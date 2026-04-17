@@ -1,0 +1,58 @@
+/**
+ * ProductRepository - Adapter implementation of IProductRepository
+ * Handles HTTP communication with the backend API
+ */
+
+import { apiClient } from '../api/client';
+import type { IProductRepository, PaginatedResponse } from '@/core/interfaces/IProductRepository';
+import type { Product, CreateProductData, UpdateProductData, ProductFilters } from '@/core/entities/product';
+
+export class ProductRepository implements IProductRepository {
+  private readonly basePath = '/api/v1/products';
+
+  async getAll(filters?: ProductFilters): Promise<PaginatedResponse<Product>> {
+    const params = new URLSearchParams();
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.categoryId) params.append('categoryId', filters.categoryId);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.page !== undefined) params.append('page', filters.page.toString());
+    if (filters?.size !== undefined) params.append('size', filters.size.toString());
+
+    const query = params.toString();
+    const url = query ? `${this.basePath}?${query}` : this.basePath;
+    const response = await apiClient.get<PaginatedResponse<Product>>(url);
+    return response.data;
+  }
+
+  async getById(id: string): Promise<Product> {
+    const response = await apiClient.get<Product>(`${this.basePath}/${id}`);
+    return response.data;
+  }
+
+  async create(data: CreateProductData): Promise<Product> {
+    const response = await apiClient.post<Product>(this.basePath, data);
+    return response.data;
+  }
+
+  async update(id: string, data: UpdateProductData): Promise<Product> {
+    const response = await apiClient.put<Product>(`${this.basePath}/${id}`, data);
+    return response.data;
+  }
+
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`${this.basePath}/${id}`);
+  }
+
+  async archive(id: string): Promise<Product> {
+    const response = await apiClient.post<Product>(`${this.basePath}/${id}/archive`);
+    return response.data;
+  }
+
+  async activate(id: string): Promise<Product> {
+    const response = await apiClient.post<Product>(`${this.basePath}/${id}/activate`);
+    return response.data;
+  }
+}
+
+// Singleton instance for dependency injection
+export const productRepository = new ProductRepository();

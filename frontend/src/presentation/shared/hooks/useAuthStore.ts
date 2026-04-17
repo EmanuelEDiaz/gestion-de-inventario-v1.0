@@ -50,9 +50,8 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Error al iniciar sesión';
           set({ 
-            isLoading: false, 
-            error: message,
             ...initialState,
+            error: message,
           });
           throw error;
         }

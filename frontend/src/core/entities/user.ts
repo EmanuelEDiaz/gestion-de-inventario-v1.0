@@ -61,6 +61,13 @@ export interface AuthUser {
   role: Role;
 }
 
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+}
+
 export interface AuthState {
   user: AuthUser | null;
   accessToken: string | null;
