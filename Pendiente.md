@@ -1,0 +1,11 @@
+Estos son algunos inconvenientes del usuario con el plan para agregar
+-Agregar regla obligatoria, no usar nada deprecated
+-Instalar Springboot con la version de maven estable y java con la version estable para este proyecto y nextjs lo mas actual y estable(usar pnpm)
+- antes de comenzar recomendar mejores skills para el desarrollo de la aplicacion
+-modificar el plan para que revice siempre que los necesite los skills en D:\emanuel\Programacion\Nextjs\gestion de inventario\.agents\skills, si es necesario que los mueva a otro lugar donde el agente los use por defecto
+-ojo agregue unos skills que me gustaron adaptalos al proyecto actual y dime que cambian del plan
+- despues de deescargar otros skills mas revizar si el plan sigue  o usa los skills
+- la app debe de poder al final funcionar totalmente para hacer pruebas antes del build y despues del build, ademas de que la imagen de docker se hara una vez que funcione todo 
+- El lenguaje de la aplicacion debe ser espanol para labels texto, todo lo mostrado en la aplicacion, pero en ingles para nombres de variables y codigo en general, debe haber descripciones y cuando se pase el maus por arriba de algo que aparesca una descripcion de lo que va 
+-En la aplicacion debe haber un link o qr que haga encontrar mas facil una vez unido al hospot la aplicacion
+-Middleware para evitar que alguien sin autenticarse entre en la aplicacion

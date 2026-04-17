@@ -1,0 +1,123 @@
+# ADR-001: Clean Architecture + Hexagonal (Ports & Adapters)
+
+- **Status**: Accepted
+- **Date**: 2025-01-01
+- **Context**: We need an architecture that allows the domain logic to remain independent of frameworks, databases, and transport mechanisms. The system must be testable, maintainable, and support multiple adapters (web, persistence, file storage).
+- **Decision**: Adopt Clean Architecture with Hexagonal (Ports & Adapters) pattern combined with SOLID principles.
+  - **Domain layer** (`domain/`): Pure Java — models, value objects, domain services, events, errors. No Spring annotations, no persistence annotations, no JSON annotations.
+  - **Application layer** (`application/`): Use cases (commands & queries), DTOs, mappers. Depends only on domain. Orchestrates domain objects via ports.
+  - **Adapters layer** (`adapters/`): Web (Spring WebFlux controllers), Persistence (R2DBC repositories), Security (JWT/RBAC), Storage (file system). Each adapter implements a port defined in domain/application.
+  - **Dependency rule**: Dependencies point inward only (adapters → application → domain). Domain never depends on outer layers.
+- **Consequences**:
+  - Domain logic is framework-agnostic and highly testable.
+  - Swapping adapters (e.g., different DB) requires no domain changes.
+  - ArchUnit rules enforce dependency boundaries at CI time.
+
+---
+
+# ADR-002: Spring Boot WebFlux + R2DBC (Reactive)
+
+- **Status**: Accepted
+- **Date**: 2025-01-01
+- **Context**: The system needs to handle concurrent POS operations, sync pushes, and file uploads efficiently. Traditional blocking I/O would limit throughput.
+- **Decision**: Use Spring Boot WebFlux (reactive) with R2DBC for non-blocking database access on PostgreSQL.
+  - Flyway migrations run via JDBC at startup (Flyway does not support R2DBC natively).
+  - Runtime queries use R2DBC exclusively.
+- **Consequences**:
+  - All repository ports return `Mono<T>` / `Flux<T>`.
+  - Blocking calls are forbidden in the reactive chain.
+  - Flyway requires a separate JDBC datasource configured only for migrations.
+
+---
+
+# ADR-003: Offline-First with IndexedDB Outbox + Server-Authoritative Sync
+
+- **Status**: Accepted
+- **Date**: 2025-01-01
+- **Context**: The app must work fully offline (LAN/hotspot, no internet). Sales, adjustments, and other operations created offline must sync reliably when connectivity returns.
+- **Decision**:
+  - Frontend stores operations in an IndexedDB outbox (Dexie.js v4+).
+  - Sync uses push/pull pattern: `POST /api/v1/sync/push` (batch idempotent ops), `GET /api/v1/sync/pull?cursor=&limit=`.
+  - Cursor is `bigserial` from `sync_log` table, monotonically increasing.
+  - Each operation has a UUID `operation_id` for idempotency.
+  - Conflict resolution: server-authoritative + optimistic locking (`version` field / `ETag` / `If-Match`).
+  - Rejected operations are returned with reason and details.
+- **Consequences**:
+  - All mutable endpoints require `Idempotency-Key` header.
+  - Frontend must handle rejected operations and surface conflicts to user.
+  - Sync progress bar is mandatory in UI.
+
+---
+
+# ADR-004: JWT Authentication (HS256) + RBAC
+
+- **Status**: Accepted
+- **Date**: 2025-01-01
+- **Context**: Need stateless authentication that works in offline/LAN scenarios without external auth providers.
+- **Decision**:
+  - Access token: JWT HS256, TTL 15 minutes.
+  - Refresh token: UUID, hashed (SHA-256) in `refresh_tokens` table, TTL 7 days.
+  - Refresh delivered via `httpOnly + Secure + SameSite=Strict` cookie.
+  - RBAC v1: fixed roles `ADMIN`, `MANAGER`, `SELLER`.
+  - Password hashing: bcrypt with cost factor 12.
+- **Consequences**:
+  - No external identity provider needed.
+  - Token rotation on refresh.
+  - Logout revokes refresh token server-side.
+
+---
+
+# ADR-005: File Storage on Disk (not in DB)
+
+- **Status**: Accepted
+- **Date**: 2025-01-01
+- **Context**: Product images and user avatars need to be stored. Storing binary data in PostgreSQL (`bytea`) would bloat the database and complicate backups.
+- **Decision**:
+  - Images stored on filesystem under `INVENTORY_MEDIA_ROOT` (env variable).
+  - DB stores only `file_path` (relative path under the root).
+  - Paths are deterministic: `products/{productId}/original/{imageId}.{ext}`.
+  - Thumbnails generated on upload (256px, 1024px for products; 256px for avatars).
+  - Atomic writes: temp file + move.
+  - Security: reject `..`, absolute paths, and path traversal.
+- **Consequences**:
+  - Docker volume mount for `/var/lib/inventory/media`.
+  - Backup strategy must include media volume.
+  - Images served via authenticated endpoints only.
+
+---
+
+# ADR-006: Caddy as Reverse Proxy for Local HTTPS
+
+- **Status**: Accepted
+- **Date**: 2025-01-01
+- **Context**: PWA requires HTTPS. The app runs on LAN/hotspot without internet, so Let's Encrypt is not available.
+- **Decision**: Use Caddy with auto-generated local CA certificates. Mobile devices trust the CA by installing it once.
+- **Consequences**:
+  - PWA features (Service Worker, install prompt) work on LAN.
+  - One-time setup to trust CA on each device.
+
+---
+
+# ADR-007: Flyway for Database Migrations
+
+- **Status**: Accepted
+- **Date**: 2025-01-01
+- **Context**: Need versioned, repeatable database migrations. R2DBC is runtime driver but Flyway requires JDBC.
+- **Decision**: Use Flyway with a JDBC datasource configured only for migrations. Runs at application startup and in CI.
+- **Consequences**:
+  - Two datasource configs: JDBC (Flyway only) + R2DBC (runtime).
+  - Migration files in `src/main/resources/db/migration/`.
+  - Naming: `V{NNN}__{description}.sql`.
+
+---
+
+# ADR-008: MapStruct for Object Mapping
+
+- **Status**: Accepted
+- **Date**: 2025-01-01
+- **Context**: Need compile-time-safe mapping between layers (Web DTO ↔ Application DTO ↔ Domain model ↔ Persistence entity).
+- **Decision**: Use MapStruct for all inter-layer mappings. Unit tests validate critical field mappings.
+- **Consequences**:
+  - Compile-time error if mapping is incomplete.
+  - No runtime reflection overhead.
+  - Mapper interfaces in each layer's `mapper/` package.

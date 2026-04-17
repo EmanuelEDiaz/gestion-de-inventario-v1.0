@@ -1,0 +1,106 @@
+# =====================================================
+# Inventario Offline-First - Configuración Spring Boot
+# =====================================================
+# Runtime: WebFlux (reactive) + R2DBC + PostgreSQL
+# Migraciones: Flyway (JDBC en arranque)
+# =====================================================
+
+spring:
+  application:
+    name: inventory-app
+
+  # R2DBC (runtime reactive)
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:inventory}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    pool:
+      initial-size: 5
+      max-size: 20
+      max-idle-time: 30m
+
+  # Flyway (JDBC para migraciones)
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:inventory}
+    user: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Jackson
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+# Server
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Security / JWT
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me-in-production-minimum-256-bits-key-here!!}
+  
+  # Media storage (imágenes)
+  media:
+    root: ${INVENTORY_MEDIA_ROOT:./media}
+    max-avatar-size: 2MB
+    max-product-image-size: 10MB
+    max-images-per-product: 8
+
+# Logging
+logging:
+  level:
+    com.inventory: DEBUG
+    org.springframework.r2dbc: INFO
+    io.r2dbc.postgresql: INFO
+
+---
+# Profile: dev
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/inventory_dev
+
+  flyway:
+    url: jdbc:postgresql://localhost:5432/inventory_dev
+
+logging:
+  level:
+    com.inventory: DEBUG
+
+---
+# Profile: test
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  r2dbc:
+    url: r2dbc:tc:postgresql:16:///inventory_test?TC_DAEMON=true
+
+logging:
+  level:
+    com.inventory: DEBUG
+    org.testcontainers: INFO
+
+---
+# Profile: prod
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+logging:
+  level:
+    com.inventory: INFO
+    org.springframework: WARN
