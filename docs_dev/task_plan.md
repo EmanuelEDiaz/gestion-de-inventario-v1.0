@@ -1,7 +1,7 @@
 # Plan de Desarrollo - Sistema de Inventario Offline-First
 
 **Fecha Inicio**: 2026-04-17
-**Última Actualización**: 2026-04-18
+**Última Actualización**: 2026-04-17
 **Stack**: Spring Boot 3.4 WebFlux + Next.js 15 + PWA
 
 ---
@@ -17,9 +17,16 @@
 - [x] Arquitectura hexagonal backend (ports/in, use cases, controllers)
 - [x] Arquitectura hexagonal frontend (core/infrastructure/presentation)
 - [x] **Gate D: Stock balances + Ledger de movimientos** ✅
+- [x] **Fase 2A: Compras** (backend + frontend) ✅
+- [x] **Fase 2B: Ventas/POS** (backend + frontend) ✅
 
-### ⏳ Pendiente
-- [ ] Gate E: Operaciones (Compras, Ventas, Transferencias, Ajustes, Devoluciones)
+### ⏳ En Progreso
+- [ ] Fase 2C: Transferencias entre almacenes
+
+### ❌ Pendiente
+- [ ] Fase 2D: Ajustes de inventario
+- [ ] Fase 2E: Devoluciones
+- [ ] Fase 3: Usuarios & Terceros (suppliers, customers)
 - [ ] Gate F: Dashboard + Export (CSV/XLSX/PDF)
 - [ ] Gate G: Offline sync completo + PWA hardening
 - [ ] Gate Final: Docker + README portafolio
@@ -48,23 +55,27 @@
 ### Fase 2: Operaciones de Inventario (Gate E)
 **Objetivo**: CRUD completo para todas las operaciones
 
-#### 2A: Compras
-- [ ] 2.1 Backend: Purchase, PurchaseLine domain models
-- [ ] 2.2 Backend: PurchaseCommandPort, PurchaseQueryPort
-- [ ] 2.3 Backend: CreatePurchaseUseCase (actualiza stock + costos)
-- [ ] 2.4 Backend: PurchaseController
-- [ ] 2.5 Frontend: Módulo purchases (formulario, lista, detalles)
-**Commit**: "feat(purchases): Add purchase management"
+#### 2A: Compras ✅ COMPLETADA
+**Commit**: `feat(purchases): Add purchase management module`
+- [x] Backend: Purchase, PurchaseLine domain models (inmutables)
+- [x] Backend: PurchaseCommandPort, PurchaseQueryPort (ports)
+- [x] Backend: PurchaseCommandUseCase, PurchaseQueryUseCase
+- [x] Backend: PurchaseController + Persistence adapters
+- [x] Frontend: Core entities + interfaces + use cases
+- [x] Frontend: PurchaseRepository, usePurchases hook
+- [x] Frontend: PurchaseTable, PurchaseDetail components
 
-#### 2B: Ventas (POS)
-- [ ] 2.6 Backend: Sale, SaleLine domain models
-- [ ] 2.7 Backend: SaleCommandPort, SaleQueryPort
-- [ ] 2.8 Backend: CreateSaleUseCase (valida stock, resta inventario)
-- [ ] 2.9 Backend: SaleController
-- [ ] 2.10 Frontend: Módulo POS (interfaz venta rápida, carrito)
-**Commit**: "feat(sales): Add POS sales module"
+#### 2B: Ventas (POS) ✅ COMPLETADA
+**Commit**: `feat(sales): Add sales/POS management module`
+- [x] Backend: Sale, SaleLine domain models con workflow
+- [x] Backend: SaleCommandPort, SaleQueryPort (ports)
+- [x] Backend: SaleCommandUseCase (reserve/release stock)
+- [x] Backend: SaleController + Persistence adapters
+- [x] Frontend: Core entities + interfaces + use cases
+- [x] Frontend: SaleRepository, useSales hook
+- [x] Frontend: SaleTable component
 
-#### 2C: Transferencias
+#### 2C: Transferencias ⏳ EN PROGRESO
 - [ ] 2.11 Backend: Transfer domain + use cases + controller
 - [ ] 2.12 Frontend: Módulo transfers (origen → destino)
 **Commit**: "feat(transfers): Add warehouse transfers"
@@ -154,6 +165,8 @@
 |-------|---------|------------|-------|
 | Controllers llamaban repos directamente | 1 | Refactorizado a Use Cases | 2026-04-17 |
 | Domain models mutables | 1 | Convertidos a inmutables | 2026-04-17 |
+| Hooks >100 líneas | 1 | Refactorizado (usePurchases, useSales) | 2026-04-17 |
+| Use cases recreados cada render | 1 | Singleton pattern fuera del hook | 2026-04-17 |
 
 ---
 
@@ -182,4 +195,10 @@ Antes de marcar una fase como completada:
 
 ## Próxima Acción
 
-**Iniciar Fase 1.1**: Crear modelos de dominio StockBalance e InventoryMovement
+**Fase 2C: Transferencias entre almacenes**
+
+Antes de implementar:
+1. Cargar skills: hexagonal, clean-code, patterns, react-best-practices
+2. Crear modelos de dominio Transfer, TransferLine
+3. Auditar código antes de cada commit
+4. Verificar que hooks < 100 líneas

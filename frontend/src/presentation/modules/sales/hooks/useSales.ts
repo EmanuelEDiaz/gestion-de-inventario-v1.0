@@ -5,7 +5,6 @@ import { Sale, SaleFilter, CreateSaleInput } from '@/core/entities/sale';
 import { saleRepository } from '@/infrastructure/repositories/SaleRepository';
 import {
   GetAllSalesUseCase,
-  GetSaleByIdUseCase,
   CreateSaleUseCase,
   ConfirmSaleUseCase,
   DeliverSaleUseCase,
@@ -13,181 +12,101 @@ import {
   DeleteSaleUseCase
 } from '@/core/use-cases/sale';
 
-interface UseSalesState {
+// Use cases singleton
+const useCases = {
+  getAll: new GetAllSalesUseCase(saleRepository),
+  create: new CreateSaleUseCase(saleRepository),
+  confirm: new ConfirmSaleUseCase(saleRepository),
+  deliver: new DeliverSaleUseCase(saleRepository),
+  cancel: new CancelSaleUseCase(saleRepository),
+  delete: new DeleteSaleUseCase(saleRepository),
+};
+
+interface State {
   sales: Sale[];
-  selectedSale: Sale | null;
   isLoading: boolean;
   error: string | null;
 }
 
 export function useSales(initialFilter?: SaleFilter) {
-  const [state, setState] = useState<UseSalesState>({
-    sales: [],
-    selectedSale: null,
-    isLoading: false,
-    error: null
-  });
+  const [state, setState] = useState<State>({ sales: [], isLoading: false, error: null });
 
-  const getAllUseCase = new GetAllSalesUseCase(saleRepository);
-  const getByIdUseCase = new GetSaleByIdUseCase(saleRepository);
-  const createUseCase = new CreateSaleUseCase(saleRepository);
-  const confirmUseCase = new ConfirmSaleUseCase(saleRepository);
-  const deliverUseCase = new DeliverSaleUseCase(saleRepository);
-  const cancelUseCase = new CancelSaleUseCase(saleRepository);
-  const deleteUseCase = new DeleteSaleUseCase(saleRepository);
+  const setLoading = () => setState(p => ({ ...p, isLoading: true, error: null }));
+  const setError = (msg: string) => setState(p => ({ ...p, isLoading: false, error: msg }));
+  const updateSale = (id: string, data: Sale) => 
+    setState(p => ({ ...p, sales: p.sales.map(x => x.id === id ? data : x), isLoading: false }));
 
   const fetchAll = useCallback(async (filter?: SaleFilter) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setLoading();
     try {
-      const data = await getAllUseCase.execute(filter);
-      setState(prev => ({ ...prev, sales: data, isLoading: false }));
-    } catch (err) {
-      setState(prev => ({ 
-        ...prev, 
-        error: err instanceof Error ? err.message : 'Error cargando ventas',
-        isLoading: false 
-      }));
-    }
-  }, []);
-
-  const fetchById = useCallback(async (id: string) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    try {
-      const data = await getByIdUseCase.execute(id);
-      setState(prev => ({ ...prev, selectedSale: data, isLoading: false }));
-      return data;
-    } catch (err) {
-      setState(prev => ({ 
-        ...prev, 
-        error: err instanceof Error ? err.message : 'Error cargando venta',
-        isLoading: false 
-      }));
-      return null;
+      const data = await useCases.getAll.execute(filter);
+      setState({ sales: data, isLoading: false, error: null });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error cargando ventas');
     }
   }, []);
 
   const create = useCallback(async (input: CreateSaleInput) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setLoading();
     try {
-      const data = await createUseCase.execute(input);
-      setState(prev => ({ 
-        ...prev, 
-        sales: [data, ...prev.sales], 
-        selectedSale: data,
-        isLoading: false 
-      }));
+      const data = await useCases.create.execute(input);
+      setState(p => ({ ...p, sales: [data, ...p.sales], isLoading: false }));
       return data;
-    } catch (err) {
-      setState(prev => ({ 
-        ...prev, 
-        error: err instanceof Error ? err.message : 'Error creando venta',
-        isLoading: false 
-      }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error creando venta');
       return null;
     }
   }, []);
 
   const confirm = useCallback(async (id: string) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setLoading();
     try {
-      const data = await confirmUseCase.execute(id);
-      setState(prev => ({ 
-        ...prev, 
-        sales: prev.sales.map(s => s.id === id ? data : s),
-        selectedSale: prev.selectedSale?.id === id ? data : prev.selectedSale,
-        isLoading: false 
-      }));
+      const data = await useCases.confirm.execute(id);
+      updateSale(id, data);
       return data;
-    } catch (err) {
-      setState(prev => ({ 
-        ...prev, 
-        error: err instanceof Error ? err.message : 'Error confirmando venta',
-        isLoading: false 
-      }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error confirmando venta');
       return null;
     }
   }, []);
 
   const deliver = useCallback(async (id: string) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setLoading();
     try {
-      const data = await deliverUseCase.execute(id);
-      setState(prev => ({ 
-        ...prev, 
-        sales: prev.sales.map(s => s.id === id ? data : s),
-        selectedSale: prev.selectedSale?.id === id ? data : prev.selectedSale,
-        isLoading: false 
-      }));
+      const data = await useCases.deliver.execute(id);
+      updateSale(id, data);
       return data;
-    } catch (err) {
-      setState(prev => ({ 
-        ...prev, 
-        error: err instanceof Error ? err.message : 'Error entregando venta',
-        isLoading: false 
-      }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error entregando venta');
       return null;
     }
   }, []);
 
   const cancel = useCallback(async (id: string) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setLoading();
     try {
-      const data = await cancelUseCase.execute(id);
-      setState(prev => ({ 
-        ...prev, 
-        sales: prev.sales.map(s => s.id === id ? data : s),
-        selectedSale: prev.selectedSale?.id === id ? data : prev.selectedSale,
-        isLoading: false 
-      }));
+      const data = await useCases.cancel.execute(id);
+      updateSale(id, data);
       return data;
-    } catch (err) {
-      setState(prev => ({ 
-        ...prev, 
-        error: err instanceof Error ? err.message : 'Error cancelando venta',
-        isLoading: false 
-      }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error cancelando venta');
       return null;
     }
   }, []);
 
   const deleteSale = useCallback(async (id: string) => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setLoading();
     try {
-      await deleteUseCase.execute(id);
-      setState(prev => ({ 
-        ...prev, 
-        sales: prev.sales.filter(s => s.id !== id),
-        selectedSale: prev.selectedSale?.id === id ? null : prev.selectedSale,
-        isLoading: false 
-      }));
+      await useCases.delete.execute(id);
+      setState(p => ({ ...p, sales: p.sales.filter(x => x.id !== id), isLoading: false }));
       return true;
-    } catch (err) {
-      setState(prev => ({ 
-        ...prev, 
-        error: err instanceof Error ? err.message : 'Error eliminando venta',
-        isLoading: false 
-      }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error eliminando venta');
       return false;
     }
   }, []);
 
-  const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
-  }, []);
+  useEffect(() => { fetchAll(initialFilter); }, []);
 
-  useEffect(() => {
-    fetchAll(initialFilter);
-  }, []);
-
-  return {
-    ...state,
-    fetchAll,
-    fetchById,
-    create,
-    confirm,
-    deliver,
-    cancel,
-    deleteSale,
-    clearError
-  };
+  return { ...state, fetchAll, create, confirm, deliver, cancel, deleteSale, clearError: () => setState(p => ({ ...p, error: null })) };
 }
