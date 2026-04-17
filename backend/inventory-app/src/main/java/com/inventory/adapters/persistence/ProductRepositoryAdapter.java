@@ -1,0 +1,124 @@
+package com.inventory.adapters.persistence;
+
+import com.inventory.adapters.persistence.entity.ProductEntity;
+import com.inventory.adapters.persistence.mapper.CatalogPersistenceMapper;
+import com.inventory.adapters.persistence.repository.ProductR2dbcRepository;
+import com.inventory.domain.model.Product;
+import com.inventory.domain.ports.out.ProductRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@Repository
+public class ProductRepositoryAdapter implements ProductRepository {
+
+    private final ProductR2dbcRepository r2dbcRepository;
+    private final CatalogPersistenceMapper mapper;
+
+    public ProductRepositoryAdapter(ProductR2dbcRepository r2dbcRepository,
+                                     CatalogPersistenceMapper mapper) {
+        this.r2dbcRepository = r2dbcRepository;
+        this.mapper = mapper;
+    }
+
+    @Override
+    public Mono<Product> findById(UUID id) {
+        return r2dbcRepository.findById(id)
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Mono<Product> findBySku(String sku) {
+        return r2dbcRepository.findBySku(sku)
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Mono<Product> findByBarcode(String barcode) {
+        return r2dbcRepository.findByBarcode(barcode)
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Product> findAll() {
+        return r2dbcRepository.findAll()
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Product> findAllActive() {
+        return r2dbcRepository.findAllActive()
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Product> findByCategory(UUID categoryId) {
+        return r2dbcRepository.findByCategoryId(categoryId)
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Product> findByStatus(Product.ProductStatus status) {
+        return r2dbcRepository.findByStatus(status.name())
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Product> search(String query) {
+        return r2dbcRepository.search(query)
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Product> findAllPaginated(int page, int size) {
+        int offset = page * size;
+        return r2dbcRepository.findAllPaginated(offset, size)
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Mono<Long> count() {
+        return r2dbcRepository.count();
+    }
+
+    @Override
+    public Mono<Long> countByStatus(Product.ProductStatus status) {
+        return r2dbcRepository.countByStatus(status.name());
+    }
+
+    @Override
+    public Mono<Product> save(Product product) {
+        return r2dbcRepository.findById(product.getId())
+            .flatMap(existing -> {
+                ProductEntity entity = mapper.toEntity(product, false);
+                return r2dbcRepository.save(entity);
+            })
+            .switchIfEmpty(Mono.defer(() -> {
+                ProductEntity entity = mapper.toEntity(product, true);
+                return r2dbcRepository.save(entity);
+            }))
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Mono<Boolean> existsBySku(String sku) {
+        return r2dbcRepository.existsBySku(sku);
+    }
+
+    @Override
+    public Mono<Boolean> existsByBarcode(String barcode) {
+        return r2dbcRepository.existsByBarcode(barcode);
+    }
+
+    @Override
+    public Mono<Boolean> existsById(UUID id) {
+        return r2dbcRepository.existsById(id);
+    }
+
+    @Override
+    public Mono<Void> deleteById(UUID id) {
+        return r2dbcRepository.deleteById(id);
+    }
+}
