@@ -1,7 +1,7 @@
 # Plan de Desarrollo - Sistema de Inventario Offline-First
 
 **Fecha Inicio**: 2026-04-17
-**Última Actualización**: 2026-04-17
+**Última Actualización**: 2026-04-18
 **Stack**: Spring Boot 3.4 WebFlux + Next.js 15 + PWA
 
 ---
@@ -16,10 +16,9 @@
 - [x] Catálogo base: Products, Categories, Warehouses (CRUD completo)
 - [x] Arquitectura hexagonal backend (ports/in, use cases, controllers)
 - [x] Arquitectura hexagonal frontend (core/infrastructure/presentation)
-- [x] Middleware auth en frontend
+- [x] **Gate D: Stock balances + Ledger de movimientos** ✅
 
 ### ⏳ Pendiente
-- [ ] Gate D: Stock balances + Ledger de movimientos
 - [ ] Gate E: Operaciones (Compras, Ventas, Transferencias, Ajustes, Devoluciones)
 - [ ] Gate F: Dashboard + Export (CSV/XLSX/PDF)
 - [ ] Gate G: Offline sync completo + PWA hardening
@@ -29,22 +28,20 @@
 
 ## Fases de Implementación
 
-### Fase 1: Stock & Balances (Gate D completo)
-**Objetivo**: Sistema de balances de inventario con ledger inmutable
+### Fase 1: Stock & Balances (Gate D completo) ✅ COMPLETADA
+**Commit**: `a693c07` - "feat(stock): Fase 1 - Stock & Balances module complete"
 
-#### Backend
-- [ ] 1.1 Modelos de dominio: StockBalance, InventoryMovement
-- [ ] 1.2 Ports: StockQueryPort, StockCommandPort
-- [ ] 1.3 Use Cases: GetStockBalancesUseCase, RegisterMovementUseCase
-- [ ] 1.4 Controllers: StockController, MovementController
-- [ ] 1.5 Persistence: Adapters R2DBC para stock_balances, inventory_movements
+#### Backend ✅
+- [x] 1.1 Modelos de dominio: StockBalance, InventoryMovement (inmutables)
+- [x] 1.2 Ports: StockQueryPort, MovementQueryPort, StockRepository, MovementRepository
+- [x] 1.3 Use Cases: StockQueryUseCase, MovementQueryUseCase
+- [x] 1.4 Controllers: StockController, MovementController
+- [x] 1.5 Persistence: Adapters R2DBC + entities + mappers
 
-#### Frontend
-- [ ] 1.6 Core: Entities (StockBalance, Movement)
-- [ ] 1.7 Infrastructure: StockRepository
-- [ ] 1.8 Presentation: Módulo stock (tabla, filtros, alertas reorder)
-
-**Commit**: "feat(stock): Add stock balance and movement tracking"
+#### Frontend ✅
+- [x] 1.6 Core: Entities (StockBalance, InventoryMovement)
+- [x] 1.7 Infrastructure: StockRepository, MovementRepository
+- [x] 1.8 Presentation: StockBalanceTable, StockBalanceCard, MovementTable, hooks
 
 ---
 
