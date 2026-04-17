@@ -85,6 +85,26 @@ public class InventoryMovement {
         );
     }
 
+    public static InventoryMovement saleReturn(UUID warehouseId, UUID productId, BigDecimal quantity,
+                                                BigDecimal unitCost, BigDecimal unitPrice, UUID returnId,
+                                                BigDecimal balanceAfter, UUID createdBy) {
+        return new InventoryMovement(
+            null, warehouseId, productId, MovementType.SALE_RETURN,
+            quantity, unitCost, unitPrice, null, null, "CUP", BigDecimal.ONE,
+            balanceAfter, "RETURN", returnId, null, Instant.now(), createdBy, null
+        );
+    }
+
+    public static InventoryMovement purchaseReturn(UUID warehouseId, UUID productId, BigDecimal quantity,
+                                                    BigDecimal unitCost, UUID returnId,
+                                                    BigDecimal balanceAfter, UUID createdBy) {
+        return new InventoryMovement(
+            null, warehouseId, productId, MovementType.PURCHASE_RETURN,
+            quantity.negate(), unitCost, null, null, null, "CUP", BigDecimal.ONE,
+            balanceAfter, "RETURN", returnId, null, Instant.now(), createdBy, null
+        );
+    }
+
     public static InventoryMovement adjustment(UUID warehouseId, UUID productId, BigDecimal quantity,
                                                 boolean isIncrease, UUID adjustmentId, BigDecimal balanceAfter,
                                                 String notes, UUID createdBy) {
