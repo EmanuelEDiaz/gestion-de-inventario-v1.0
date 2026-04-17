@@ -15,6 +15,9 @@ public interface SupplierR2dbcRepository extends ReactiveCrudRepository<Supplier
     @Query("SELECT * FROM suppliers WHERE is_active = true ORDER BY name")
     Flux<SupplierEntity> findAllActive();
 
+    @Query("SELECT * FROM suppliers WHERE is_active = :active ORDER BY name")
+    Flux<SupplierEntity> findByActive(boolean active);
+
     @Query("SELECT * FROM suppliers WHERE LOWER(name) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(code) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "ORDER BY name LIMIT 50")

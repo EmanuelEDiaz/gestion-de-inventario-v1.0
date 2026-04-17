@@ -15,6 +15,9 @@ public interface CustomerR2dbcRepository extends ReactiveCrudRepository<Customer
     @Query("SELECT * FROM customers WHERE is_active = true ORDER BY name")
     Flux<CustomerEntity> findAllActive();
 
+    @Query("SELECT * FROM customers WHERE is_active = :active ORDER BY name")
+    Flux<CustomerEntity> findByActive(boolean active);
+
     @Query("SELECT * FROM customers WHERE LOWER(name) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(code) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "ORDER BY name LIMIT 50")

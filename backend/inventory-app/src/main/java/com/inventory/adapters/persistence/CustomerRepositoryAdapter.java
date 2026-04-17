@@ -48,6 +48,12 @@ public class CustomerRepositoryAdapter implements CustomerRepository {
     }
 
     @Override
+    public Flux<Customer> findByActive(boolean active) {
+        return r2dbcRepository.findByActive(active)
+            .map(mapper::toDomain);
+    }
+
+    @Override
     public Flux<Customer> search(String query) {
         return r2dbcRepository.search(query)
             .map(mapper::toDomain);

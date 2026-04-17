@@ -48,6 +48,12 @@ public class SupplierRepositoryAdapter implements SupplierRepository {
     }
 
     @Override
+    public Flux<Supplier> findByActive(boolean active) {
+        return r2dbcRepository.findByActive(active)
+            .map(mapper::toDomain);
+    }
+
+    @Override
     public Flux<Supplier> search(String query) {
         return r2dbcRepository.search(query)
             .map(mapper::toDomain);
