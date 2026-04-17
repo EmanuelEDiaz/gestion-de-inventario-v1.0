@@ -1,53 +1,188 @@
-# Task: Inventario Offline-First - Setup Inicial
+# Plan de Desarrollo - Sistema de Inventario Offline-First
 
-**Inicio:** 2026-04-17
-**Stack:** Spring Boot WebFlux + Next.js 15 + PWA
+**Fecha Inicio**: 2026-04-17
+**Última Actualización**: 2026-04-17
+**Stack**: Spring Boot 3.4 WebFlux + Next.js 15 + PWA
 
-## Fases
+---
 
-- [x] Fase 0: Verificar consistencia de skills
-- [ ] Fase 1: Crear estructura de carpetas base
-- [ ] Fase 2: Inicializar backend (Spring Boot WebFlux + R2DBC + Flyway)
-- [ ] Fase 3: Inicializar frontend (Next.js 15 + pnpm + PWA shell)
-- [ ] Fase 4: Migrar plan detallado desde CLAUDE.md a docs/
-- [ ] Fase 5: Simplificar CLAUDE.md (solo reglas esenciales)
-- [ ] Fase 6: Crear README.md completo
-- [ ] Fase 7: Verificar que compila y arranca
+## Estado Actual
 
-## Decisiones
+### ✅ Completado
+- [x] Gate A: Diseño base (arquitectura, glosario, estructura carpetas)
+- [x] Gate B: Contratos (ERD, migraciones V1-V5, DTOs base)
+- [x] Gate C: Scaffolding (backend compila, frontend arranca)
+- [x] Autenticación (JWT + refresh tokens + RBAC)
+- [x] Catálogo base: Products, Categories, Warehouses (CRUD completo)
+- [x] Arquitectura hexagonal backend (ports/in, use cases, controllers)
+- [x] Arquitectura hexagonal frontend (core/infrastructure/presentation)
+- [x] Middleware auth en frontend
 
-| Decisión | Razón | Fecha |
-|----------|-------|-------|
-| Java 21 LTS | Última LTS estable, soporte hasta 2031 | 2026-04-17 |
-| Spring Boot 3.4.x | Última estable, soporte WebFlux nativo | 2026-04-17 |
-| Next.js 15.x | App Router estable, mejor PWA | 2026-04-17 |
-| pnpm | Más rápido, mejor gestión de deps | 2026-04-17 |
-| PostgreSQL 16 | Estable, buen soporte JSON | 2026-04-17 |
-| Flyway | Migraciones versionadas | 2026-04-17 |
+### ⏳ Pendiente
+- [ ] Gate D: Stock balances + Ledger de movimientos
+- [ ] Gate E: Operaciones (Compras, Ventas, Transferencias, Ajustes, Devoluciones)
+- [ ] Gate F: Dashboard + Export (CSV/XLSX/PDF)
+- [ ] Gate G: Offline sync completo + PWA hardening
+- [ ] Gate Final: Docker + README portafolio
 
-## Versiones a usar
+---
 
-| Componente | Versión | Notas |
-|------------|---------|-------|
-| Java | 21 LTS | OpenJDK/Temurin |
-| Maven | 3.9.x | Wrapper incluido |
-| Spring Boot | 3.4.x | WebFlux + R2DBC |
-| Node.js | 20 LTS | Para frontend |
-| pnpm | 9.x | Package manager |
-| Next.js | 15.x | App Router |
-| PostgreSQL | 16 | Para desarrollo y producción |
-| Tailwind CSS | 4.x | Con design tokens |
-| shadcn/ui | latest | Componentes accesibles |
+## Fases de Implementación
+
+### Fase 1: Stock & Balances (Gate D completo)
+**Objetivo**: Sistema de balances de inventario con ledger inmutable
+
+#### Backend
+- [ ] 1.1 Modelos de dominio: StockBalance, InventoryMovement
+- [ ] 1.2 Ports: StockQueryPort, StockCommandPort
+- [ ] 1.3 Use Cases: GetStockBalancesUseCase, RegisterMovementUseCase
+- [ ] 1.4 Controllers: StockController, MovementController
+- [ ] 1.5 Persistence: Adapters R2DBC para stock_balances, inventory_movements
+
+#### Frontend
+- [ ] 1.6 Core: Entities (StockBalance, Movement)
+- [ ] 1.7 Infrastructure: StockRepository
+- [ ] 1.8 Presentation: Módulo stock (tabla, filtros, alertas reorder)
+
+**Commit**: "feat(stock): Add stock balance and movement tracking"
+
+---
+
+### Fase 2: Operaciones de Inventario (Gate E)
+**Objetivo**: CRUD completo para todas las operaciones
+
+#### 2A: Compras
+- [ ] 2.1 Backend: Purchase, PurchaseLine domain models
+- [ ] 2.2 Backend: PurchaseCommandPort, PurchaseQueryPort
+- [ ] 2.3 Backend: CreatePurchaseUseCase (actualiza stock + costos)
+- [ ] 2.4 Backend: PurchaseController
+- [ ] 2.5 Frontend: Módulo purchases (formulario, lista, detalles)
+**Commit**: "feat(purchases): Add purchase management"
+
+#### 2B: Ventas (POS)
+- [ ] 2.6 Backend: Sale, SaleLine domain models
+- [ ] 2.7 Backend: SaleCommandPort, SaleQueryPort
+- [ ] 2.8 Backend: CreateSaleUseCase (valida stock, resta inventario)
+- [ ] 2.9 Backend: SaleController
+- [ ] 2.10 Frontend: Módulo POS (interfaz venta rápida, carrito)
+**Commit**: "feat(sales): Add POS sales module"
+
+#### 2C: Transferencias
+- [ ] 2.11 Backend: Transfer domain + use cases + controller
+- [ ] 2.12 Frontend: Módulo transfers (origen → destino)
+**Commit**: "feat(transfers): Add warehouse transfers"
+
+#### 2D: Ajustes
+- [ ] 2.13 Backend: Adjustment domain + use cases + controller
+- [ ] 2.14 Frontend: Módulo adjustments (correcciones inventario)
+**Commit**: "feat(adjustments): Add inventory adjustments"
+
+#### 2E: Devoluciones
+- [ ] 2.15 Backend: Return domain + use cases + controller
+- [ ] 2.16 Frontend: Módulo returns (devoluciones clientes/proveedores)
+**Commit**: "feat(returns): Add return management"
+
+---
+
+### Fase 3: Usuarios & Terceros
+**Objetivo**: Gestión completa de usuarios, suppliers, customers
+
+- [ ] 3.1 Backend: UserController completo (CRUD + avatar upload)
+- [ ] 3.2 Backend: SupplierController (CRUD)
+- [ ] 3.3 Backend: CustomerController (CRUD)
+- [ ] 3.4 Frontend: Módulo users (admin panel)
+- [ ] 3.5 Frontend: Módulo suppliers
+- [ ] 3.6 Frontend: Módulo customers
+**Commit**: "feat(users): Add user management and third parties"
+
+---
+
+### Fase 4: Dashboard & Reportes (Gate F)
+**Objetivo**: Dashboard con métricas + exportación
+
+- [ ] 4.1 Backend: DashboardController (métricas agregadas)
+- [ ] 4.2 Backend: ExportController (CSV, XLSX, PDF)
+- [ ] 4.3 Frontend: Dashboard principal con gráficos (Chart.js/Recharts)
+- [ ] 4.4 Frontend: Funcionalidad export multi-formato
+**Commit**: "feat(dashboard): Add dashboard and export functionality"
+
+---
+
+### Fase 5: Offline & Sync (Gate G)
+**Objetivo**: PWA completo con sync offline
+
+- [ ] 5.1 Frontend: IndexedDB para outbox local (Dexie.js)
+- [ ] 5.2 Frontend: Service Worker mejorado (workbox)
+- [ ] 5.3 Backend: SyncController (push/pull con cursor bigserial)
+- [ ] 5.4 Frontend: UI estados (online/offline/syncing) con barra progreso
+- [ ] 5.5 Frontend: Resolución de conflictos (last-write-wins + manual)
+- [ ] 5.6 Frontend: QR/Link para acceso desde dispositivos móviles
+**Commit**: "feat(offline): Add offline sync and PWA hardening"
+
+---
+
+### Fase 6: Polish & Portafolio (Gate Final)
+**Objetivo**: Preparar para producción y portafolio
+
+- [ ] 6.1 Tests: Unit tests backend (JUnit 5 + WebTestClient)
+- [ ] 6.2 Tests: E2E frontend (Playwright)
+- [ ] 6.3 Docker: Dockerfile multi-stage (backend + frontend)
+- [ ] 6.4 Docker: docker-compose.yml (app + postgres + caddy)
+- [ ] 6.5 README.md actualizado para portafolio
+- [ ] 6.6 Documentación API (OpenAPI/Swagger)
+- [ ] 6.7 Screenshots/GIFs demostrativos
+- [ ] 6.8 Verificación final: build + docker + tests
+**Commit**: "chore: Prepare for portfolio release"
+
+---
+
+## Decisiones Técnicas
+
+| Decisión | Elección | Rationale |
+|----------|----------|-----------|
+| Java | 21 LTS | Soporte hasta 2031, records, virtual threads |
+| Spring Boot | 3.4.x | WebFlux nativo, R2DBC, última estable |
+| Migraciones | Flyway JDBC | R2DBC no soporta DDL |
+| Mappers | MapStruct | Compile-time, sin reflection |
+| Costos | STANDARD default | WAC/FIFO como opcionales |
+| Sync cursor | bigserial | Más eficiente que timestamps |
+| PWA cache | NetworkFirst | Offline-first con fallback |
+| pnpm | 9.x | Más rápido que npm/yarn |
+
+---
 
 ## Errores Encontrados
 
-| Error | Intento | Resolución |
-|-------|---------|------------|
-| (ninguno aún) | - | - |
+| Error | Intento | Resolución | Fecha |
+|-------|---------|------------|-------|
+| Controllers llamaban repos directamente | 1 | Refactorizado a Use Cases | 2026-04-17 |
+| Domain models mutables | 1 | Convertidos a inmutables | 2026-04-17 |
 
-## Notas
+---
 
-- Skills verificados: hexagonal, project-structure, patterns - CONSISTENTES
-- UI en español, código en inglés
-- Runtime 100% offline obligatorio
-- Middleware auth obligatorio
+## Skills Aplicados
+
+| Skill | Uso |
+|-------|-----|
+| hexagonal | Arquitectura frontend |
+| clean-code | SRP, KISS, no over-engineering |
+| react-best-practices | Hooks, performance |
+| senior-backend | Patrones API (adaptado a Spring) |
+| planning | Este plan |
+
+---
+
+## Verificación por Fase
+
+Antes de marcar una fase como completada:
+1. `mvn compile` (backend sin errores)
+2. `pnpm build` (frontend sin errores)
+3. Test manual funcionalidad
+4. `git commit` con mensaje convencional
+5. Actualizar este plan
+
+---
+
+## Próxima Acción
+
+**Iniciar Fase 1.1**: Crear modelos de dominio StockBalance e InventoryMovement
