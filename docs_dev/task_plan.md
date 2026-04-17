@@ -30,7 +30,7 @@
 - [ ] Gate F: Dashboard + Export (CSV/XLSX/PDF)
 - [ ] Gate G: Offline sync completo + PWA hardening
 - [ ] Gate Final: Docker + README portafolio
-
+-[] recordar aca que se puede crear un usuario con permisos explicitos y  que seller y admin son los roles por defecto
 ---
 
 ## Fases de Implementación
