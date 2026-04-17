@@ -2,6 +2,7 @@
 
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
 import { Icons } from './Sidebar';
+import { SyncIndicator } from './SyncIndicator';
 
 interface HeaderProps {
   isSidebarCollapsed?: boolean;
@@ -31,6 +32,7 @@ export function Header({ isSidebarCollapsed = false }: HeaderProps) {
 
         {/* Acciones del usuario */}
         <div className="flex items-center gap-4">
+          <SyncIndicator />
           {/* Nombre del usuario */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
             {Icons.user}

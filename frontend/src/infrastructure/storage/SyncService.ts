@@ -1,0 +1,57 @@
+import { apiClient } from '@/presentation/shared/lib/api-client';
+import { getSyncCursor, setSyncCursor } from './db';
+import { getPendingOutbox, removeFromOutbox, incrementRetry } from './outbox';
+
+interface SyncEntry {
+  cursor: number;
+  entityType: string;
+  entityId: string;
+  action: string;
+  payload: unknown;
+}
+
+interface SyncPullResponse {
+  nextCursor: number;
+  hasMore: boolean;
+  entries: SyncEntry[];
+}
+
+export async function pushOutbox(): Promise<{ pushed: number; failed: number }> {
+  const pending = await getPendingOutbox();
+  let pushed = 0;
+  let failed = 0;
+  for (const entry of pending) {
+    if (entry.retries >= 5) { failed++; continue; }
+    try {
+      await apiClient.request({ method: entry.method, url: entry.url, data: entry.body });
+      await removeFromOutbox(entry.id!);
+      pushed++;
+    } catch {
+      await incrementRetry(entry.id!);
+      failed++;
+    }
+  }
+  return { pushed, failed };
+}
+
+export async function pullSync(): Promise<{ newEntries: number }> {
+  const cursor = await getSyncCursor();
+  let total = 0;
+  let currentCursor = cursor;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await apiClient.get<SyncPullResponse>(
+      `/api/v1/sync/pull?cursor=${currentCursor}`
+    );
+    const { nextCursor, hasMore: more, entries } = response.data;
+    total += entries.length;
+    currentCursor = nextCursor;
+    hasMore = more && entries.length > 0;
+  }
+
+  if (currentCursor !== cursor) {
+    await setSyncCursor(currentCursor);
+  }
+  return { newEntries: total };
+}
