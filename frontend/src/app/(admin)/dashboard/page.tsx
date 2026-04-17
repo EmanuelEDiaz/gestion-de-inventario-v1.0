@@ -1,13 +1,17 @@
 'use client';
 
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
+import { useDashboard } from '@/presentation/modules/dashboard/hooks/useDashboard';
+import { DashboardStatsGrid } from '@/presentation/modules/dashboard/components/DashboardStatsGrid';
+import { LowStockList } from '@/presentation/modules/dashboard/components/LowStockList';
+import { formatCurrency } from '@/presentation/shared/lib/utils';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const { stats, lowStockItems, loading, error } = useDashboard();
 
   return (
     <div className="space-y-6">
-      {/* Título y bienvenida */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Panel de Control</h1>
         <p className="text-gray-600">
@@ -15,95 +19,56 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Tarjetas de resumen */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <DashboardCard
-          title="Productos"
-          value="0"
-          description="Total de productos activos"
-          color="blue"
-        />
-        <DashboardCard
-          title="Almacenes"
-          value="1"
-          description="Almacenes registrados"
-          color="green"
-        />
-        <DashboardCard
-          title="Stock Bajo"
-          value="0"
-          description="Productos con stock bajo"
-          color="yellow"
-        />
-        <DashboardCard
-          title="Ventas Hoy"
-          value="$0"
-          description="Total de ventas del día"
-          color="purple"
-        />
-      </div>
+      {error && (
+        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">{error}</div>
+      )}
 
-      {/* Secciones adicionales */}
+      {loading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-24 animate-pulse rounded-lg bg-gray-200" />
+          ))}
+        </div>
+      ) : stats ? (
+        <DashboardStatsGrid stats={stats} />
+      ) : null}
+
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Actividad reciente */}
         <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Actividad Reciente
-          </h2>
-          <div className="text-center text-gray-500 py-8">
-            No hay actividad reciente
-          </div>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Resumen Semanal</h2>
+          {stats ? (
+            <dl className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <dt className="text-gray-500">Ventas esta semana</dt>
+                <dd className="font-medium text-gray-900">{formatCurrency(stats.salesThisWeek)}</dd>
+              </div>
+              <div className="flex justify-between text-sm">
+                <dt className="text-gray-500">Compras esta semana</dt>
+                <dd className="font-medium text-gray-900">{formatCurrency(stats.purchasesThisWeek)}</dd>
+              </div>
+              <div className="flex justify-between text-sm">
+                <dt className="text-gray-500">Sin stock</dt>
+                <dd className={`font-medium ${stats.outOfStockCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                  {stats.outOfStockCount} producto{stats.outOfStockCount !== 1 ? 's' : ''}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <div className="py-8 text-center text-gray-400 text-sm">Cargando...</div>
+          )}
         </div>
 
-        {/* Productos con bajo stock */}
         <div className="rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
             Productos con Bajo Stock
+            {lowStockItems.length > 0 && (
+              <span className="ml-2 rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">
+                {lowStockItems.length}
+              </span>
+            )}
           </h2>
-          <div className="text-center text-gray-500 py-8">
-            Todos los productos tienen stock suficiente
-          </div>
+          <LowStockList items={lowStockItems} />
         </div>
-      </div>
-    </div>
-  );
-}
-
-interface DashboardCardProps {
-  title: string;
-  value: string;
-  description: string;
-  color: 'blue' | 'green' | 'yellow' | 'purple' | 'red';
-}
-
-function DashboardCard({ title, value, description, color }: DashboardCardProps) {
-  const colorClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    yellow: 'bg-yellow-500',
-    purple: 'bg-purple-500',
-    red: 'bg-red-500',
-  };
-
-  return (
-    <div className="overflow-hidden rounded-lg bg-white shadow">
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className={`h-12 w-12 rounded-lg ${colorClasses[color]}`} />
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="truncate text-sm font-medium text-gray-500">
-                {title}
-              </dt>
-              <dd className="text-2xl font-semibold text-gray-900">{value}</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-      <div className="bg-gray-50 px-5 py-3">
-        <div className="text-sm text-gray-500">{description}</div>
       </div>
     </div>
   );
