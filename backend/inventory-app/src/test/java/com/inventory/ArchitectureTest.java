@@ -77,8 +77,8 @@ class ArchitectureTest {
     @DisplayName("Los repositories de persistencia deben estar en adapters")
     void repositories_should_be_in_persistence_package() {
         classes()
-                .that().haveSimpleNameEndingWith("RepositoryImpl")
-                .should().resideInAPackage("..adapters.persistence.repository..")
+                .that().haveSimpleNameEndingWith("RepositoryAdapter")
+                .should().resideInAPackage("..adapters.persistence..")
                 .because("Las implementaciones de repositorios van en adapters/persistence")
                 .check(importedClasses);
     }

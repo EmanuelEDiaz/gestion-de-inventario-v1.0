@@ -1,22 +1,13 @@
 -- =====================================================
--- V4: Catálogo base - Monedas, Almacenes, Categorías, Productos
+-- V4: Catálogo base - Almacenes, Categorías, Productos
 -- =====================================================
+-- Nota: currencies, app_settings, audit_log, idempotency_keys, sync_log
+-- ya fueron creados en V1__initial_schema.sql
 
--- Monedas (base para multi-moneda)
-CREATE TABLE currencies (
-    code        TEXT PRIMARY KEY,
-    name        TEXT NOT NULL,
-    symbol      TEXT NOT NULL,
-    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Datos iniciales de monedas
+-- Añadir MLC a currencies si no existe
 INSERT INTO currencies (code, name, symbol) VALUES
-    ('CUP', 'Peso Cubano', '$'),
-    ('USD', 'Dólar Estadounidense', '$'),
-    ('EUR', 'Euro', '€'),
-    ('MLC', 'Moneda Libremente Convertible', 'MLC');
+    ('MLC', 'Moneda Libremente Convertible', 'MLC')
+ON CONFLICT (code) DO NOTHING;
 
 -- Tasas de cambio
 CREATE TABLE exchange_rates (
@@ -34,21 +25,10 @@ CREATE TABLE exchange_rates (
 
 CREATE INDEX idx_exchange_rates_codes ON exchange_rates(base_code, quote_code, valid_from DESC);
 
--- Configuración global de la aplicación
-CREATE TABLE app_settings (
-    id                          TEXT PRIMARY KEY DEFAULT 'global',
-    company_name                TEXT,
-    default_cost_method         TEXT NOT NULL DEFAULT 'STANDARD' CHECK (default_cost_method IN ('STANDARD', 'WAC', 'FIFO')),
-    default_currency_code       TEXT NOT NULL DEFAULT 'CUP' REFERENCES currencies(code),
-    low_stock_threshold_default NUMERIC(19,4) DEFAULT 10,
-    updated_by                  UUID REFERENCES users(id),
-    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    version                     INT NOT NULL DEFAULT 0
-);
-
--- Configuración inicial
+-- Configuración inicial si no existe (V1 ya creó la tabla pero sin datos)
 INSERT INTO app_settings (id, company_name, default_cost_method, default_currency_code)
-VALUES ('global', 'Mi Negocio', 'STANDARD', 'CUP');
+VALUES ('global', 'Mi Negocio', 'STANDARD', 'CUP')
+ON CONFLICT (id) DO NOTHING;
 
 -- Almacenes
 CREATE TABLE warehouses (
@@ -160,47 +140,12 @@ CREATE INDEX idx_product_images_product ON product_images(product_id);
 -- Garantizar una sola imagen primaria por producto
 CREATE UNIQUE INDEX idx_product_images_primary ON product_images(product_id) WHERE is_primary = TRUE;
 
--- Auditoría general
-CREATE TABLE audit_log (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    actor_id    UUID REFERENCES users(id),
-    actor_name  TEXT,
-    entity_type TEXT NOT NULL,
-    entity_id   UUID NOT NULL,
-    action      TEXT NOT NULL CHECK (action IN ('CREATE', 'UPDATE', 'DELETE', 'ARCHIVE')),
-    before_data JSONB,
-    after_data  JSONB,
-    ip_address  TEXT,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- Añadir columnas faltantes a audit_log si es necesario (V1 ya la creó)
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS actor_name TEXT;
+ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS ip_address TEXT;
 
-CREATE INDEX idx_audit_log_entity ON audit_log(entity_type, entity_id);
-CREATE INDEX idx_audit_log_actor ON audit_log(actor_id);
-CREATE INDEX idx_audit_log_created ON audit_log(created_at);
+-- Añadir columna status a idempotency_keys si no existe
+ALTER TABLE idempotency_keys ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PENDING';
 
--- Keys de idempotencia para operaciones
-CREATE TABLE idempotency_keys (
-    key             TEXT PRIMARY KEY,
-    scope           TEXT NOT NULL,
-    request_hash    TEXT NOT NULL,
-    response_json   JSONB,
-    status          TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED')),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at      TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '72 hours')
-);
-
-CREATE INDEX idx_idempotency_expires ON idempotency_keys(expires_at);
-
--- Sync log para offline
-CREATE TABLE sync_log (
-    id              BIGSERIAL PRIMARY KEY,
-    entity_type     TEXT NOT NULL,
-    entity_id       UUID NOT NULL,
-    action          TEXT NOT NULL CHECK (action IN ('CREATE', 'UPDATE', 'DELETE')),
-    payload         JSONB NOT NULL,
-    warehouse_id    UUID REFERENCES warehouses(id),
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_sync_log_entity ON sync_log(entity_type, entity_id);
-CREATE INDEX idx_sync_log_warehouse ON sync_log(warehouse_id) WHERE warehouse_id IS NOT NULL;
+-- Añadir columna payload a sync_log si no existe (V1 puede tenerla nullable)
+-- No necesario si V1 ya la define

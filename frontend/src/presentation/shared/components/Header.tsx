@@ -2,19 +2,14 @@
 
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
 import { Icons } from './Sidebar';
-import { SyncIndicator } from './SyncIndicator';
 
 interface HeaderProps {
   isSidebarCollapsed?: boolean;
+  onLogoutRequest: () => void;
 }
 
-export function Header({ isSidebarCollapsed = false }: HeaderProps) {
-  const { user, logout } = useAuthStore();
-
-  const handleLogout = async () => {
-    await logout();
-    window.location.href = '/login';
-  };
+export function Header({ isSidebarCollapsed = false, onLogoutRequest }: HeaderProps) {
+  const { user } = useAuthStore();
 
   return (
     <header
@@ -32,7 +27,6 @@ export function Header({ isSidebarCollapsed = false }: HeaderProps) {
 
         {/* Acciones del usuario */}
         <div className="flex items-center gap-4">
-          <SyncIndicator />
           {/* Nombre del usuario */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
             {Icons.user}
@@ -46,7 +40,7 @@ export function Header({ isSidebarCollapsed = false }: HeaderProps) {
 
           {/* Botón de cerrar sesión */}
           <button
-            onClick={handleLogout}
+            onClick={onLogoutRequest}
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-red-600"
             title="Cerrar sesión"
           >

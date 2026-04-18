@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { isPersistenceReady } from '@/infrastructure/storage/db';
 import { pushOutbox, pullSync } from '@/infrastructure/storage/SyncService';
 
-type SyncStatus = 'online' | 'offline' | 'syncing' | 'error';
+export type SyncStatus = 'online' | 'offline' | 'syncing' | 'error';
 
 export function useSyncStatus() {
   const [status, setStatus] = useState<SyncStatus>('online');
@@ -12,15 +13,15 @@ export function useSyncStatus() {
   const syncInProgress = useRef(false);
 
   const updateOnlineStatus = useCallback(() => {
-    if (!navigator.onLine) {
-      setStatus('offline');
-    } else if (status === 'offline') {
-      setStatus('online');
-    }
-  }, [status]);
+    setStatus((prev) => {
+      if (!navigator.onLine) return 'offline';
+      if (prev === 'offline') return 'online';
+      return prev;
+    });
+  }, []);
 
   const sync = useCallback(async () => {
-    if (syncInProgress.current || !navigator.onLine) return;
+    if (syncInProgress.current || !navigator.onLine || !isPersistenceReady()) return;
     syncInProgress.current = true;
     setStatus('syncing');
     try {

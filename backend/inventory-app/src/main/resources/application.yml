@@ -9,22 +9,22 @@ spring:
   application:
     name: inventory-app
 
-  # R2DBC (runtime reactive)
+  # R2DBC (runtime reactive) - Local PostgreSQL
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:inventory}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: r2dbc:postgresql://localhost:5432/inventory
+    username: postgres
+    password: postgres
     pool:
       initial-size: 5
       max-size: 20
       max-idle-time: 30m
 
-  # Flyway (JDBC para migraciones)
+  # Flyway (JDBC para migraciones) - Local PostgreSQL
   flyway:
     enabled: true
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:inventory}
-    user: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://localhost:5432/inventory
+    user: postgres
+    password: postgres
     locations: classpath:db/migration
     baseline-on-migrate: true
 

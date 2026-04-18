@@ -36,7 +36,7 @@ export function ProductsListView() {
 
       {isLoading && <LoadingOverlay />}
 
-      {!isLoading && products.length === 0 && (
+      {!isLoading && (!products || products.length === 0) && (
         <EmptyState
           message="No hay productos registrados"
           action={
@@ -47,7 +47,7 @@ export function ProductsListView() {
         />
       )}
 
-      {!isLoading && products.length > 0 && <ProductTable products={products} />}
+      {!isLoading && products && products.length > 0 && <ProductTable products={products} />}
     </div>
   );
 }

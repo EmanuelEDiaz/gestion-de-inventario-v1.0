@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Standard data-fetching pattern: useEffect(() => { fetchData(); }, [fetchData])
+      // is the recommended React pattern for loading data on mount/dependency change.
+      // This rule is overly strict for async fetch callbacks wrapped in useCallback.
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

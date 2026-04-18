@@ -8,12 +8,14 @@ import { apiClient } from '@/infrastructure/api/client';
  */
 export class AuthRepository implements IAuthRepository {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+    const response = await apiClient.post<AuthResponse>('/api/v1/auth/login', credentials);
     
-    // Guardar tokens en sessionStorage para requests client-side
+    // localStorage: persistencia en cliente
+    // Cookie: para que el middleware del servidor pueda leerlo (SameSite=Lax para Chrome)
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('access_token', response.data.accessToken);
-      sessionStorage.setItem('refresh_token', response.data.refreshToken);
+      localStorage.setItem('access_token', response.data.accessToken);
+      localStorage.setItem('refresh_token', response.data.refreshToken);
+      document.cookie = `access_token=${response.data.accessToken}; path=/; SameSite=Lax`;
     }
     
     return response.data;
@@ -22,34 +24,36 @@ export class AuthRepository implements IAuthRepository {
   async logout(): Promise<void> {
     try {
       const refreshToken = typeof window !== 'undefined' 
-        ? sessionStorage.getItem('refresh_token') 
+        ? localStorage.getItem('refresh_token')
         : null;
       
       if (refreshToken) {
-        await apiClient.post('/auth/logout', { refreshToken });
+        await apiClient.post('/api/v1/auth/logout', { refreshToken });
       }
     } finally {
-      // Limpiar tokens locales
+      // Limpiar tokens locales y cookie
       if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('access_token');
-        sessionStorage.removeItem('refresh_token');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
     }
   }
 
   async refreshToken(request: RefreshTokenRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/refresh', request);
+    const response = await apiClient.post<AuthResponse>('/api/v1/auth/refresh', request);
     
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('access_token', response.data.accessToken);
-      sessionStorage.setItem('refresh_token', response.data.refreshToken);
+      localStorage.setItem('access_token', response.data.accessToken);
+      localStorage.setItem('refresh_token', response.data.refreshToken);
+      document.cookie = `access_token=${response.data.accessToken}; path=/; SameSite=Lax`;
     }
     
     return response.data;
   }
 
   async getCurrentUser(): Promise<AuthUser> {
-    const response = await apiClient.get<AuthUser>('/auth/me');
+    const response = await apiClient.get<AuthUser>('/api/v1/auth/me');
     return response.data;
   }
 }

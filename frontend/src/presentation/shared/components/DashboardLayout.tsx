@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar, Icons } from './Sidebar';
 import { Header } from './Header';
+import { NetworkStatusWidget } from './NetworkStatusWidget';
+import { LogoutConfirmDialog } from './LogoutConfirmDialog';
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
+import { getOutboxCount } from '@/infrastructure/storage/db';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -26,37 +29,49 @@ const navigationItems = [
 ];
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user, isAuthenticated } = useAuthStore();
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const saved = localStorage.getItem('sidebar-collapsed');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [pendingForLogout, setPendingForLogout] = useState(0);
+  const { isAuthenticated, hasHydrated, logout } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    // Recuperar preferencia de sidebar
-    const savedCollapsed = localStorage.getItem('sidebar-collapsed');
-    if (savedCollapsed !== null) {
-      setIsCollapsed(JSON.parse(savedCollapsed));
-    }
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    // Redirigir si no está autenticado
-    if (!isLoading && !isAuthenticated) {
+    if (!hasHydrated) return;
+    if (!isAuthenticated) {
       router.push('/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [hasHydrated, isAuthenticated, router]);
+
+  const handleLogoutRequest = async () => {
+    // Check for unsynchronized changes before showing dialog
+    try {
+      const count = await getOutboxCount();
+      setPendingForLogout(count);
+    } catch {
+      setPendingForLogout(0);
+    }
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutDialog(false);
+    await logout();
+    window.location.href = '/login';
+  };
 
   const handleToggleSidebar = () => {
-    setIsCollapsed(prev => {
+    setIsCollapsed((prev: boolean) => {
       const newValue = !prev;
       localStorage.setItem('sidebar-collapsed', JSON.stringify(newValue));
       return newValue;
     });
   };
 
-  // Mostrar loading mientras verifica autenticación
-  if (isLoading) {
+  if (!hasHydrated) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
@@ -64,7 +79,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   }
 
-  // No renderizar si no está autenticado
   if (!isAuthenticated) {
     return null;
   }
@@ -76,7 +90,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         isCollapsed={isCollapsed}
         onToggle={handleToggleSidebar}
       />
-      <Header isSidebarCollapsed={isCollapsed} />
+      <Header isSidebarCollapsed={isCollapsed} onLogoutRequest={handleLogoutRequest} />
       
       <main
         className={`pt-16 transition-all duration-300 ${
@@ -87,6 +101,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </div>
       </main>
+
+      <NetworkStatusWidget />
+      <LogoutConfirmDialog
+        isOpen={showLogoutDialog}
+        pendingCount={pendingForLogout}
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setShowLogoutDialog(false)}
+      />
     </div>
   );
 }

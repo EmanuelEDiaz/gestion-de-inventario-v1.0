@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { AuthUser, AuthResponse, LoginCredentials } from '@/core/entities/user';
 import { authRepository } from '@/infrastructure/repositories/AuthRepository';
+import { initPersistence, destroyPersistence } from '@/infrastructure/storage/db';
 
 interface AuthStore {
   // State
@@ -11,6 +12,7 @@ interface AuthStore {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  hasHydrated: boolean; // Track hydration status
   
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -19,6 +21,7 @@ interface AuthStore {
   setError: (error: string | null) => void;
   clearAuth: () => void;
   hydrate: () => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 const initialState = {
@@ -28,6 +31,7 @@ const initialState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  hasHydrated: false,
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -47,10 +51,17 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: null,
           });
+          // Initialize offline persistence after successful login
+          try {
+            await initPersistence();
+          } catch (err) {
+            console.error('Failed to init persistence:', err);
+          }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Error al iniciar sesión';
           set({ 
             ...initialState,
+            hasHydrated: true,
             error: message,
           });
           throw error;
@@ -63,14 +74,14 @@ export const useAuthStore = create<AuthStore>()(
           await authRepository.logout();
         } catch (error) {
           console.error('Logout error:', error);
-        } finally {
-          set(initialState);
-          // Also clear sessionStorage
-          if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('access_token');
-            sessionStorage.removeItem('refresh_token');
-          }
         }
+        // Destroy all offline persistence (IndexedDB, caches, localStorage)
+        try {
+          await destroyPersistence();
+        } catch (err) {
+          console.error('Failed to destroy persistence:', err);
+        }
+        set({ ...initialState, hasHydrated: true });
       },
       
       refreshTokens: async () => {
@@ -97,26 +108,14 @@ export const useAuthStore = create<AuthStore>()(
       setError: (error: string | null) => set({ error }),
       
       clearAuth: () => {
-        set(initialState);
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('access_token');
-          sessionStorage.removeItem('refresh_token');
-        }
+        set({ ...initialState, hasHydrated: true });
       },
       
       hydrate: () => {
-        // Sync with sessionStorage on client
-        if (typeof window !== 'undefined') {
-          const accessToken = sessionStorage.getItem('access_token');
-          const refreshToken = sessionStorage.getItem('refresh_token');
-          if (accessToken && refreshToken) {
-            const state = get();
-            if (!state.accessToken) {
-              set({ accessToken, refreshToken });
-            }
-          }
-        }
+        // No longer needed - zustand persist handles localStorage
       },
+      
+      setHasHydrated: (state: boolean) => set({ hasHydrated: state }),
     }),
     {
       name: 'auth-storage',
@@ -126,6 +125,16 @@ export const useAuthStore = create<AuthStore>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Called when hydration is complete
+        state?.setHasHydrated(true);
+        // Re-init persistence if already authenticated from previous session
+        if (state?.isAuthenticated) {
+          initPersistence().catch((err) =>
+            console.error('Failed to re-init persistence on rehydrate:', err),
+          );
+        }
+      },
     }
   )
 );
@@ -135,3 +144,4 @@ export const useUser = () => useAuthStore((state) => state.user);
 export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
 export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
 export const useAuthError = () => useAuthStore((state) => state.error);
+export const useHasHydrated = () => useAuthStore((state) => state.hasHydrated);

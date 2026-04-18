@@ -34,18 +34,26 @@ export async function pushOutbox(): Promise<{ pushed: number; failed: number }> 
   return { pushed, failed };
 }
 
+const MAX_PULL_PAGES = 50;
+
 export async function pullSync(): Promise<{ newEntries: number }> {
   const cursor = await getSyncCursor();
   let total = 0;
   let currentCursor = cursor;
   let hasMore = true;
+  let page = 0;
 
-  while (hasMore) {
+  while (hasMore && page < MAX_PULL_PAGES) {
+    page++;
     const response = await apiClient.get<SyncPullResponse>(
       `/api/v1/sync/pull?cursor=${currentCursor}`
     );
     const { nextCursor, hasMore: more, entries } = response.data;
     total += entries.length;
+
+    // Safety: if cursor doesn't advance, the server is stuck — stop immediately
+    if (nextCursor <= currentCursor) break;
+
     currentCursor = nextCursor;
     hasMore = more && entries.length > 0;
   }

@@ -1,6 +1,10 @@
-import { getDB, type OutboxEntry } from './db';
+import { getDB, canAddToOutbox, type OutboxEntry } from './db';
 
 export async function addToOutbox(entry: Omit<OutboxEntry, 'id' | 'createdAt' | 'retries'>): Promise<void> {
+  const allowed = await canAddToOutbox();
+  if (!allowed) {
+    throw new Error('Outbox limit reached. Sync pending changes before adding more.');
+  }
   const db = await getDB();
   await db.add('outbox', { ...entry, createdAt: Date.now(), retries: 0 });
 }

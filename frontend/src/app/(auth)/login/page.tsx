@@ -1,18 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input } from '@/presentation/shared/components/ui';
+import { Button, Input, toast } from '@/presentation/shared/components/ui';
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
-import { getErrorMessage } from '@/infrastructure/api/client';
+import { useNetworkHealth, checkBackendHealth } from '@/presentation/shared/hooks/useNetworkHealth';
+import { WifiOff } from 'lucide-react';
+import axios from 'axios';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, error, setError } = useAuthStore();
+  const { login, isLoading, isAuthenticated, hasHydrated } = useAuthStore();
+  const { backendStatus } = useNetworkHealth();
   
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({});
+  const [hasNavigated, setHasNavigated] = useState(false);
+  
+  const isBackendOffline = backendStatus === 'disconnected';
+  
+  // Redirigir si ya está autenticado AL CARGAR (no después de login)
+  // Solo para usuarios que llegan a /login mientras ya están logueados
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated && !hasNavigated) {
+      // Solo redirigir si no estamos en proceso de login (form vacío)
+      if (!username && !password) {
+        setHasNavigated(true);
+        router.replace('/dashboard');
+      }
+    }
+  }, [hasHydrated, isAuthenticated, hasNavigated, username, password, router]);
   
   const validateForm = (): boolean => {
     const errors: { username?: string; password?: string } = {};
@@ -30,16 +48,61 @@ export default function LoginPage() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
+
+    // Verify backend connectivity before attempting login
+    const isReachable = await checkBackendHealth();
+    if (!isReachable) {
+      toast.error('Sin conexión al servidor', {
+        description: 'Debes estar conectado al servidor para iniciar sesión.',
+        duration: 5000,
+      });
+      return;
+    }
     
     try {
       await login({ username: username.trim(), password });
-      router.push('/dashboard');
+      toast.success('¡Bienvenido!', { description: 'Iniciando sesión...', duration: 2000 });
+      setHasNavigated(true);
+      router.replace('/dashboard');
     } catch (err) {
-      const message = getErrorMessage(err);
-      setError(message);
+      // Determinar el tipo de error
+      if (axios.isAxiosError(err)) {
+        if (!err.response) {
+          // Error de conexión (no hay respuesta del servidor)
+          toast.error('Error de conexión', { 
+            description: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+            duration: 6000 
+          });
+        } else if (err.response.status === 401) {
+          // Credenciales incorrectas
+          toast.error('Credenciales inválidas', { 
+            description: 'Usuario o contraseña incorrectos.',
+            duration: 5000 
+          });
+        } else if (err.response.status === 403) {
+          // Usuario deshabilitado
+          toast.error('Acceso denegado', { 
+            description: 'Tu cuenta ha sido deshabilitada.',
+            duration: 5000 
+          });
+        } else {
+          // Otro error del servidor
+          toast.error('Error del servidor', { 
+            description: `Error ${err.response.status}: Intenta de nuevo más tarde.`,
+            duration: 5000 
+          });
+        }
+      } else {
+        // Error desconocido
+        toast.error('Error inesperado', { 
+          description: 'Ocurrió un error. Por favor intenta de nuevo.',
+          duration: 5000 
+        });
+      }
     }
   };
   
@@ -66,13 +129,14 @@ export default function LoginPage() {
         <p className="text-gray-600 mt-1">Inicia sesión para continuar</p>
       </div>
       
-      {/* Error global */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
+      {/* Offline Banner */}
+      {isBackendOffline && (
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <WifiOff className="h-4 w-4 shrink-0" />
+          <span>Sin conexión al servidor. Necesitas estar conectado para iniciar sesión.</span>
         </div>
       )}
-      
+
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <Input
@@ -113,6 +177,7 @@ export default function LoginPage() {
           className="w-full"
           size="lg"
           isLoading={isLoading}
+          disabled={isLoading || isBackendOffline}
         >
           Iniciar Sesión
         </Button>

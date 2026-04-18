@@ -5,7 +5,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
  * Maneja tokens JWT automáticamente.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // Crear instancia de Axios
 export const apiClient: AxiosInstance = axios.create({
@@ -21,10 +21,9 @@ export const apiClient: AxiosInstance = axios.create({
 // Interceptor de request: agregar token de acceso
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // El token viene de cookies httpOnly, manejado por el servidor
-    // Para requests client-side, puede venir de memoria
+    // Token desde localStorage (persistente en cliente)
     const accessToken = typeof window !== 'undefined' 
-      ? sessionStorage.getItem('access_token') 
+      ? localStorage.getItem('access_token') 
       : null;
     
     if (accessToken && config.headers) {
@@ -52,7 +51,7 @@ apiClient.interceptors.response.use(
       try {
         // Obtener refresh token almacenado
         const refreshToken = typeof window !== 'undefined' 
-          ? sessionStorage.getItem('refresh_token') 
+          ? localStorage.getItem('refresh_token') 
           : null;
         
         if (!refreshToken) {
@@ -61,7 +60,7 @@ apiClient.interceptors.response.use(
         
         // Intentar refresh del token
         const refreshResponse = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
+          `${API_BASE_URL}/api/v1/auth/refresh`,
           { refreshToken },
           { headers: { 'Content-Type': 'application/json' } }
         );
@@ -69,8 +68,9 @@ apiClient.interceptors.response.use(
         // Guardar nuevos tokens
         const { accessToken, refreshToken: newRefreshToken } = refreshResponse.data;
         if (typeof window !== 'undefined') {
-          sessionStorage.setItem('access_token', accessToken);
-          sessionStorage.setItem('refresh_token', newRefreshToken);
+          localStorage.setItem('access_token', accessToken);
+          localStorage.setItem('refresh_token', newRefreshToken);
+          document.cookie = `access_token=${accessToken}; path=/; SameSite=Lax`;
         }
         
         // Reintentar request original
@@ -79,10 +79,11 @@ apiClient.interceptors.response.use(
         }
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh falló, redirigir a login
+        // Refresh falló, limpiar tokens y redirigir a login
         if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('access_token');
-          sessionStorage.removeItem('refresh_token');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
