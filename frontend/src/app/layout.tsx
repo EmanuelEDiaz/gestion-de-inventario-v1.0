@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { ServiceWorkerRegistration } from "@/presentation/shared/components/ServiceWorkerRegistration";
 import { Toaster } from "@/presentation/shared/components/ui";
+import { Providers } from "@/presentation/shared/components/Providers";
 
 export const metadata: Metadata = {
   title: "Gestión de Inventario",
@@ -27,9 +28,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.svg" />
       </head>
       <body className="min-h-full flex flex-col">
-        <ServiceWorkerRegistration />
-        <Toaster />
-        {children}
+        <Providers>
+          <ServiceWorkerRegistration />
+          <Toaster />
+          {children}
+        </Providers>
       </body>
     </html>
   );

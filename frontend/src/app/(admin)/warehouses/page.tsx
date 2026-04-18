@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Warehouses list page - Simple wrapper for WarehousesListView
  */

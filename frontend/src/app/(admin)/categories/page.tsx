@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Categories page - Simple wrapper for CategoriesView
  */
