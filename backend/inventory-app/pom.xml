@@ -102,6 +102,18 @@
             <version>${lombok-mapstruct-binding.version}</version>
         </dependency>
 
+        <!-- OpenAPI / Swagger UI (WebFlux) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+        <!-- Webjars locator: resuelve versiones automáticamente (necesario para Swagger UI) -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator-lite</artifactId>
+        </dependency>
+
         <!-- DevTools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

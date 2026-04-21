@@ -36,4 +36,12 @@ public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEn
     Mono<Boolean> existsBySku(String sku);
 
     Mono<Boolean> existsByBarcode(String barcode);
+
+    @Query("SELECT * FROM products WHERE " +
+           "(:search IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(sku) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "AND (:categoryId IS NULL OR category_id = :categoryId) " +
+           "AND (:status IS NULL OR status = :status) " +
+           "ORDER BY name LIMIT :size OFFSET :offset")
+    Flux<ProductEntity> findWithFilter(String search, UUID categoryId, String status, int offset, int size);
 }

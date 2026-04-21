@@ -4,6 +4,7 @@ import com.inventory.adapters.persistence.entity.ProductEntity;
 import com.inventory.adapters.persistence.mapper.CatalogPersistenceMapper;
 import com.inventory.adapters.persistence.repository.ProductR2dbcRepository;
 import com.inventory.domain.model.Product;
+import com.inventory.domain.ports.in.ProductFilter;
 import com.inventory.domain.ports.out.ProductRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -75,6 +76,27 @@ public class ProductRepositoryAdapter implements ProductRepository {
     public Flux<Product> findAllPaginated(int page, int size) {
         int offset = page * size;
         return r2dbcRepository.findAllPaginated(offset, size)
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Product> findAllFiltered(ProductFilter filter, boolean activeOnly) {
+        if (filter.isEmpty()) {
+            return activeOnly ? findAllActive() : findAll();
+        }
+        return r2dbcRepository.findWithFilter(
+                filter.getSearch(),
+                filter.getCategoryId(),
+                activeOnly ? "ACTIVE" : null,
+                filter.getPage() * filter.getSize(),
+                filter.getSize()
+            )
+            .map(mapper::toDomain);
+    }
+
+    @Override
+    public Flux<Product> findAllByWarehouse(UUID warehouseId, String search, UUID categoryId, String status, boolean activeOnly) {
+        return r2dbcRepository.findWithFilter(search, categoryId, status, 0, 20)
             .map(mapper::toDomain);
     }
 
