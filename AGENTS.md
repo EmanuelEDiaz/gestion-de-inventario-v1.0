@@ -1,50 +1,55 @@
-# AGENTS.md — Agentic Coding Guidelines
+# AGENTS.md — Guía de Código para Agentes
 
-> Read this file before writing code in this repository.
+> Leer este archivo antes de escribir código en este repositorio.
 
-## 1. Build / Lint / Test Commands
+## 1. Comandos de Build / Lint / Test
 
-### Frontend (in `frontend/` - use pnpm)
+### Frontend (en `frontend/` - usar pnpm)
 
 ```bash
-# Development
-cd frontend && pnpm dev          # Dev server at localhost:3000
-cd frontend && pnpm build        # Production build
-cd frontend && pnpm start        # Production server
+# Desarrollo
+cd frontend && pnpm dev          # Dev server en localhost:3000
+cd frontend && pnpm build        # Build de producción
+cd frontend && pnpm start        # Servidor de producción
 
 # Linting
-cd frontend && pnpm lint        # Run ESLint
-cd frontend && pnpm lint --fix   # Auto-fix lint errors
+cd frontend && pnpm lint         # Ejecutar ESLint
+cd frontend && pnpm lint --fix   # Auto-corregir errores
 
 # Testing
-cd frontend && pnpm test        # Run Vitest in watch mode
-cd frontend && pnpm test:run    # Run Vitest once
-cd frontend && pnpm test:coverage # Run with coverage
+cd frontend && pnpm test         # Vitest en modo watch
+cd frontend && pnpm test:run     # Vitest ejecutar una vez
+cd frontend && pnpm test:coverage # Con coverage
 
-# E2E Testing (requires dev server running)
-cd frontend && npx playwright test  # Run Playwright tests
+# Ejecutar un solo test
+cd frontend && pnpm vitest run src/core/entities/product.test.ts
+cd frontend && pnpm vitest run --related src/presentation/modules/products/
+
+# E2E Testing (requiere servidor corriendo)
+cd frontend && npx playwright test
 ```
 
-## 2. Code Style Guidelines
+## 2. Estándares de Código
 
 ### TypeScript
 - **Target**: ES2017 | **Strict**: true | **Module Resolution**: bundler
 - **Path Alias**: `@/*` → `./src/*`
+- Nunca usar `any` sin justificación
 
-### Naming Conventions
+### Convenciones de Nombres
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| TS files | kebab-case | `product-repository.ts` |
-| TSX files | PascalCase | `ProductTable.tsx` |
+| Elemento | Convención | Ejemplo |
+|----------|-------------|---------|
+| Archivos TS | kebab-case | `product-repository.ts` |
+| Archivos TSX | PascalCase | `ProductTable.tsx` |
 | Interfaces/Types | PascalCase | `Product`, `IProductRepository` |
-| Functions/Hooks | camelCase | `getProducts`, `useProducts` |
-| Constants | UPPER_SNAKE_CASE | `API_BASE_URL` |
+| Funciones/Hooks | camelCase | `getProducts`, `useProducts` |
+| Constantes | UPPER_SNAKE_CASE | `API_BASE_URL` |
 
-### Imports Order
+### Orden de Imports
 
 ```typescript
-// 1. External
+// 1. Externos
 import { useState } from 'react';
 import axios from 'axios';
 
@@ -55,58 +60,58 @@ import { GetProductsUseCase } from '@/core/use-cases/product';
 // 3. Interfaces
 import type { IProductRepository } from '@/core/interfaces/IProductRepository';
 
-// 4. Infrastructure
+// 4. Infraestructura
 import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
 
-// 5. Presentation (relative)
+// 5. Presentación (relativo)
 import { ProductTable } from '@/presentation/modules/products/components/ProductTable';
 import { cn } from '@/presentation/shared/lib/utils';
 ```
 
-### File Structure (Clean Architecture)
+### Estructura de Archivos (Clean Architecture)
 
 ```
 src/
-  core/           # Domain - pure TS, no deps
-    entities/     # Models
-    interfaces/   # Ports (contracts)
-    use-cases/    # Business logic
-  infrastructure/ # Adapters
-    api/          # HTTP clients
-    repositories/ # Implementations
-    storage/      # IndexedDB
-  presentation/   # UI
+  core/              # Domain - TS puro, sin deps
+    entities/        # Modelos
+    interfaces/      # Puertos (contratos)
+    use-cases/       # Lógica de negocio
+  infrastructure/   # Adaptadores
+    api/             # Clientes HTTP
+    repositories/    # Implementaciones
+    storage/         # IndexedDB
+  presentation/      # UI
     shared/
-      components/ui/  # shadcn/ui base
-      hooks/         # Global hooks
+      components/ui/ # Componentes base shadcn/ui
+      hooks/         # Hooks globales
       lib/           # Utils (cn, formatCurrency)
-    modules/       # Feature modules
+    modules/         # Módulos por feature
       products/
         components/
-        hooks/     # Controller hooks
-        views/     # Page compositions
+        hooks/       # Controller hooks
+        views/       # Composiciones de vista
 ```
 
-### Component Patterns
+### Patrones de Componentes
 
 ```typescript
-// Good: Explicit props
+// Correcto: props explícitas con interface
 interface ProductRowProps {
   product: Product;
   onEdit: (id: string) => void;
 }
-export function ProductRow({ product, onEdit }: ProductRowProps) { ... }
+export function ProductRow({ product, onEdit }: ProductRowProps) { }
 
-// Bad: any type
-export function ProductRow(props: any) { ... }
+// Incorrecto: tipo any
+export function ProductRow(props: any) { }
 ```
 
-### Error Handling
+### Manejo de Errores
 
 ```typescript
 class ProductNotFoundError extends Error {
   constructor(public readonly productId: string) {
-    super(`Product ${productId} not found`);
+    super(`Producto ${productId} no encontrado`);
     this.name = 'ProductNotFoundError';
   }
 }
@@ -121,14 +126,14 @@ try {
 }
 ```
 
-### State Management
-- **Server State**: TanStack Query (`@tanstack/react-query`)
-- **Client State**: Zustand (`zustand`)
-- **No Redux**
+### Gestión de Estado
+- **Estado Servidor**: TanStack Query (`@tanstack/react-query`)
+- **Estado Cliente**: Zustand (`zustand`)
+- **NO usar Redux**
 
-### CSS & Styling
-- Tailwind CSS v4 with utility classes
-- Use `cn()` utility for conditional classes:
+### CSS & Estilos
+- Tailwind CSS v4 con utility classes
+- Usar `cn()` para clases condicionales:
 
 ```typescript
 import { cn } from '@/presentation/shared/lib/utils';
@@ -136,40 +141,41 @@ import { cn } from '@/presentation/shared/lib/utils';
 <div className={cn('rounded p-4', isActive && 'bg-blue-100')} />
 ```
 
-### Offline-First Rules
-- IndexedDB for offline persistence
-- Outbox pattern for sync queue
-- Idempotent operations (safe to retry)
-- Optimistic updates (update UI first, then sync)
+## 3. Reglas Offline-First
+- IndexedDB para persistencia offline
+- Patrón outbox para cola de sync
+- Operaciones idempotentes (seguro reintentar)
+- Actualizaciones optimistas (UI primero, luego sync)
 
-### Security
-- Never commit secrets/API keys
-- Use environment variables
-- JWT: 15min access / 7 days refresh
+## 4. Seguridad
+- Nunca commitear secrets/API keys
+- Usar variables de entorno
+- JWT: 15min access / 7 días refresh
 
-## 3. Pre-Flight Checklist
+## 5. Lista de Verificación Pre-Código
 
-Before writing code:
-1. Read `CLAUDE.md` first
-2. Check `.claude/skills/` for relevant patterns
-3. Review domain entities in `src/core/entities/`
-4. Review interfaces in `src/core/interfaces/`
+1. Leer `CLAUDE.md` primero (documentación de arquitectura)
+2. Revisar `.claude/skills/` para patrones relevantes
+3. Revisar entidades en `src/core/entities/`
+4. Revisar interfaces en `src/core/interfaces/`
 
-## 4. Prohibited Patterns
+## 6. Patrones Prohibidos
 
-- ❌ External fonts/images (use local in `/public`)
-- ❌ Remote CDNs or scripts
-- ❌ `any` type without justification
-- ❌ Console.log in production
-- ❌ Untyped error handling (`catch (e) {}`)
-- ❌ Direct React state for server data (use TanStack Query)
+- ❌ Fuentes/imágenes externas (usar locales en `/public`)
+- ❌ CDNs o scripts remotos
+- ❌ Tipo `any` sin justificación
+- ❌ Console.log en producción
+- ❌ Error handling sin tipar (`catch (e) {}`)
+- ❌ Estado React directo para datos servidor (usar TanStack Query)
 
-## 5. Next.js 16
+## 7. Next.js 16
 
-This project uses Next.js 16 with breaking changes. Verify APIs in `node_modules/next/dist/docs/` before use.
+Este proyecto usa Next.js 16 con breaking changes. Verificar APIs en `node_modules/next/dist/docs/` antes de usar.
 
-## 6. Documentation
+## 8. Guías de Testing
 
-- No unnecessary comments - code should be self-documenting
-- Use JSDoc only for public APIs and complex interfaces
-- Document **why**, not **what**
+- Archivos de test usan extensión `.test.ts` o `.spec.ts`
+- Ubicar tests junto al código (mismo directorio)
+- Usar `@testing-library/react` para tests de componentes
+- Mockear dependencias externas (API calls, IndexedDB)
+- Seguir patrón AAA: Arrange, Act, Assert

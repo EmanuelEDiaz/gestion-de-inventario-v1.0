@@ -61,6 +61,18 @@ logging:
     org.springframework.r2dbc: INFO
     io.r2dbc.postgresql: INFO
 
+# SpringDoc / Swagger UI
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: false
+
 ---
 # Profile: dev
 spring:

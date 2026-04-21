@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -136,6 +137,32 @@ public class GlobalExceptionHandler {
                 .body(problem));
     }
     
+    @ExceptionHandler(ResponseStatusException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleResponseStatus(
+            ResponseStatusException ex, ServerWebExchange exchange) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        // Para recursos estáticos (404) no loguear como error
+        if (status == HttpStatus.NOT_FOUND) {
+            log.debug("Resource not found: {}", exchange.getRequest().getPath().value());
+        } else {
+            log.warn("ResponseStatusException {}: {}", status, ex.getReason());
+        }
+
+        ProblemDetail problem = ProblemDetail.of(
+                "urn:inventory:error:" + status.name().toLowerCase().replace("_", "-"),
+                status.value(),
+                status.getReasonPhrase(),
+                ex.getReason() != null ? ex.getReason() : status.getReasonPhrase(),
+                exchange.getRequest().getPath().value()
+        );
+
+        return Mono.just(ResponseEntity.status(status)
+                .header("Content-Type", "application/problem+json")
+                .body(problem));
+    }
+
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ProblemDetail>> handleGeneric(
             Exception ex, ServerWebExchange exchange) {

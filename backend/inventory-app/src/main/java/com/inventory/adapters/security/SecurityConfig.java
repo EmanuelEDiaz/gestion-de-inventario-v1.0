@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .pathMatchers("/actuator/health").permitAll()
                         
                         // OpenAPI/Swagger (solo en desarrollo)
-                        .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
                         
                         // Todos los demás endpoints requieren autenticación
                         .anyExchange().authenticated()

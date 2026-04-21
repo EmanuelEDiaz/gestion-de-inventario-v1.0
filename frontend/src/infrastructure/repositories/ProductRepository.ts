@@ -1,6 +1,11 @@
 /**
  * ProductRepository - Adapter implementation of IProductRepository
  * Handles HTTP communication with the backend API
+ * 
+ * TODO: Agregar persistencia IndexedDB para modo offline
+ * - INVESTIGAR: ¿implementar cache de productos para consulta offline?
+ * - INVESTIGAR: ¿guardar create/update/delete en outbox para sync posterior?
+ * - Login NO puede ejecutarse offline
  */
 
 import { apiClient } from '../api/client';
