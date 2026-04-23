@@ -183,3 +183,176 @@ Phone Hotspot (192.168.x.1)
 - Server accessible at `https://<server-ip>` on LAN.
 - No internet required at runtime.
 - All assets (JS, CSS, fonts, icons) served locally from Next.js/Caddy.
+
+---
+
+## 9. Progreso Real de Carga Inicial
+
+La app solo puede declararse "disponible offline" cuando los 6 pasos siguientes completan en orden:
+
+| Paso | Descripción | Progreso |
+|------|-------------|---------|
+| 1/6 | App shell cargado — Service Worker activo y controlando | 15% |
+| 2/6 | Autenticación verificada — token válido | 25% |
+| 3/6 | Catálogo descargado — products, categories | 45% |
+| 4/6 | Almacenes y stock balances descargados | 60% |
+| 5/6 | Clientes, proveedores y monedas descargados | 80% |
+| 6/6 | Sync pull completado — cursor guardado en IndexedDB | 100% |
+
+### Comportamiento en error de paso
+- Cada paso muestra su propio estado: `cargando…` / `✓ listo` / `⚠ error`
+- En error: mensaje descriptivo + botón **"↺ Reintentar este paso"** + botón **"↺ Reintentar todo"**
+- Si la conexión se pierde antes del 100%: banner _"Datos incompletos. La app no está lista para uso offline. Reconéctate para completar."_
+- El modo offline solo se habilita al llegar al 100%
+
+### Componente: barra de carga inicial (progreso real)
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Preparando la aplicación...                        │
+│  [████████████████████████████░░░░░░░░░░░░   75%]  │
+│                                                     │
+│  ✓  App shell                                       │
+│  ✓  Autenticación                                   │
+│  ✓  Catálogo de productos                           │
+│  ⟳  Almacenes y stock...                            │
+│  ○  Clientes y proveedores                          │
+│  ○  Sincronización pull                             │
+└─────────────────────────────────────────────────────┘
+```
+
+- La barra es **real** (no animación falsa): avanza únicamente al completar cada paso
+- El ancho de la barra = `(pasosCompletados / 6) * 100%` calculado en tiempo de ejecución
+- Al llegar a 100% la pantalla de carga se reemplaza por la app (sin "loading" posterior)
+- En primer uso (sin datos locales): pantalla de bienvenida antes de la barra
+- En recargas subsiguientes: si todos los datos siguen frescos, la barra se omite y arranca directo
+
+---
+
+## 10. Progreso Real de Sync (Upload de cambios pendientes)
+
+La barra de sync muestra el estado real de cada operación del outbox. No es un timer falso.
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 🔄 Sincronizando  5/8 operaciones      [Colapsar ↑] │
+├─────────────────────────────────────────────────────┤
+│ ✓ Venta #001         · aceptada         [Ver]       │
+│ ✓ Venta #002         · aceptada         [Ver]       │
+│ ✓ Ajuste #001        · aceptada         [Ver]       │
+│ ⟳ Compra #001        · sincronizando…              │
+│ ⚠ Venta #003         · conflicto        [Resolver ▶]│
+│ ○ Venta #004         · pendiente                    │
+│ ○ Transferencia #001 · pendiente                    │
+│ ○ Pago deuda #001    · pendiente                    │
+├─────────────────────────────────────────────────────┤
+│ [↺ Reintentar fallidos]  [Ver todas las incidencias]│
+└─────────────────────────────────────────────────────┘
+```
+
+### Comportamiento detallado
+- **Progreso** = `(aceptadas + rechazadas) / total` — número real, no estimado
+- El contador "X/Y operaciones" actualiza en tiempo real al completar cada una
+- Al finalizar sin conflictos: barra se colapsa automáticamente tras 3 s
+- Si hay conflictos pendientes: barra permanece visible con badge de alerta rojo
+- Botón **"Ver todas las incidencias"** navega a `/admin/sync/incidents`
+- La barra es colapsable y configurable en DisplaySettings (puede ocultarse permanentemente)
+
+---
+
+## 11. Política de Conflictos — 3 Tipos
+
+### Tipo A — Entidad duplicada (ENTITY_DUPLICATE)
+*Escenario: mismo SKU/barcode creado en dos dispositivos offline*
+
+| Opción | Acción |
+|--------|--------|
+| **Descartar la mía** | Elimina del outbox. Usa la versión del servidor. |
+| **Reemplazar la del servidor** | Solo ADMIN. Sobreescribe la del servidor con la mía. |
+| **Editar y reintentar** | Abre el formulario pre-cargado con mis datos para corregir el conflicto (ej: cambiar el SKU) y reintenta. |
+
+### Tipo B — Stock insuficiente (STOCK_CONFLICT)
+*Escenario: dos dispositivos offline venden el mismo producto, el stock no alcanza para ambos. El primero en sincronizar gana.*
+
+| Opción | Acción |
+|--------|--------|
+| **Olvidar esta venta** | Cancela la venta en el outbox. Pide confirmación: _"¿Seguro que quieres cancelar Venta #003? Esta acción no se puede deshacer."_ |
+| **Cambiar producto/cantidad** | Abre el formulario de la venta con los datos actuales de stock del servidor para que el usuario ajuste y reintente. |
+
+### Tipo C — Version mismatch (VERSION_MISMATCH)
+*Escenario: la misma entidad fue modificada por dos dispositivos mientras ambos estaban offline*
+
+| Opción | Acción |
+|--------|--------|
+| **Usar versión del servidor** | Descarta mis cambios. Adopta la versión del servidor como estado actual. |
+| **Ver diferencias y editar** | Vista comparativa: "Mi versión" vs "Versión del servidor" con campos editables para hacer merge manual. |
+| **Forzar mis cambios** | Solo ADMIN. Sobreescribe el servidor con mi versión. |
+
+---
+
+## 12. Centro de Incidencias `/admin/sync/incidents`
+
+Vista dedicada para gestionar todas las incidencias sin depender de la barra de sync.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Centro de Incidencias                       [Ignorar todas]      │
+├──────────────────────────────────────────────────────────────────┤
+│ [Tipo ▼]  [Entidad ▼]  [Estado ▼]    🔍 [Buscar...         ]   │
+├────┬──────────────────────────────────┬──────────────────────────┤
+│ ☐  │ Venta #003 · Stock conflict      │ [Olvidar] [Cambiar]      │
+│ ☐  │ Producto "Arroz" · Duplicado     │ [Descartar][Editar][↑]   │
+│ ☐  │ Cliente "Juan" · V. mismatch     │ [Servidor][Diff][Forzar] │
+│ ☐  │ Compra #002 · Checksum error     │ [Reintentar][Cancelar]   │
+├────┴──────────────────────────────────┴──────────────────────────┤
+│ ☐ Seleccionar todo        [Aplicar a seleccionados ▼]            │
+│                           Mostrando 4 de 4 incidencias           │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+- Paginación estándar (20 por página)
+- Cada fila es expandible: muestra "Mi versión" vs "Versión servidor" en un panel acordeón
+- "Aplicar a seleccionados" → dropdown con las acciones comunes del tipo más frecuente entre los seleccionados
+- Badge en el sidebar con el total de incidencias `PENDING`
+
+---
+
+## 13. Política de Creación de Entidades Offline
+
+```
+Si OutboxEntry.isOfflineCreated = true AND OutboxEntry.hasUniqueRisk = true:
+  → Mostrar banner amarillo en el outbox entry:
+    ⚠ "Creado sin conexión — riesgo de duplicado.
+       Se recomienda conectarse antes de sincronizar."
+
+Al sincronizar:
+  - Servidor acepta → ✓ sin problema
+  - Servidor rechaza por duplicado → genera SyncIncident de tipo ENTITY_DUPLICATE
+
+Política recomendada (documentada para los usuarios):
+  - Crear productos, categorías y otras entidades con campos únicos (SKU, barcode, código)
+    preferentemente mientras se está conectado al servidor.
+  - Si se crea offline, usar nombres/códigos claramente únicos para minimizar conflictos.
+```
+
+---
+
+## 14. Upload Atómico de Archivos
+
+Todo upload de imagen sigue este protocolo para garantizar integridad:
+
+```
+1. Cliente calcula SHA-256 del archivo antes de enviarlo
+2. Cliente envía multipart con header: Content-MD5: <base64(sha256)>
+3. Servidor recibe el archivo, calcula su propio SHA-256
+4. Si los hashes coinciden → persiste el archivo y retorna ImageUploadResponse con serverChecksum
+5. Si no coinciden → 400 Bad Request (checksum-mismatch), nada se guarda
+6. Cliente verifica que serverChecksum == checksumSha256 local
+
+En error:
+  - UI muestra: "⚠ Error al subir '{filename}' — el archivo llegó incompleto"
+  - Botón: [↺ Reintentar] por archivo individual
+  - Botón: [↺ Reintentar todos] para todos los uploads fallidos
+  - El archivo queda en status='error' en la UploadQueue (IndexedDB)
+  - No se crea ningún registro roto en la base de datos
+```

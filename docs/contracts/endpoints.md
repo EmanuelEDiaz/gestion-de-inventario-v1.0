@@ -174,3 +174,137 @@ Base: `/api/v1`
 - Tipo: `bigserial` (id de sync_log)
 - Primer pull: `cursor=0`
 - Response incluye `newCursor`
+
+---
+
+## Regla Global — Upload con checksum (aplica a TODOS los endpoints de imágenes)
+
+> Todo `POST */images` y `POST */avatar` requiere el header:
+> `Content-MD5: <base64(sha256(file_bytes))>`
+>
+> Si el servidor recibe el archivo y el hash no coincide → `400 Bad Request`:
+> ```json
+> {
+>   "type": "https://errors.app/checksum-mismatch",
+>   "title": "Checksum mismatch",
+>   "detail": "El archivo llegó corrupto. Esperado: {expected}, recibido: {actual}",
+>   "status": 400
+> }
+> ```
+> No se persiste nada si el checksum falla.
+
+---
+
+## Clientes — Imágenes
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| POST | `/customers/{id}/images` | Subir imagen (multipart, máx 5 MiB, requiere Content-MD5) | ADMIN/MANAGER |
+| GET | `/customers/{id}/images` | Listar metadata de imágenes | Autenticado |
+| GET | `/customers/{id}/images/{imgId}` | Obtener imagen `?variant=full\|thumb256` | Autenticado |
+| DELETE | `/customers/{id}/images/{imgId}` | Eliminar imagen | ADMIN/MANAGER |
+
+---
+
+## Proveedores — Imágenes, Links Sociales, Catálogo
+
+### Imágenes
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| POST | `/suppliers/{id}/images` | Subir imagen (multipart, máx 5 MiB, requiere Content-MD5) | ADMIN/MANAGER |
+| GET | `/suppliers/{id}/images` | Listar metadata de imágenes | Autenticado |
+| GET | `/suppliers/{id}/images/{imgId}` | Obtener imagen `?variant=full\|thumb256` | Autenticado |
+| DELETE | `/suppliers/{id}/images/{imgId}` | Eliminar imagen | ADMIN/MANAGER |
+
+### Links de Redes Sociales
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| GET | `/suppliers/{id}/social-links` | Listar links sociales del proveedor | Autenticado |
+| POST | `/suppliers/{id}/social-links` | Agregar link social | ADMIN/MANAGER |
+| DELETE | `/suppliers/{id}/social-links/{linkId}` | Eliminar link social | ADMIN/MANAGER |
+
+### Catálogo de Productos del Proveedor
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| GET | `/suppliers/{id}/products` | Listar productos que ofrece el proveedor | Autenticado |
+| POST | `/suppliers/{id}/products` | Vincular/agregar producto (del catálogo o texto libre) | ADMIN/MANAGER |
+| DELETE | `/suppliers/{id}/products/{entryId}` | Desvincular/eliminar entrada | ADMIN/MANAGER |
+
+---
+
+## Deudas / Fiado
+
+> Las ventas con `paymentMode = CREDIT` o `RESERVE` requieren `customerId` obligatorio.
+> Ver modificación de `POST /sales` en la sección de DTOs.
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| GET | `/debts` | Todas las deudas (filtros: `status`, `customerId`, `dueBefore`, `page`, `size`) | Autenticado |
+| GET | `/debts/{id}` | Detalle de deuda con historial de pagos → ETag | Autenticado |
+| PATCH | `/debts/{id}` | Actualizar `due_date` / `description` / `notes` / cancelar → If-Match | ADMIN/MANAGER |
+| POST | `/debts/{id}/payments` | Registrar pago (parcial o total), requiere Idempotency-Key | Autenticado |
+| GET | `/customers/{id}/debts` | Deudas de un cliente específico (filtros: `status`, `page`, `size`) | Autenticado |
+
+### Lógica de estados de deuda (automática, no vía endpoint)
+- `paid_amount = 0` → status = `PENDING`
+- `0 < paid_amount < original_amount` → status = `PARTIAL`
+- `paid_amount = original_amount` → status = `PAID`
+- Solo `CANCELLED` se puede setear vía `PATCH /debts/{id}`
+
+---
+
+## Notificaciones
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| GET | `/notifications` | Inbox del usuario autenticado. Params: `unreadOnly`, `category`, `page`, `size` | Autenticado |
+| POST | `/notifications` | Crear notificación manual (a un usuario o broadcast) | Autenticado |
+| POST | `/notifications/mark-read` | Marcar lista de IDs como leídas. Body: `{ notificationIds: string[] }` | Autenticado |
+| POST | `/notifications/mark-all-read` | Marcar todas las notificaciones del usuario como leídas | Autenticado |
+| GET | `/notifications/unread-count` | Retorna `{ count: number }` para badge en header | Autenticado |
+| GET | `/notifications/stream` | **SSE** — stream en tiempo real (`text/event-stream`). Emite `NewNotification` events | Autenticado |
+
+> El endpoint SSE (`/notifications/stream`) no usa paginación. El cliente usa `EventSource` nativo con reconexión automática. El servidor usa `Flux<ServerSentEvent>` de Spring WebFlux.
+>
+> Disparadores automáticos del sistema (no requieren endpoint):
+> - `on_hand ≤ reorder_point` → notificación `LOW_STOCK`, target `ALL`
+> - `customer_debts.due_date < now` → notificación `DEBT_OVERDUE`, target `ALL` (job periódico)
+> - `import_jobs` completa/falla → notificación `IMPORT_DONE`, target `USER` (solo al creador)
+> - `sync push` → `409 Conflict` → notificación `SYNC_CONFLICT`, target `USER` (dispositivo que falló)
+
+---
+
+## Sync — Incidencias
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| POST | `/sync/incidents` | Reportar resolución de incidencia desde el cliente | Autenticado |
+| GET | `/sync/incidents` | Listar incidencias del servidor (audit) | ADMIN/MANAGER |
+
+> `POST /sync/incidents` body: `SyncIncidentReportRequest` (ver DTOs)
+
+---
+
+## Dashboard — Stats extendido
+
+> `GET /reports/dashboard` (ya existente) ahora retorna también:
+> - `pendingDebtsCount: number`
+> - `pendingDebtsTotal: number` (suma en moneda base)
+> - `partialDebtsCount: number`
+> - `pendingSyncIncidentsCount: number`
+
+---
+
+## POS — Venta rápida
+
+> `POST /sales` (ya existente) acepta el nuevo campo `paymentMode` (ver DTOs).
+> No hay endpoint separado para POS. La diferencia es solo el payload.
+
+### Reglas de venta rápida (sin cliente, `paymentMode = IMMEDIATE`):
+- `customerId` es **opcional**
+- `barcode` puede usarse para identificar el producto (campo en la línea)
+- Si no se especifica `soldAt`, el servidor usa `now()`
+- La venta se confirma inmediatamente (no queda en DRAFT)

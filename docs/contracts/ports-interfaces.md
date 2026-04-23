@@ -235,3 +235,287 @@ public interface FileStoragePort {
     Mono<Void> delete(String relativePath);
 }
 ```
+
+---
+
+## Puertos de Entrada -- nuevos (Backend Java)
+
+### Imagenes de Clientes
+- UploadCustomerImageUseCase
+- DeleteCustomerImageUseCase
+- ListCustomerImagesQuery
+
+### Imagenes de Proveedores
+- UploadSupplierImageUseCase
+- DeleteSupplierImageUseCase
+- ListSupplierImagesQuery
+
+### Proveedor Extendido
+- CreateSupplierSocialLinkUseCase
+- DeleteSupplierSocialLinkUseCase
+- ListSupplierSocialLinksQuery
+- CreateSupplierCatalogProductUseCase
+- DeleteSupplierCatalogProductUseCase
+- ListSupplierCatalogProductsQuery
+
+### Deudas / Fiado
+- CreateCreditSaleUseCase *(extiende CreateSaleUseCase -- paymentMode = CREDIT)*
+- CreateReserveSaleUseCase *(extiende CreateSaleUseCase -- paymentMode = RESERVE)*
+- ConfirmReserveSaleUseCase *(al registrar pago total en venta RESERVE)*
+- RegisterDebtPaymentUseCase
+- UpdateDebtUseCase
+- CancelDebtUseCase
+- ListDebtsQuery
+- GetDebtQuery
+- ListCustomerDebtsQuery
+
+### Notificaciones
+- CreateNotificationUseCase
+- DispatchSystemNotificationUseCase *(llamado internamente por el dominio)*
+- MarkNotificationsReadUseCase
+- MarkAllNotificationsReadUseCase
+- ListNotificationsQuery
+- GetUnreadCountQuery
+
+### Sync -- Incidencias
+- ReportSyncIncidentUseCase
+- ListSyncIncidentsQuery
+
+---
+
+## Puertos de Salida -- nuevos (Backend Java)
+
+```java
+// Imagenes de clientes
+public interface CustomerImageRepositoryPort {
+    Mono<CustomerImage> save(CustomerImage image);
+    Mono<CustomerImage> findById(UUID id);
+    Flux<CustomerImage> findByCustomerId(UUID customerId);
+    Mono<Boolean> existsPrimaryForCustomer(UUID customerId);
+    Mono<Void> clearPrimaryForCustomer(UUID customerId);
+    Mono<Void> deleteById(UUID id);
+}
+
+// Imagenes de proveedores
+public interface SupplierImageRepositoryPort {
+    Mono<SupplierImage> save(SupplierImage image);
+    Mono<SupplierImage> findById(UUID id);
+    Flux<SupplierImage> findBySupplierId(UUID supplierId);
+    Mono<Boolean> existsPrimaryForSupplier(UUID supplierId);
+    Mono<Void> clearPrimaryForSupplier(UUID supplierId);
+    Mono<Void> deleteById(UUID id);
+}
+
+// Links sociales de proveedor
+public interface SupplierSocialLinkRepositoryPort {
+    Mono<SupplierSocialLink> save(SupplierSocialLink link);
+    Mono<SupplierSocialLink> findById(UUID id);
+    Flux<SupplierSocialLink> findBySupplierId(UUID supplierId);
+    Mono<Void> deleteById(UUID id);
+}
+
+// Catalogo de productos del proveedor
+public interface SupplierCatalogProductRepositoryPort {
+    Mono<SupplierCatalogProduct> save(SupplierCatalogProduct entry);
+    Mono<SupplierCatalogProduct> findById(UUID id);
+    Flux<SupplierCatalogProduct> findBySupplierId(UUID supplierId);
+    Mono<Void> deleteById(UUID id);
+}
+
+// Deudas
+public interface CustomerDebtRepositoryPort {
+    Mono<CustomerDebt> save(CustomerDebt debt);
+    Mono<CustomerDebt> findById(UUID id);
+    Mono<CustomerDebt> findBySaleId(UUID saleId);
+    Flux<CustomerDebt> findByCustomerId(UUID customerId);
+    Flux<CustomerDebt> search(DebtSearchCriteria criteria);
+    Mono<Long> countByStatus(String status);
+    Mono<BigDecimal> sumRemainingByStatus(String status, String currencyCode);
+}
+
+// Pagos de deudas
+public interface DebtPaymentRepositoryPort {
+    Mono<DebtPayment> save(DebtPayment payment);
+    Flux<DebtPayment> findByDebtId(UUID debtId);
+}
+
+// Notificaciones
+public interface NotificationRepositoryPort {
+    Mono<Notification> save(Notification notification);
+    Mono<Notification> findById(UUID id);
+    Flux<Notification> findForUser(UUID userId, NotificationSearchCriteria criteria);
+    Mono<Long> countUnreadForUser(UUID userId);
+}
+
+// Lecturas de notificaciones
+public interface NotificationReadRepositoryPort {
+    Mono<Void> markRead(UUID notificationId, UUID userId, Instant readAt);
+    Mono<Void> markAllRead(UUID userId, Instant readAt);
+    Mono<Boolean> isRead(UUID notificationId, UUID userId);
+}
+
+// Sink reactivo para SSE (notificaciones en tiempo real)
+public interface NotificationSinkPort {
+    Mono<Void> emit(Notification notification);
+    Flux<Notification> streamForUser(UUID userId);
+}
+
+// Incidencias de sync
+public interface SyncIncidentRepositoryPort {
+    Mono<SyncIncident> save(SyncIncident incident);
+    Mono<SyncIncident> findById(UUID id);
+    Flux<SyncIncident> search(IncidentSearchCriteria criteria);
+    Mono<Long> countPending();
+}
+```
+
+---
+
+## Criterios de Busqueda -- nuevos (Backend Java)
+
+```java
+public class DebtSearchCriteria {
+    UUID customerId;        // opcional
+    String status;          // PENDING | PARTIAL | PAID | CANCELLED
+    Instant dueBefore;      // deudas cuyo due_date < dueBefore
+    int page;
+    int size;
+}
+
+public class NotificationSearchCriteria {
+    boolean unreadOnly;
+    String category;        // opcional
+    int page;
+    int size;
+}
+
+public class IncidentSearchCriteria {
+    String entityType;      // opcional
+    String incidentType;    // opcional
+    String status;          // PENDING | RESOLVED | IGNORED
+    int page;
+    int size;
+}
+```
+
+---
+
+## Puertos Frontend (TypeScript -- core/interfaces/)
+
+```typescript
+// Busqueda universal paginada
+export interface ISearchableRepository<T, F> {
+  search(filters: F, page: number, size: number): Promise<PagedResult<T>>
+}
+
+export interface PagedResult<T> {
+  content: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
+// Incidencias (IndexedDB)
+export interface ISyncIncidentRepository {
+  save(incident: SyncIncident): Promise<SyncIncident>
+  findById(incidentId: string): Promise<SyncIncident | null>
+  findAll(filters: IncidentFilters): Promise<PagedResult<SyncIncident>>
+  countPending(): Promise<number>
+  markResolved(incidentId: string, resolution: ResolutionAction): Promise<void>
+  markIgnored(incidentId: string): Promise<void>
+}
+
+// Cola de uploads (IndexedDB)
+export interface IUploadQueueRepository {
+  enqueue(entry: UploadQueueEntry): Promise<UploadQueueEntry>
+  findPending(): Promise<UploadQueueEntry[]>
+  updateStatus(fileId: string, status: UploadStatus, error?: string): Promise<void>
+  deleteByFileId(fileId: string): Promise<void>
+}
+
+// Configuracion de pantalla (localStorage)
+export interface IDisplaySettingsRepository {
+  get(): DisplaySettings               // sincrono
+  save(settings: DisplaySettings): void // sincrono
+}
+```
+
+---
+
+## Filtros Frontend por entidad (TypeScript -- core/interfaces/filters.ts)
+
+```typescript
+export interface ProductFilters {
+  search?: string
+  categoryId?: string
+  status?: 'ACTIVE' | 'ARCHIVED'
+  minPrice?: number
+  maxPrice?: number
+  lowStock?: boolean
+  page: number
+  size: number
+}
+
+export interface CustomerFilters {
+  search?: string
+  isActive?: boolean
+  hasPendingDebt?: boolean
+  page: number
+  size: number
+}
+
+export interface SupplierFilters {
+  search?: string
+  isActive?: boolean
+  platform?: string
+  hasProducts?: boolean
+  page: number
+  size: number
+}
+
+export interface SaleFilters {
+  search?: string
+  warehouseId?: string
+  customerId?: string
+  status?: SaleStatus
+  paymentMode?: PaymentMode
+  fromDate?: string
+  toDate?: string
+  page: number
+  size: number
+}
+
+export interface DebtFilters {
+  customerId?: string
+  status?: 'PENDING' | 'PARTIAL' | 'PAID' | 'CANCELLED'
+  dueBefore?: string
+  page: number
+  size: number
+}
+
+export interface NotificationFilters {
+  unreadOnly?: boolean
+  category?: string
+  page: number
+  size: number
+}
+
+export interface IncidentFilters {
+  status?: 'PENDING' | 'RESOLVED' | 'IGNORED'
+  entityType?: string
+  incidentType?: string
+  page: number
+  size: number
+}
+
+export interface MovementFilters {
+  warehouseId?: string
+  productId?: string
+  movementType?: string
+  fromDate?: string
+  toDate?: string
+  page: number
+  size: number
+}
+```
