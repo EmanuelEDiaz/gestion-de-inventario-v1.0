@@ -64,4 +64,9 @@ public class SupplierImageCommandUseCase implements SupplierImageCommandPort {
                     ))
             );
     }
+
+    @Override
+    public Flux<SupplierImage> listBySupplierId(UUID supplierId) {
+        return supplierImageRepository.findBySupplierId(supplierId);
+    }
 }

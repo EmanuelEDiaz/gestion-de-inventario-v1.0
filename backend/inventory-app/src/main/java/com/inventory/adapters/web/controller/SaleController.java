@@ -92,7 +92,7 @@ public class SaleController {
                     .toList(),
             request.paymentMode() != null
                 ? Sale.PaymentMode.valueOf(request.paymentMode())
-                : Sale.PaymentMode.CASH
+                : Sale.PaymentMode.IMMEDIATE
         );
         return saleCommandPort.create(cmd, userId)
             .map(saleMapper::toDto);
