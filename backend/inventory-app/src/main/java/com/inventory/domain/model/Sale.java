@@ -16,6 +16,7 @@ public record Sale(
     UUID customerId,
     UUID warehouseId,
     SaleStatus status,
+    PaymentMode paymentMode,
     String currencyCode,
     BigDecimal exchangeRate,
     BigDecimal subtotal,
@@ -36,11 +37,16 @@ public record Sale(
         CANCELLED
     }
 
+    public enum PaymentMode {
+        IMMEDIATE, CREDIT, RESERVE
+    }
+
     public Sale {
         if (id == null) throw new IllegalArgumentException("Sale id cannot be null");
         if (saleNumber == null || saleNumber.isBlank()) throw new IllegalArgumentException("Sale number cannot be blank");
         if (warehouseId == null) throw new IllegalArgumentException("Warehouse id cannot be null");
         if (status == null) throw new IllegalArgumentException("Status cannot be null");
+        if (paymentMode == null) paymentMode = PaymentMode.IMMEDIATE;
         if (currencyCode == null) currencyCode = "USD";
         if (exchangeRate == null) exchangeRate = BigDecimal.ONE;
         if (subtotal == null) subtotal = BigDecimal.ZERO;
@@ -61,7 +67,8 @@ public record Sale(
         String notes,
         LocalDate saleDate,
         List<SaleLine> lines,
-        UUID createdBy
+        UUID createdBy,
+        PaymentMode paymentMode
     ) {
         BigDecimal subtotal = calculateSubtotal(lines);
         BigDecimal discountAmount = BigDecimal.ZERO;
@@ -74,6 +81,7 @@ public record Sale(
             customerId,
             warehouseId,
             SaleStatus.DRAFT,
+            paymentMode != null ? paymentMode : PaymentMode.IMMEDIATE,
             currencyCode != null ? currencyCode : "USD",
             BigDecimal.ONE,
             subtotal,
@@ -104,7 +112,7 @@ public record Sale(
         }
         return new Sale(
             id, saleNumber, customerId, warehouseId,
-            SaleStatus.CONFIRMED,
+            SaleStatus.CONFIRMED, paymentMode,
             currencyCode, exchangeRate, subtotal, discountAmount, taxAmount, total,
             notes, saleDate, createdBy, createdAt, LocalDateTime.now(), lines
         );
@@ -116,7 +124,7 @@ public record Sale(
         }
         return new Sale(
             id, saleNumber, customerId, warehouseId,
-            SaleStatus.DELIVERED,
+            SaleStatus.DELIVERED, paymentMode,
             currencyCode, exchangeRate, subtotal, discountAmount, taxAmount, total,
             notes, saleDate, createdBy, createdAt, LocalDateTime.now(), lines
         );
@@ -131,7 +139,7 @@ public record Sale(
         }
         return new Sale(
             id, saleNumber, customerId, warehouseId,
-            SaleStatus.CANCELLED,
+            SaleStatus.CANCELLED, paymentMode,
             currencyCode, exchangeRate, subtotal, discountAmount, taxAmount, total,
             notes, saleDate, createdBy, createdAt, LocalDateTime.now(), lines
         );

@@ -1,6 +1,8 @@
 package com.inventory.domain.model;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -20,10 +22,12 @@ public class Customer {
     private final Instant createdAt;
     private final Instant updatedAt;
     private final int version;
+    private final List<CustomerImage> images;
 
     public Customer(UUID id, String code, String name, String contactName, String phone,
                     String email, String address, String notes, boolean active,
-                    Instant createdAt, Instant updatedAt, int version) {
+                    Instant createdAt, Instant updatedAt, int version,
+                    List<CustomerImage> images) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Customer name cannot be null or blank");
         }
@@ -39,6 +43,7 @@ public class Customer {
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.updatedAt = updatedAt != null ? updatedAt : this.createdAt;
         this.version = version;
+        this.images = images != null ? Collections.unmodifiableList(images) : Collections.emptyList();
     }
 
     public static Customer create(String code, String name, String contactName, String phone, String email) {
@@ -54,7 +59,8 @@ public class Customer {
             true,
             Instant.now(),
             Instant.now(),
-            0
+            0,
+            null
         );
     }
 
@@ -71,6 +77,7 @@ public class Customer {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public int getVersion() { return version; }
+    public List<CustomerImage> getImages() { return images; }
 
     public Customer update(String code, String name, String contactName, String phone, 
                            String email, String address, String notes) {
@@ -86,22 +93,23 @@ public class Customer {
             this.active,
             this.createdAt,
             Instant.now(),
-            this.version
+            this.version,
+            this.images
         );
     }
 
     public Customer deactivate() {
         return new Customer(id, code, name, contactName, phone, email, address, notes, 
-                           false, createdAt, Instant.now(), version);
+                           false, createdAt, Instant.now(), version, images);
     }
 
     public Customer activate() {
         return new Customer(id, code, name, contactName, phone, email, address, notes, 
-                           true, createdAt, Instant.now(), version);
+                           true, createdAt, Instant.now(), version, images);
     }
 
     public Customer withVersion(int newVersion) {
         return new Customer(id, code, name, contactName, phone, email, address, notes, 
-                           active, createdAt, updatedAt, newVersion);
+                           active, createdAt, updatedAt, newVersion, images);
     }
 }

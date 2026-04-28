@@ -1,7 +1,5 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.DashboardStatsDto;
-import com.inventory.application.dto.LowStockItemDto;
 import com.inventory.domain.ports.in.DashboardQueryPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,7 +45,7 @@ class DashboardControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /api/v1/dashboard/stats devuelve 200 con rol ADMIN")
     void getStats_returns200WhenAdmin() {
-        DashboardStatsDto stats = new DashboardStatsDto(
+        DashboardQueryPort.DashboardStats stats = new DashboardQueryPort.DashboardStats(
             10L, 2L, 50L, 5L, 3L, 1L,
             BigDecimal.valueOf(500), BigDecimal.valueOf(2000),
             8L, BigDecimal.valueOf(1500)
@@ -71,7 +69,7 @@ class DashboardControllerTest {
     @DisplayName("GET /api/v1/dashboard/stats devuelve 200 con rol SELLER")
     void getStats_returns200WhenSeller() {
         when(dashboardQueryPort.getStats()).thenReturn(Mono.just(
-            new DashboardStatsDto(0L, 0L, 0L, 0L, 0L, 0L,
+            new DashboardQueryPort.DashboardStats(0L, 0L, 0L, 0L, 0L, 0L,
                 BigDecimal.ZERO, BigDecimal.ZERO, 0L, BigDecimal.ZERO)
         ));
 
@@ -85,7 +83,7 @@ class DashboardControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /api/v1/dashboard/low-stock devuelve lista de items")
     void getLowStockItems_returnsItems() {
-        LowStockItemDto item = new LowStockItemDto(
+        DashboardQueryPort.LowStockItem item = new DashboardQueryPort.LowStockItem(
             UUID.randomUUID(), "Producto A", "SKU-001",
             UUID.randomUUID(), "Almacén Central",
             BigDecimal.valueOf(3), BigDecimal.valueOf(10)

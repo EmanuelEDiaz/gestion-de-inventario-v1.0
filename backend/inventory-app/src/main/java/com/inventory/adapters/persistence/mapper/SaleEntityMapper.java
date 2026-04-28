@@ -15,6 +15,7 @@ import java.util.UUID;
 public interface SaleEntityMapper {
 
     @Mapping(target = "status", source = "status", qualifiedByName = "statusToString")
+    @Mapping(target = "paymentMode", source = "paymentMode", qualifiedByName = "paymentModeToString")
     SaleEntity toEntity(Sale sale);
 
     @Named("statusToString")
@@ -22,13 +23,24 @@ public interface SaleEntityMapper {
         return status != null ? status.name() : null;
     }
 
+    @Named("paymentModeToString")
+    default String paymentModeToString(Sale.PaymentMode mode) {
+        return mode != null ? mode.name() : Sale.PaymentMode.IMMEDIATE.name();
+    }
+
     @Mapping(target = "status", source = "status", qualifiedByName = "stringToStatus")
+    @Mapping(target = "paymentMode", source = "paymentMode", qualifiedByName = "stringToPaymentMode")
     @Mapping(target = "lines", ignore = true)
     Sale toDomain(SaleEntity entity);
 
     @Named("stringToStatus")
     default Sale.SaleStatus stringToStatus(String status) {
         return status != null ? Sale.SaleStatus.valueOf(status) : null;
+    }
+
+    @Named("stringToPaymentMode")
+    default Sale.PaymentMode stringToPaymentMode(String mode) {
+        return mode != null ? Sale.PaymentMode.valueOf(mode) : Sale.PaymentMode.IMMEDIATE;
     }
 
     default Sale toDomainWithLines(SaleEntity entity, List<SaleLineEntity> lineEntities) {
@@ -42,6 +54,7 @@ public interface SaleEntityMapper {
             base.customerId(),
             base.warehouseId(),
             base.status(),
+            base.paymentMode(),
             base.currencyCode(),
             base.exchangeRate(),
             base.subtotal(),

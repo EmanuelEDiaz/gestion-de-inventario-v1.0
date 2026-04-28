@@ -30,7 +30,7 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
             command.email()
         );
         
-        if (command.address() != null || command.notes() != null) {
+        if (command.address() != null || command.notes() != null || command.website() != null) {
             supplier = supplier.update(
                 command.code(),
                 command.name(),
@@ -38,7 +38,8 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                 command.phone(),
                 command.email(),
                 command.address(),
-                command.notes()
+                command.notes(),
+                command.website()
             );
         }
         
@@ -56,7 +57,8 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                 command.phone(),
                 command.email(),
                 command.address(),
-                command.notes()
+                command.notes(),
+                command.website()
             ))
             .flatMap(supplierRepository::save);
     }

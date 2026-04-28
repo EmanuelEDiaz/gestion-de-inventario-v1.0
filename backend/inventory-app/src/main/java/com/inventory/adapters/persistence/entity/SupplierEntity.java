@@ -50,6 +50,9 @@ public class SupplierEntity implements Persistable<UUID> {
     @Column("version")
     private Integer version;
 
+    @Column("website")
+    private String website;
+
     @Transient
     private boolean isNew = true;
 
@@ -91,6 +94,9 @@ public class SupplierEntity implements Persistable<UUID> {
 
     public Integer getVersion() { return version; }
     public void setVersion(Integer version) { this.version = version; }
+
+    public String getWebsite() { return website; }
+    public void setWebsite(String website) { this.website = website; }
 
     @Override
     public boolean isNew() { return isNew; }

@@ -14,6 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -78,7 +79,19 @@ public class SaleController {
         @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = extractUserId(userDetails);
-        return saleCommandPort.create(request, userId)
+        SaleCommandPort.CreateCommand cmd = new SaleCommandPort.CreateCommand(
+            request.warehouseId(),
+            request.customerId(),
+            request.currencyCode(),
+            request.notes(),
+            request.saleDate(),
+            request.lines() == null ? List.of() :
+                request.lines().stream()
+                    .map(l -> new SaleCommandPort.CreateCommand.SaleLineCommand(
+                        l.productId(), l.quantity(), l.unitPrice(), l.discount()))
+                    .toList()
+        );
+        return saleCommandPort.create(cmd, userId)
             .map(saleMapper::toDto);
     }
 

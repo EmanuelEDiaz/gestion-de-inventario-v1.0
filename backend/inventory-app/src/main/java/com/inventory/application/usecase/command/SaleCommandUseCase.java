@@ -1,6 +1,5 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.application.dto.CreateSaleRequest;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.InventoryMovement;
@@ -40,18 +39,18 @@ public class SaleCommandUseCase implements SaleCommandPort {
 
     @Override
     @Transactional
-    public Mono<Sale> create(CreateSaleRequest request, UUID createdBy) {
-        if (request.warehouseId() == null) {
+    public Mono<Sale> create(CreateCommand command, UUID createdBy) {
+        if (command.warehouseId() == null) {
             return Mono.error(new BadRequestException("Warehouse is required"));
         }
-        if (request.lines() == null || request.lines().isEmpty()) {
+        if (command.lines() == null || command.lines().isEmpty()) {
             return Mono.error(new BadRequestException("At least one line is required"));
         }
 
         return saleRepository.generateSaleNumber()
             .flatMap(saleNumber -> {
                 AtomicInteger sortOrder = new AtomicInteger(0);
-                List<SaleLine> lines = request.lines().stream()
+                List<SaleLine> lines = command.lines().stream()
                     .map(line -> SaleLine.create(
                         line.productId(),
                         line.quantity(),
@@ -63,13 +62,14 @@ public class SaleCommandUseCase implements SaleCommandPort {
 
                 Sale sale = Sale.createDraft(
                     saleNumber,
-                    request.warehouseId(),
-                    request.customerId(),
-                    request.currencyCode(),
-                    request.notes(),
-                    request.saleDate(),
+                    command.warehouseId(),
+                    command.customerId(),
+                    command.currencyCode(),
+                    command.notes(),
+                    command.saleDate(),
                     lines,
-                    createdBy
+                    createdBy,
+                    null
                 );
 
                 return saleRepository.save(sale);

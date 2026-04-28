@@ -1,6 +1,8 @@
 package com.inventory.domain.model;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -20,10 +22,17 @@ public class Supplier {
     private final Instant createdAt;
     private final Instant updatedAt;
     private final int version;
+    private final String website;
+    private final List<SupplierImage> images;
+    private final List<SupplierSocialLink> socialLinks;
+    private final List<SupplierCatalogProduct> catalogProducts;
 
     public Supplier(UUID id, String code, String name, String contactName, String phone,
                     String email, String address, String notes, boolean active,
-                    Instant createdAt, Instant updatedAt, int version) {
+                    Instant createdAt, Instant updatedAt, int version,
+                    String website, List<SupplierImage> images,
+                    List<SupplierSocialLink> socialLinks,
+                    List<SupplierCatalogProduct> catalogProducts) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Supplier name cannot be null or blank");
         }
@@ -39,6 +48,10 @@ public class Supplier {
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.updatedAt = updatedAt != null ? updatedAt : this.createdAt;
         this.version = version;
+        this.website = website;
+        this.images = images != null ? Collections.unmodifiableList(images) : Collections.emptyList();
+        this.socialLinks = socialLinks != null ? Collections.unmodifiableList(socialLinks) : Collections.emptyList();
+        this.catalogProducts = catalogProducts != null ? Collections.unmodifiableList(catalogProducts) : Collections.emptyList();
     }
 
     public static Supplier create(String code, String name, String contactName, String phone, String email) {
@@ -54,7 +67,8 @@ public class Supplier {
             true,
             Instant.now(),
             Instant.now(),
-            0
+            0,
+            null, null, null, null
         );
     }
 
@@ -71,9 +85,13 @@ public class Supplier {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public int getVersion() { return version; }
+    public String getWebsite() { return website; }
+    public List<SupplierImage> getImages() { return images; }
+    public List<SupplierSocialLink> getSocialLinks() { return socialLinks; }
+    public List<SupplierCatalogProduct> getCatalogProducts() { return catalogProducts; }
 
     public Supplier update(String code, String name, String contactName, String phone, 
-                           String email, String address, String notes) {
+                           String email, String address, String notes, String website) {
         return new Supplier(
             this.id,
             code != null ? code : this.code,
@@ -86,22 +104,29 @@ public class Supplier {
             this.active,
             this.createdAt,
             Instant.now(),
-            this.version
+            this.version,
+            website,
+            this.images,
+            this.socialLinks,
+            this.catalogProducts
         );
     }
 
     public Supplier deactivate() {
         return new Supplier(id, code, name, contactName, phone, email, address, notes, 
-                           false, createdAt, Instant.now(), version);
+                           false, createdAt, Instant.now(), version,
+                           website, images, socialLinks, catalogProducts);
     }
 
     public Supplier activate() {
         return new Supplier(id, code, name, contactName, phone, email, address, notes, 
-                           true, createdAt, Instant.now(), version);
+                           true, createdAt, Instant.now(), version,
+                           website, images, socialLinks, catalogProducts);
     }
 
     public Supplier withVersion(int newVersion) {
         return new Supplier(id, code, name, contactName, phone, email, address, notes, 
-                           active, createdAt, updatedAt, newVersion);
+                           active, createdAt, updatedAt, newVersion,
+                           website, images, socialLinks, catalogProducts);
     }
 }

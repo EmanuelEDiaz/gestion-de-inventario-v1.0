@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.application.dto.CreateSaleRequest;
 import com.inventory.domain.errors.BadRequestException;
+import com.inventory.domain.ports.in.SaleCommandPort;
 import com.inventory.domain.model.Sale;
 import com.inventory.domain.model.SaleLine;
 import com.inventory.domain.model.StockBalance;
@@ -54,9 +54,9 @@ class SaleCommandUseCaseTest {
     @Test
     @DisplayName("create() falla cuando warehouseId es null")
     void create_failsWithNullWarehouseId() {
-        CreateSaleRequest request = new CreateSaleRequest(
+        SaleCommandPort.CreateCommand request = new SaleCommandPort.CreateCommand(
             null, null, "USD", null, LocalDate.now(),
-            List.of(new CreateSaleRequest.SaleLineRequest(productId, 1, BigDecimal.TEN, null))
+            List.of(new SaleCommandPort.CreateCommand.SaleLineCommand(productId, 1, BigDecimal.TEN, null))
         );
 
         StepVerifier.create(useCase.create(request, userId))
@@ -68,7 +68,7 @@ class SaleCommandUseCaseTest {
     @Test
     @DisplayName("create() falla cuando lines está vacío")
     void create_failsWithEmptyLines() {
-        CreateSaleRequest request = new CreateSaleRequest(
+        SaleCommandPort.CreateCommand request = new SaleCommandPort.CreateCommand(
             warehouseId, null, "USD", null, LocalDate.now(), List.of()
         );
 
@@ -81,15 +81,15 @@ class SaleCommandUseCaseTest {
     @Test
     @DisplayName("create() crea un borrador de venta cuando datos son válidos")
     void create_createsDraftSaleWithValidData() {
-        CreateSaleRequest request = new CreateSaleRequest(
+        SaleCommandPort.CreateCommand request = new SaleCommandPort.CreateCommand(
             warehouseId, null, "USD", null, LocalDate.now(),
-            List.of(new CreateSaleRequest.SaleLineRequest(productId, 2, BigDecimal.valueOf(50), null))
+            List.of(new SaleCommandPort.CreateCommand.SaleLineCommand(productId, 2, BigDecimal.valueOf(50), null))
         );
 
         Sale expectedSale = Sale.createDraft(
             "VEN-001", warehouseId, null, "USD", null, LocalDate.now(),
             List.of(SaleLine.create(productId, 2, BigDecimal.valueOf(50), null, 1)),
-            userId
+            userId, null
         );
 
         when(saleRepository.generateSaleNumber()).thenReturn(Mono.just("VEN-001"));
@@ -122,7 +122,7 @@ class SaleCommandUseCaseTest {
         Sale draft = Sale.createDraft(
             "VEN-001", warehouseId, null, "USD", null, LocalDate.now(),
             List.of(SaleLine.create(productId, 10, BigDecimal.valueOf(50), null, 1)),
-            userId
+            userId, null
         );
 
         StockBalance lowStock = new StockBalance(

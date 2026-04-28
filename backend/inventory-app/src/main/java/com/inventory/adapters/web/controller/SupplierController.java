@@ -72,7 +72,8 @@ public class SupplierController {
             request.phone(),
             request.email(),
             request.address(),
-            request.notes()
+            request.notes(),
+            null
         )).map(mapper::toDto);
     }
 
@@ -87,7 +88,8 @@ public class SupplierController {
             request.phone(),
             request.email(),
             request.address(),
-            request.notes()
+            request.notes(),
+            null
         )).map(mapper::toDto);
     }
 

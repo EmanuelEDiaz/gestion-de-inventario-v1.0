@@ -60,7 +60,7 @@ class SaleTest {
         );
 
         Sale sale = Sale.createDraft(
-            "VEN-001", warehouseId, null, "USD", null, LocalDate.now(), lines, userId
+            "VEN-001", warehouseId, null, "USD", null, LocalDate.now(), lines, userId, null
         );
 
         assertThat(sale.subtotal()).isEqualByComparingTo(BigDecimal.valueOf(250));
@@ -73,7 +73,7 @@ class SaleTest {
     @DisplayName("Sale lanza excepción cuando saleNumber está en blanco")
     void sale_throwsWhenSaleNumberBlank() {
         assertThatThrownBy(() ->
-            Sale.createDraft("", warehouseId, null, "USD", null, LocalDate.now(), List.of(), userId)
+            Sale.createDraft("", warehouseId, null, "USD", null, LocalDate.now(), List.of(), userId, null)
         ).isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -81,7 +81,7 @@ class SaleTest {
     @DisplayName("Sale lanza excepción cuando warehouseId es null")
     void sale_throwsWhenWarehouseIdNull() {
         assertThatThrownBy(() ->
-            Sale.createDraft("VEN-001", null, null, "USD", null, LocalDate.now(), List.of(), userId)
+            Sale.createDraft("VEN-001", null, null, "USD", null, LocalDate.now(), List.of(), userId, null)
         ).isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -91,7 +91,7 @@ class SaleTest {
         List<SaleLine> lines = List.of(
             SaleLine.create(productId, 1, BigDecimal.valueOf(100), BigDecimal.ZERO, 1)
         );
-        Sale draft = Sale.createDraft("VEN-001", warehouseId, null, "USD", null, LocalDate.now(), lines, userId);
+        Sale draft = Sale.createDraft("VEN-001", warehouseId, null, "USD", null, LocalDate.now(), lines, userId, null);
         Sale confirmed = draft.confirm();
 
         assertThat(confirmed.status()).isEqualTo(Sale.SaleStatus.CONFIRMED);

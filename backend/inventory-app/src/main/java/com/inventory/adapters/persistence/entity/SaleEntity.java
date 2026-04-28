@@ -27,6 +27,9 @@ public class SaleEntity {
     @Column("status")
     private String status;
 
+    @Column("payment_mode")
+    private String paymentMode;
+
     @Column("currency_code")
     private String currencyCode;
 
@@ -77,6 +80,9 @@ public class SaleEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getPaymentMode() { return paymentMode; }
+    public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
 
     public String getCurrencyCode() { return currencyCode; }
     public void setCurrencyCode(String currencyCode) { this.currencyCode = currencyCode; }

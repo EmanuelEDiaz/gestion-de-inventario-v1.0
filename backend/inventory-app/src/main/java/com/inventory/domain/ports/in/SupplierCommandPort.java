@@ -22,7 +22,8 @@ public interface SupplierCommandPort {
         String phone,
         String email,
         String address,
-        String notes
+        String notes,
+        String website
     ) {}
 
     record UpdateCommand(
@@ -32,6 +33,7 @@ public interface SupplierCommandPort {
         String phone,
         String email,
         String address,
-        String notes
+        String notes,
+        String website
     ) {}
 }
