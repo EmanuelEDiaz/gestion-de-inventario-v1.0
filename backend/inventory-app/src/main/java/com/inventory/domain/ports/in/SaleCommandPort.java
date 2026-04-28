@@ -21,7 +21,8 @@ public interface SaleCommandPort {
         String currencyCode,
         String notes,
         LocalDate saleDate,
-        List<SaleLineCommand> lines
+        List<SaleLineCommand> lines,
+        Sale.PaymentMode paymentMode
     ) {
         public record SaleLineCommand(
             UUID productId,

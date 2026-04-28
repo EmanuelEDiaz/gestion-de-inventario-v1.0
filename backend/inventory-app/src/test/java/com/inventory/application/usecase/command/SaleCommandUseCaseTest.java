@@ -56,7 +56,8 @@ class SaleCommandUseCaseTest {
     void create_failsWithNullWarehouseId() {
         SaleCommandPort.CreateCommand request = new SaleCommandPort.CreateCommand(
             null, null, "USD", null, LocalDate.now(),
-            List.of(new SaleCommandPort.CreateCommand.SaleLineCommand(productId, 1, BigDecimal.TEN, null))
+            List.of(new SaleCommandPort.CreateCommand.SaleLineCommand(productId, 1, BigDecimal.TEN, null)),
+            null
         );
 
         StepVerifier.create(useCase.create(request, userId))
@@ -69,7 +70,7 @@ class SaleCommandUseCaseTest {
     @DisplayName("create() falla cuando lines está vacío")
     void create_failsWithEmptyLines() {
         SaleCommandPort.CreateCommand request = new SaleCommandPort.CreateCommand(
-            warehouseId, null, "USD", null, LocalDate.now(), List.of()
+            warehouseId, null, "USD", null, LocalDate.now(), List.of(), null
         );
 
         StepVerifier.create(useCase.create(request, userId))
@@ -83,7 +84,8 @@ class SaleCommandUseCaseTest {
     void create_createsDraftSaleWithValidData() {
         SaleCommandPort.CreateCommand request = new SaleCommandPort.CreateCommand(
             warehouseId, null, "USD", null, LocalDate.now(),
-            List.of(new SaleCommandPort.CreateCommand.SaleLineCommand(productId, 2, BigDecimal.valueOf(50), null))
+            List.of(new SaleCommandPort.CreateCommand.SaleLineCommand(productId, 2, BigDecimal.valueOf(50), null)),
+            null
         );
 
         Sale expectedSale = Sale.createDraft(

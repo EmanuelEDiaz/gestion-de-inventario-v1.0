@@ -89,7 +89,8 @@ public class SaleController {
                 request.lines().stream()
                     .map(l -> new SaleCommandPort.CreateCommand.SaleLineCommand(
                         l.productId(), l.quantity(), l.unitPrice(), l.discount()))
-                    .toList()
+                    .toList(),
+            null
         );
         return saleCommandPort.create(cmd, userId)
             .map(saleMapper::toDto);

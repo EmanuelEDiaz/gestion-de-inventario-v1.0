@@ -19,6 +19,8 @@ public interface CustomerDebtRepository {
 
     Flux<CustomerDebt> findPendingByCustomerId(UUID customerId);
 
+    Flux<CustomerDebt> findByStatus(CustomerDebt.DebtStatus status);
+
     Flux<CustomerDebt> findOverdue();
 
     Mono<CustomerDebt> save(CustomerDebt debt);

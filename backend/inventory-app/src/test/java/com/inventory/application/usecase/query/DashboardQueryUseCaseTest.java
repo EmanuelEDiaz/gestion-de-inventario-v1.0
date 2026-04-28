@@ -1,4 +1,4 @@
-﻿package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.Product;
 import com.inventory.domain.model.StockBalance;

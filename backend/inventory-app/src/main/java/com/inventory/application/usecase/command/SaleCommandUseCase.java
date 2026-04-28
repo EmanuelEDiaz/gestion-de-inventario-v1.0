@@ -69,7 +69,7 @@ public class SaleCommandUseCase implements SaleCommandPort {
                     command.saleDate(),
                     lines,
                     createdBy,
-                    null
+                    command.paymentMode()
                 );
 
                 return saleRepository.save(sale);
