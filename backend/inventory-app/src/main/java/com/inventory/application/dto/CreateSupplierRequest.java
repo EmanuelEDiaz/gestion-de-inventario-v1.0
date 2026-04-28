@@ -28,5 +28,6 @@ public record CreateSupplierRequest(
     @Size(max = 300, message = "Address must be at most 300 characters")
     String address,
     
-    String notes
+    String notes,
+    String website
 ) {}

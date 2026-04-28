@@ -5,6 +5,7 @@ import com.inventory.domain.model.SupplierCatalogProduct;
 import com.inventory.domain.ports.in.SupplierCatalogProductCommandPort;
 import com.inventory.domain.ports.out.SupplierCatalogProductRepository;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -38,5 +39,10 @@ public class SupplierCatalogProductCommandUseCase implements SupplierCatalogProd
         return supplierCatalogProductRepository.findById(catalogProductId)
             .switchIfEmpty(Mono.error(new NotFoundException("SupplierCatalogProduct not found: " + catalogProductId)))
             .flatMap(p -> supplierCatalogProductRepository.deleteById(catalogProductId));
+    }
+
+    @Override
+    public Flux<SupplierCatalogProduct> listBySupplierId(UUID supplierId) {
+        return supplierCatalogProductRepository.findBySupplierId(supplierId);
     }
 }

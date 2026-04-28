@@ -1,6 +1,7 @@
 package com.inventory.domain.ports.in;
 
 import com.inventory.domain.model.SupplierCatalogProduct;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -14,6 +15,8 @@ public interface SupplierCatalogProductCommandPort {
     Mono<SupplierCatalogProduct> add(AddCommand command);
 
     Mono<Void> delete(UUID catalogProductId);
+
+    Flux<SupplierCatalogProduct> listBySupplierId(UUID supplierId);
 
     record AddCommand(
         UUID supplierId,

@@ -1,6 +1,7 @@
 package com.inventory.domain.ports.in;
 
 import com.inventory.domain.model.SupplierImage;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -15,6 +16,8 @@ public interface SupplierImageCommandPort {
     Mono<Void> delete(UUID imageId);
 
     Mono<SupplierImage> setPrimary(UUID imageId);
+
+    Flux<SupplierImage> listBySupplierId(UUID supplierId);
 
     record UploadCommand(
         UUID supplierId,

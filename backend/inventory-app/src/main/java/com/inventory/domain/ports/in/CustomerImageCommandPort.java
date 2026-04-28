@@ -17,6 +17,8 @@ public interface CustomerImageCommandPort {
 
     Mono<CustomerImage> setPrimary(UUID imageId);
 
+    Flux<CustomerImage> listByCustomer(UUID customerId);
+
     record UploadCommand(
         UUID customerId,
         boolean isPrimary,

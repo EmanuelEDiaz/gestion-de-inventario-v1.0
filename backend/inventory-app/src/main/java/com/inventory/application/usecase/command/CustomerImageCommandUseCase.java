@@ -6,6 +6,7 @@ import com.inventory.domain.ports.in.CustomerImageCommandPort;
 import com.inventory.domain.ports.out.CustomerImageRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -63,5 +64,10 @@ public class CustomerImageCommandUseCase implements CustomerImageCommandPort {
                             target.originalFilename(), target.sizeBytes(), target.createdAt())
                     ))
             );
+    }
+
+    @Override
+    public Flux<CustomerImage> listByCustomer(UUID customerId) {
+        return customerImageRepository.findByCustomerId(customerId);
     }
 }

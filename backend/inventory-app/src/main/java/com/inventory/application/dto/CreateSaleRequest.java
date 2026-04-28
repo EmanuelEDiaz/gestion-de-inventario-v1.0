@@ -11,7 +11,8 @@ public record CreateSaleRequest(
     String currencyCode,
     String notes,
     LocalDate saleDate,
-    List<SaleLineRequest> lines
+    List<SaleLineRequest> lines,
+    String paymentMode
 ) {
     public record SaleLineRequest(
         UUID productId,

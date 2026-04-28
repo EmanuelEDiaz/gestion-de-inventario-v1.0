@@ -90,7 +90,9 @@ public class SaleController {
                     .map(l -> new SaleCommandPort.CreateCommand.SaleLineCommand(
                         l.productId(), l.quantity(), l.unitPrice(), l.discount()))
                     .toList(),
-            null
+            request.paymentMode() != null
+                ? Sale.PaymentMode.valueOf(request.paymentMode())
+                : Sale.PaymentMode.CASH
         );
         return saleCommandPort.create(cmd, userId)
             .map(saleMapper::toDto);

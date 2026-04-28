@@ -16,11 +16,18 @@ public interface SaleMapper {
     @Mapping(target = "warehouseName", ignore = true)
     @Mapping(target = "status", source = "status", qualifiedByName = "statusToString")
     @Mapping(target = "lines", source = "lines", qualifiedByName = "linesToDtos")
+    @Mapping(target = "paymentMode", source = "paymentMode", qualifiedByName = "paymentModeToString")
+    @Mapping(target = "debtId", ignore = true)
     SaleDto toDto(Sale sale);
 
     @Named("statusToString")
     default String statusToString(Sale.SaleStatus status) {
         return status != null ? status.name() : null;
+    }
+
+    @Named("paymentModeToString")
+    default String paymentModeToString(Sale.PaymentMode mode) {
+        return mode != null ? mode.name() : null;
     }
 
     @Named("linesToDtos")

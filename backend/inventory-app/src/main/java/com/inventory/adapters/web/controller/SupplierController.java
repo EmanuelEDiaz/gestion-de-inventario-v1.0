@@ -73,7 +73,7 @@ public class SupplierController {
             request.email(),
             request.address(),
             request.notes(),
-            null
+            request.website()
         )).map(mapper::toDto);
     }
 
@@ -89,7 +89,7 @@ public class SupplierController {
             request.email(),
             request.address(),
             request.notes(),
-            null
+            request.website()
         )).map(mapper::toDto);
     }
 

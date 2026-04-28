@@ -25,7 +25,9 @@ public record SaleDto(
     UUID createdBy,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    List<SaleLineDto> lines
+    List<SaleLineDto> lines,
+    String paymentMode,
+    UUID debtId
 ) {
     public record SaleLineDto(
         UUID id,

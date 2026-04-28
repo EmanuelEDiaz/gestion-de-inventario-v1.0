@@ -16,6 +16,7 @@ public record SupplierDto(
     String address,
     String notes,
     boolean active,
+    String website,
     Instant createdAt,
     Instant updatedAt
 ) {}
