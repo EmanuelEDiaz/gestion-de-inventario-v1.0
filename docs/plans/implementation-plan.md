@@ -6,7 +6,7 @@ Módulos: Imágenes de Clientes/Proveedores · Proveedor Extendido · Modo Fiar 
 
 ---
 
-## Etapa 1 — Migración de Base de Datos (Flyway V2)
+## Etapa 1 — Migración de Base de Datos (Flyway V2) ✅ COMPLETADA
 
 ### Objetivo
 Crear todas las tablas nuevas y alteraciones de tablas existentes en una sola migración.
@@ -146,36 +146,39 @@ CREATE TABLE sync_incidents (
 
 ---
 
-## Etapa 2 — Modelos de Dominio (Java)
+## Etapa 2 — Modelos de Dominio (Java) ✅ COMPLETADA
 
 ### Objetivo
 Crear las clases de dominio puras (sin anotaciones de Spring ni JPA).
 
 ### Archivos a crear
 ```
-backend/inventory-app/src/main/java/com/yourorg/inventory/domain/model/
-  CustomerDebt.java
-  DebtPayment.java
-  Notification.java
-  SupplierSocialLink.java
-  SupplierCatalogProduct.java
-  SyncIncident.java
+backend/inventory-app/src/main/java/com/inventory/domain/model/
+  CustomerImage.java          ✅
+  SupplierImage.java          ✅
+  CustomerDebt.java           ✅
+  DebtPayment.java            ✅
+  Notification.java           ✅
+  NotificationRead.java       ✅
+  SupplierSocialLink.java     ✅
+  SupplierCatalogProduct.java ✅
+  SyncIncident.java           ✅
 ```
 
 ### Archivos a modificar
 ```
-domain/model/Customer.java         ← agregar List<CustomerImage> images
-domain/model/Supplier.java         ← agregar website, List<SupplierImage>, List<SupplierSocialLink>, List<SupplierCatalogProduct>
-domain/model/Sale.java             ← agregar PaymentMode paymentMode (enum: IMMEDIATE, CREDIT, RESERVE)
+domain/model/Customer.java         ← agregar List<CustomerImage> images  ✅
+domain/model/Supplier.java         ← agregar website, List<SupplierImage>, List<SupplierSocialLink>, List<SupplierCatalogProduct>  ✅
+domain/model/Sale.java             ← agregar PaymentMode paymentMode (enum: IMMEDIATE, CREDIT, RESERVE)  ✅
 ```
 
 ### Criterios de aceptación
-- Compilar: `mvn compile -pl inventory-app` sin errores
-- No hay dependencias de Spring/JPA en `domain/model/`
+- Compilar: `mvn compile -pl inventory-app` sin errores  ✅
+- No hay dependencias de Spring/JPA en `domain/model/`  ✅
 
 ---
 
-## Etapa 3 — Puertos de Repositorio (Java)
+## Etapa 3 — Puertos de Repositorio (Java) ✅ COMPLETADA
 
 ### Objetivo
 Definir las interfaces de los repositorios (output ports).
@@ -183,25 +186,28 @@ Definir las interfaces de los repositorios (output ports).
 ### Archivos a crear
 ```
 domain/ports/out/
-  CustomerImageRepositoryPort.java
-  SupplierImageRepositoryPort.java
-  SupplierSocialLinkRepositoryPort.java
-  SupplierCatalogProductRepositoryPort.java
-  CustomerDebtRepositoryPort.java
-  DebtPaymentRepositoryPort.java
-  NotificationRepositoryPort.java
-  NotificationReadRepositoryPort.java
-  NotificationSinkPort.java          ← para SSE (push de nuevas notifs)
-  SyncIncidentRepositoryPort.java
+  CustomerImageRepository.java          ✅
+  SupplierImageRepository.java          ✅
+  SupplierSocialLinkRepository.java     ✅
+  SupplierCatalogProductRepository.java ✅
+  CustomerDebtRepository.java           ✅
+  DebtPaymentRepository.java            ✅
+  NotificationRepository.java           ✅
+  NotificationReadRepository.java       ✅
+  NotificationSinkPort.java             ✅  ← SSE (push de nuevas notifs, no es repo)
+  SyncIncidentRepository.java           ✅
 ```
 
+> **Convención de nombres**: los puertos de repositorio usan `*Repository.java` (sin sufijo "Port").
+> Solo `NotificationSinkPort` conserva el sufijo "Port" porque no es un repositorio sino un canal de emisión.
+
 ### Criterios de aceptación
-- Compilar sin errores
-- Todas las firmas de métodos retornan `Mono<T>` o `Flux<T>` (WebFlux reactivo)
+- Compilar sin errores  ✅
+- Todas las firmas de métodos retornan `Mono<T>` o `Flux<T>` (WebFlux reactivo)  ✅
 
 ---
 
-## Etapa 4 — Casos de Uso (Java Application Layer)
+## Etapa 4 — Casos de Uso (Java Application Layer)  ← PRÓXIMA
 
 ### Objetivo
 Implementar la lógica de negocio en la capa de aplicación.
@@ -267,7 +273,7 @@ application/usecase/query/
 
 ---
 
-## Etapa 5 — Adaptadores de Persistencia (Java)
+## Etapa 5 — Adaptadores de Persistencia (R2DBC)
 
 ### Objetivo
 Implementar los repositorios con R2DBC.
@@ -286,15 +292,15 @@ adapters/persistence/
     NotificationReadEntity.java
     SyncIncidentEntity.java
   repository/ (Spring Data R2DBC interfaces)
-    CustomerImageR2dbcRepo.java
-    SupplierImageR2dbcRepo.java
-    SupplierSocialLinkR2dbcRepo.java
-    SupplierCatalogProductR2dbcRepo.java
-    CustomerDebtR2dbcRepo.java
-    DebtPaymentR2dbcRepo.java
-    NotificationR2dbcRepo.java
-    NotificationReadR2dbcRepo.java
-    SyncIncidentR2dbcRepo.java
+    CustomerImageR2dbcRepository.java
+    SupplierImageR2dbcRepository.java
+    SupplierSocialLinkR2dbcRepository.java
+    SupplierCatalogProductR2dbcRepository.java
+    CustomerDebtR2dbcRepository.java
+    DebtPaymentR2dbcRepository.java
+    NotificationR2dbcRepository.java
+    NotificationReadR2dbcRepository.java
+    SyncIncidentR2dbcRepository.java
   mapper/
     CustomerImageMapper.java         (MapStruct)
     SupplierImageMapper.java
@@ -309,7 +315,7 @@ adapters/persistence/
     DebtPaymentRepositoryAdapter.java
     NotificationRepositoryAdapter.java
     SyncIncidentRepositoryAdapter.java
-    NotificationSinkAdapter.java     ← Sinks.Many para SSE broadcast
+    NotificationSinkAdapter.java     ← implementa NotificationSinkPort con reactor Sinks.Many
 ```
 
 ### Criterios de aceptación
