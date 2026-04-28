@@ -8,6 +8,8 @@ auto-load: true
 # AGENTS.md - Reglas Obligatorias del Proyecto
 
 > **CRITICAL:** Estas reglas se aplican a TODA tarea automáticamente.
+> 
+> **Skills cargados automáticamente al inicio**: `agents-rules`, `senior-frontend`, `react-best-practices`
 
 ---
 

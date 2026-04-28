@@ -123,6 +123,7 @@ $bStatus = if ($backOk)  { "http://localhost:8080" } else { "http://localhost:80
 $fStatus = if ($frontOk) { "http://localhost:3000" } else { "http://localhost:3000 (iniciando...)" }
 Write-Host "   Frontend  : $fStatus" -ForegroundColor $(if ($frontOk) { "Green" } else { "Yellow" })
 Write-Host "   Backend   : $bStatus" -ForegroundColor $(if ($backOk)  { "Green" } else { "Yellow" })
+Write-Host "   Swagger   : http://localhost:8080/swagger-ui.html" -ForegroundColor Magenta
 Write-Host "   Health    : http://localhost:8080/actuator/health" -ForegroundColor DarkGray
 Write-Host "   API       : http://localhost:8080/api/v1" -ForegroundColor DarkGray
 Write-Host ""

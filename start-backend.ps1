@@ -61,9 +61,14 @@ $backendDir = Join-Path $ROOT "backend\inventory-app"
 Write-OK "Directorio: $backendDir"
 Write-Host ""
 Write-Host "   Credenciales: admin / admin123" -ForegroundColor White
+Write-Host "   Swagger UI  : http://localhost:8080/swagger-ui.html" -ForegroundColor Magenta
 Write-Host "   Para detener: Ctrl+C" -ForegroundColor Yellow
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
-Set-Location $backendDir
-mvn spring-boot:run "-Dmaven.test.skip=true"
+Push-Location $backendDir
+try {
+    mvn spring-boot:run "-Dmaven.test.skip=true"
+} finally {
+    Pop-Location
+}
