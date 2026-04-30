@@ -1,4 +1,4 @@
-# Implementation Roadmap
+﻿# Implementation Roadmap
 
 Este documento aterriza [CLAUDE.md](../../CLAUDE.md) y [execution-addendum.md](./execution-addendum.md) a una secuencia operativa. No reemplaza los contratos del plan principal; define orden, dependencias y entregables para reducir ambiguedad.
 
@@ -147,3 +147,5 @@ Salida esperada:
 - Regla de no usar deprecated aplicada a dependencias y APIs.
 
 Cuando todos estos puntos esten cerrados, el siguiente paso ya no sera seguir refinando documentos sino empezar a materializar Gate B y Gate C.
+
+> **Estado de ejecucion real, hallazgos de tests y pendientes del frontend**: ver `docs/plans/implementation-plan.md`.

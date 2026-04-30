@@ -3,6 +3,7 @@
 Este documento complementa a [CLAUDE.md](../../CLAUDE.md). No reemplaza el plan principal; agrega reglas operativas y criterios de ejecucion para evitar ambiguedades durante la implementacion.
 
 La secuencia de entrega refinada vive en [implementation-roadmap.md](./implementation-roadmap.md).
+El plan activo de ejecucion (etapas, estado y hallazgos) vive en [docs/plans/implementation-plan.md](../plans/implementation-plan.md).
 
 ## 1. Dependency Policy
 

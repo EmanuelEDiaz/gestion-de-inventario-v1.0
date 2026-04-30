@@ -207,7 +207,7 @@ domain/ports/out/
 
 ---
 
-## Etapa 4 — Casos de Uso (Java Application Layer)  ← PRÓXIMA
+## Etapa 4 — Casos de Uso (Java Application Layer) ✅ COMPLETADA
 
 ### Objetivo
 Implementar la lógica de negocio en la capa de aplicación.
@@ -273,7 +273,7 @@ application/usecase/query/
 
 ---
 
-## Etapa 5 — Adaptadores de Persistencia (R2DBC)
+## Etapa 5 — Adaptadores de Persistencia (R2DBC) ✅ COMPLETADA
 
 ### Objetivo
 Implementar los repositorios con R2DBC.
@@ -324,7 +324,7 @@ adapters/persistence/
 
 ---
 
-## Etapa 6 — Controladores Web (Java)
+## Etapa 6 — Controladores Web (Java) ✅ COMPLETADA
 
 ### Objetivo
 Exponer los endpoints REST definidos en `docs/contracts/endpoints.md`.
@@ -361,12 +361,9 @@ adapters/web/dto/SaleResponse.java                  ← agregar paymentMode, deb
 
 ---
 
-## Etapa 7 — Tests Backend
+## Etapa 7 — Tests Backend ✅ COMPLETADA (106 tests, 0 errores)
 
-### Objetivo
-Cobertura completa de los nuevos casos de uso y controladores.
-
-### Tests a escribir
+> **Estado real** — Los tests escritos difieren del plan original. Ver sección "Hallazgos y estado real" al final del plan.
 ```
 src/test/java/
   domain/CreditSaleServiceTest.java
@@ -385,7 +382,7 @@ src/test/java/
 
 ---
 
-## Etapa 8 — Entidades Frontend (TypeScript Core)
+## Etapa 8 — Entidades Frontend (TypeScript Core) ← PRÓXIMA
 
 ### Objetivo
 Definir los tipos de dominio en la capa core del frontend.
@@ -623,6 +620,121 @@ frontend/src/presentation/shared/components/
 - Resolver conflicto ENTITY_DUPLICATE con "Editar y reintentar" → abre formulario pre-cargado
 - Barra de carga inicial: avanza paso a paso (verificar con DevTools Network throttling)
 - Barra de sync: muestra progreso real de operaciones del outbox
+
+---
+
+## Hallazgos y estado real (actualizado 2026-04-30)
+
+### Backend completado — estado por etapa
+
+| Etapa | Tests | Commit |
+|-------|-------|--------|
+| 1 — Migración DB | — | ✅ main |
+| 2 — Domain models | — | ✅ main |
+| 3 — Ports | — | ✅ main |
+| 4 — Use cases | `CustomerImageCommandUseCaseTest` (7), `SupplierImageCommandUseCaseTest` (4), `CustomerDebtCommandUseCaseTest` (4), `SyncIncidentCommandUseCaseTest` (4), `SupplierSocialLinkCommandUseCaseTest` (3), `SaleCommandUseCaseTest` (5) | ✅ main |
+| 5 — Persistence | `ArchitectureTest` (6), `ProductTest` (6), `SaleTest` (7), `StockBalanceTest` (10) | ✅ main |
+| 6 — Controllers | `DashboardControllerTest` (5), `SyncControllerTest` (3) | ✅ main |
+| 7 — Tests BE | `CustomerDebtControllerTest` (8), `NotificationControllerTest` (7), `SyncIncidentControllerTest` (7), `CustomerImageControllerTest` (10), `SupplierImageControllerTest` (8), `DashboardQueryUseCaseTest` (2) | ⏳ pendiente commit |
+
+**Total: 106 tests, 0 errores**
+
+### Tests reales escritos en Etapa 7 (difieren del plan original)
+
+El plan original indicaba tests con TestContainers. Lo que se implementó fue una suite de **`@WebFluxTest` slice tests** con `@MockBean` — más rápidos, sin dependencia de Docker/Postgres, suficientes para verificar RBAC y contratos HTTP. Los tests de integración con TestContainers quedan pendientes para una etapa de hardening posterior.
+
+### Hallazgos críticos para el frontend (LEER ANTES de Etapas 8-14)
+
+Estos valores se verificaron en los tests del backend. Usarlos exactamente como aparecen aquí.
+
+#### Enums — valores exactos
+```typescript
+// NotificationType
+type NotificationType = 'SYSTEM_AUTO' | 'USER_MANUAL'
+// ⚠️ NO existen 'SYSTEM' ni 'MANUAL' → HTTP 400
+
+// NotificationCategory
+type NotificationCategory = 'LOW_STOCK' | 'SYSTEM' | 'SALE' | 'PURCHASE' | 'SYNC'
+
+// SyncIncidentType
+type SyncIncidentType = 'STOCK_CONFLICT' | 'ENTITY_DUPLICATE' | 'VERSION_MISMATCH' | 'CHECKSUM_ERROR'
+// ⚠️ NO existe 'CONFLICT' a secas → HTTP 400
+
+// SyncIncidentStatus
+type SyncIncidentStatus = 'PENDING' | 'RESOLVED' | 'IGNORED'
+
+// PaymentMode (Sale)
+type PaymentMode = 'IMMEDIATE' | 'CREDIT' | 'RESERVE'
+```
+
+#### Upload de imágenes — flujo real (dos pasos)
+
+El endpoint de imágenes recibe **JSON, NO multipart/form-data**:
+
+```
+POST /api/v1/customers/{id}/images
+Content-Type: application/json
+
+{
+  "isPrimary": boolean,
+  "contentType": "image/png" | "image/jpeg" | "image/webp",
+  "filePath": string,       ← ruta donde YA fue guardado el binario
+  "originalFilename": string,
+  "sizeBytes": number,
+  "sortOrder": number        ← 0 = primera, 1 = segunda, etc.
+}
+```
+
+Esto implica que el frontend necesita DOS pasos:
+1. Subir el binario (endpoint pendiente — ver punto siguiente)
+2. Registrar metadatos con este endpoint JSON
+
+**⚠️ Pendiente en backend**: el endpoint de subida binaria `POST /api/v1/uploads/image` (multipart → devuelve filePath) NO existe todavía. Debe crearse antes de implementar la UI de galería en Etapas 10-11. Se puede diferir usando un mock de filePath en desarrollo.
+
+#### RBAC verificado en tests
+
+| Operación | ADMIN | MANAGER | SELLER |
+|-----------|-------|---------|--------|
+| Ver imágenes | ✅ | ✅ | ✅ |
+| Subir / eliminar imagen | ✅ | ✅ | ❌ 403 |
+| Marcar imagen como primary | ✅ | ✅ | ❌ 403 |
+| Ver deudas | ✅ | ✅ | ✅ |
+| Cancelar deuda | ✅ | ✅ | ❌ 403 |
+| Registrar pago de deuda | ✅ | ✅ | ✅ |
+| Ver notificaciones | ✅ | ✅ | ✅ |
+| Crear notificación | ✅ | ✅ | ❌ 403 |
+| Ver / resolver sync incidents | ✅ | ✅ | ❌ 403 |
+
+El frontend debe ocultar o deshabilitar los botones según rol. No confiar solo en que el backend rechace.
+
+#### Entidades frontend faltantes (descubiertas al escribir los tests)
+
+Estas entidades tienen DTO en el backend pero NO tienen archivo en `frontend/src/core/entities/`:
+
+| Archivo a crear | DTO backend |
+|-----------------|-------------|
+| `customer-image.ts` | `CustomerImageDto` |
+| `supplier-image.ts` | `SupplierImageDto` |
+| `supplier-social-link.ts` | `SupplierSocialLinkDto` |
+| `supplier-catalog-product.ts` | `SupplierCatalogProductDto` |
+
+> La Etapa 8 del plan original ya incluye `customer-debt.ts`, `notification.ts`, `sync-incident.ts`. Se agregan los 4 de arriba a esa etapa.
+
+#### Entidades frontend existentes con campos faltantes
+
+| Archivo | Campo faltante |
+|---------|---------------|
+| `customer.ts` | `images?: CustomerImage[]` |
+| `supplier.ts` | `images?: SupplierImage[]`, `socialLinks?: SupplierSocialLink[]`, `catalogProducts?: SupplierCatalogProduct[]`, `website?: string` |
+| `sale.ts` | `paymentMode?: PaymentMode`, `debtId?: string` |
+
+#### Deuda técnica frontend (no bloquea etapas 8-14)
+
+Registrada en auditoría 2026-04-17. Debe resolverse antes de entrega final:
+- 5 componentes superan 100 líneas
+- 9 hooks sin sufijo `Controller`
+- 9 módulos con estructura plana (faltan subcarpetas `table/`, `filters/`)
+- 5 vistas con lógica que debería estar en hooks
 
 ---
 
