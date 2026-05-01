@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/presentation/shared/components/ui/toast';
 import { useSales } from '../hooks/useSales';
 import { SaleTable } from '../components/SaleTable';
 import { SaleFormFields } from '../components/form/SaleFormFields';

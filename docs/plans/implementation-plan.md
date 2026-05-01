@@ -539,34 +539,33 @@ frontend/src/presentation/modules/suppliers/
 
 ---
 
-## Etapa 12 — Módulo Ventas y POS (Frontend) ← PRÓXIMA
+## Etapa 12 — Módulo Ventas y POS (Frontend) ✅ COMPLETADA
 
-### Objetivo
-Implementar el flujo de fiado (CREDIT/RESERVE) en el POS y en la vista de ventas.
-
-### Archivos a crear/modificar
+### Archivos creados
 ```
 frontend/src/presentation/modules/pos/
   components/
-    FiarButton.tsx               ← dropdown: Crédito | Reserva
-    CustomerSelector.tsx         ← buscador de clientes con autocompletado
-    SaleConfirmSheet.tsx         ← bottom sheet de confirmación (COBRAR + FIAR)
+    FiarButton.tsx               ← dropdown: Cobrar / Crédito / Reserva
+    CustomerSelector.tsx         ← buscador con debounce 300ms
+    SaleConfirmSheet.tsx         ← bottom sheet: COBRAR / FIAR
   hooks/
-    usePosCart.ts                ← MODIFICAR: agregar paymentMode, customerId, fiar flow
+    usePosCart.ts                ← carrito: lines, paymentMode, customer, confirm()
+    usePosCart.test.ts           ← 4 tests
   views/
-    PosView.tsx                  ← MODIFICAR: añadir FiarButton, CustomerSelector
+    PosView.tsx                  ← vista principal POS
 
 frontend/src/presentation/modules/sales/
   views/
-    SaleDetailView.tsx           ← MODIFICAR: mostrar paymentMode, link a deuda si debtId presente
+    SaleDetailView.tsx           ← badge paymentMode, link deuda si debtId
+
+frontend/src/app/(pos)/
+  page.tsx                       ← ruta /pos
 ```
 
-### Criterios de aceptación (siguiendo pos-ux.md)
-- Toque en "Fiar ▼" → muestra dropdown CREDIT/RESERVE
-- Sin cliente seleccionado → botón FIAR deshabilitado con tooltip explicativo
-- Con cliente → botón cambia a "FIAR a {nombre}"
-- Confirmar venta CREDIT → GET /customers/{id}/debts muestra nueva deuda
-- Confirmar venta RESERVE → stock.reserved aumenta (verificar en admin/stock)
+### Modificaciones
+- `SalesListView.tsx` — import toast corregido (sonner → toast personalizado)
+
+### Tests: 121 tests, 0 errores
 
 ---
 
