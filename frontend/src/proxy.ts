@@ -23,7 +23,7 @@ function isPublicPath(pathname: string): boolean {
   return publicPaths.some((path) => pathname.startsWith(path));
 }
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicPath(pathname)) {

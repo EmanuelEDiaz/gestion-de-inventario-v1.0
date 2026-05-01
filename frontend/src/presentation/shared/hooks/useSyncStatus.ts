@@ -99,7 +99,7 @@ export function useSyncStatus() {
 
   // Sync no-op cuando no hay persistencia
   const sync = useCallback(async () => {
-    console.log('[SyncStatus] No implementado: persistencia offline');
+    return;
   }, []);
 
   return { status, lastSync, pendingCount, sync };

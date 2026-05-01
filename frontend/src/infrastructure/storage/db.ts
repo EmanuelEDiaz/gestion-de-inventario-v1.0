@@ -232,3 +232,9 @@ export const MAX_OUTBOX_ENTRIES = 500;
 export function isPersistenceReady(): boolean { return false; }
 export async function getOutboxCount(): Promise<number> { return 0; }
 export async function canAddToOutbox(): Promise<boolean> { return false; }
+export async function initPersistence(): Promise<void> {
+	// No-op: persistencia offline aun no implementada.
+}
+export async function destroyPersistence(): Promise<void> {
+	// No-op: persistencia offline aun no implementada.
+}

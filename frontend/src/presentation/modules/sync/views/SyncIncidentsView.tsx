@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import type { SyncIncidentType } from '@/core/entities/sync-incident';
 import { SYNC_INCIDENT_TYPE_LABELS } from '@/core/entities/sync-incident';
 import { useSyncIncidents } from '../hooks/useSyncIncidents';
@@ -61,9 +61,8 @@ export function SyncIncidentsView() {
             </thead>
             <tbody>
               {filtered.map((incident) => (
-                <>
+                <Fragment key={incident.id}>
                   <SyncIncidentRow
-                    key={incident.id}
                     incident={incident}
                     expanded={expandedId === incident.id}
                     onToggle={() =>
@@ -72,12 +71,11 @@ export function SyncIncidentsView() {
                   />
                   {expandedId === incident.id && (
                     <SyncConflictResolver
-                      key={`resolver-${incident.id}`}
                       incident={incident}
                       onClose={() => setExpandedId(null)}
                     />
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

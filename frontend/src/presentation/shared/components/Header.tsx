@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
+import { NotificationBadge } from '@/presentation/modules/notifications/components/NotificationBadge';
 import { Icons } from './Sidebar';
 
 interface HeaderProps {
@@ -27,6 +28,8 @@ export function Header({ isSidebarCollapsed = false, onLogoutRequest }: HeaderPr
 
         {/* Acciones del usuario */}
         <div className="flex items-center gap-4">
+          <NotificationBadge />
+
           {/* Nombre del usuario */}
           <div className="flex items-center gap-2 text-sm text-gray-600">
             {Icons.user}
