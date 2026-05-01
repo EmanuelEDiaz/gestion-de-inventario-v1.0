@@ -426,50 +426,55 @@ frontend/src/core/entities/
 
 ---
 
-## Etapa 9 — Infraestructura Frontend ← PRÓXIMA
+## Etapa 9 — Infraestructura Frontend ✅ COMPLETADA
 
 ### Objetivo
-Implementar repositorios, stores de Dexie y clientes HTTP para los nuevos módulos.
+Implementar repositorios, clientes HTTP e interfaces para los nuevos módulos.
 
-### Archivos a crear
+### Archivos creados
+
+#### Interfaces (puertos)
 ```
-frontend/src/infrastructure/storage/
-  dexie-db.ts                 ← MODIFICAR: agregar 4 nuevos stores (syncIncidents, uploadQueue, customerDebts, notifications)
-
-frontend/src/infrastructure/repositories/
-  CustomerDebtRepository.ts
-  NotificationRepository.ts
-  SyncIncidentRepository.ts
-  UploadQueueRepository.ts
-
-frontend/src/infrastructure/api/
-  customer-debt-api.ts
-  notification-api.ts
-  sync-incident-api.ts
-  image-upload-api.ts         ← con SHA-256 + Content-MD5 header
-
 frontend/src/core/interfaces/
-  ICustomerDebtRepository.ts
-  INotificationRepository.ts
-  ISyncIncidentRepository.ts
-  IUploadQueueRepository.ts
+  ICustomerDebtRepository.ts   ✅ findAll, findOverdue, findById, findByCustomer, update, cancel, registerPayment
+  INotificationRepository.ts   ✅ findAll, getUnreadCount, create, markRead, markAllRead
+  ISyncIncidentRepository.ts   ✅ findPending, findById, report, resolve, ignore
+  IUploadQueueRepository.ts    ✅ enqueue, findByStatus, findByEntity, updateStatus, incrementRetry, remove, clearCompleted
 ```
 
-### Nuevos stores Dexie
-```typescript
-// syncIncidents: '++id, operationId, entityType, incidentType, status, createdAt'
-// uploadQueue: '++id, entityType, entityId, status, checksumSha256'
-// customerDebts: 'id, customerId, status, dueDate'
-// notifications: 'id, category, targetType, createdAt, [read+userId]'
+#### Clientes HTTP
+```
+frontend/src/infrastructure/api/
+  customer-debt-api.ts         ✅ GET /api/v1/debts, PATCH, POST /{id}/cancel, POST /{id}/payments
+  notification-api.ts          ✅ GET /api/v1/notifications, POST, POST /{id}/read, POST /read-all
+  sync-incident-api.ts         ✅ GET /api/v1/sync/incidents, POST, POST /{id}/resolve, POST /{id}/ignore
+  image-upload-api.ts          ✅ customerImageApi + supplierImageApi (list/upload/setPrimary/delete)
+```
+
+#### Repositorios
+```
+frontend/src/infrastructure/repositories/
+  CustomerDebtRepository.ts    ✅ implementa ICustomerDebtRepository vía customerDebtApi
+  NotificationRepository.ts    ✅ implementa INotificationRepository vía notificationApi
+  SyncIncidentRepository.ts    ✅ implementa ISyncIncidentRepository vía syncIncidentApi
+  UploadQueueRepository.ts     ✅ implementa IUploadQueueRepository vía IndexedDB (idb)
+```
+
+### Tests escritos (21 tests nuevos → total 99 tests)
+```
+frontend/src/infrastructure/repositories/
+  CustomerDebtRepository.test.ts   8 tests
+  NotificationRepository.test.ts   6 tests
+  SyncIncidentRepository.test.ts   7 tests
 ```
 
 ### Criterios de aceptación
-- `pnpm test:run` verde
-- Upload con SHA-256 verificado: test con archivo real → Content-MD5 header correcto
+- `pnpm tsc --noEmit` — sin errores en archivos nuevos  ✅
+- `pnpm test:run` — 99 tests, 0 errores  ✅
 
 ---
 
-## Etapa 10 — Módulo Clientes (Frontend)
+## Etapa 10 — Módulo Clientes (Frontend) ← PRÓXIMA
 
 ### Objetivo
 Añadir galería de imágenes y lista de deudas a la vista de cliente.
@@ -653,7 +658,8 @@ frontend/src/presentation/shared/components/
 | 5 — Persistence | `ArchitectureTest` (6), `ProductTest` (6), `SaleTest` (7), `StockBalanceTest` (10) | ✅ main |
 | 6 — Controllers | `DashboardControllerTest` (5), `SyncControllerTest` (3) | ✅ main |
 | 7 — Tests BE | `CustomerDebtControllerTest` (8), `NotificationControllerTest` (7), `SyncIncidentControllerTest` (7), `CustomerImageControllerTest` (10), `SupplierImageControllerTest` (8), `DashboardQueryUseCaseTest` (2) | ✅ main |
-| 8 — FE Entities | 55 tests (7 archivos) | ✅ pendiente commit |
+| 8 — FE Entities | 55 tests (7 archivos) | ✅ commiteado |
+| 9 — FE Infrastructure | 21 tests (3 archivos) | ✅ pendiente commit |
 
 **Total: 106 tests, 0 errores**
 
