@@ -382,34 +382,51 @@ src/test/java/
 
 ---
 
-## Etapa 8 — Entidades Frontend (TypeScript Core) ← PRÓXIMA
+## Etapa 8 — Entidades Frontend (TypeScript Core) ✅ COMPLETADA
 
 ### Objetivo
 Definir los tipos de dominio en la capa core del frontend.
 
-### Archivos a crear
+### Archivos creados
 ```
 frontend/src/core/entities/
-  customer-debt.ts
-  debt-payment.ts
-  notification.ts
-  sync-incident.ts
-  upload-queue-entry.ts
+  customer-image.ts           ✅ CustomerImage, CreateCustomerImageData, SetPrimaryCustomerImageData
+  supplier-image.ts           ✅ SupplierImage, CreateSupplierImageData, SetPrimarySupplierImageData
+  supplier-social-link.ts     ✅ SupplierSocialLink, SocialPlatform (7 valores), SOCIAL_PLATFORM_LABELS
+  supplier-catalog-product.ts ✅ SupplierCatalogProduct, AddSupplierCatalogProductData
+  customer-debt.ts            ✅ CustomerDebt, DebtStatus, DebtPaymentMethod, DEBT_STATUS_LABELS/COLORS
+  debt-payment.ts             ✅ DebtPayment, RegisterDebtPaymentData
+  notification.ts             ✅ Notification, NotificationType, NotificationCategory, NOTIFICATION_CATEGORY_LABELS
+  sync-incident.ts            ✅ SyncIncident, SyncIncidentType, SyncIncidentStatus, labels, report/resolve data
+  upload-queue-entry.ts       ✅ UploadQueueEntry, UploadQueueStatus, UploadQueueEntityType
 ```
 
-### Archivos a modificar
+### Archivos modificados
 ```
-frontend/src/core/entities/customer.ts    ← agregar images: ImageMetadata[]
-frontend/src/core/entities/supplier.ts   ← agregar images, socialLinks, catalogProducts, website
-frontend/src/core/entities/sale.ts       ← agregar paymentMode, debtId
+frontend/src/core/entities/customer.ts    ✅ + images?: CustomerImage[]
+frontend/src/core/entities/supplier.ts   ✅ + website?, images?, socialLinks?, catalogProducts?
+frontend/src/core/entities/sale.ts       ✅ + PaymentMode type, paymentMode?, debtId? en Sale y CreateSaleInput
+```
+
+### Tests escritos (55 tests, 0 errores)
+```
+frontend/src/core/entities/
+  customer-image.test.ts         7 tests
+  customer-debt.test.ts          8 tests
+  notification.test.ts           9 tests
+  sync-incident.test.ts          9 tests
+  supplier-social-link.test.ts   5 tests
+  entities-extension.test.ts     7 tests  ← verifica Customer, Supplier y Sale extendidos
+  product.test.ts                10 tests (pre-existente, sigue verde)
 ```
 
 ### Criterios de aceptación
-- `pnpm tsc --noEmit` sin errores en frontend/
+- `pnpm tsc --noEmit` — sin errores en archivos nuevos/modificados  ✅
+- `pnpm vitest run src/core/entities/` — 55 tests, 0 errores  ✅
 
 ---
 
-## Etapa 9 — Infraestructura Frontend
+## Etapa 9 — Infraestructura Frontend ← PRÓXIMA
 
 ### Objetivo
 Implementar repositorios, stores de Dexie y clientes HTTP para los nuevos módulos.
@@ -635,7 +652,8 @@ frontend/src/presentation/shared/components/
 | 4 — Use cases | `CustomerImageCommandUseCaseTest` (7), `SupplierImageCommandUseCaseTest` (4), `CustomerDebtCommandUseCaseTest` (4), `SyncIncidentCommandUseCaseTest` (4), `SupplierSocialLinkCommandUseCaseTest` (3), `SaleCommandUseCaseTest` (5) | ✅ main |
 | 5 — Persistence | `ArchitectureTest` (6), `ProductTest` (6), `SaleTest` (7), `StockBalanceTest` (10) | ✅ main |
 | 6 — Controllers | `DashboardControllerTest` (5), `SyncControllerTest` (3) | ✅ main |
-| 7 — Tests BE | `CustomerDebtControllerTest` (8), `NotificationControllerTest` (7), `SyncIncidentControllerTest` (7), `CustomerImageControllerTest` (10), `SupplierImageControllerTest` (8), `DashboardQueryUseCaseTest` (2) | ⏳ pendiente commit |
+| 7 — Tests BE | `CustomerDebtControllerTest` (8), `NotificationControllerTest` (7), `SyncIncidentControllerTest` (7), `CustomerImageControllerTest` (10), `SupplierImageControllerTest` (8), `DashboardQueryUseCaseTest` (2) | ✅ main |
+| 8 — FE Entities | 55 tests (7 archivos) | ✅ pendiente commit |
 
 **Total: 106 tests, 0 errores**
 

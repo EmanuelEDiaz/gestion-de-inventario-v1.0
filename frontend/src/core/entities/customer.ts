@@ -1,3 +1,5 @@
+import type { CustomerImage } from './customer-image';
+
 export type CustomerStatus = 'active' | 'inactive';
 
 export interface Customer {
@@ -12,6 +14,7 @@ export interface Customer {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  images?: CustomerImage[];
 }
 
 export interface CreateCustomerData {

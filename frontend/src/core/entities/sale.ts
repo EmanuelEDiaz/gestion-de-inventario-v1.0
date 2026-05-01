@@ -3,6 +3,8 @@
  */
 export type SaleStatus = 'DRAFT' | 'CONFIRMED' | 'DELIVERED' | 'CANCELLED';
 
+export type PaymentMode = 'IMMEDIATE' | 'CREDIT' | 'RESERVE';
+
 export interface Sale {
   id: string;
   saleNumber: string;
@@ -19,6 +21,8 @@ export interface Sale {
   total: number;
   notes: string | null;
   saleDate: string;
+  paymentMode?: PaymentMode;
+  debtId?: string | null;
   createdBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -51,6 +55,7 @@ export interface CreateSaleInput {
   currencyCode?: string;
   notes?: string;
   saleDate?: string;
+  paymentMode?: PaymentMode;
   lines: {
     productId: string;
     quantity: number;
