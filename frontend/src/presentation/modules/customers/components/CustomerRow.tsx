@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { Customer } from '@/core/entities/customer';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { Badge } from '@/presentation/shared/components/ui/badge';
@@ -16,7 +17,11 @@ interface CustomerRowProps {
 export function CustomerRow({ customer, onActivate, onDeactivate, onDelete }: CustomerRowProps) {
   return (
     <TableRow>
-      <TableCell className="font-medium">{customer.code || 'N/A'}</TableCell>
+      <TableCell className="font-medium">
+        <Link href={`/customers/${customer.id}`} className="hover:underline text-blue-600" title="Ver detalle del cliente">
+          {customer.code || 'N/A'}
+        </Link>
+      </TableCell>
       <TableCell>{customer.name}</TableCell>
       <TableCell>{customer.phone || 'N/A'}</TableCell>
       <TableCell>{customer.email || 'N/A'}</TableCell>

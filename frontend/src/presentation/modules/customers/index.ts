@@ -1,4 +1,11 @@
 export { useCustomers } from './hooks/useCustomers';
+export { useCustomerImages } from './hooks/useCustomerImages';
+export { useCustomerDebts } from './hooks/useCustomerDebts';
+export { useDebtPayment } from './hooks/useDebtPayment';
 export { CustomerTable } from './components/CustomerTable';
 export { CustomerRow } from './components/CustomerRow';
 export { CustomerActions } from './components/CustomerActions';
+export { CustomerImageCarousel } from './components/CustomerImageCarousel';
+export { CustomerDebtList } from './components/CustomerDebtList';
+export { DebtPaymentForm } from './components/DebtPaymentForm';
+export { CustomerDetailView } from './views/CustomerDetailView';

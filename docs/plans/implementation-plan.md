@@ -474,7 +474,7 @@ frontend/src/infrastructure/repositories/
 
 ---
 
-## Etapa 10 — Módulo Clientes (Frontend) ← PRÓXIMA
+## Etapa 10 — Módulo Clientes (Frontend) ✅ COMPLETADA
 
 ### Objetivo
 Añadir galería de imágenes y lista de deudas a la vista de cliente.
@@ -502,7 +502,7 @@ frontend/src/presentation/modules/customers/
 
 ---
 
-## Etapa 11 — Módulo Proveedores (Frontend)
+## Etapa 11 — Módulo Proveedores (Frontend) ← PRÓXIMA
 
 ### Objetivo
 Añadir imágenes, redes sociales y catálogo de productos al proveedor.
