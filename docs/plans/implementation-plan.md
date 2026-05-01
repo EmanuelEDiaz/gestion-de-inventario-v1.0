@@ -588,7 +588,30 @@ frontend/src/presentation/modules/debts/
 
 ---
 
-## Etapa 14 — Módulo Notificaciones (Frontend)
+## Etapa 14 — Módulo Notificaciones + Sync Incidents (Frontend) ✅ COMPLETADA
+
+**Tests:** 134 total (9 nuevos), 0 errores · Fecha: 2026-05-01
+
+### Archivos creados
+- `presentation/modules/notifications/hooks/useNotifications.ts` — queries: `['notifications', includeRead]` y `['notifications', 'unread-count']` (refetchInterval 30s)
+- `presentation/modules/notifications/hooks/useMarkRead.ts` — mutaciones `markOne` / `markAll`, invalida `['notifications']`
+- `presentation/modules/notifications/hooks/useNotificationStream.ts` — SSE via `EventSource('/api/v1/notifications/stream')`, invalida queries al recibir eventos
+- `presentation/modules/notifications/components/NotificationBadge.tsx` — badge con contador, link a `/notifications`
+- `presentation/modules/notifications/components/NotificationItem.tsx` — ítem individual con botón "Leída", badge de categoría, tiempo relativo (`date-fns/locale/es`)
+- `presentation/modules/notifications/components/NotificationInbox.tsx` — lista + "Marcar todas como leídas"
+- `presentation/modules/notifications/views/NotificationsView.tsx` — toggle "mostrar leídas" + SSE activo
+- `presentation/modules/sync/hooks/useSyncIncidents.ts` — queries: `['sync-incidents', deviceId ?? 'all']` y `['sync-incident', id]`
+- `presentation/modules/sync/hooks/useResolveSyncIncident.ts` — mutaciones `resolve` / `ignore`, invalida queries
+- `presentation/modules/sync/components/SyncIncidentRow.tsx` — fila de tabla expandible con badges tipo/estado
+- `presentation/modules/sync/components/SyncConflictResolver.tsx` — panel con payloads local/servidor, textarea resolución, botones Resolver/Ignorar/Cancelar
+- `presentation/modules/sync/views/SyncIncidentsView.tsx` — tabla con filtro por tipo, accordion expand
+- `app/(admin)/notifications/page.tsx` — ruta `/notifications`
+- `app/(admin)/sync/incidents/page.tsx` — ruta `/sync/incidents`
+
+### Tests escritos
+- `useNotifications.test.ts` — 3 tests (queryKeys con/sin includeRead, unread-count + refetchInterval)
+- `useSyncIncidents.test.ts` — 4 tests (queryKey 'all', queryKey con deviceId, enabled false/true para detail)
+- `useMarkRead.test.ts` — 2 tests (retorna markOne + markAll, useMutation llamado 2 veces)
 
 ### Objetivo
 Implementar inbox de notificaciones, badge en tiempo real y centro de incidencias.
