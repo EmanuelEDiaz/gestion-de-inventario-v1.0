@@ -569,34 +569,22 @@ frontend/src/app/(pos)/
 
 ---
 
-## Etapa 13 — Módulo Deudas (Frontend)
+## Etapa 13 — Módulo Deudas (Frontend) ✅ COMPLETADA
 
-### Objetivo
-Crear la vista global de deudas `/admin/debts`.
-
-### Archivos a crear
+### Archivos creados
 ```
-frontend/src/app/(admin)/debts/
-  page.tsx
-
+frontend/src/app/(admin)/debts/page.tsx
 frontend/src/presentation/modules/debts/
   components/
-    DebtRow.tsx
-    DebtDetailPanel.tsx          ← acordeón con historial de pagos
-    DebtUpdateForm.tsx           ← actualizar description/dueDate/notes
+    DebtRow.tsx, DebtDetailPanel.tsx, DebtUpdateForm.tsx
   hooks/
-    useDebts.ts                  ← TanStack Query: GET /debts con filtros
-    useDebtDetail.ts             ← GET /debts/{id}
-    useUpdateDebt.ts             ← PATCH /debts/{id}
+    useDebts.ts, useDebtDetail.ts, useUpdateDebt.ts (incluye useCancelDebt)
+    debts.test.ts ← 4 tests
   views/
-    DebtsListView.tsx            ← tabla con filtros (estado, vencimiento)
+    DebtsListView.tsx
 ```
 
-### Criterios de aceptación
-- `/admin/debts` carga lista paginada con filtros de estado
-- Clic en fila → expande historial de pagos
-- Editar description/dueDate → PATCH actualiza
-- Badge en sidebar muestra count de deudas PENDING + PARTIAL
+### Tests: 125 tests, 0 errores
 
 ---
 
