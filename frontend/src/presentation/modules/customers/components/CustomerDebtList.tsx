@@ -10,7 +10,7 @@ import { EmptyState } from '@/presentation/shared/components/EmptyState';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { DEBT_STATUS_LABELS, DEBT_STATUS_COLORS } from '@/core/entities/customer-debt';
 import type { RegisterDebtPaymentData } from '@/core/entities/debt-payment';
-import { toast } from 'sonner';
+import { toast } from '@/presentation/shared/components/ui/toast';
 import { CreditCard } from 'lucide-react';
 
 interface CustomerDebtListProps {

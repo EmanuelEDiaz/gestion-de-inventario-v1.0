@@ -6,6 +6,15 @@ Módulos: Imágenes de Clientes/Proveedores · Proveedor Extendido · Modo Fiar 
 
 ---
 
+## Convenciones UI ya implementadas (NO reimplementar)
+
+| Elemento | Implementación | Ubicación |
+|----------|---------------|-----------|
+| **Toast** | `import { toast } from '@/presentation/shared/components/ui/toast'` — wraps sonner con progress bar. API: `toast.success(msg)`, `toast.error(msg)`, `toast.warning(msg)`, `toast.info(msg)`. **Nunca importar de `sonner` directamente.** | `src/presentation/shared/components/ui/toast.tsx` |
+| **Tooltip** | Atributo HTML nativo `title="texto explicativo"` en el elemento. No existe componente dedicado. | N/A |
+
+---
+
 ## Etapa 1 — Migración de Base de Datos (Flyway V2) ✅ COMPLETADA
 
 ### Objetivo
@@ -502,7 +511,7 @@ frontend/src/presentation/modules/customers/
 
 ---
 
-## Etapa 11 — Módulo Proveedores (Frontend) ← PRÓXIMA
+## Etapa 11 — Módulo Proveedores (Frontend) ✅ COMPLETADA
 
 ### Objetivo
 Añadir imágenes, redes sociales y catálogo de productos al proveedor.
@@ -530,7 +539,7 @@ frontend/src/presentation/modules/suppliers/
 
 ---
 
-## Etapa 12 — Módulo Ventas y POS (Frontend)
+## Etapa 12 — Módulo Ventas y POS (Frontend) ← PRÓXIMA
 
 ### Objetivo
 Implementar el flujo de fiado (CREDIT/RESERVE) en el POS y en la vista de ventas.

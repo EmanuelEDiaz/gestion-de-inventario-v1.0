@@ -1,4 +1,11 @@
 export { useSuppliers } from './hooks/useSuppliers';
+export { useSupplierImages } from './hooks/useSupplierImages';
+export { useSupplierSocialLinks } from './hooks/useSupplierSocialLinks';
+export { useSupplierCatalog } from './hooks/useSupplierCatalog';
 export { SupplierTable } from './components/SupplierTable';
 export { SupplierRow } from './components/SupplierRow';
 export { SupplierActions } from './components/SupplierActions';
+export { SupplierImageCarousel } from './components/SupplierImageCarousel';
+export { SupplierSocialLinks } from './components/SupplierSocialLinks';
+export { SupplierCatalogProducts } from './components/SupplierCatalogProducts';
+export { SupplierDetailView } from './views/SupplierDetailView';

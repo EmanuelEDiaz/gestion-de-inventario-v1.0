@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { Supplier } from '@/core/entities/supplier';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { Badge } from '@/presentation/shared/components/ui/badge';
@@ -16,7 +17,15 @@ interface SupplierRowProps {
 export function SupplierRow({ supplier, onActivate, onDeactivate, onDelete }: SupplierRowProps) {
   return (
     <TableRow>
-      <TableCell className="font-medium">{supplier.code || 'N/A'}</TableCell>
+      <TableCell className="font-medium">
+        <Link
+          href={`/suppliers/${supplier.id}`}
+          className="text-blue-600 hover:underline"
+          title={`Ver detalle de ${supplier.name}`}
+        >
+          {supplier.code || 'N/A'}
+        </Link>
+      </TableCell>
       <TableCell>{supplier.name}</TableCell>
       <TableCell>{supplier.phone || 'N/A'}</TableCell>
       <TableCell>{supplier.email || 'N/A'}</TableCell>

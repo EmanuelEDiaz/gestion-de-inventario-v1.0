@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useCustomerImages } from '../hooks/useCustomerImages';
+import { useSupplierImages } from '../hooks/useSupplierImages';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
@@ -11,12 +11,12 @@ import { Star, Trash2, Plus } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-interface CustomerImageCarouselProps {
-  customerId: string;
+interface SupplierImageCarouselProps {
+  supplierId: string;
 }
 
-export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps) {
-  const { images, isLoading, upload, setPrimary, remove } = useCustomerImages(customerId);
+export function SupplierImageCarousel({ supplierId }: SupplierImageCarouselProps) {
+  const { images, isLoading, upload, setPrimary, remove } = useSupplierImages(supplierId);
   const [showUpload, setShowUpload] = useState(false);
   const [filePath, setFilePath] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -78,7 +78,7 @@ export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps
             label="Ruta del archivo en servidor"
             value={filePath}
             onChange={(e) => setFilePath(e.target.value)}
-            placeholder="/media/customers/imagen.jpg"
+            placeholder="/media/suppliers/imagen.jpg"
             title="Ruta del archivo almacenado en el servidor"
           />
           <div className="flex gap-2 justify-end">
@@ -100,40 +100,36 @@ export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps
       {images.length === 0 && !showUpload && <EmptyState message="Sin imágenes registradas" />}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {images.map((image) => (
-          <div key={image.id} className="relative group rounded-lg overflow-hidden border bg-gray-100 aspect-square">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+        {images.map((img) => (
+          <div key={img.id} className="relative group rounded-lg border overflow-hidden">
             <img
-              src={`${API_URL}${image.filePath}`}
-              alt={image.originalFilename || 'Imagen del cliente'}
-              className="w-full h-full object-cover"
+              src={`${API_URL}${img.filePath}`}
+              alt={img.originalFilename || 'Imagen proveedor'}
+              className="w-full h-32 object-cover"
+              title={img.originalFilename || img.filePath}
             />
-            {image.isPrimary && (
-              <span className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 text-xs px-1 py-0.5 rounded font-medium">
+            {img.isPrimary && (
+              <span className="absolute top-1 left-1 bg-yellow-400 text-yellow-900 text-xs px-1 rounded">
                 Principal
               </span>
             )}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              {!image.isPrimary && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleSetPrimary(image.id)}
-                  title="Hacer imagen principal"
-                  className="text-white hover:text-yellow-300"
+            <div className="absolute top-1 right-1 hidden group-hover:flex gap-1">
+              {!img.isPrimary && (
+                <button
+                  className="bg-white rounded p-1 shadow"
+                  onClick={() => handleSetPrimary(img.id)}
+                  title="Marcar como imagen principal"
                 >
-                  <Star className="h-4 w-4" />
-                </Button>
+                  <Star className="h-3 w-3 text-yellow-500" />
+                </button>
               )}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleRemove(image.id)}
+              <button
+                className="bg-white rounded p-1 shadow"
+                onClick={() => handleRemove(img.id)}
                 title="Eliminar imagen"
-                className="text-white hover:text-red-300"
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+                <Trash2 className="h-3 w-3 text-red-500" />
+              </button>
             </div>
           </div>
         ))}
