@@ -1,7 +1,7 @@
 'use client';
 
 import type { Currency } from '@/core/entities/currency';
-import { Badge } from '@/presentation/shared/components/ui/badge';
+import { Badge, TooltipWrapper } from '@/presentation/shared/components/ui';
 
 interface CurrencyRowProps {
   currency: Currency;
@@ -20,13 +20,14 @@ export function CurrencyRow({ currency, onToggle }: CurrencyRowProps) {
         </Badge>
       </td>
       <td className="p-3">
-        <button
-          onClick={() => onToggle(currency.code, !currency.isActive)}
-          className="text-sm text-primary hover:underline"
-          title={currency.isActive ? 'Desactivar moneda' : 'Activar moneda'}
-        >
-          {currency.isActive ? 'Desactivar' : 'Activar'}
-        </button>
+        <TooltipWrapper content={currency.isActive ? 'Desactivar moneda' : 'Activar moneda'}>
+          <button
+            onClick={() => onToggle(currency.code, !currency.isActive)}
+            className="text-sm text-primary hover:underline"
+          >
+            {currency.isActive ? 'Desactivar' : 'Activar'}
+          </button>
+        </TooltipWrapper>
       </td>
     </tr>
   );

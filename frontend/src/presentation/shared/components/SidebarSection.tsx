@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/presentation/shared/lib/utils';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 
 interface NavItem {
   href: string;
@@ -41,63 +42,77 @@ const ChevronIcon = ({ isOpen }: { isOpen: boolean }) => (
 export function SidebarSection({ title, icon, iconOpen, items, isOpen, isCollapsed, onToggle }: SidebarSectionProps) {
   const pathname = usePathname();
 
-  const renderHeader = () => (
-    <button
-      onClick={onToggle}
-      className={cn(
-        'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-        'text-gray-400 hover:bg-gray-800 hover:text-white',
-        isCollapsed && 'justify-center'
-      )}
-      title={isCollapsed ? title : undefined}
-    >
-      {isCollapsed ? (
-        <span className="flex h-8 w-8 items-center justify-center rounded bg-gray-800" title={title}>
-          {isOpen && iconOpen ? iconOpen : (icon || <span className="text-xs">{title.charAt(0)}</span>)}
-        </span>
-      ) : (
-        <>
-          <span className="flex h-6 w-6 items-center justify-center">
-            {isOpen && iconOpen ? iconOpen : icon}
+  const renderHeader = () => {
+    const headerContent = (
+      <button
+        onClick={onToggle}
+        className={cn(
+          'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+          'text-gray-400 hover:bg-gray-800 hover:text-white',
+          isCollapsed && 'justify-center'
+        )}
+      >
+        {isCollapsed ? (
+          <span className="flex h-8 w-8 items-center justify-center rounded bg-gray-800">
+            {isOpen && iconOpen ? iconOpen : (icon || <span className="text-xs">{title.charAt(0)}</span>)}
           </span>
-          <span className="flex-1 text-left">{title}</span>
-          <ChevronIcon isOpen={isOpen} />
-        </>
-      )}
-    </button>
-  );
+        ) : (
+          <>
+            <span className="flex h-6 w-6 items-center justify-center">
+              {isOpen && iconOpen ? iconOpen : icon}
+            </span>
+            <span className="flex-1 text-left">{title}</span>
+            <ChevronIcon isOpen={isOpen} />
+          </>
+        )}
+      </button>
+    );
+
+    if (isCollapsed) {
+      return <TooltipWrapper content={title}>{headerContent}</TooltipWrapper>;
+    }
+
+    return headerContent;
+  };
 
   const renderItems = () => (
     <ul className="ml-4 mt-1 space-y-0.5 border-l border-gray-700 pl-2">
       {items.map((item) => {
         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-        return (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              className={cn(
-                'flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors',
-                isActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white',
-                isCollapsed && 'justify-center px-2'
-              )}
-              title={isCollapsed ? item.label : undefined}
-            >
-              <span className="flex h-5 w-5 items-center justify-center">{item.icon}</span>
-              {!isCollapsed && (
-                <>
-                  <span className="flex-1">{item.label}</span>
-                  {item.badge && (
-                    <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs">
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              )}
-            </Link>
-          </li>
+        const linkContent = (
+          <Link
+            href={item.href}
+            className={cn(
+              'flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors',
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+              isCollapsed && 'justify-center px-2'
+            )}
+          >
+            <span className="flex h-5 w-5 items-center justify-center">{item.icon}</span>
+            {!isCollapsed && (
+              <>
+                <span className="flex-1">{item.label}</span>
+                {item.badge && (
+                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs">
+                    {item.badge}
+                  </span>
+                )}
+              </>
+            )}
+          </Link>
         );
+
+        if (isCollapsed) {
+          return (
+            <li key={item.href}>
+              <TooltipWrapper content={item.label}>{linkContent}</TooltipWrapper>
+            </li>
+          );
+        }
+
+        return <li key={item.href}>{linkContent}</li>;
       })}
     </ul>
   );

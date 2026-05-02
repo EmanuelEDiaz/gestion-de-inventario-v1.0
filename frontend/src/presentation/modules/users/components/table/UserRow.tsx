@@ -1,7 +1,7 @@
 'use client';
 
 import type { User } from '@/core/entities/user';
-import { Badge } from '@/presentation/shared/components/ui/badge';
+import { Badge, TooltipWrapper } from '@/presentation/shared/components/ui';
 
 interface UserRowProps {
   user: User;
@@ -36,13 +36,14 @@ export function UserRow({ user, onToggle }: UserRowProps) {
         </Badge>
       </td>
       <td className="p-3">
-        <button
-          onClick={() => onToggle(user.id, !user.isActive)}
-          className="text-sm text-primary hover:underline"
-          title={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
-        >
-          {user.isActive ? 'Desactivar' : 'Activar'}
-        </button>
+        <TooltipWrapper content={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}>
+          <button
+            onClick={() => onToggle(user.id, !user.isActive)}
+            className="text-sm text-primary hover:underline"
+          >
+            {user.isActive ? 'Desactivar' : 'Activar'}
+          </button>
+        </TooltipWrapper>
       </td>
     </tr>
   );

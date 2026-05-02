@@ -106,7 +106,6 @@ class ProductNotFoundError extends Error {
   }
 }
 
-// Uso correcto
 try {
   await productRepository.delete(id);
 } catch (error) {

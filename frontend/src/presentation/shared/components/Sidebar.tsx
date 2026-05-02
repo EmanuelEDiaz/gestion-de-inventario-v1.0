@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/presentation/shared/lib/utils';
 import { SidebarSection } from './SidebarSection';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import type { NavSection } from '../hooks/useSidebarSections';
 
 interface SidebarProps {
@@ -228,13 +229,14 @@ export function Sidebar({ sections, isCollapsed = false, onToggle, openSections,
         {!isCollapsed && (
           <span className="text-xl font-bold">Inventario</span>
         )}
-        <button
-          onClick={onToggle}
-          className="rounded p-1 hover:bg-gray-800"
-          title={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}
-        >
-          {isCollapsed ? Icons.menu : Icons.close}
-        </button>
+        <TooltipWrapper content={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}>
+          <button
+            onClick={onToggle}
+            className="rounded p-1 hover:bg-gray-800"
+          >
+            {isCollapsed ? Icons.menu : Icons.close}
+          </button>
+        </TooltipWrapper>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
