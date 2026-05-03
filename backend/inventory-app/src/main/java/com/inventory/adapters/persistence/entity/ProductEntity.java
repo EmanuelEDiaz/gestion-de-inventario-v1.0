@@ -69,6 +69,9 @@ public class ProductEntity implements Persistable<UUID> {
     @Transient
     private boolean isNew = true;
 
+    @Transient
+    private String mainImage;
+
     public ProductEntity() {}
 
     // Getters y Setters
@@ -122,6 +125,9 @@ public class ProductEntity implements Persistable<UUID> {
 
     public Integer getVersion() { return version; }
     public void setVersion(Integer version) { this.version = version; }
+
+    public String getMainImage() { return mainImage; }
+    public void setMainImage(String mainImage) { this.mainImage = mainImage; }
 
     @Override
     public boolean isNew() { return isNew; }

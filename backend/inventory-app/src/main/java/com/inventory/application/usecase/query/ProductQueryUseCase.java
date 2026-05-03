@@ -1,6 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.Product;
+import com.inventory.domain.ports.in.ProductFilter;
 import com.inventory.domain.ports.in.ProductQueryPort;
 import com.inventory.domain.ports.out.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -45,8 +46,8 @@ public class ProductQueryUseCase implements ProductQueryPort {
     }
 
     @Override
-    public Flux<Product> findAllWithCursor(String cursor, int size, boolean activeOnly) {
-        return productRepository.findAllWithCursor(cursor, size, activeOnly);
+    public Flux<Product> findAllWithCursor(String cursor, ProductFilter filter, boolean activeOnly) {
+        return productRepository.findAllWithCursor(cursor, filter, activeOnly);
     }
 
     @Override

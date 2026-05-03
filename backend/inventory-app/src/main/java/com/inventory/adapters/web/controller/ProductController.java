@@ -5,6 +5,7 @@ import com.inventory.adapters.web.mapper.CatalogWebMapper;
 import com.inventory.domain.model.Category;
 import com.inventory.domain.model.Product;
 import com.inventory.domain.ports.in.ProductCommandPort;
+import com.inventory.domain.ports.in.ProductFilter;
 import com.inventory.domain.ports.in.ProductQueryPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import jakarta.validation.Valid;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,9 +50,29 @@ public class ProductController {
     public Mono<ProductsPageResponse> getAll(
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "false") boolean activeOnly) {
+            @RequestParam(defaultValue = "false") boolean activeOnly,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String unitOfMeasure,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "true") boolean sortAsc) {
+        
         int effectiveSize = Math.min(size, MAX_PAGE_SIZE);
-        return productQuery.findAllWithCursor(cursor, effectiveSize, activeOnly)
+        
+        Product.ProductStatus productStatus = status != null 
+            ? Product.ProductStatus.valueOf(status.toUpperCase()) 
+            : null;
+        
+        ProductFilter filter = new ProductFilter(
+            search, categoryId, productStatus,
+            minPrice, maxPrice, unitOfMeasure,
+            sortBy, sortAsc, 0, effectiveSize
+        );
+        
+        return productQuery.findAllWithCursor(cursor, filter, activeOnly)
             .collectList()
             .flatMap(items -> {
                 String nextCursor = items.size() == effectiveSize && !items.isEmpty() 

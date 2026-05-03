@@ -25,5 +25,6 @@ public record ProductResponse(
     String unitOfMeasure,
     Instant createdAt,
     Instant updatedAt,
-    int version
+    int version,
+    String mainImage
 ) {}

@@ -49,7 +49,8 @@ public class ProductCommandUseCase implements ProductCommandPort {
                     command.unitOfMeasure(),
                     Instant.now(),
                     Instant.now(),
-                    0
+                    0,
+                    null
                 );
                 return productRepository.save(product);
             }));

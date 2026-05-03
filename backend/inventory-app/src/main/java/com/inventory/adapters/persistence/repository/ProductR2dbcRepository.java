@@ -6,6 +6,7 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEntity, UUID> {
@@ -39,15 +40,35 @@ public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEn
 
     @Query("SELECT * FROM products WHERE " +
            "(:search IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(sku) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "LOWER(sku) LIKE LOWER(CONCAT('%', :search, '%'))) " +
            "AND (:categoryId IS NULL OR category_id = :categoryId) " +
            "AND (:status IS NULL OR status = :status) " +
-           "ORDER BY name LIMIT :size OFFSET :offset")
-    Flux<ProductEntity> findWithFilter(String search, UUID categoryId, String status, int offset, int size);
+           "AND (:minPrice IS NULL OR sale_price >= :minPrice) " +
+           "AND (:maxPrice IS NULL OR sale_price <= :maxPrice) " +
+           "AND (:unitOfMeasure IS NULL OR unit_of_measure = :unitOfMeasure) " +
+           "ORDER BY " +
+           "CASE WHEN :sortAsc THEN LOWER(:sortBy) END ASC, " +
+           "CASE WHEN NOT :sortAsc THEN LOWER(:sortBy) END DESC " +
+           "LIMIT :size OFFSET :offset")
+    Flux<ProductEntity> findWithFilter(String search, UUID categoryId, String status,
+                                        BigDecimal minPrice, BigDecimal maxPrice, String unitOfMeasure,
+                                        String sortBy, boolean sortAsc, int offset, int size);
 
     @Query("SELECT * FROM products WHERE " +
            "(:cursor IS NULL OR id > :cursor::uuid) " +
            "AND (:status IS NULL OR status = :status) " +
-           "ORDER BY id LIMIT :size")
-    Flux<ProductEntity> findWithCursor(String cursor, int size, String status);
+           "AND (:search IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(sku) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:categoryId IS NULL OR category_id = :categoryId) " +
+           "AND (:minPrice IS NULL OR sale_price >= :minPrice) " +
+           "AND (:maxPrice IS NULL OR sale_price <= :maxPrice) " +
+           "AND (:unitOfMeasure IS NULL OR unit_of_measure = :unitOfMeasure) " +
+           "ORDER BY " +
+           "CASE WHEN :sortAsc THEN LOWER(:sortBy) END ASC, " +
+           "CASE WHEN NOT :sortAsc THEN LOWER(:sortBy) END DESC " +
+           "LIMIT :size")
+    Flux<ProductEntity> findWithCursorAndFilter(String cursor, int size, String status,
+                                                String search, UUID categoryId,
+                                                BigDecimal minPrice, BigDecimal maxPrice, String unitOfMeasure,
+                                                String sortBy, boolean sortAsc);
 }

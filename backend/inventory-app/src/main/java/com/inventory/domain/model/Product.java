@@ -26,12 +26,13 @@ public class Product {
     private final Instant createdAt;
     private final Instant updatedAt;
     private final int version;
+    private final String mainImage;
 
     public Product(UUID id, String sku, String barcode, String name, String description,
                    UUID categoryId, ProductStatus status, CostMethod costMethod, 
                    BigDecimal standardCost, BigDecimal salePrice, BigDecimal reorderPoint,
                    String currencyCode, BigDecimal taxRate, String unitOfMeasure,
-                   Instant createdAt, Instant updatedAt, int version) {
+                   Instant createdAt, Instant updatedAt, int version, String mainImage) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Product name cannot be null or blank");
         }
@@ -52,6 +53,7 @@ public class Product {
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.updatedAt = updatedAt != null ? updatedAt : this.createdAt;
         this.version = version;
+        this.mainImage = mainImage;
     }
 
     public static Product create(String name, String sku, String barcode, BigDecimal salePrice) {
@@ -72,7 +74,8 @@ public class Product {
             "UNIT",
             Instant.now(),
             Instant.now(),
-            0
+            0,
+            null
         );
     }
 
@@ -94,6 +97,7 @@ public class Product {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public int getVersion() { return version; }
+    public String getMainImage() { return mainImage; }
 
     public boolean isActive() {
         return status == ProductStatus.ACTIVE;
@@ -136,7 +140,8 @@ public class Product {
             this.categoryId, this.status, this.costMethod,
             this.standardCost, this.salePrice, this.reorderPoint,
             this.currencyCode, this.taxRate, this.unitOfMeasure,
-            this.createdAt, Instant.now(), this.version
+            this.createdAt, Instant.now(), this.version,
+            this.mainImage
         );
     }
 
@@ -150,7 +155,8 @@ public class Product {
             this.currencyCode,
             taxRate != null ? taxRate : this.taxRate,
             this.unitOfMeasure,
-            this.createdAt, Instant.now(), this.version
+            this.createdAt, Instant.now(), this.version,
+            this.mainImage
         );
     }
 
@@ -160,7 +166,8 @@ public class Product {
             categoryId, this.status, this.costMethod,
             this.standardCost, this.salePrice, this.reorderPoint,
             this.currencyCode, this.taxRate, this.unitOfMeasure,
-            this.createdAt, Instant.now(), this.version
+            this.createdAt, Instant.now(), this.version,
+            this.mainImage
         );
     }
 
@@ -170,7 +177,8 @@ public class Product {
             this.categoryId, this.status, costMethod,
             this.standardCost, this.salePrice, this.reorderPoint,
             this.currencyCode, this.taxRate, this.unitOfMeasure,
-            this.createdAt, Instant.now(), this.version
+            this.createdAt, Instant.now(), this.version,
+            this.mainImage
         );
     }
 
@@ -180,7 +188,8 @@ public class Product {
             this.categoryId, this.status, this.costMethod,
             this.standardCost, this.salePrice, reorderPoint,
             this.currencyCode, this.taxRate, this.unitOfMeasure,
-            this.createdAt, Instant.now(), this.version
+            this.createdAt, Instant.now(), this.version,
+            this.mainImage
         );
     }
 
@@ -190,7 +199,8 @@ public class Product {
             this.categoryId, ProductStatus.ARCHIVED, this.costMethod,
             this.standardCost, this.salePrice, this.reorderPoint,
             this.currencyCode, this.taxRate, this.unitOfMeasure,
-            this.createdAt, Instant.now(), this.version
+            this.createdAt, Instant.now(), this.version,
+            this.mainImage
         );
     }
 
@@ -200,7 +210,8 @@ public class Product {
             this.categoryId, ProductStatus.ACTIVE, this.costMethod,
             this.standardCost, this.salePrice, this.reorderPoint,
             this.currencyCode, this.taxRate, this.unitOfMeasure,
-            this.createdAt, Instant.now(), this.version
+            this.createdAt, Instant.now(), this.version,
+            this.mainImage
         );
     }
 
@@ -210,7 +221,19 @@ public class Product {
             this.categoryId, this.status, this.costMethod,
             this.standardCost, this.salePrice, this.reorderPoint,
             this.currencyCode, this.taxRate, this.unitOfMeasure,
-            this.createdAt, this.updatedAt, newVersion
+            this.createdAt, this.updatedAt, newVersion,
+            this.mainImage
+        );
+    }
+
+    public Product withMainImage(String mainImage) {
+        return new Product(
+            this.id, this.sku, this.barcode, this.name, this.description,
+            this.categoryId, this.status, this.costMethod,
+            this.standardCost, this.salePrice, this.reorderPoint,
+            this.currencyCode, this.taxRate, this.unitOfMeasure,
+            this.createdAt, Instant.now(), this.version,
+            mainImage
         );
     }
 

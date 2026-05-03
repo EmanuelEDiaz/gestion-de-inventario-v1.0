@@ -179,7 +179,8 @@ public class CatalogPersistenceMapper {
             entity.getUnitOfMeasure(),
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
-            entity.getVersion() != null ? entity.getVersion() : 0
+            entity.getVersion() != null ? entity.getVersion() : 0,
+            entity.getMainImage()
         );
     }
 
@@ -203,6 +204,7 @@ public class CatalogPersistenceMapper {
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
         entity.setVersion(domain.getVersion());
+        entity.setMainImage(domain.getMainImage());
         entity.setNew(isNew);
         return entity;
     }

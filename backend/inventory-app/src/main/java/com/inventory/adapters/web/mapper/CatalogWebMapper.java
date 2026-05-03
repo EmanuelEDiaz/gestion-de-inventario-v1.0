@@ -78,7 +78,8 @@ public class CatalogWebMapper {
             domain.getUnitOfMeasure(),
             domain.getCreatedAt(),
             domain.getUpdatedAt(),
-            domain.getVersion()
+            domain.getVersion(),
+            domain.getMainImage()
         );
     }
 
@@ -98,7 +99,7 @@ public class CatalogWebMapper {
             request.currencyCode() != null ? request.currencyCode() : "CUP",
             request.taxRate(),
             request.unitOfMeasure(),
-            null, null, 0
+            null, null, 0, null
         );
     }
 
@@ -120,7 +121,8 @@ public class CatalogWebMapper {
             request.unitOfMeasure() != null ? request.unitOfMeasure() : existing.getUnitOfMeasure(),
             existing.getCreatedAt(),
             null,
-            existing.getVersion()
+            existing.getVersion(),
+            existing.getMainImage()
         );
     }
 }
