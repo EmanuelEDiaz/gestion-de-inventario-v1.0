@@ -8,7 +8,7 @@ import { NetworkStatusWidget } from './NetworkStatusWidget';
 import { LogoutConfirmDialog } from './LogoutConfirmDialog';
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
 import { useSidebarSections } from '@/presentation/shared/hooks/useSidebarSections';
-import { TooltipProvider } from '@/presentation/shared/components/ui';
+
 import { getOutboxCount } from '@/infrastructure/storage/db';
 
 interface DashboardLayoutProps {
@@ -141,36 +141,34 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <TooltipProvider>
-      <div className="min-h-screen bg-gray-50">
-        <Sidebar
-          sections={navigationSections}
-          isCollapsed={isCollapsed}
-          onToggle={handleToggleSidebar}
-          openSections={openSections}
-          onToggleSection={toggleSection}
-        />
-        <Header isSidebarCollapsed={isCollapsed} onLogoutRequest={handleLogoutRequest} />
-        
-        <main
-          className={`pt-16 transition-all duration-300 ${
-            isCollapsed ? 'pl-16' : 'pl-64'
-          }`}
-        >
-          <div className="p-6">
-            {children}
-          </div>
-        </main>
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar
+        sections={navigationSections}
+        isCollapsed={isCollapsed}
+        onToggle={handleToggleSidebar}
+        openSections={openSections}
+        onToggleSection={toggleSection}
+      />
+      <Header isSidebarCollapsed={isCollapsed} onLogoutRequest={handleLogoutRequest} />
+      
+      <main
+        className={`pt-16 transition-all duration-300 ${
+          isCollapsed ? 'pl-16' : 'pl-64'
+        }`}
+      >
+        <div className="p-6">
+          {children}
+        </div>
+      </main>
 
-        <NetworkStatusWidget />
-        <LogoutConfirmDialog
-          isOpen={showLogoutDialog}
-          pendingCount={pendingForLogout}
-          onConfirm={handleLogoutConfirm}
-          onCancel={() => setShowLogoutDialog(false)}
-        />
-      </div>
-    </TooltipProvider>
+      <NetworkStatusWidget />
+      <LogoutConfirmDialog
+        isOpen={showLogoutDialog}
+        pendingCount={pendingForLogout}
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setShowLogoutDialog(false)}
+      />
+    </div>
   );
 }
 

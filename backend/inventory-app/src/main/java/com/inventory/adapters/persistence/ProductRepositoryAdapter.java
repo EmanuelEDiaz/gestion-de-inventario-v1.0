@@ -118,7 +118,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
 
     @Override
     public Flux<Product> findAllByWarehouse(UUID warehouseId, String search, UUID categoryId, String status, boolean activeOnly) {
-        return r2dbcRepository.findWithFilter(search, categoryId, status, 0, 20)
+        return r2dbcRepository.findWithFilter(search, categoryId, status, null, null, null, "name", true, 0, 20)
             .map(mapper::toDomain);
     }
 

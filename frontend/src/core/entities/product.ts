@@ -24,6 +24,7 @@ export interface Product {
   unitOfMeasure: UnitOfMeasure;
   createdAt: string;
   updatedAt: string;
+  mainImage: string | null;
 }
 
 export interface CreateProductData {
@@ -48,6 +49,11 @@ export interface ProductFilters {
   search?: string;
   categoryId?: string;
   status?: ProductStatus;
+  minPrice?: number;
+  maxPrice?: number;
+  unitOfMeasure?: UnitOfMeasure;
+  sortBy?: string;
+  sortAsc?: boolean;
   page?: number;
   size?: number;
 }

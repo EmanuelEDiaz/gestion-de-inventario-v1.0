@@ -24,6 +24,9 @@ export function SettingsFormFields({ settings, onSubmit, isSubmitting }: Setting
   const [maxProductPages, setMaxProductPages] = useState(
     settings.maxProductPages?.toString() ?? '20'
   );
+  const [searchDebounceMs, setSearchDebounceMs] = useState(
+    settings.searchDebounceMs?.toString() ?? '300'
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +37,7 @@ export function SettingsFormFields({ settings, onSubmit, isSubmitting }: Setting
         defaultCostMethod,
         lowStockThresholdDefault: lowStockThreshold ? Number(lowStockThreshold) : undefined,
         maxProductPages: maxProductPages ? Number(maxProductPages) : undefined,
+        searchDebounceMs: searchDebounceMs ? Number(searchDebounceMs) : undefined,
       },
       version: settings.version,
     });
@@ -122,6 +126,26 @@ export function SettingsFormFields({ settings, onSubmit, isSubmitting }: Setting
         />
         <p className="text-xs text-gray-500">
           Por defecto: 20 productos por página, hasta 20 páginas = 400 productos máximos en memoria
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="searchDebounceMs" className="text-sm font-medium">
+          Retardo de búsqueda (ms)
+        </label>
+        <Input
+          id="searchDebounceMs"
+          type="number"
+          min={100}
+          max={2000}
+          step={100}
+          value={searchDebounceMs}
+          onChange={(e) => setSearchDebounceMs(e.target.value)}
+          placeholder="300"
+          title="Tiempo de espera antes de ejecutar la búsqueda (evita muchas peticiones)"
+        />
+        <p className="text-xs text-gray-500">
+          Recomendado: 300ms para conexiones rápidas, 500-1000ms para conexiones lentas
         </p>
       </div>
 

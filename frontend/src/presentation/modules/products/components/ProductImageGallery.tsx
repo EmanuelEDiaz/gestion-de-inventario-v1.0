@@ -69,7 +69,7 @@ export function ProductImageGallery({ productId }: ProductImageGalleryProps) {
       />
 
       {primaryImage ? (
-        <TooltipWrapper tooltipText="Imagen principal del producto. Toca para ver en grande.">
+        <TooltipWrapper content="Imagen principal del producto. Toca para ver en grande.">
           <div 
             onClick={() => setLightboxIndex(images.indexOf(primaryImage))}
             className="relative aspect-video rounded-lg overflow-hidden cursor-zoom-in border bg-gray-100"
@@ -95,7 +95,7 @@ export function ProductImageGallery({ productId }: ProductImageGalleryProps) {
       {otherImages.length > 0 && (
         <div className="flex gap-2 overflow-x-auto py-2">
           {otherImages.map((img, idx) => (
-            <TooltipWrapper key={img.id} tooltipText={`Imagen ${idx + 2}. Toca para ver en grande.`}>
+            <TooltipWrapper key={img.id} content={`Imagen ${idx + 2}. Toca para ver en grande.`}>
               <div 
                 onClick={() => setLightboxIndex(images.indexOf(img))}
                 className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-zoom-in border bg-gray-100 hover:ring-2 hover:ring-blue-500"

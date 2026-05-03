@@ -47,7 +47,11 @@ public class NotificationController {
     @GetMapping("/unread-count")
     @PreAuthorize("isAuthenticated()")
     public Mono<Long> unreadCount(@AuthenticationPrincipal UserDetails userDetails) {
-        return queryPort.getUnreadCount(extractUserId(userDetails));
+        UUID userId = extractUserId(userDetails);
+        if (userId == null) {
+            return Mono.just(0L);
+        }
+        return queryPort.getUnreadCount(userId);
     }
 
     @PostMapping

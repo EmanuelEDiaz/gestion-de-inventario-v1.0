@@ -8,7 +8,6 @@
 import Link from 'next/link';
 import { Button } from '@/presentation/shared/components/ui';
 import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { ProductSearchBar } from '../components/filters/ProductSearchBar';
 import { ProductsInfiniteList } from '../components/ProductsInfiniteList';
 import { useSettingsController } from '@/presentation/modules/settings/hooks/useSettingsController';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
@@ -34,8 +33,6 @@ export function ProductsListView() {
           </Link>
         }
       />
-
-      <ProductSearchBar onSearch={() => {}} />
 
       <ProductsInfiniteList maxPages={maxPages} />
     </div>

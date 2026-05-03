@@ -1,48 +1,134 @@
 /**
- * ProductTable - Table displaying products list
+ * ProductTable - Table displaying products list using GenericTable
  * Max 100 lines per component rule
  */
 
+'use client';
+
+import { useCallback, useMemo } from 'react';
+import Image from 'next/image';
+import { Box } from 'lucide-react';
 import type { Product } from '@/core/entities/product';
-import { ProductRow } from './ProductRow';
+import { StatusBadge } from '@/presentation/shared/components/StatusBadge';
+import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { productRepository } from '@/infrastructure/repositories/ProductRepository';
 
 interface ProductTableProps {
   products: Product[];
-  onEdit?: (product: Product) => void;
+  sortKey?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (key: string) => void;
+  onDeleteSuccess?: () => void;
 }
 
-export function ProductTable({ products, onEdit }: ProductTableProps) {
+export function ProductTable({ 
+  products, 
+  sortKey, 
+  sortDirection, 
+  onSort,
+  onDeleteSuccess 
+}: ProductTableProps) {
+  const handleDeleteClick = useCallback((product: Product) => {
+    if (!confirm(`¿Estás seguro de eliminar el producto "${product.name}"?`)) {
+      return;
+    }
+    
+    productRepository.delete(product.id)
+      .then(() => {
+        toast.success('Producto eliminado correctamente');
+        onDeleteSuccess?.();
+      })
+      .catch(() => {
+        toast.error('Error al eliminar el producto');
+      });
+  }, [onDeleteSuccess]);
+
+  const columns: Column<Product>[] = useMemo(() => [
+    {
+      key: 'name',
+      label: 'Producto',
+      sortable: true,
+      render: (_, product) => (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 flex-shrink-0 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center">
+            {product.mainImage ? (
+              <Image
+                src={product.mainImage}
+                alt={product.name}
+                width={40}
+                height={40}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Box className="h-5 w-5 text-gray-400" />
+            )}
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">{product.name}</div>
+            {product.barcode && (
+              <div className="text-sm text-gray-500">{product.barcode}</div>
+            )}
+          </div>
+        </div>
+      ),
+      className: 'w-64',
+    },
+    {
+      key: 'sku',
+      label: 'SKU',
+      sortable: true,
+      render: (value) => <span>{String(value) || '-'}</span>,
+    },
+    {
+      key: 'categoryName',
+      label: 'Categoría',
+      sortable: true,
+      render: (value) => <span>{String(value) || '-'}</span>,
+    },
+    {
+      key: 'salePrice',
+      label: 'Precio',
+      sortable: true,
+      render: (value) => <span>{value != null ? `$${Number(value).toFixed(2)}` : '-'}</span>,
+      className: 'text-right',
+    },
+    {
+      key: 'status',
+      label: 'Estado',
+      render: (value) => <StatusBadge active={value === 'ACTIVE'} />,
+      className: 'text-center',
+    },
+  ], []);
+
+  const actions: TableAction<Product>[] = useMemo(() => [
+    {
+      icon: Eye,
+      title: 'Ver detalles del producto',
+      href: (product) => `/products/${product.id}`,
+    },
+    {
+      icon: Pencil,
+      title: 'Modificar información del producto',
+      href: (product) => `/products/${product.id}/edit`,
+    },
+    {
+      icon: Trash2,
+      title: 'Eliminar producto del sistema',
+      onClick: handleDeleteClick,
+    },
+  ], [handleDeleteClick]);
+
   return (
-    <div className="overflow-x-auto rounded-lg bg-white shadow">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Producto
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              SKU
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Categoría
-            </th>
-            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-              Precio
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
-              Estado
-            </th>
-            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-              Acciones
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
-          {products.map((product) => (
-            <ProductRow key={product.id} product={product} onEdit={onEdit} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <GenericTable
+      data={products}
+      columns={columns}
+      actions={actions}
+      onSort={onSort}
+      sortKey={sortKey}
+      sortDirection={sortDirection}
+      emptyMessage="No hay productos registrados"
+    />
   );
 }

@@ -37,7 +37,7 @@ class ProductTest {
             new Product(UUID.randomUUID(), "SKU-001", null, null, null,
                 null, Product.ProductStatus.ACTIVE, Product.CostMethod.STANDARD,
                 null, BigDecimal.ONE, null, "CUP", BigDecimal.ZERO, "UNIT",
-                Instant.now(), Instant.now(), 0)
+                Instant.now(), Instant.now(), 0, null)
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessageContaining("name");
     }
@@ -49,7 +49,7 @@ class ProductTest {
             new Product(UUID.randomUUID(), "SKU-001", null, "   ", null,
                 null, Product.ProductStatus.ACTIVE, Product.CostMethod.STANDARD,
                 null, BigDecimal.ONE, null, "CUP", BigDecimal.ZERO, "UNIT",
-                Instant.now(), Instant.now(), 0)
+                Instant.now(), Instant.now(), 0, null)
         ).isInstanceOf(IllegalArgumentException.class);
     }
 
