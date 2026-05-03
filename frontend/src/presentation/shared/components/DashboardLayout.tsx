@@ -8,8 +8,8 @@ import { NetworkStatusWidget } from './NetworkStatusWidget';
 import { LogoutConfirmDialog } from './LogoutConfirmDialog';
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
 import { useSidebarSections } from '@/presentation/shared/hooks/useSidebarSections';
-
 import { getOutboxCount } from '@/infrastructure/storage/db';
+import { cn } from '@/presentation/shared/lib/utils';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -91,6 +91,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved !== null ? JSON.parse(saved) : false;
   });
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [pendingForLogout, setPendingForLogout] = useState(0);
   const { isAuthenticated, hasHydrated, logout } = useAuthStore();
@@ -104,7 +105,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [hasHydrated, isAuthenticated, router]);
 
   const handleLogoutRequest = async () => {
-    // Check for unsynchronized changes before showing dialog
     try {
       const count = await getOutboxCount();
       setPendingForLogout(count);
@@ -128,6 +128,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     });
   };
 
+  const handleToggleMobileMenu = () => {
+    setIsMobileOpen((prev) => !prev);
+  };
+
+  const handleCloseMobileMenu = () => {
+    setIsMobileOpen(false);
+  };
+
   if (!hasHydrated) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -142,21 +150,52 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar
-        sections={navigationSections}
-        isCollapsed={isCollapsed}
-        onToggle={handleToggleSidebar}
-        openSections={openSections}
-        onToggleSection={toggleSection}
+      {/* Sidebar desktop */}
+      <div className="hidden md:block">
+        <Sidebar
+          sections={navigationSections}
+          isCollapsed={isCollapsed}
+          onToggle={handleToggleSidebar}
+          openSections={openSections}
+          onToggleSection={toggleSection}
+        />
+      </div>
+
+      {/* Sidebar mobile overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={handleCloseMobileMenu}
+        />
+      )}
+      
+      {/* Sidebar mobile */}
+      <div className={cn(
+        'fixed left-0 top-0 z-50 h-screen w-64 transform transition-transform duration-300 md:hidden',
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+      )}>
+        <Sidebar
+          sections={navigationSections}
+          isCollapsed={false}
+          onToggle={handleCloseMobileMenu}
+          openSections={openSections}
+          onToggleSection={toggleSection}
+        />
+      </div>
+
+      <Header 
+        isSidebarCollapsed={isCollapsed} 
+        onLogoutRequest={handleLogoutRequest}
+        onToggleMobileMenu={handleToggleMobileMenu}
       />
-      <Header isSidebarCollapsed={isCollapsed} onLogoutRequest={handleLogoutRequest} />
       
       <main
-        className={`pt-16 transition-all duration-300 ${
-          isCollapsed ? 'pl-16' : 'pl-64'
-        }`}
+        className={cn(
+          'pt-16 transition-all duration-300',
+          'pl-0 md:pl-16 lg:pl-64'
+        )}
       >
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {children}
         </div>
       </main>

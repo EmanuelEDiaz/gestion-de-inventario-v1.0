@@ -5,15 +5,17 @@
 
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Box } from 'lucide-react';
 import type { Product } from '@/core/entities/product';
 import { StatusBadge } from '@/presentation/shared/components/StatusBadge';
 import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { productRepository } from '@/infrastructure/repositories/ProductRepository';
+import { ImagePreview } from '../ImagePreview';
 
 interface ProductTableProps {
   products: Product[];
@@ -30,6 +32,13 @@ export function ProductTable({
   onSort,
   onDeleteSuccess 
 }: ProductTableProps) {
+  const router = useRouter();
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const handleRowClick = useCallback((product: Product) => {
+    router.push(`/products/${product.id}`);
+  }, [router]);
+
   const handleDeleteClick = useCallback((product: Product) => {
     if (!confirm(`¿Estás seguro de eliminar el producto "${product.name}"?`)) {
       return;
@@ -51,8 +60,16 @@ export function ProductTable({
       label: 'Producto',
       sortable: true,
       render: (_, product) => (
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 flex-shrink-0 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center">
+        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+          <div 
+            className="h-10 w-10 flex-shrink-0 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center cursor-zoom-in transition-transform hover:scale-105"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (product.mainImage) {
+                setPreviewImage(product.mainImage);
+              }
+            }}
+          >
             {product.mainImage ? (
               <Image
                 src={product.mainImage}
@@ -104,16 +121,6 @@ export function ProductTable({
 
   const actions: TableAction<Product>[] = useMemo(() => [
     {
-      icon: Eye,
-      title: 'Ver detalles del producto',
-      href: (product) => `/products/${product.id}`,
-    },
-    {
-      icon: Pencil,
-      title: 'Modificar información del producto',
-      href: (product) => `/products/${product.id}/edit`,
-    },
-    {
       icon: Trash2,
       title: 'Eliminar producto del sistema',
       onClick: handleDeleteClick,
@@ -121,14 +128,25 @@ export function ProductTable({
   ], [handleDeleteClick]);
 
   return (
-    <GenericTable
-      data={products}
-      columns={columns}
-      actions={actions}
-      onSort={onSort}
-      sortKey={sortKey}
-      sortDirection={sortDirection}
-      emptyMessage="No hay productos registrados"
-    />
+    <>
+      <GenericTable
+        data={products}
+        columns={columns}
+        actions={actions}
+        onSort={onSort}
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        emptyMessage="No hay productos registrados"
+        onRowClick={handleRowClick}
+      />
+      {previewImage && (
+        <ImagePreview
+          src={previewImage}
+          alt="Vista previa"
+          isOpen={!!previewImage}
+          onClose={() => setPreviewImage(null)}
+        />
+      )}
+    </>
   );
 }
