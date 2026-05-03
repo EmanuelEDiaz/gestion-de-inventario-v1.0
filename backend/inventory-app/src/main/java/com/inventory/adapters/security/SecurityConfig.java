@@ -54,6 +54,9 @@ public class SecurityConfig {
                         // Actuator health (para health checks)
                         .pathMatchers("/actuator/health").permitAll()
                         
+                        // Media (imágenes): acceso público sin token
+                        .pathMatchers("/media/**").permitAll()
+                        
                         // OpenAPI/Swagger (solo en desarrollo)
                         .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
                         

@@ -69,7 +69,7 @@ public class ProductEntity implements Persistable<UUID> {
     @Transient
     private boolean isNew = true;
 
-    @Transient
+    @Column("main_image")
     private String mainImage;
 
     public ProductEntity() {}

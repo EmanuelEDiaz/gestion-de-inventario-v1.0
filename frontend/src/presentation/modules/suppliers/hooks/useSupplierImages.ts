@@ -2,7 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supplierImageApi } from '@/infrastructure/api/image-upload-api';
-import type { CreateSupplierImageData } from '@/core/entities/supplier-image';
+
+interface SupplierUploadInput {
+  file: File;
+  isPrimary: boolean;
+  sortOrder?: number;
+}
 
 const imgKey = (supplierId: string) => ['supplier-images', supplierId];
 
@@ -16,8 +21,8 @@ export function useSupplierImages(supplierId: string) {
   });
 
   const upload = useMutation({
-    mutationFn: (data: CreateSupplierImageData) =>
-      supplierImageApi.upload(supplierId, data),
+    mutationFn: (data: SupplierUploadInput) =>
+      supplierImageApi.upload(supplierId, data.file, data.isPrimary, data.sortOrder),
     onSuccess: () => qc.invalidateQueries({ queryKey: imgKey(supplierId) }),
   });
 

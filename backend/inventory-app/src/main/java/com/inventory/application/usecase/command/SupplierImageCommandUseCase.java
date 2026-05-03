@@ -1,14 +1,17 @@
 package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.NotFoundException;
+import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.model.SupplierImage;
 import com.inventory.domain.ports.in.SupplierImageCommandPort;
 import com.inventory.domain.ports.out.SupplierImageRepository;
+import com.inventory.application.service.ImageProcessingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -17,10 +20,52 @@ import java.util.UUID;
 @Service
 public class SupplierImageCommandUseCase implements SupplierImageCommandPort {
 
-    private final SupplierImageRepository supplierImageRepository;
+    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
+    private static final long MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
-    public SupplierImageCommandUseCase(SupplierImageRepository supplierImageRepository) {
+    private final SupplierImageRepository supplierImageRepository;
+    private final ImageProcessingService imageService;
+
+    public SupplierImageCommandUseCase(SupplierImageRepository supplierImageRepository,
+                                       ImageProcessingService imageService) {
         this.supplierImageRepository = supplierImageRepository;
+        this.imageService = imageService;
+    }
+
+    @Override
+    public Mono<SupplierImage> uploadWithFile(UploadFileCommand command) {
+        if (!ALLOWED_TYPES.contains(command.contentType())) {
+            return Mono.error(new BadRequestException("Tipo de imagen no permitido: " + command.contentType()));
+        }
+        if (command.fileData().length > MAX_SIZE_BYTES) {
+            return Mono.error(new BadRequestException("El archivo supera 5 MB"));
+        }
+
+        return supplierImageRepository.findBySupplierId(command.supplierId()).count()
+            .flatMap(count -> {
+                try {
+                    String filePath = imageService.processAndSaveSupplier(
+                        command.supplierId(),
+                        command.fileData(),
+                        command.originalFilename(),
+                        command.contentType()
+                    );
+
+                    int sortOrder = command.sortOrder() >= 0 ? command.sortOrder() : count.intValue();
+                    SupplierImage image = SupplierImage.create(
+                        command.supplierId(),
+                        sortOrder,
+                        command.isPrimary(),
+                        command.contentType(),
+                        filePath,
+                        command.originalFilename(),
+                        command.fileData().length
+                    );
+                    return supplierImageRepository.save(image);
+                } catch (Exception e) {
+                    return Mono.error(new BadRequestException("Error al procesar imagen: " + e.getMessage()));
+                }
+            });
     }
 
     @Override

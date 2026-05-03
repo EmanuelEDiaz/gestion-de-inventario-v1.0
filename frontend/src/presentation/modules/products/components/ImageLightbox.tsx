@@ -55,7 +55,7 @@ export function ImageLightbox({ images, initialIndex, onClose }: ImageLightboxPr
       
       <div className="max-w-[90vw] max-h-[90vh] p-4" onClick={(e) => e.stopPropagation()}>
         <img 
-          src={`${API_URL}${image.filePath}`} 
+          src={`${API_URL}/media${image.filePath}`} 
           alt={image.originalFilename || 'Imagen producto'}
           className="max-w-full max-h-[85vh] object-contain rounded-lg"
         />

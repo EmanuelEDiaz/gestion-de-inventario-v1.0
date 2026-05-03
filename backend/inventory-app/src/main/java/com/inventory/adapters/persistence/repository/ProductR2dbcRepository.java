@@ -71,4 +71,12 @@ public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEn
                                                 String search, UUID categoryId,
                                                 BigDecimal minPrice, BigDecimal maxPrice, String unitOfMeasure,
                                                 String sortBy, boolean sortAsc);
+
+    @org.springframework.data.r2dbc.repository.Modifying
+    @Query("UPDATE products SET main_image = :filePath, updated_at = NOW() WHERE id = :productId")
+    Mono<Integer> updateMainImage(UUID productId, String filePath);
+
+    @org.springframework.data.r2dbc.repository.Modifying
+    @Query("UPDATE products SET main_image = NULL, updated_at = NOW() WHERE id = :productId")
+    Mono<Integer> clearMainImage(UUID productId);
 }

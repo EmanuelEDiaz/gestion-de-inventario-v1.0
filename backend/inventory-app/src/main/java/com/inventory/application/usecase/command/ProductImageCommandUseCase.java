@@ -5,6 +5,7 @@ import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.ProductImage;
 import com.inventory.domain.ports.in.ProductImageCommandPort;
 import com.inventory.domain.ports.out.ProductImageRepository;
+import com.inventory.domain.ports.out.ProductRepository;
 import com.inventory.application.service.ImageProcessingService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +24,14 @@ public class ProductImageCommandUseCase implements ProductImageCommandPort {
 
     private final ProductImageRepository repository;
     private final ImageProcessingService imageService;
+    private final ProductRepository productRepository;
 
-    public ProductImageCommandUseCase(ProductImageRepository repository, 
-                                       ImageProcessingService imageService) {
+    public ProductImageCommandUseCase(ProductImageRepository repository,
+                                       ImageProcessingService imageService,
+                                       ProductRepository productRepository) {
         this.repository = repository;
         this.imageService = imageService;
+        this.productRepository = productRepository;
     }
 
     @Override
@@ -57,7 +61,14 @@ public class ProductImageCommandUseCase implements ProductImageCommandPort {
                         command.contentType(), filePath, command.originalFilename(),
                         command.fileData().length
                     );
-                    return repository.save(image);
+                    return repository.save(image)
+                        .flatMap(saved -> {
+                            if (saved.isPrimary()) {
+                                return productRepository.updateMainImage(saved.productId(), saved.filePath())
+                                    .thenReturn(saved);
+                            }
+                            return Mono.just(saved);
+                        });
                 } catch (Exception e) {
                     return Mono.error(new BadRequestException("Error al procesar imagen: " + e.getMessage()));
                 }
@@ -92,15 +103,19 @@ public class ProductImageCommandUseCase implements ProductImageCommandPort {
                             true, target.contentType(), target.filePath(),
                             target.originalFilename(), target.sizeBytes(), target.createdAt())
                     ))
+                    .flatMap(saved -> productRepository.updateMainImage(saved.productId(), saved.filePath())
+                        .thenReturn(saved))
             );
     }
 
     @Override
     public Mono<Void> delete(UUID imageId) {
-        return repository.existsById(imageId)
-            .flatMap(exists -> exists
-                ? repository.deleteById(imageId)
-                : Mono.error(new NotFoundException("Imagen no encontrada: " + imageId)));
+        return repository.findById(imageId)
+            .switchIfEmpty(Mono.error(new NotFoundException("Imagen no encontrada: " + imageId)))
+            .flatMap(image -> repository.deleteById(imageId)
+                .then(image.isPrimary()
+                    ? productRepository.clearMainImage(image.productId())
+                    : Mono.empty()));
     }
 
     @Override

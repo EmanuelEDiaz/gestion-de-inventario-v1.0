@@ -1,6 +1,7 @@
 package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.NotFoundException;
+import com.inventory.application.service.ImageProcessingService;
 import com.inventory.domain.model.CustomerImage;
 import com.inventory.domain.ports.out.CustomerImageRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,9 @@ class CustomerImageCommandUseCaseTest {
     @Mock
     private CustomerImageRepository customerImageRepository;
 
+    @Mock
+    private ImageProcessingService imageProcessingService;
+
     private CustomerImageCommandUseCase useCase;
 
     private final UUID customerId = UUID.randomUUID();
@@ -35,7 +39,7 @@ class CustomerImageCommandUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new CustomerImageCommandUseCase(customerImageRepository);
+        useCase = new CustomerImageCommandUseCase(customerImageRepository, imageProcessingService);
     }
 
     @Test

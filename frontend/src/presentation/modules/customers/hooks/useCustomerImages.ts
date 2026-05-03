@@ -2,7 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customerImageApi } from '@/infrastructure/api/image-upload-api';
-import type { CreateCustomerImageData } from '@/core/entities/customer-image';
+
+interface CustomerUploadInput {
+  file: File;
+  isPrimary: boolean;
+  sortOrder?: number;
+}
 
 const imgKey = (customerId: string) => ['customer-images', customerId];
 
@@ -16,8 +21,8 @@ export function useCustomerImages(customerId: string) {
   });
 
   const upload = useMutation({
-    mutationFn: (data: CreateCustomerImageData) =>
-      customerImageApi.upload(customerId, data),
+    mutationFn: (data: CustomerUploadInput) =>
+      customerImageApi.upload(customerId, data.file, data.isPrimary, data.sortOrder),
     onSuccess: () => qc.invalidateQueries({ queryKey: imgKey(customerId) }),
   });
 

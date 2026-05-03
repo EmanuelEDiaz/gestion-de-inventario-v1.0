@@ -121,7 +121,7 @@ export function GenericTable<T extends { id: string }>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((row, rowIndex) => (
+            {data.map((row) => (
               <TableRow
                 key={row.id}
                 className={cn(
@@ -142,7 +142,10 @@ export function GenericTable<T extends { id: string }>({
                   );
                 })}
                 {actions.length > 0 && (
-                  <TableCell className="py-3.5 px-4 text-center">
+                  <TableCell
+                    className="py-3.5 px-4 text-center"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <div className={cn(
                       'flex items-center justify-center gap-1 transition-opacity duration-150',
                       'opacity-100 md:opacity-0 md:group-hover:opacity-100'

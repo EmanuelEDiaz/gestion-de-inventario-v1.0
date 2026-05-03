@@ -147,6 +147,16 @@ public class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    public Mono<Void> updateMainImage(UUID productId, String filePath) {
+        return r2dbcRepository.updateMainImage(productId, filePath).then();
+    }
+
+    @Override
+    public Mono<Void> clearMainImage(UUID productId) {
+        return r2dbcRepository.clearMainImage(productId).then();
+    }
+
+    @Override
     public Mono<Boolean> existsBySku(String sku) {
         return r2dbcRepository.existsBySku(sku);
     }

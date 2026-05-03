@@ -7,15 +7,15 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Box } from 'lucide-react';
+import { Image as ImageIcon, Eye, Pencil, Trash2 } from 'lucide-react';
 import type { Product } from '@/core/entities/product';
 import { StatusBadge } from '@/presentation/shared/components/StatusBadge';
 import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
-import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { productRepository } from '@/infrastructure/repositories/ProductRepository';
 import { ImagePreview } from '../ImagePreview';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface ProductTableProps {
   products: Product[];
@@ -62,24 +62,23 @@ export function ProductTable({
       render: (_, product) => (
         <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
           <div 
-            className="h-10 w-10 flex-shrink-0 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center cursor-zoom-in transition-transform hover:scale-105"
+            className="h-10 w-10 shrink-0 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center cursor-zoom-in transition-transform hover:scale-105"
             onClick={(e) => {
               e.stopPropagation();
               if (product.mainImage) {
-                setPreviewImage(product.mainImage);
+                setPreviewImage(`${API_URL}/media${product.mainImage}`);
               }
             }}
           >
             {product.mainImage ? (
-              <Image
-                src={product.mainImage}
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={`${API_URL}/media${product.mainImage}`}
                 alt={product.name}
-                width={40}
-                height={40}
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Box className="h-5 w-5 text-gray-400" />
+              <ImageIcon className="h-5 w-5 text-slate-400" />
             )}
           </div>
           <div>
@@ -120,6 +119,16 @@ export function ProductTable({
   ], []);
 
   const actions: TableAction<Product>[] = useMemo(() => [
+    {
+      icon: Eye,
+      title: 'Ver detalles del producto',
+      href: (row) => `/products/${row.id}`,
+    },
+    {
+      icon: Pencil,
+      title: 'Modificar información del producto',
+      href: (row) => `/products/${row.id}/edit`,
+    },
     {
       icon: Trash2,
       title: 'Eliminar producto del sistema',

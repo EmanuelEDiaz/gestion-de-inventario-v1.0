@@ -1,6 +1,6 @@
 import { apiClient } from './client';
-import type { CustomerImage, CreateCustomerImageData } from '@/core/entities/customer-image';
-import type { SupplierImage, CreateSupplierImageData } from '@/core/entities/supplier-image';
+import type { CustomerImage } from '@/core/entities/customer-image';
+import type { SupplierImage } from '@/core/entities/supplier-image';
 import type { ProductImage, CreateProductImageData } from '@/core/entities/product-image';
 
 export const customerImageApi = {
@@ -10,9 +10,18 @@ export const customerImageApi = {
       .then((r) => r.data);
   },
 
-  upload(customerId: string, data: CreateCustomerImageData): Promise<CustomerImage> {
+  upload(customerId: string, file: File, isPrimary: boolean, sortOrder?: number): Promise<CustomerImage> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('isPrimary', String(isPrimary));
+    if (typeof sortOrder === 'number') {
+      formData.append('sortOrder', String(sortOrder));
+    }
+
     return apiClient
-      .post<CustomerImage>(`/api/v1/customers/${customerId}/images`, data)
+      .post<CustomerImage>(`/api/v1/customers/${customerId}/images`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       .then((r) => r.data);
   },
 
@@ -36,9 +45,18 @@ export const supplierImageApi = {
       .then((r) => r.data);
   },
 
-  upload(supplierId: string, data: CreateSupplierImageData): Promise<SupplierImage> {
+  upload(supplierId: string, file: File, isPrimary: boolean, sortOrder?: number): Promise<SupplierImage> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('isPrimary', String(isPrimary));
+    if (typeof sortOrder === 'number') {
+      formData.append('sortOrder', String(sortOrder));
+    }
+
     return apiClient
-      .post<SupplierImage>(`/api/v1/suppliers/${supplierId}/images`, data)
+      .post<SupplierImage>(`/api/v1/suppliers/${supplierId}/images`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
       .then((r) => r.data);
   },
 

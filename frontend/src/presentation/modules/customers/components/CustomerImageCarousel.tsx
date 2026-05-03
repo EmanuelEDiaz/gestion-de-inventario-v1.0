@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useCustomerImages } from '../hooks/useCustomerImages';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Input } from '@/presentation/shared/components/ui/Input';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/EmptyState';
 import { toast } from '@/presentation/shared/components/ui/toast';
@@ -18,25 +17,23 @@ interface CustomerImageCarouselProps {
 export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps) {
   const { images, isLoading, upload, setPrimary, remove } = useCustomerImages(customerId);
   const [showUpload, setShowUpload] = useState(false);
-  const [filePath, setFilePath] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const handleUpload = async () => {
-    if (!filePath.trim()) return;
+    if (!selectedFile) return;
     setUploading(true);
     try {
       await upload.mutateAsync({
-        filePath: filePath.trim(),
-        contentType: 'image/jpeg',
+        file: selectedFile,
         isPrimary: images.length === 0,
-        sizeBytes: 0,
         sortOrder: images.length,
       });
-      toast.success('Imagen registrada');
-      setFilePath('');
+      toast.success('Imagen subida');
+      setSelectedFile(null);
       setShowUpload(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al registrar imagen');
+      toast.error(err instanceof Error ? err.message : 'Error al subir imagen');
     } finally {
       setUploading(false);
     }
@@ -74,12 +71,16 @@ export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps
 
       {showUpload && (
         <div className="rounded-lg border p-3 space-y-2 bg-gray-50">
-          <Input
-            label="Ruta del archivo en servidor"
-            value={filePath}
-            onChange={(e) => setFilePath(e.target.value)}
-            placeholder="/media/customers/imagen.jpg"
-            title="Ruta del archivo almacenado en el servidor"
+          <label className="block text-sm font-medium text-gray-700" htmlFor="customer-image-file">
+            Imagen local
+          </label>
+          <input
+            id="customer-image-file"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            title="Selecciona una imagen local para subir al servidor"
+            onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+            className="block w-full text-sm text-gray-700"
           />
           <div className="flex gap-2 justify-end">
             <Button size="sm" variant="ghost" onClick={() => setShowUpload(false)} title="Cancelar">
@@ -88,10 +89,10 @@ export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps
             <Button
               size="sm"
               onClick={handleUpload}
-              disabled={uploading || !filePath.trim()}
-              title="Registrar imagen"
+              disabled={uploading || !selectedFile}
+              title="Subir imagen seleccionada"
             >
-              {uploading ? 'Registrando...' : 'Registrar'}
+              {uploading ? 'Subiendo...' : 'Subir'}
             </Button>
           </div>
         </div>
@@ -104,7 +105,7 @@ export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps
           <div key={image.id} className="relative group rounded-lg overflow-hidden border bg-gray-100 aspect-square">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${API_URL}${image.filePath}`}
+              src={`${API_URL}/media${image.filePath}`}
               alt={image.originalFilename || 'Imagen del cliente'}
               className="w-full h-full object-cover"
             />

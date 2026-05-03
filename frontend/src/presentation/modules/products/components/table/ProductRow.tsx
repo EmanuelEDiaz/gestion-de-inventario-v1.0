@@ -2,14 +2,15 @@
  * ProductRow - Single row in products table
  */
 
-import Image from 'next/image';
-import { Box } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import type { Product } from '@/core/entities/product';
 import { StatusBadge } from '@/presentation/shared/components/StatusBadge';
 import { IconButton } from '@/presentation/shared/components/IconButton';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { productRepository } from '@/infrastructure/repositories/ProductRepository';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface ProductRowProps {
   product: Product;
@@ -40,15 +41,14 @@ export function ProductRow({ product, onDeleteSuccess }: ProductRowProps) {
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 flex-shrink-0 rounded-md bg-gray-100 overflow-hidden flex items-center justify-center">
             {product.mainImage ? (
-              <Image
-                src={product.mainImage}
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={`${API_URL}/media${product.mainImage}`}
                 alt={product.name}
-                width={40}
-                height={40}
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Box className="h-5 w-5 text-gray-400" />
+              <ImageIcon className="h-5 w-5 text-slate-400" />
             )}
           </div>
           <div>

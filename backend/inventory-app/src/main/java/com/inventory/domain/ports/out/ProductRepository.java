@@ -60,6 +60,10 @@ public interface ProductRepository {
     
     Mono<Product> save(Product product);
     
+    Mono<Void> updateMainImage(UUID productId, String filePath);
+    
+    Mono<Void> clearMainImage(UUID productId);
+    
     Mono<Boolean> existsBySku(String sku);
     
     Mono<Boolean> existsByBarcode(String barcode);

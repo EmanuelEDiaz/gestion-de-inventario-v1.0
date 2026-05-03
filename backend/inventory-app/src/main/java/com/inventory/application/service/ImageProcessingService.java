@@ -25,6 +25,25 @@ public class ImageProcessingService {
 
     public String processAndSave(UUID productId, byte[] fileData, 
                                  String originalFilename, String contentType) throws IOException {
+        return processAndSaveInternal("products", productId, fileData, originalFilename, contentType, true);
+    }
+
+    public String processAndSaveCustomer(UUID customerId, byte[] fileData,
+                                         String originalFilename, String contentType) throws IOException {
+        return processAndSaveInternal("customers", customerId, fileData, originalFilename, contentType, false);
+    }
+
+    public String processAndSaveSupplier(UUID supplierId, byte[] fileData,
+                                         String originalFilename, String contentType) throws IOException {
+        return processAndSaveInternal("suppliers", supplierId, fileData, originalFilename, contentType, false);
+    }
+
+    private String processAndSaveInternal(String bucket,
+                                          UUID ownerId,
+                                          byte[] fileData,
+                                          String originalFilename,
+                                          String contentType,
+                                          boolean generateLargeThumb) throws IOException {
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(fileData));
         if (image == null) {
             throw new IllegalArgumentException("No se puede decodificar la imagen");
@@ -35,20 +54,25 @@ public class ImageProcessingService {
 
         String ext = getExtension(contentType);
         UUID imageId = UUID.randomUUID();
-        String relativePath = String.format("products/%s/original/%s.%s", productId, imageId, ext);
+        String relativePath = String.format("%s/%s/original/%s.%s", bucket, ownerId, imageId, ext);
         Path targetPath = Paths.get(mediaRoot, relativePath);
 
         Files.createDirectories(targetPath.getParent());
         Files.write(targetPath, fileData);
 
-        generateThumbnail(image, productId, imageId, 256);
-        generateThumbnail(image, productId, imageId, 1024);
+        generateThumbnail(image, bucket, ownerId, imageId, 256);
+        if (generateLargeThumb) {
+            generateThumbnail(image, bucket, ownerId, imageId, 1024);
+        }
 
         return "/" + relativePath;
     }
 
-    private void generateThumbnail(BufferedImage original, UUID productId, 
-                                    UUID imageId, int size) throws IOException {
+    private void generateThumbnail(BufferedImage original,
+                                   String bucket,
+                                   UUID ownerId,
+                                   UUID imageId,
+                                   int size) throws IOException {
         int width = original.getWidth();
         int height = original.getHeight();
         
@@ -62,7 +86,7 @@ public class ImageProcessingService {
         g.drawImage(original, 0, 0, newWidth, newHeight, null);
         g.dispose();
 
-        String thumbPath = String.format("products/%s/thumb/%d/%s.jpg", productId, size, imageId);
+        String thumbPath = String.format("%s/%s/thumb/%d/%s.jpg", bucket, ownerId, size, imageId);
         Path targetPath = Paths.get(mediaRoot, thumbPath);
         Files.createDirectories(targetPath.getParent());
         ImageIO.write(thumbnail, "jpg", targetPath.toFile());

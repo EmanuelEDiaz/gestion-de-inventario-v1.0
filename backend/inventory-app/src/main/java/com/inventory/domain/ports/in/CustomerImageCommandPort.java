@@ -11,6 +11,8 @@ import java.util.UUID;
  */
 public interface CustomerImageCommandPort {
 
+    Mono<CustomerImage> uploadWithFile(UploadFileCommand command);
+
     Mono<CustomerImage> upload(UploadCommand command);
 
     Mono<Void> delete(UUID imageId);
@@ -18,6 +20,15 @@ public interface CustomerImageCommandPort {
     Mono<CustomerImage> setPrimary(UUID imageId);
 
     Flux<CustomerImage> listByCustomer(UUID customerId);
+
+    record UploadFileCommand(
+        UUID customerId,
+        boolean isPrimary,
+        byte[] fileData,
+        String originalFilename,
+        String contentType,
+        int sortOrder
+    ) {}
 
     record UploadCommand(
         UUID customerId,

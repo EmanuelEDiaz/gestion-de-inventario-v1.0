@@ -5,7 +5,7 @@
       "type": "http",
       "headers": {
         "Accept": "application/json",
-        "X-Goog-Api-Key": "${GOOGLE_API_KEY}"
+        "X-Goog-Api-Key": "${AQ.Ab8RN6KE3iq_Zit2gyXip6WS_c5lVxRn32nziZYUWxnl4kEZWA}"
       }
     }
   },
