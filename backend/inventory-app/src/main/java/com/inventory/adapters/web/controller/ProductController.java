@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,6 +24,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/products")
 public class ProductController {
+
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final ProductQueryPort productQuery;
     private final ProductCommandPort productCommand;
@@ -41,13 +45,27 @@ public class ProductController {
     }
 
     @GetMapping
-    public Flux<ProductResponse> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
+    public Mono<ProductsPageResponse> getAll(
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "false") boolean activeOnly) {
-        return productQuery.findAll(page, Math.min(size, 100), activeOnly)
-            .flatMap(this::enrichWithCategory);
+        int effectiveSize = Math.min(size, MAX_PAGE_SIZE);
+        return productQuery.findAllWithCursor(cursor, effectiveSize, activeOnly)
+            .collectList()
+            .flatMap(items -> {
+                String nextCursor = items.size() == effectiveSize && !items.isEmpty() 
+                    ? items.get(items.size() - 1).getId().toString() 
+                    : null;
+                return enrichAllWithCategory(items)
+                    .collectList()
+                    .map(enriched -> new ProductsPageResponse(enriched, nextCursor));
+            });
     }
+
+    record ProductsPageResponse(
+        List<ProductResponse> items,
+        String nextCursor
+    ) {}
 
     @GetMapping("/search")
     public Flux<ProductResponse> search(@RequestParam String q) {
@@ -168,5 +186,10 @@ public class ProductController {
             .map(Category::getName)
             .defaultIfEmpty("")
             .map(categoryName -> mapper.toResponse(product, categoryName));
+    }
+
+    private Flux<ProductResponse> enrichAllWithCategory(List<Product> products) {
+        return Flux.fromIterable(products)
+            .flatMap(this::enrichWithCategory);
     }
 }

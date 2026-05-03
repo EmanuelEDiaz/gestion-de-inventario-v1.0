@@ -80,6 +80,12 @@ public class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    public Flux<Product> findAllWithCursor(String cursor, int size, boolean activeOnly) {
+        return r2dbcRepository.findWithCursor(cursor, size, activeOnly ? "ACTIVE" : null)
+            .map(mapper::toDomain);
+    }
+
+    @Override
     public Flux<Product> findAllFiltered(ProductFilter filter, boolean activeOnly) {
         if (filter.isEmpty()) {
             return activeOnly ? findAllActive() : findAll();

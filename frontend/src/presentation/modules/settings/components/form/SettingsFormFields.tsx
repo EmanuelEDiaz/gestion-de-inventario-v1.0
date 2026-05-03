@@ -21,6 +21,9 @@ export function SettingsFormFields({ settings, onSubmit, isSubmitting }: Setting
   const [lowStockThreshold, setLowStockThreshold] = useState(
     settings.lowStockThresholdDefault?.toString() ?? ''
   );
+  const [maxProductPages, setMaxProductPages] = useState(
+    settings.maxProductPages?.toString() ?? '20'
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +33,7 @@ export function SettingsFormFields({ settings, onSubmit, isSubmitting }: Setting
         defaultCurrencyCode,
         defaultCostMethod,
         lowStockThresholdDefault: lowStockThreshold ? Number(lowStockThreshold) : undefined,
+        maxProductPages: maxProductPages ? Number(maxProductPages) : undefined,
       },
       version: settings.version,
     });
@@ -100,6 +104,25 @@ export function SettingsFormFields({ settings, onSubmit, isSubmitting }: Setting
           placeholder="10"
           title="Cantidad mínima antes de generar alertas de stock bajo"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="maxProductPages" className="text-sm font-medium">
+          Máx. páginas de productos en memoria
+        </label>
+        <Input
+          id="maxProductPages"
+          type="number"
+          min={1}
+          max={50}
+          value={maxProductPages}
+          onChange={(e) => setMaxProductPages(e.target.value)}
+          placeholder="20"
+          title="Cantidad máxima de páginas de productos a mantener en memoria (afecta rendimiento)"
+        />
+        <p className="text-xs text-gray-500">
+          Por defecto: 20 productos por página, hasta 20 páginas = 400 productos máximos en memoria
+        </p>
       </div>
 
       <Button type="submit" disabled={isSubmitting}>

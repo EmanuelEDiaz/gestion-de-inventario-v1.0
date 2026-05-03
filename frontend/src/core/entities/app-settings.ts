@@ -5,6 +5,7 @@ export interface AppSettings {
   defaultCurrencyCode: string;
   companyName: string | null;
   lowStockThresholdDefault: number | null;
+  maxProductPages: number;
   version: number;
 }
 
@@ -13,6 +14,7 @@ export interface UpdateSettingsInput {
   defaultCurrencyCode?: string;
   companyName?: string;
   lowStockThresholdDefault?: number;
+  maxProductPages?: number;
 }
 
 export const COST_METHOD_LABELS: Record<CostMethod, string> = {

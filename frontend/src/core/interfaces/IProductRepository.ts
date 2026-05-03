@@ -13,8 +13,14 @@ export interface PaginatedResponse<T> {
   number: number;
 }
 
+export interface CursorResponse<T> {
+  items: T[];
+  nextCursor: string | null;
+}
+
 export interface IProductRepository {
   getAll(filters?: ProductFilters): Promise<PaginatedResponse<Product>>;
+  getAllWithCursor(cursor: string | null, size: number): Promise<CursorResponse<Product>>;
   getById(id: string): Promise<Product>;
   create(data: CreateProductData): Promise<Product>;
   update(id: string, data: UpdateProductData): Promise<Product>;

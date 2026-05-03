@@ -37,6 +37,14 @@ public interface ProductRepository {
     Flux<Product> findAllPaginated(int page, int size);
     
     /**
+     * Búsqueda con cursor-based pagination.
+     * @param cursor UUID del último producto recibido (null para primera página)
+     * @param size Número de productos por página
+     * @param activeOnly Si true, solo retorna productos activos
+     */
+    Flux<Product> findAllWithCursor(String cursor, int size, boolean activeOnly);
+    
+    /**
      * Búsqueda con filtros dinámicos.
      */
     Flux<Product> findAllFiltered(ProductFilter filter, boolean activeOnly);

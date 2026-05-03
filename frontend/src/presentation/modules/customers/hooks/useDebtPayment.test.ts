@@ -44,11 +44,10 @@ describe('useDebtPayment', () => {
     const invalidateQueries = vi.fn();
     vi.mocked(useQueryClient).mockReturnValue({ invalidateQueries } as unknown as ReturnType<typeof useQueryClient>);
     let capturedOnSuccess: (() => void) | undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(useMutation).mockImplementation(((opts: any) => {
+    vi.mocked(useMutation).mockImplementation(((opts: { onSuccess?: () => void }) => {
       capturedOnSuccess = opts.onSuccess;
       return { mutateAsync: vi.fn() };
-    }) as any);
+    }) as unknown as typeof useMutation);
 
     // Act
     renderHook(() => useDebtPayment('cust-42'));

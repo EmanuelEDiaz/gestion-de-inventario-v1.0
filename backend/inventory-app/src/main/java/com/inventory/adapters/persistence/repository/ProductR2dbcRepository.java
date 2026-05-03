@@ -44,4 +44,10 @@ public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEn
            "AND (:status IS NULL OR status = :status) " +
            "ORDER BY name LIMIT :size OFFSET :offset")
     Flux<ProductEntity> findWithFilter(String search, UUID categoryId, String status, int offset, int size);
+
+    @Query("SELECT * FROM products WHERE " +
+           "(:cursor IS NULL OR id > :cursor::uuid) " +
+           "AND (:status IS NULL OR status = :status) " +
+           "ORDER BY id LIMIT :size")
+    Flux<ProductEntity> findWithCursor(String cursor, int size, String status);
 }

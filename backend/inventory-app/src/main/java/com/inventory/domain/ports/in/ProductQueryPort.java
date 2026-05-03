@@ -20,6 +20,8 @@ public interface ProductQueryPort {
 
     Flux<Product> findAll(int page, int size, boolean activeOnly);
 
+    Flux<Product> findAllWithCursor(String cursor, int size, boolean activeOnly);
+
     Flux<Product> findByCategory(UUID categoryId);
 
     Flux<Product> search(String query);

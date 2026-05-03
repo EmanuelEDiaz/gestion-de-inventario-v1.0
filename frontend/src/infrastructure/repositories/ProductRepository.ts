@@ -9,7 +9,7 @@
  */
 
 import { apiClient } from '../api/client';
-import type { IProductRepository, PaginatedResponse } from '@/core/interfaces/IProductRepository';
+import type { IProductRepository, PaginatedResponse, CursorResponse } from '@/core/interfaces/IProductRepository';
 import type { Product, CreateProductData, UpdateProductData, ProductFilters } from '@/core/entities/product';
 
 export class ProductRepository implements IProductRepository {
@@ -26,6 +26,17 @@ export class ProductRepository implements IProductRepository {
     const query = params.toString();
     const url = query ? `${this.basePath}?${query}` : this.basePath;
     const response = await apiClient.get<PaginatedResponse<Product>>(url);
+    return response.data;
+  }
+
+  async getAllWithCursor(cursor: string | null, size: number): Promise<CursorResponse<Product>> {
+    const params = new URLSearchParams();
+    if (cursor) params.append('cursor', cursor);
+    params.append('size', size.toString());
+    
+    const query = params.toString();
+    const url = `${this.basePath}?${query}`;
+    const response = await apiClient.get<CursorResponse<Product>>(url);
     return response.data;
   }
 
