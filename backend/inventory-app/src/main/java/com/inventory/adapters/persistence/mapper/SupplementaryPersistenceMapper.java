@@ -149,6 +149,39 @@ public class SupplementaryPersistenceMapper {
         return e;
     }
 
+    // ==================== ProductImage ====================
+
+    public ProductImage toDomain(ProductImageEntity e) {
+        if (e == null) return null;
+        return new ProductImage(
+            e.getId(),
+            e.getProductId(),
+            e.getSortOrder(),
+            e.isPrimary(),
+            e.getContentType(),
+            e.getFilePath(),
+            e.getOriginalFilename(),
+            e.getSizeBytes(),
+            e.getCreatedAt()
+        );
+    }
+
+    public ProductImageEntity toEntity(ProductImage d, boolean isNew) {
+        if (d == null) return null;
+        ProductImageEntity e = new ProductImageEntity();
+        e.setId(d.id());
+        e.setProductId(d.productId());
+        e.setSortOrder(d.sortOrder());
+        e.setPrimary(d.isPrimary());
+        e.setContentType(d.contentType());
+        e.setFilePath(d.filePath());
+        e.setOriginalFilename(d.originalFilename());
+        e.setSizeBytes(d.sizeBytes());
+        e.setCreatedAt(d.createdAt());
+        e.setNew(isNew);
+        return e;
+    }
+
     // ==================== SupplierSocialLink ====================
 
     public SupplierSocialLink toDomain(SupplierSocialLinkEntity e) {

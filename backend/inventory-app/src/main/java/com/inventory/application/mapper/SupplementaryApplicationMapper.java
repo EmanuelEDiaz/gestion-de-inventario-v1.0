@@ -29,6 +29,14 @@ public class SupplementaryApplicationMapper {
         );
     }
 
+    public ProductImageDto toDto(ProductImage img) {
+        return new ProductImageDto(
+            img.id(), img.productId(), img.sortOrder(), img.isPrimary(),
+            img.contentType(), img.filePath(), img.originalFilename(),
+            img.sizeBytes(), img.createdAt()
+        );
+    }
+
     public SupplierSocialLinkDto toDto(SupplierSocialLink link) {
         return new SupplierSocialLinkDto(
             link.id(), link.supplierId(),

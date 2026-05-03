@@ -38,6 +38,7 @@ pnpm vitest run --related src/presentation/modules/products/
 ## 2. Reglas Obligatorias
 
 - **Idioma**: Español en respuestas
+- **Skills obligatorios**: Antes de cualquier tarea, cargar el skill `senior-frontend` o `senior-fullstack` según corresponda. Si la tarea es de un dominio específico (UI/UX, testing, seguridad, etc.), cargar también el skill apropiado de `.claude/skills/`.
 - **Mobile-first**: UI debe funcionar en móvil
 - **Pre-check**: Revisar entidades en `src/core/entities/`, interfaces en `src/core/interfaces/`
 - **Componente ≤ 100 líneas**, **Hook ≤ 150 líneas**
