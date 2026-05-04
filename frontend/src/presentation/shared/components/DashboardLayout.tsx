@@ -6,6 +6,7 @@ import { Sidebar, Icons } from './Sidebar';
 import { Header } from './Header';
 import { NetworkStatusWidget } from './NetworkStatusWidget';
 import { LogoutConfirmDialog } from './LogoutConfirmDialog';
+import { LoadingOverlay } from './LoadingSpinner';
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
 import { useSidebarSections } from '@/presentation/shared/hooks/useSidebarSections';
 import { getOutboxCount } from '@/infrastructure/storage/db';
@@ -138,8 +139,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (!hasHydrated) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      <div className="min-h-screen bg-gray-50">
+        <div className="hidden md:block">
+          <Sidebar
+            sections={navigationSections}
+            isCollapsed={isCollapsed}
+            onToggle={handleToggleSidebar}
+            openSections={openSections}
+            onToggleSection={toggleSection}
+          />
+        </div>
+        <NetworkStatusWidget />
+        <LoadingOverlay message="Iniciando..." />
       </div>
     );
   }

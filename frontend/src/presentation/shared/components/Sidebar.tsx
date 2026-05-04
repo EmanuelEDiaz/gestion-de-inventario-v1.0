@@ -5,13 +5,21 @@ import { SidebarSection } from './SidebarSection';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import type { NavSection } from '../hooks/useSidebarSections';
 
+interface SidebarProps {
+  sections: NavSection[];
+  isCollapsed?: boolean;
+  onToggle: () => void;
+  openSections: Record<string, boolean>;
+  onToggleSection: (id: string) => void;
+}
+
 import {
-  Dashboard,
-  Inventory2,
-  Storefront,
-  LocalShipping,
-  Storage,
-  Settings,
+  Dashboard, DashboardFill,
+  Inventory2, Inventory2Fill,
+  Storefront, StorefrontFill,
+  LocalShipping, LocalShippingFill,
+  Storage, StorageFill,
+  Settings, SettingsFill,
   ShoppingCart,
   ShoppingBag,
   SwapHoriz,
@@ -30,29 +38,29 @@ import {
   Close,
 } from '@material-symbols-svg/react';
 
-const iconProps = { width: 20, height: 20 };
+const iconProps = { width: 20, height: 20, className: 'text-white' };
 
 const Folder = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
   </svg>
 );
 
 const ChevronDownIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polyline points="6 9 12 15 18 9"/>
   </svg>
 );
 
 const FolderOpen = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="m6 14 1.5-2.9A2 2 0 0 1 9.8 10l2.3-2.8a2 2 0 0 1 3.6 0l2.3 2.8a2 2 0 0 1 1.7 1.1"/>
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
   </svg>
 );
 
 const Warehouse = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"/>
     <path d="M6 18h12"/>
     <path d="M6 14h12"/>
@@ -61,14 +69,14 @@ const Warehouse = () => (
 );
 
 const AssignmentReturn = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="9 14 4 9 9 4"/>
     <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
   </svg>
 );
 
 const Inventory = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 20h20"/>
     <path d="M5 20V10l7-7 7 7v10"/>
     <path d="M9 20v-4h6v4"/>
@@ -76,7 +84,7 @@ const Inventory = () => (
 );
 
 const SupervisorAccount = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
     <circle cx="9" cy="7" r="4"/>
     <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
@@ -85,7 +93,7 @@ const SupervisorAccount = () => (
 );
 
 const CurrencyExchange = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M16 3h5v5"/>
     <path d="M8 3H3v5"/>
     <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/>
@@ -125,28 +133,28 @@ export const Icons = {
 
 const sectionIcons: Record<string, { closed: React.ReactNode; open: React.ReactNode }> = {
   general: { 
-    closed: <Dashboard fill {...iconProps} />, 
-    open: <Dashboard {...iconProps} /> 
+    closed: <Dashboard {...iconProps} />, 
+    open: <DashboardFill {...iconProps} /> 
   },
   inventario: { 
-    closed: <Inventory2 fill {...iconProps} />, 
-    open: <Inventory2 {...iconProps} /> 
+    closed: <Inventory2 {...iconProps} />, 
+    open: <Inventory2Fill {...iconProps} /> 
   },
   comercial: { 
-    closed: <Storefront fill {...iconProps} />, 
-    open: <Storefront {...iconProps} /> 
+    closed: <Storefront {...iconProps} />, 
+    open: <StorefrontFill {...iconProps} /> 
   },
   operaciones: { 
-    closed: <LocalShipping fill {...iconProps} />, 
-    open: <LocalShipping {...iconProps} /> 
+    closed: <LocalShipping {...iconProps} />, 
+    open: <LocalShippingFill {...iconProps} /> 
   },
   datos: { 
-    closed: <Storage fill {...iconProps} />, 
-    open: <Storage {...iconProps} /> 
+    closed: <Storage {...iconProps} />, 
+    open: <StorageFill {...iconProps} /> 
   },
   sistema: { 
-    closed: <Settings fill {...iconProps} />, 
-    open: <Settings {...iconProps} /> 
+    closed: <Settings {...iconProps} />, 
+    open: <SettingsFill {...iconProps} /> 
   },
 };
 
