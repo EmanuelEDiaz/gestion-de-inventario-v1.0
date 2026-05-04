@@ -1,0 +1,58 @@
+# === Java / Gradle ===
+backend/**/build/
+backend/**/.gradle/
+
+*.class
+*.jar
+*.war
+
+# === Maven ===
+backend/**/target/
+backend/**/.mvn/wrapper/maven-wrapper.jar
+
+# === IDE ===
+.idea/
+*.iml
+*.iws
+.vscode/settings.json
+.vscode/launch.json
+*.swp
+*.swo
+*~
+
+# === Node / Next.js ===
+frontend/node_modules/
+frontend/.next/
+
+frontend/.env*.local
+
+# === Environment / Secrets ===
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Media (dev local) ===
+media/
+
+# === Docker ===
+infra/docker/.env
+
+# === Stitch MCP (dev only) ===
+.mcp.json
+
+# === Skills (local dev) ===
+.agents/
+
+# === Logs ===
+*.log
+logs/
+#===otros===
+nul frontend
+.dev-pids.json

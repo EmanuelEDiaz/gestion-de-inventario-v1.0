@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title desc">
+  <title>Inventario</title>
+  <desc>Icono de la aplicacion de inventario.</desc>
+  <rect width="192" height="192" rx="40" fill="#1d4ed8" />
+  <path d="M48 64 96 40l48 24v64l-48 24-48-24V64Z" fill="#dbeafe" />
+  <path d="M48 64 96 88l48-24" fill="none" stroke="#1e3a8a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M96 88v64" fill="none" stroke="#1e3a8a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M48 64v64" fill="none" stroke="#1e3a8a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M144 64v64" fill="none" stroke="#1e3a8a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
