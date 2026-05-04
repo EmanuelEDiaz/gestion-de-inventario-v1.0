@@ -32,12 +32,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     sections: navigationSections,
     currentPathname: pathname 
   });
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const saved = localStorage.getItem('sidebar-collapsed');
-    return saved !== null ? JSON.parse(saved) : false;
-  });
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Read sidebar preference only after mount to avoid hydration mismatch
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar-collapsed');
+    if (saved !== null) setIsCollapsed(JSON.parse(saved));
+  }, []);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [pendingForLogout, setPendingForLogout] = useState(0);
   const { isAuthenticated, hasHydrated, logout } = useAuthStore();
