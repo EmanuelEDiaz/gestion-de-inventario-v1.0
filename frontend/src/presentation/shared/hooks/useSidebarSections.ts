@@ -5,8 +5,9 @@ import { useState, useEffect } from 'react';
 export interface NavSection {
   id: string;
   title: string;
+  description?: string;
   icon?: React.ReactNode;
-  items: { href: string; label: string; icon: React.ReactNode; badge?: string }[];
+  items: { href: string; label: string; description?: string; icon: React.ReactNode; badge?: string }[];
   defaultOpen?: boolean;
 }
 

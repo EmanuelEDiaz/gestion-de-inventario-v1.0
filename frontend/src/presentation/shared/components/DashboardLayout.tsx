@@ -16,70 +16,15 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const navigationSections = [
-  {
-    id: 'general',
-    title: 'General',
-    defaultOpen: true,
-    items: [
-      { href: '/dashboard', label: 'Panel de Control', icon: Icons.dashboard },
-    ],
-  },
-  {
-    id: 'inventario',
-    title: 'Inventario',
-    defaultOpen: true,
-    items: [
-      { href: '/products', label: 'Productos', icon: Icons.products },
-      { href: '/categories', label: 'Categorías', icon: Icons.category },
-      { href: '/warehouses', label: 'Almacenes', icon: Icons.warehouse },
-      { href: '/stock', label: 'Stock', icon: Icons.stock },
-      { href: '/movements', label: 'Movimientos', icon: Icons.movements },
-    ],
-  },
-  {
-    id: 'comercial',
-    title: 'Comercial',
-    defaultOpen: false,
-    items: [
-      { href: '/suppliers', label: 'Proveedores', icon: Icons.supplier },
-      { href: '/customers', label: 'Clientes', icon: Icons.customer },
-    ],
-  },
-  {
-    id: 'operaciones',
-    title: 'Operaciones',
-    defaultOpen: true,
-    items: [
-      { href: '/purchases', label: 'Compras', icon: Icons.purchase },
-      { href: '/sales', label: 'Ventas', icon: Icons.sale },
-      { href: '/transfers', label: 'Transferencias', icon: Icons.transfer },
-      { href: '/adjustments', label: 'Ajustes', icon: Icons.adjustment },
-      { href: '/returns', label: 'Devoluciones', icon: Icons.returnDoc },
-    ],
-  },
-  {
-    id: 'datos',
-    title: 'Datos',
-    defaultOpen: false,
-    items: [
-      { href: '/import', label: 'Importar', icon: Icons.importData },
-      { href: '/export', label: 'Exportar', icon: Icons.exportData },
-      { href: '/reports', label: 'Reportes', icon: Icons.report },
-    ],
-  },
-  {
-    id: 'sistema',
-    title: 'Sistema',
-    defaultOpen: false,
-    items: [
-      { href: '/users', label: 'Usuarios', icon: Icons.users },
-      { href: '/currencies', label: 'Monedas', icon: Icons.currency },
-      { href: '/exchange-rates', label: 'Tasas de Cambio', icon: Icons.exchangeRate },
-      { href: '/settings', label: 'Configuración', icon: Icons.settings },
-    ],
-  },
-];
+import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.config';
+
+const navigationSections = NAVIGATION_CONFIG.map((section) => ({
+  ...section,
+  items: section.items.map(({ iconKey, ...rest }) => ({
+    ...rest,
+    icon: Icons[iconKey as keyof typeof Icons] ?? Icons.dashboard,
+  })),
+}));
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
