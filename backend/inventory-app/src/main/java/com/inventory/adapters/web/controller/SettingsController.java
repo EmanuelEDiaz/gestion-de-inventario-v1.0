@@ -1,40 +1,104 @@
 package com.inventory.adapters.web.controller;
 
+import com.inventory.adapters.web.dto.AppSettingsResponse;
+import com.inventory.adapters.web.dto.AppSettingsUpdateRequest;
+import com.inventory.adapters.web.mapper.AppSettingsWebMapper;
+import com.inventory.application.usecase.command.UpdateSettingsUseCase;
+import com.inventory.application.usecase.query.SettingsQueryUseCase;
+import com.inventory.domain.model.AppSettings.CostMethod;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
 
+/**
+ * Controlador REST para la configuración global del sistema.
+ *
+ * GET  /api/v1/settings   → retorna ETag con versión actual
+ * PATCH /api/v1/settings  → requiere If-Match con versión actual (optimistic lock)
+ */
 @RestController
 @RequestMapping("/api/v1/settings")
 public class SettingsController {
 
-    private final Map<String, Object> settings = new ConcurrentHashMap<>(Map.of(
-        "defaultCostMethod", "STANDARD",
-        "defaultCurrencyCode", "CUP",
-        "companyName", "",
-        "lowStockThresholdDefault", BigDecimal.ZERO,
-        "maxProductPages", 20,
-        "searchDebounceMs", 300,
-        "version", 0
-    ));
+    private final SettingsQueryUseCase queryUseCase;
+    private final UpdateSettingsUseCase updateUseCase;
+    private final AppSettingsWebMapper mapper;
+
+    public SettingsController(SettingsQueryUseCase queryUseCase,
+                               UpdateSettingsUseCase updateUseCase,
+                               AppSettingsWebMapper mapper) {
+        this.queryUseCase = queryUseCase;
+        this.updateUseCase = updateUseCase;
+        this.mapper = mapper;
+    }
 
     @GetMapping
-    public Mono<ResponseEntity<Map<String, Object>>> getSettings() {
-        return Mono.just(ResponseEntity.ok(settings));
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<ResponseEntity<AppSettingsResponse>> getSettings() {
+        return queryUseCase.execute()
+                .map(settings -> ResponseEntity.ok()
+                        .eTag("W/\"" + settings.getVersion() + "\"")
+                        .body(mapper.toResponse(settings)));
     }
 
     @PatchMapping
-    public Mono<ResponseEntity<Map<String, Object>>> updateSettings(
-            @RequestBody Map<String, Object> updates,
-            @RequestHeader(value = "If-Match", required = false) String ifMatch) {
-        
-        settings.putAll(updates);
-        settings.put("version", ((Integer)settings.get("version")) + 1);
-        
-        return Mono.just(ResponseEntity.ok(settings));
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<ResponseEntity<AppSettingsResponse>> updateSettings(
+            @Valid @RequestBody AppSettingsUpdateRequest request,
+            @RequestHeader(value = "If-Match", required = false) String ifMatch,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Integer clientVersion = parseIfMatch(ifMatch);
+        UUID actorId = resolveActorId(userDetails);
+
+        CostMethod costMethod = request.defaultCostMethod() != null
+                ? CostMethod.valueOf(request.defaultCostMethod())
+                : null;
+
+        UpdateSettingsUseCase.Command command = new UpdateSettingsUseCase.Command(
+                clientVersion,
+                costMethod,
+                request.defaultCurrencyCode(),
+                request.companyName(),
+                request.lowStockThresholdDefault(),
+                actorId
+        );
+
+        return updateUseCase.execute(command)
+                .map(updated -> ResponseEntity.ok()
+                        .eTag("W/\"" + updated.getVersion() + "\"")
+                        .body(mapper.toResponse(updated)));
+    }
+
+    /**
+     * Parsea el valor del header If-Match: W/"version" → versión entera.
+     * Retorna null si el header no está presente.
+     */
+    private Integer parseIfMatch(String ifMatch) {
+        if (ifMatch == null || ifMatch.isBlank()) return null;
+        try {
+            String cleaned = ifMatch.trim().replaceAll("W/\"?", "").replaceAll("\"", "");
+            return Integer.parseInt(cleaned);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Header If-Match inválido. Formato esperado: W/\"<version>\" (ejemplo: W/\"3\")");
+        }
+    }
+
+    private UUID resolveActorId(UserDetails userDetails) {
+        if (userDetails == null) return null;
+        try {
+            return UUID.fromString(userDetails.getUsername());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.inventory.domain.ports.out;
 
 import com.inventory.domain.model.User;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -32,4 +33,14 @@ public interface UserRepositoryPort {
      * Verifica si existe un usuario con el nombre dado.
      */
     Mono<Boolean> existsByUsername(String username);
+
+    /**
+     * Verifica si existe un usuario con el email dado.
+     */
+    Mono<Boolean> existsByEmail(String email);
+
+    /**
+     * Devuelve todos los usuarios con sus roles cargados.
+     */
+    Flux<User> findAll();
 }

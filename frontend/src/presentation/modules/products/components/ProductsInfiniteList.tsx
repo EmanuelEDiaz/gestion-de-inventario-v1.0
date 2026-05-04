@@ -9,7 +9,7 @@ import { ProductFiltersPanel, type ProductFiltersState } from './ProductFiltersP
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/EmptyState';
-import { useSettingsController } from '@/presentation/modules/settings/hooks/useSettingsController';
+import { DEFAULT_UI_PREFS } from '@/core/entities/app-settings';
 import { useSort } from '@/presentation/shared/hooks/useSort';
 
 const initialFilters: ProductFiltersState = {
@@ -26,8 +26,7 @@ interface ProductsInfiniteListProps {
 }
 
 export function ProductsInfiniteList({ maxPages = 20 }: ProductsInfiniteListProps) {
-  const { settings } = useSettingsController();
-  const debounceMs = settings?.searchDebounceMs ?? 300;
+  const debounceMs = DEFAULT_UI_PREFS.searchDebounceMs;
 
   const [filters, setFilters] = useState<ProductFiltersState>(initialFilters);
   const { sortKey, sortDirection, handleSort } = useSort();

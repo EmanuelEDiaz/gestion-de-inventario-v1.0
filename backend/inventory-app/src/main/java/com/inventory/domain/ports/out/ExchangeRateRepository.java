@@ -4,21 +4,18 @@ import com.inventory.domain.model.ExchangeRate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 public interface ExchangeRateRepository {
 
-    Mono<ExchangeRate> findById(String id);
+    Mono<ExchangeRate> findById(UUID id);
 
     Flux<ExchangeRate> findAll();
 
-    Flux<ExchangeRate> findAllActive();
+    Flux<ExchangeRate> findByBasecodeAndQuotecode(String baseCode, String quoteCode);
 
-    Mono<ExchangeRate> findActiveRate(String fromCurrency, String toCurrency);
-
-    Flux<ExchangeRate> findHistory(String fromCurrency, String toCurrency);
+    /** Returns the most recent entry for the given pair. */
+    Mono<ExchangeRate> findLatest(String baseCode, String quoteCode);
 
     Mono<ExchangeRate> save(ExchangeRate exchangeRate);
-
-    Mono<ExchangeRate> delete(ExchangeRate exchangeRate);
-
-    Mono<ExchangeRate> deleteById(String id);
 }

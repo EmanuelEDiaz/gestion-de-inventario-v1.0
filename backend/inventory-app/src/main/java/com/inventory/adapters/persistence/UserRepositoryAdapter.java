@@ -8,6 +8,7 @@ import com.inventory.adapters.persistence.repository.UserR2dbcRepository;
 import com.inventory.domain.model.User;
 import com.inventory.domain.ports.out.UserRepositoryPort;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.HashSet;
@@ -57,7 +58,17 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public Mono<Boolean> existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
-    
+
+    @Override
+    public Mono<Boolean> existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public Flux<User> findAll() {
+        return userRepository.findAll().flatMap(this::loadUserWithRole);
+    }
+
     /**
      * Carga el usuario con su rol y permisos asociados.
      */

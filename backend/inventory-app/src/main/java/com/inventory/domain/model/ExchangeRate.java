@@ -2,70 +2,53 @@ package com.inventory.domain.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Entidad de dominio: Tipo de Cambio.
- * Representa la tasa de cambio entre dos monedas.
+ * Representa la tasa de cambio entre dos monedas en un momento dado.
  */
 public class ExchangeRate {
-    private final String id;
-    private final String fromCurrency;
-    private final String toCurrency;
+
+    public enum RateType { OFFICIAL, MARKET, CUSTOM }
+
+    private final UUID id;
+    private final String baseCode;
+    private final String quoteCode;
     private final BigDecimal rate;
-    private final boolean active;
-    private final Instant effectiveDate;
+    private final RateType rateType;
+    private final Instant validFrom;
+    private final UUID createdBy;
     private final Instant createdAt;
 
-    public ExchangeRate(String id, String fromCurrency, String toCurrency, 
-                      BigDecimal rate, boolean active, Instant effectiveDate, Instant createdAt) {
-        if (id == null || id.isBlank()) {
-            throw new IllegalArgumentException("ExchangeRate id cannot be null or blank");
-        }
-        if (fromCurrency == null || fromCurrency.isBlank()) {
-            throw new IllegalArgumentException("From currency cannot be null or blank");
-        }
-        if (toCurrency == null || toCurrency.isBlank()) {
-            throw new IllegalArgumentException("To currency cannot be null or blank");
-        }
-        if (rate == null || rate.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Rate must be greater than zero");
-        }
-        this.id = id;
-        this.fromCurrency = fromCurrency.toUpperCase();
-        this.toCurrency = toCurrency.toUpperCase();
-        this.rate = rate;
-        this.active = active;
-        this.effectiveDate = effectiveDate != null ? effectiveDate : Instant.now();
+    public ExchangeRate(UUID id, String baseCode, String quoteCode,
+                        BigDecimal rate, RateType rateType,
+                        Instant validFrom, UUID createdBy, Instant createdAt) {
+        if (baseCode == null || baseCode.isBlank()) throw new IllegalArgumentException("baseCode is required");
+        if (quoteCode == null || quoteCode.isBlank()) throw new IllegalArgumentException("quoteCode is required");
+        if (rate == null || rate.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("rate must be > 0");
+        this.id        = id;
+        this.baseCode  = baseCode.toUpperCase();
+        this.quoteCode = quoteCode.toUpperCase();
+        this.rate      = rate;
+        this.rateType  = rateType != null ? rateType : RateType.OFFICIAL;
+        this.validFrom = validFrom != null ? validFrom : Instant.now();
+        this.createdBy = createdBy;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
     }
 
-    public static ExchangeRate create(String fromCurrency, String toCurrency, BigDecimal rate) {
-        String id = fromCurrency.toUpperCase() + "-" + toCurrency.toUpperCase() + "-" + 
-                  System.currentTimeMillis();
-        return new ExchangeRate(id, fromCurrency, toCurrency, rate, true, Instant.now(), Instant.now());
+    public static ExchangeRate create(String baseCode, String quoteCode, BigDecimal rate,
+                                      RateType rateType, Instant validFrom, UUID createdBy) {
+        return new ExchangeRate(UUID.randomUUID(), baseCode, quoteCode, rate, rateType,
+                validFrom, createdBy, Instant.now());
     }
 
-    // Getters
-    public String getId() { return id; }
-    public String getFromCurrency() { return fromCurrency; }
-    public String getToCurrency() { return toCurrency; }
+    public UUID getId()         { return id; }
+    public String getBaseCode() { return baseCode; }
+    public String getQuoteCode(){ return quoteCode; }
     public BigDecimal getRate() { return rate; }
-    public boolean isActive() { return active; }
-    public Instant getEffectiveDate() { return effectiveDate; }
-    public Instant getCreatedAt() { return createdAt; }
-
-    public ExchangeRate deactivate() {
-        return new ExchangeRate(id, fromCurrency, toCurrency, rate, false, effectiveDate, createdAt);
-    }
-
-    public ExchangeRate activate() {
-        return new ExchangeRate(id, fromCurrency, toCurrency, rate, true, effectiveDate, createdAt);
-    }
-
-    public ExchangeRate updateRate(BigDecimal newRate) {
-        if (newRate == null || newRate.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Rate must be greater than zero");
-        }
-        return new ExchangeRate(id, fromCurrency, toCurrency, newRate, active, Instant.now(), createdAt);
-    }
+    public RateType getRateType(){ return rateType; }
+    public Instant getValidFrom(){ return validFrom; }
+    public UUID getCreatedBy()  { return createdBy; }
+    public Instant getCreatedAt(){ return createdAt; }
 }

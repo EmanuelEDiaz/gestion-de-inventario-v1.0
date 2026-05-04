@@ -3,7 +3,9 @@ package com.inventory.adapters.web.controller;
 import com.inventory.adapters.web.dto.ProblemDetail;
 import com.inventory.domain.errors.DomainException;
 import com.inventory.domain.errors.InvalidCredentialsException;
+import com.inventory.domain.errors.InvalidSettingsValueException;
 import com.inventory.domain.errors.InvalidTokenException;
+import com.inventory.domain.errors.SettingsVersionConflictException;
 import com.inventory.domain.errors.UserDisabledException;
 import com.inventory.domain.errors.UserNotFoundException;
 import org.slf4j.Logger;
@@ -119,6 +121,42 @@ public class GlobalExceptionHandler {
                 .body(problem));
     }
     
+    @ExceptionHandler(SettingsVersionConflictException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleSettingsConflict(
+            SettingsVersionConflictException ex, ServerWebExchange exchange) {
+        log.warn("Settings version conflict: client={}, current={}", ex.getClientVersion(), ex.getCurrentVersion());
+
+        ProblemDetail problem = ProblemDetail.of(
+                "urn:inventory:error:settings-version-conflict",
+                HttpStatus.CONFLICT.value(),
+                "Conflicto de versión en configuración",
+                ex.getMessage(),
+                exchange.getRequest().getPath().value()
+        );
+
+        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT)
+                .header("Content-Type", "application/problem+json")
+                .body(problem));
+    }
+
+    @ExceptionHandler(InvalidSettingsValueException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleInvalidSettingsValue(
+            InvalidSettingsValueException ex, ServerWebExchange exchange) {
+        log.warn("Invalid settings value for field '{}': {}", ex.getField(), ex.getMessage());
+
+        ProblemDetail problem = ProblemDetail.of(
+                "urn:inventory:error:invalid-settings-value",
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "Valor de configuración inválido",
+                ex.getMessage(),
+                exchange.getRequest().getPath().value()
+        );
+
+        return Mono.just(ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .header("Content-Type", "application/problem+json")
+                .body(problem));
+    }
+
     @ExceptionHandler(DomainException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleDomainException(
             DomainException ex, ServerWebExchange exchange) {

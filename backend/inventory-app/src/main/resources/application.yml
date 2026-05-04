@@ -73,6 +73,16 @@ springdoc:
     path: /v3/api-docs
   show-actuator: false
 
+# Actuator (solo health, sin detalles)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 ---
 # Profile: dev
 spring:

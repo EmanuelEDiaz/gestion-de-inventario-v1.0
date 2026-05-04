@@ -9,18 +9,11 @@ import Link from 'next/link';
 import { Button } from '@/presentation/shared/components/ui';
 import { PageHeader } from '@/presentation/shared/components/PageHeader';
 import { ProductsInfiniteList } from '../components/ProductsInfiniteList';
-import { useSettingsController } from '@/presentation/modules/settings/hooks/useSettingsController';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
+import { DEFAULT_UI_PREFS } from '@/core/entities/app-settings';
 
-const DEFAULT_MAX_PAGES = 20;
+const DEFAULT_MAX_PAGES = DEFAULT_UI_PREFS.maxProductPages;
 
 export function ProductsListView() {
-  const { settings, isLoading } = useSettingsController();
-  const maxPages = settings?.maxProductPages ?? DEFAULT_MAX_PAGES;
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
 
   return (
     <div className="space-y-6">
@@ -34,7 +27,7 @@ export function ProductsListView() {
         }
       />
 
-      <ProductsInfiniteList maxPages={maxPages} />
+      <ProductsInfiniteList maxPages={DEFAULT_MAX_PAGES} />
     </div>
   );
 }
