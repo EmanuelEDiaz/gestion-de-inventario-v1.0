@@ -4,6 +4,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import type { CreateProductData } from '@/core/entities/product';
 import { CreateProductUseCase } from '@/core/use-cases/product/CreateProductUseCase';
 import { productRepository } from '@/infrastructure/repositories/ProductRepository';
@@ -23,6 +24,7 @@ interface ProductImagesDraft {
 
 export function useProductFormController() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [state, setState] = useState<FormState>({ isLoading: false, error: null });
 
   const handleSubmit = useCallback(async (data: CreateProductData, imagesDraft?: ProductImagesDraft) => {
@@ -42,12 +44,15 @@ export function useProductFormController() {
         }
       }
 
+      await queryClient.invalidateQueries({ queryKey: ['categories'] });
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+
       router.push('/products');
     } catch (err: unknown) {
       const message = getErrorMessage(err);
       setState({ isLoading: false, error: message });
     }
-  }, [router]);
+  }, [router, queryClient]);
 
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));

@@ -6,6 +6,7 @@ import { SYNC_INCIDENT_TYPE_LABELS } from '@/core/entities/sync-incident';
 import { useSyncIncidents } from '../hooks/useSyncIncidents';
 import { SyncIncidentRow } from '../components/SyncIncidentRow';
 import { SyncConflictResolver } from '../components/SyncConflictResolver';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 
 const ALL_TYPES = ['all', 'STOCK_CONFLICT', 'ENTITY_DUPLICATE', 'VERSION_MISMATCH', 'CHECKSUM_ERROR'] as const;
 type FilterType = typeof ALL_TYPES[number];
@@ -24,21 +25,17 @@ export function SyncIncidentsView() {
     <div className="px-4 py-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h1 className="text-xl font-semibold text-gray-900">Incidentes de sincronización</h1>
-        <select
+        <ComboboxSelect
+          options={[
+            { value: 'all', label: 'Todos los tipos' },
+            ...(['STOCK_CONFLICT', 'ENTITY_DUPLICATE', 'VERSION_MISMATCH', 'CHECKSUM_ERROR'] as SyncIncidentType[]).map(
+              (t) => ({ value: t, label: SYNC_INCIDENT_TYPE_LABELS[t] })
+            ),
+          ]}
           value={filter}
-          onChange={(e) => setFilter(e.target.value as FilterType)}
-          className="border rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          title="Filtrar incidentes por tipo"
-        >
-          <option value="all">Todos los tipos</option>
-          {(['STOCK_CONFLICT', 'ENTITY_DUPLICATE', 'VERSION_MISMATCH', 'CHECKSUM_ERROR'] as SyncIncidentType[]).map(
-            (t) => (
-              <option key={t} value={t}>
-                {SYNC_INCIDENT_TYPE_LABELS[t]}
-              </option>
-            )
-          )}
-        </select>
+          onChange={(val) => setFilter(val as FilterType)}
+          className="w-48"
+        />
       </div>
 
       {isLoading ? (

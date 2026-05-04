@@ -7,7 +7,7 @@ import type { Category, CreateCategoryData } from '@/core/entities/category';
 import { Button } from '@/presentation/shared/components/ui';
 import { Input } from '@/presentation/shared/components/ui';
 import { FormField } from '@/presentation/shared/components/FormField';
-import { Select } from '@/presentation/shared/components/Select';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 
 interface CategoryFormProps {
   categories: Category[];
@@ -68,11 +68,12 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onCancel }
           placeholder="Nombre de la categoría"
         />
         <FormField label="Categoría Padre">
-          <Select
+          <ComboboxSelect
             value={formData.parentId}
-            onChange={(e) => setFormData((p) => ({ ...p, parentId: e.target.value }))}
+            onChange={(val) => setFormData((p) => ({ ...p, parentId: val }))}
             options={parentOptions}
             placeholder="Ninguna (raíz)"
+            searchPlaceholder="Buscar categoría..."
           />
         </FormField>
         <Input

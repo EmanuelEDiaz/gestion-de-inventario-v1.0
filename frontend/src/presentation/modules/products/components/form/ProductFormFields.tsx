@@ -7,7 +7,7 @@ import type { Category } from '@/core/entities/category';
 import type { UnitOfMeasure } from '@/core/entities/product';
 import { Input } from '@/presentation/shared/components/ui';
 import { FormField } from '@/presentation/shared/components/FormField';
-import { Select } from '@/presentation/shared/components/Select';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import { Textarea } from '@/presentation/shared/components/Textarea';
 
 export interface ProductFormData {
@@ -80,11 +80,12 @@ export function ProductFormFields({ data, categories, onChange }: ProductFormFie
           />
         </FormField>
         <FormField label="Categoría">
-          <Select
+          <ComboboxSelect
             value={data.categoryId}
-            onChange={(e) => onChange('categoryId', e.target.value)}
+            onChange={(val) => onChange('categoryId', val)}
             options={categoryOptions}
             placeholder="Sin categoría"
+            searchPlaceholder="Buscar categoría..."
           />
         </FormField>
       </section>
@@ -132,10 +133,11 @@ export function ProductFormFields({ data, categories, onChange }: ProductFormFie
             placeholder="0"
           />
           <FormField label="Unidad de Medida">
-            <Select
+            <ComboboxSelect
               value={data.unitOfMeasure}
-              onChange={(e) => onChange('unitOfMeasure', e.target.value)}
+              onChange={(val) => onChange('unitOfMeasure', val)}
               options={UNIT_OPTIONS}
+              placeholder="Seleccionar..."
             />
           </FormField>
         </div>

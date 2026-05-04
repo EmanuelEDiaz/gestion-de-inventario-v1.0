@@ -7,6 +7,7 @@ import { Input } from '@/presentation/shared/components/ui/Input';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/EmptyState';
 import { toast } from '@/presentation/shared/components/ui/toast';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import { Plus, Trash2, ExternalLink } from 'lucide-react';
 import {
   SOCIAL_PLATFORM_LABELS,
@@ -69,17 +70,12 @@ export function SupplierSocialLinks({ supplierId }: SupplierSocialLinksProps) {
               <label className="text-sm font-medium text-gray-700" htmlFor="platform-select">
                 Plataforma
               </label>
-              <select
-                id="platform-select"
-                className="rounded-md border px-3 py-2 text-sm"
+              <ComboboxSelect
+                options={PLATFORMS.map((p) => ({ value: p, label: SOCIAL_PLATFORM_LABELS[p] }))}
                 value={platform}
-                onChange={(e) => setPlatform(e.target.value as SocialPlatform)}
-                title="Seleccionar plataforma de red social"
-              >
-                {PLATFORMS.map((p) => (
-                  <option key={p} value={p}>{SOCIAL_PLATFORM_LABELS[p]}</option>
-                ))}
-              </select>
+                onChange={(val) => setPlatform(val as SocialPlatform)}
+                placeholder="Seleccionar..."
+              />
             </div>
             <Input
               label="Etiqueta (opcional)"

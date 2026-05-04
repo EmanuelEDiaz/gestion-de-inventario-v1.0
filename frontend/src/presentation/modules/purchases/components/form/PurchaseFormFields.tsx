@@ -14,6 +14,7 @@ import { ProductRepository } from '@/infrastructure/repositories/ProductReposito
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/Textarea';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import { Trash2, Plus } from 'lucide-react';
 
 interface PurchaseLineInput {
@@ -71,30 +72,21 @@ export function PurchaseFormFields({ onSubmit, isSubmitting, onCancel }: Purchas
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label htmlFor="warehouseId" className="text-sm font-medium">Almacén *</label>
-          <select
-            id="warehouseId"
+          <ComboboxSelect
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
             value={warehouseId}
-            onChange={(e) => setWarehouseId(e.target.value)}
-            required
-            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-            title="Almacén destino de la compra"
-          >
-            <option value="">{warehouses.length === 0 ? 'No hay almacenes disponibles' : '-- Seleccionar almacén --'}</option>
-            {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-          </select>
+            onChange={setWarehouseId}
+            placeholder={warehouses.length === 0 ? 'No hay almacenes' : 'Seleccionar...'}
+          />
         </div>
         <div className="space-y-1">
           <label htmlFor="supplierId" className="text-sm font-medium">Proveedor</label>
-          <select
-            id="supplierId"
+          <ComboboxSelect
+            options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
             value={supplierId}
-            onChange={(e) => setSupplierId(e.target.value)}
-            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-            title="Proveedor de la compra"
-          >
-            <option value="">{suppliers.length === 0 ? 'No hay proveedores disponibles' : '-- Sin proveedor --'}</option>
-            {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+            onChange={setSupplierId}
+            placeholder={suppliers.length === 0 ? 'No hay proveedores' : 'Sin proveedor...'}
+          />
         </div>
       </div>
 
@@ -108,16 +100,12 @@ export function PurchaseFormFields({ onSubmit, isSubmitting, onCancel }: Purchas
             <div key={i} className="grid grid-cols-[1fr_80px_100px_40px] gap-2 items-end">
               <div className="space-y-1">
                 {i === 0 && <label className="text-xs text-muted-foreground">Producto</label>}
-                <select
+                <ComboboxSelect
+                  options={products.map((p) => ({ value: p.id, label: p.sku ? `${p.sku} - ${p.name}` : p.name }))}
                   value={line.productId}
-                  onChange={(e) => updateLine(i, 'productId', e.target.value)}
-                  required
-                  className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-                  title="Producto"
-                >
-                  <option value="">{products.length === 0 ? 'No hay productos' : '-- Producto --'}</option>
-                  {products.map((p) => <option key={p.id} value={p.id}>{p.sku ? `${p.sku} - ` : ''}{p.name}</option>)}
-                </select>
+                  onChange={(val) => updateLine(i, 'productId', val)}
+                  placeholder={products.length === 0 ? 'No hay productos' : 'Seleccionar...'}
+                />
               </div>
               <div className="space-y-1">
                 {i === 0 && <label className="text-xs text-muted-foreground">Cant.</label>}

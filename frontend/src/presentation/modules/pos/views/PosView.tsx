@@ -14,6 +14,7 @@ import type { Warehouse } from '@/core/entities/warehouse';
 import type { Product } from '@/core/entities/product';
 import { WarehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
 import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import { Trash2, Plus, ShoppingCart } from 'lucide-react';
 
 const warehouseRepo = new WarehouseRepository();
@@ -53,16 +54,13 @@ export function PosView() {
       {/* Panel izquierdo — búsqueda de productos */}
       <div className="flex-1 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            className="rounded-md border px-3 py-2 text-sm"
+          <ComboboxSelect
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
             value={cart.warehouseId}
-            onChange={(e) => cart.setWarehouse(e.target.value)}
-            title="Seleccionar almacén de despacho"
-          >
-            {warehouses.map((w) => (
-              <option key={w.id} value={w.id}>{w.name}</option>
-            ))}
-          </select>
+            onChange={cart.setWarehouse}
+            placeholder="Seleccionar almacén..."
+            className="w-48"
+          />
 
           <FiarButton
             paymentMode={cart.paymentMode}

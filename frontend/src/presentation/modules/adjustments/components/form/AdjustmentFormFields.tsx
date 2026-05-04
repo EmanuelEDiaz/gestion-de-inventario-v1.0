@@ -12,6 +12,7 @@ import { ProductRepository } from '@/infrastructure/repositories/ProductReposito
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/Textarea';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import { Trash2, Plus } from 'lucide-react';
 
 interface AdjustmentLineInput {
@@ -70,23 +71,21 @@ export function AdjustmentFormFields({ onSubmit, isSubmitting, onCancel }: Adjus
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label htmlFor="warehouseId" className="text-sm font-medium">Almacén *</label>
-          <select
-            id="warehouseId"
+          <ComboboxSelect
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
             value={warehouseId}
-            onChange={(e) => setWarehouseId(e.target.value)}
-            required
-            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-            title="Almacén del ajuste"
-          >
-            <option value="">{warehouses.length === 0 ? 'No hay almacenes disponibles' : '-- Seleccionar almacén --'}</option>
-            {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-          </select>
+            onChange={setWarehouseId}
+            placeholder={warehouses.length === 0 ? 'No hay almacenes disponibles' : 'Seleccionar almacén...'}
+          />
         </div>
         <div className="space-y-1">
           <label className="text-sm font-medium">Tipo de Ajuste</label>
-          <select value={type} onChange={(e) => setType(e.target.value as AdjustmentType)} className="w-full rounded-md border px-3 py-2 text-sm" title="Tipo de ajuste de inventario">
-            {TYPES.map((t) => (<option key={t} value={t}>{ADJUSTMENT_TYPE_LABELS[t]}</option>))}
-          </select>
+          <ComboboxSelect
+            options={TYPES.map((t) => ({ value: t, label: ADJUSTMENT_TYPE_LABELS[t] }))}
+            value={type}
+            onChange={(val) => setType(val as AdjustmentType)}
+            placeholder="Seleccionar tipo..."
+          />
         </div>
       </div>
 
@@ -105,16 +104,12 @@ export function AdjustmentFormFields({ onSubmit, isSubmitting, onCancel }: Adjus
             <div key={i} className="grid grid-cols-[1fr_80px_80px_40px] gap-2 items-end">
               <div className="space-y-1">
                 {i === 0 && <label className="text-xs text-muted-foreground">Producto</label>}
-                <select
+                <ComboboxSelect
+                  options={products.map((p) => ({ value: p.id, label: p.sku ? `${p.sku} - ${p.name}` : p.name }))}
                   value={line.productId}
-                  onChange={(e) => updateLine(i, 'productId', e.target.value)}
-                  required
-                  className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-                  title="Producto"
-                >
-                  <option value="">{products.length === 0 ? 'No hay productos' : '-- Producto --'}</option>
-                  {products.map((p) => <option key={p.id} value={p.id}>{p.sku ? `${p.sku} - ` : ''}{p.name}</option>)}
-                </select>
+                  onChange={(val) => updateLine(i, 'productId', val)}
+                  placeholder={products.length === 0 ? 'No hay productos' : 'Seleccionar producto...'}
+                />
               </div>
               <div className="space-y-1">
                 {i === 0 && <label className="text-xs text-muted-foreground">Sistema</label>}

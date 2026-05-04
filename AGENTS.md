@@ -24,6 +24,10 @@ pnpm test:coverage
 # Ejecutar un solo test (IMPORTANTE)
 pnpm vitest run src/core/entities/product.test.ts
 pnpm vitest run --related src/presentation/modules/products/
+
+# TypeScript check
+pnpm tsc --noEmit    # Verificar tipos sin compilar
+pnpm tsc --noEmit --watch  # Modo watch
 ```
 
 ### Backend (`cd backend/inventory-app`, maven)

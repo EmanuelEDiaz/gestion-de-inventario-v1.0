@@ -6,6 +6,7 @@ import type { ExportFormat } from '@/core/interfaces/IExportRepository';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import { Download } from 'lucide-react';
 
 const FORMATS: { value: ExportFormat; label: string }[] = [
@@ -30,9 +31,12 @@ export function ExportView() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-1">
               <label className="text-sm font-medium">Formato</label>
-              <select value={format} onChange={(e) => setFormat(e.target.value as ExportFormat)} className="w-full rounded-md border px-3 py-2 text-sm" title="Formato de exportación">
-                {FORMATS.map((f) => (<option key={f.value} value={f.value}>{f.label}</option>))}
-              </select>
+              <ComboboxSelect
+                options={FORMATS}
+                value={format}
+                onChange={(val) => setFormat(val as ExportFormat)}
+                placeholder="Seleccionar formato..."
+              />
             </div>
             <div className="space-y-1">
               <label htmlFor="fromDate" className="text-sm font-medium">Desde</label>

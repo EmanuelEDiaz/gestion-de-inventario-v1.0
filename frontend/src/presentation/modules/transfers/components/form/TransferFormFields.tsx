@@ -11,6 +11,7 @@ import { ProductRepository } from '@/infrastructure/repositories/ProductReposito
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/Textarea';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import { Trash2, Plus } from 'lucide-react';
 
 interface TransferLineInput {
@@ -64,31 +65,21 @@ export function TransferFormFields({ onSubmit, isSubmitting, onCancel }: Transfe
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label htmlFor="fromWarehouseId" className="text-sm font-medium">Almacén Origen *</label>
-          <select
-            id="fromWarehouseId"
+          <ComboboxSelect
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
             value={fromWarehouseId}
-            onChange={(e) => setFromWarehouseId(e.target.value)}
-            required
-            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-            title="Almacén de origen"
-          >
-            <option value="">{warehouses.length === 0 ? 'No hay almacenes disponibles' : '-- Seleccionar origen --'}</option>
-            {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-          </select>
+            onChange={setFromWarehouseId}
+            placeholder={warehouses.length === 0 ? 'No hay almacenes' : 'Seleccionar origen...'}
+          />
         </div>
         <div className="space-y-1">
           <label htmlFor="toWarehouseId" className="text-sm font-medium">Almacén Destino *</label>
-          <select
-            id="toWarehouseId"
+          <ComboboxSelect
+            options={warehouses.filter((w) => w.id !== fromWarehouseId).map((w) => ({ value: w.id, label: w.name }))}
             value={toWarehouseId}
-            onChange={(e) => setToWarehouseId(e.target.value)}
-            required
-            className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-            title="Almacén de destino"
-          >
-            <option value="">{warehouses.length === 0 ? 'No hay almacenes disponibles' : '-- Seleccionar destino --'}</option>
-            {warehouses.filter((w) => w.id !== fromWarehouseId).map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-          </select>
+            onChange={setToWarehouseId}
+            placeholder={warehouses.length === 0 ? 'No hay almacenes' : 'Seleccionar destino...'}
+          />
         </div>
       </div>
 
@@ -102,16 +93,12 @@ export function TransferFormFields({ onSubmit, isSubmitting, onCancel }: Transfe
             <div key={i} className="grid grid-cols-[1fr_80px_40px] gap-2 items-end">
               <div className="space-y-1">
                 {i === 0 && <label className="text-xs text-muted-foreground">Producto</label>}
-                <select
+                <ComboboxSelect
+                  options={products.map((p) => ({ value: p.id, label: p.sku ? `${p.sku} - ${p.name}` : p.name }))}
                   value={line.productId}
-                  onChange={(e) => updateLine(i, 'productId', e.target.value)}
-                  required
-                  className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-                  title="Producto"
-                >
-                  <option value="">{products.length === 0 ? 'No hay productos' : '-- Producto --'}</option>
-                  {products.map((p) => <option key={p.id} value={p.id}>{p.sku ? `${p.sku} - ` : ''}{p.name}</option>)}
-                </select>
+                  onChange={(val) => updateLine(i, 'productId', val)}
+                  placeholder={products.length === 0 ? 'No hay productos' : 'Seleccionar...'}
+                />
               </div>
               <div className="space-y-1">
                 {i === 0 && <label className="text-xs text-muted-foreground">Cant.</label>}

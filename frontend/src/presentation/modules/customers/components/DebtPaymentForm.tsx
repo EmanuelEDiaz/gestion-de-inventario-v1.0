@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
-import { Select } from '@/presentation/shared/components/Select';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import { Textarea } from '@/presentation/shared/components/Textarea';
 import type { RegisterDebtPaymentData } from '@/core/entities/debt-payment';
 import type { DebtPaymentMethod } from '@/core/entities/customer-debt';
@@ -61,11 +61,11 @@ export function DebtPaymentForm({ debtId, pendingAmount, onSubmit, onCancel }: D
       />
       <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700">Método de pago</label>
-        <Select
+        <ComboboxSelect
           options={METHODS}
           value={method}
-          onChange={(e) => setMethod(e.target.value as DebtPaymentMethod)}
-          title="Seleccione el método de pago"
+          onChange={(val) => setMethod(val as DebtPaymentMethod)}
+          placeholder="Seleccionar método..."
         />
       </div>
       <div className="space-y-1">

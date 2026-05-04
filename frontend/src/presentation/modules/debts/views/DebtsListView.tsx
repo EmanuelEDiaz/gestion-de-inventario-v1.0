@@ -6,6 +6,7 @@ import { DebtRow } from '../components/DebtRow';
 import { DebtDetailPanel } from '../components/DebtDetailPanel';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/EmptyState';
+import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
 import type { DebtStatus } from '@/core/entities/customer-debt';
 
 const STATUS_OPTIONS: { value: DebtStatus | ''; label: string }[] = [
@@ -25,16 +26,13 @@ export function DebtsListView() {
     <div className="space-y-4">
       {/* Filtros */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          className="rounded-md border px-3 py-2 text-sm"
+        <ComboboxSelect
+          options={STATUS_OPTIONS}
           value={status}
-          onChange={(e) => { setStatus(e.target.value as DebtStatus | ''); setExpandedId(null); }}
-          title="Filtrar deudas por estado"
-        >
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+          onChange={(val) => { setStatus(val as DebtStatus | ''); setExpandedId(null); }}
+          className="w-40"
+          placeholder="Filtrar por estado"
+        />
       </div>
 
       {isLoading && <LoadingSpinner />}
