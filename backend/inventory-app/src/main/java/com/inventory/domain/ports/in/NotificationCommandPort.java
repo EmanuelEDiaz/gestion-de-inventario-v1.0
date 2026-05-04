@@ -18,6 +18,9 @@ public interface NotificationCommandPort {
 
     Mono<Void> markAllRead(UUID userId);
 
+    /** Elimina una notificación si pertenece al usuario. */
+    Mono<Void> deleteById(UUID notificationId, UUID userId);
+
     record CreateCommand(
         String title,
         String body,

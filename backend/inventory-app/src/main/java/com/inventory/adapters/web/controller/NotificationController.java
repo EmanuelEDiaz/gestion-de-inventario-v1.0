@@ -89,6 +89,16 @@ public class NotificationController {
         return commandPort.markAllRead(extractUserId(userDetails));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> delete(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return commandPort.deleteById(id, extractUserId(userDetails));
+    }
+
     private UUID extractUserId(UserDetails userDetails) {
         if (userDetails == null) return null;
         try {

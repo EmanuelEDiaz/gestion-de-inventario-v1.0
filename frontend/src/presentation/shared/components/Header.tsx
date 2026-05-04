@@ -2,9 +2,8 @@
 
 import Image from 'next/image';
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
-import { NotificationBadge } from '@/presentation/modules/notifications/components/NotificationBadge';
+import { NotificationTray } from '@/presentation/modules/notifications/components/NotificationTray';
 import { Icons } from './Sidebar';
-import { cn } from '@/presentation/shared/lib/utils';
 
 interface HeaderProps {
   isSidebarCollapsed?: boolean;
@@ -12,7 +11,7 @@ interface HeaderProps {
   onToggleMobileMenu?: () => void;
 }
 
-export function Header({ isSidebarCollapsed = false, onLogoutRequest, onToggleMobileMenu }: HeaderProps) {
+export function Header({ onLogoutRequest, onToggleMobileMenu }: HeaderProps) {
   const { user } = useAuthStore();
 
   return (
@@ -49,7 +48,7 @@ export function Header({ isSidebarCollapsed = false, onLogoutRequest, onToggleMo
 
         {/* Derecha: Acciones del usuario */}
         <div className="flex items-center gap-1 md:gap-4">
-          <NotificationBadge />
+          <NotificationTray />
 
           {/* Nombre del usuario - oculto en móvil */}
           <div className="hidden items-center gap-2 text-sm text-gray-600 md:flex">

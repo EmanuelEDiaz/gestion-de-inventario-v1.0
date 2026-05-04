@@ -60,6 +60,13 @@ public class NotificationCommandUseCase implements NotificationCommandPort {
     }
 
     @Override
+    public Mono<Void> deleteById(UUID notificationId, UUID userId) {
+        return notificationRepository.findById(notificationId)
+            .switchIfEmpty(Mono.error(new NotFoundException("Notification not found: " + notificationId)))
+            .flatMap(n -> notificationRepository.deleteById(notificationId));
+    }
+
+    @Override
     public Mono<Void> markAllRead(UUID userId) {
         return notificationRepository.findByUserId(userId)
             .concatWith(notificationRepository.findBroadcast())

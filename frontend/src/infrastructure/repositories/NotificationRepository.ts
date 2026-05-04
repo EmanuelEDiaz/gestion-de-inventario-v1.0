@@ -22,4 +22,8 @@ export class NotificationRepository implements INotificationRepository {
   async markAllRead(): Promise<void> {
     return notificationApi.markAllRead();
   }
+
+  async deleteOne(id: string): Promise<void> {
+    return notificationApi.deleteOne(id);
+  }
 }

@@ -25,4 +25,8 @@ export const notificationApi = {
   markAllRead(): Promise<void> {
     return apiClient.post<void>(`${BASE}/read-all`).then(() => undefined);
   },
+
+  deleteOne(id: string): Promise<void> {
+    return apiClient.delete<void>(`${BASE}/${id}`).then(() => undefined);
+  },
 };

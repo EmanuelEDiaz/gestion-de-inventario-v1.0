@@ -3,75 +3,79 @@
 import type { Notification } from '@/core/entities/notification';
 import { NOTIFICATION_CATEGORY_LABELS } from '@/core/entities/notification';
 import { cn } from '@/presentation/shared/lib/utils';
-import { useMarkRead } from '../hooks/useMarkRead';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
+import { CheckBox, CheckBoxOutlineBlank, MarkEmailRead, Delete } from '@material-symbols-svg/react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface Props {
   notification: Notification;
+  isSelected: boolean;
+  onToggleSelect: () => void;
+  onMarkRead: () => void;
+  onDelete: () => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  LOW_STOCK: 'bg-yellow-100 text-yellow-800',
-  SYSTEM: 'bg-gray-100 text-gray-800',
-  SALE: 'bg-green-100 text-green-800',
-  PURCHASE: 'bg-blue-100 text-blue-800',
-  SYNC: 'bg-purple-100 text-purple-800',
+  LOW_STOCK: 'bg-orange-100 text-orange-700',
+  SYSTEM: 'bg-gray-100 text-gray-600',
+  SALE: 'bg-green-100 text-green-700',
+  PURCHASE: 'bg-blue-100 text-blue-700',
+  SYNC: 'bg-purple-100 text-purple-700',
 };
 
-export function NotificationItem({ notification }: Props) {
-  const { markOne } = useMarkRead();
-
-  const handleMarkRead = () => {
-    if (!notification.read) {
-      markOne.mutate(notification.id);
-    }
-  };
-
-  const timeAgo = formatDistanceToNow(new Date(notification.createdAt), {
-    addSuffix: true,
-    locale: es,
-  });
+export function NotificationItem({ notification, isSelected, onToggleSelect, onMarkRead, onDelete }: Props) {
+  const { title, body, category, createdAt, read } = notification;
+  const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: es });
 
   return (
-    <div
-      className={cn(
-        'flex items-start gap-3 p-3 rounded-lg border transition-colors',
-        notification.read
-          ? 'bg-white border-gray-100'
-          : 'bg-blue-50 border-blue-100'
-      )}
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span
-            className={cn(
-              'inline-block px-1.5 py-0.5 rounded text-[11px] font-medium',
-              CATEGORY_COLORS[notification.category] ?? 'bg-gray-100 text-gray-800'
-            )}
-          >
-            {NOTIFICATION_CATEGORY_LABELS[notification.category]}
-          </span>
-          {!notification.read && (
-            <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" title="Sin leer" />
-          )}
-        </div>
-        <p className="text-sm font-medium text-gray-900 truncate">{notification.title}</p>
-        {notification.body && (
-          <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{notification.body}</p>
-        )}
-        <p className="text-xs text-gray-400 mt-1">{timeAgo}</p>
-      </div>
-      {!notification.read && (
+    <div className={cn('flex items-start gap-2 px-3 py-2.5 hover:bg-gray-50 transition-colors', !read && 'bg-blue-50/40')}>
+      <TooltipWrapper content={isSelected ? 'Deseleccionar' : 'Seleccionar'} side="right">
         <button
-          onClick={handleMarkRead}
-          disabled={markOne.isPending}
-          className="shrink-0 text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
-          title="Marcar como leída"
+          onClick={onToggleSelect}
+          className="mt-0.5 shrink-0 text-gray-400 hover:text-gray-700 transition-colors"
+          aria-label={isSelected ? 'Deseleccionar' : 'Seleccionar'}
         >
-          Leída
+          {isSelected
+            ? <CheckBox className="w-5 h-5 text-blue-600" />
+            : <CheckBoxOutlineBlank className="w-5 h-5" />}
         </button>
-      )}
+      </TooltipWrapper>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          {!read && <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" aria-label="No leída" />}
+          <span className={cn('rounded px-1.5 py-px text-[10px] font-medium leading-4', CATEGORY_COLORS[category] ?? 'bg-gray-100 text-gray-600')}>
+            {NOTIFICATION_CATEGORY_LABELS[category]}
+          </span>
+          <span className="text-xs text-gray-400 ml-auto shrink-0">{timeAgo}</span>
+        </div>
+        <p className="text-sm font-medium text-gray-800 leading-snug">{title}</p>
+        {body && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{body}</p>}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-0.5">
+        {!read && (
+          <TooltipWrapper content="Marcar como leída" side="left">
+            <button
+              onClick={onMarkRead}
+              className="rounded p-1 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              aria-label="Marcar como leída"
+            >
+              <MarkEmailRead className="h-4 w-4" />
+            </button>
+          </TooltipWrapper>
+        )}
+        <TooltipWrapper content="Eliminar notificación" side="left">
+          <button
+            onClick={onDelete}
+            className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+            aria-label="Eliminar notificación"
+          >
+            <Delete className="h-4 w-4" />
+          </button>
+        </TooltipWrapper>
+      </div>
     </div>
   );
 }

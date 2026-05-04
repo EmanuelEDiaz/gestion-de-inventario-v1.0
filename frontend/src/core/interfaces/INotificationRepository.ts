@@ -6,4 +6,5 @@ export interface INotificationRepository {
   create(data: CreateNotificationData): Promise<Notification>;
   markRead(id: string): Promise<void>;
   markAllRead(): Promise<void>;
+  deleteOne(id: string): Promise<void>;
 }
