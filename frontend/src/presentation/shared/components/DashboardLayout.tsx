@@ -192,7 +192,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <main
         className={cn(
           'pt-16 transition-all duration-300',
-          'pl-0 md:pl-16 lg:pl-64'
+          isCollapsed ? 'pl-0 md:pl-16' : 'pl-0 md:pl-16 lg:pl-64'
         )}
       >
         <div className="p-4 md:p-6">

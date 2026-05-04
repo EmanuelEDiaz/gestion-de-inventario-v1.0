@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Gestión de Inventario",
   description: "Sistema de gestión de inventario offline-first",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/bag-discount-sale-svgrepo-com.svg",
+  },
 };
 
 export default function RootLayout({

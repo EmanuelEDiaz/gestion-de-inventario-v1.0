@@ -29,8 +29,11 @@ pnpm vitest run --related src/presentation/modules/products/
 ### Backend (`cd backend/inventory-app`, maven)
 
 ```bash
-./mvnw spring-boot:run
-./mvnw compile
+./mvnw spring-boot:run   # Iniciar aplicación
+./mvnw compile            # Compilar
+./mvnw test               # Ejecutar tests
+./mvnw test -Dtest=ProductControllerTest  # Test específico
+./mvnw verify             # Tests + verify (incluye integration)
 ```
 
 ---
@@ -52,6 +55,13 @@ pnpm vitest run --related src/presentation/modules/products/
 - Target ES2017, Strict true, Module Resolution bundler
 - Path alias: `@/*` → `./src/*`
 - **Nunca usar `any` sin justificación**
+
+### Java/Spring (Backend)
+- Java 21, Spring Boot 3.4+, WebFlux (reactivo)
+- **Clean Architecture + Hexagonal**: domain NO depende de Spring/DB/JSON
+- Paquetes: `domain/model`, `domain/ports`, `application/usecase`, `adapters/web`, `adapters/persistence`
+- Usar `record` para DTOs inmutables
+-Errores custom extender `DomainException`, responder `application/problem+json`
 
 ### Convenciones de Nombres
 
