@@ -1,98 +1,114 @@
 /**
  * NotificationPanel.tsx
  * 
- * Contenedor principal del panel de notificaciones
- * - Muestra campanita en navbar
- * - Al hacer click, abre panel con 2 tabs
- * - Integración con hooks (Week 4)
+ * Contenedor principal del panel de notificaciones (Week 4 - Real-time SSE)
+ * - Muestra campanita en navbar con badge de no-leídas
+ * - Al hacer click, abre panel con 2 tabs (Sistema / De Usuarios)
+ * - Integración con TanStack Query para real-time updates
+ * - SSE streaming automático de notificaciones
+ * - Optimistic UI updates
+ * - Background sync cuando regresa el focus del tab
  */
 
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Bell, Settings, Trash2 } from 'lucide-react';
-import { Notification } from '@/core/entities/notification';
+import { Bell, Settings, CheckCheck } from 'lucide-react';
 import { NotificationTabs, type TabType } from './NotificationTabs';
 import { PreferencesPanel } from './PreferencesPanel';
 import { 
-  markNotificationAsRead, 
-  markAllNotificationsAsRead, 
-  deleteNotification 
-} from '@/infrastructure/api/notifications.api';
+  useSystemNotifications, 
+  useUserNotifications 
+} from '@/presentation/shared/hooks';
 
 interface NotificationPanelProps {
-  systemNotifications: Notification[];
-  userNotifications: Notification[];
-  isLoadingSystem?: boolean;
-  isLoadingUsers?: boolean;
-  errorSystem?: string;
-  errorUsers?: string;
-  unreadCount?: number;
-  token?: string;
+  /**
+   * Optional: Override for SSE enable (default: true)
+   */
+  enableSSE?: boolean;
 }
 
 export function NotificationPanel({
-  systemNotifications,
-  userNotifications,
-  isLoadingSystem = false,
-  isLoadingUsers = false,
-  errorSystem,
-  errorUsers,
-  unreadCount = 0,
-  token,
+  enableSSE = true,
 }: NotificationPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('sistema');
   const [showPreferences, setShowPreferences] = useState(false);
-  const [isMarkingAsRead, setIsMarkingAsRead] = useState(false);
+
+  // System notifications with real-time SSE
+  const systemNotifications = useSystemNotifications({
+    enableSSE,
+    refetchInterval: 30000, // 30 seconds fallback polling
+    enableBackgroundSync: true,
+  });
+
+  // User notifications with real-time SSE
+  const userNotifications = useUserNotifications({
+    enableSSE,
+    refetchInterval: 30000,
+    enableBackgroundSync: true,
+  });
+
+  // Combined unread count
+  const totalUnreadCount = 
+    (systemNotifications.unreadCount ?? 0) + 
+    (userNotifications.unreadCount ?? 0);
+
+  // Combined loading state
+  const isLoading = systemNotifications.isLoading || userNotifications.isLoading;
+
+  // Combined error state
+  const errorSystem = systemNotifications.error?.message;
+  const errorUsers = userNotifications.error?.message;
+
+
+  // Handle mark all as read
+  const handleMarkAllAsRead = useCallback(async () => {
+    // Mark all in system tab
+    const systemIds = systemNotifications.notifications
+      .filter(n => !n.read)
+      .map(n => n.id);
+    
+    // Mark all in user tab
+    const userIds = userNotifications.notifications
+      .filter(n => !n.read)
+      .map(n => n.id);
+
+    // Batch operations
+    const allIds = [...systemIds, ...userIds];
+    const promises = allIds.map(id => {
+      if (systemIds.includes(id)) {
+        return systemNotifications.markAsRead(id);
+      }
+      return userNotifications.markAsRead(id);
+    });
+
+    try {
+      await Promise.all(promises);
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  }, [systemNotifications, userNotifications]);
 
   const handleMarkAsRead = useCallback(
-    async (notificationId: string) => {
-      try {
-        setIsMarkingAsRead(true);
-        await markNotificationAsRead(notificationId, token);
-        // En Week 4, aquí invalidaremos el cache de TanStack Query
-      } catch (error) {
-        console.error('Error marking notification as read:', error);
-      } finally {
-        setIsMarkingAsRead(false);
+    (notificationId: string) => {
+      if (activeTab === 'sistema') {
+        return systemNotifications.markAsRead(notificationId);
       }
+      return userNotifications.markAsRead(notificationId);
     },
-    [token]
+    [activeTab, systemNotifications, userNotifications]
   );
-
-  const handleMarkAllAsRead = useCallback(async () => {
-    try {
-      setIsMarkingAsRead(true);
-      await markAllNotificationsAsRead(token);
-      // En Week 4, aquí invalidaremos el cache de TanStack Query
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-    } finally {
-      setIsMarkingAsRead(false);
-    }
-  }, [token]);
 
   const handleDelete = useCallback(
-    async (notificationId: string) => {
-      try {
-        await deleteNotification(notificationId, token);
-        // En Week 4, aquí invalidaremos el cache de TanStack Query
-      } catch (error) {
-        console.error('Error deleting notification:', error);
+    (notificationId: string) => {
+      if (activeTab === 'sistema') {
+        return systemNotifications.delete(notificationId);
       }
+      return userNotifications.delete(notificationId);
     },
-    [token]
+    [activeTab, systemNotifications, userNotifications]
   );
-
-  if (showPreferences) {
-    return (
-      <PreferencesPanel 
-        onClose={() => setShowPreferences(false)}
-        token={token}
-      />
-    );
-  }
 
   return (
     <>
@@ -104,9 +120,9 @@ export function NotificationPanel({
           className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <Bell className="h-6 w-6" />
-          {unreadCount > 0 && (
+          {totalUnreadCount > 0 && (
             <span className="absolute top-0 right-0 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
             </span>
           )}
         </button>
@@ -133,14 +149,13 @@ export function NotificationPanel({
                   >
                     <Settings className="h-5 w-5 text-gray-600" />
                   </button>
-                  {(systemNotifications.length > 0 || userNotifications.length > 0) && (
+                  {totalUnreadCount > 0 && (
                     <button
                       onClick={handleMarkAllAsRead}
-                      disabled={isMarkingAsRead}
                       title="Marcar todas como leídas"
-                      className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-sm text-gray-600"
+                      className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
                     >
-                      <Trash2 className="h-5 w-5" />
+                      <CheckCheck className="h-5 w-5 text-gray-600" />
                     </button>
                   )}
                   <button
@@ -153,18 +168,24 @@ export function NotificationPanel({
               </div>
 
               {/* Tabs */}
-              <NotificationTabs
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                systemNotifications={systemNotifications}
-                userNotifications={userNotifications}
-                isLoadingSystem={isLoadingSystem}
-                isLoadingUsers={isLoadingUsers}
-                errorSystem={errorSystem}
-                errorUsers={errorUsers}
-                onMarkAsRead={handleMarkAsRead}
-                onDelete={handleDelete}
-              />
+              {showPreferences ? (
+                <PreferencesPanel 
+                  onClose={() => setShowPreferences(false)}
+                />
+              ) : (
+                <NotificationTabs
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  systemNotifications={systemNotifications.notifications}
+                  userNotifications={userNotifications.notifications}
+                  isLoadingSystem={systemNotifications.isLoading}
+                  isLoadingUsers={userNotifications.isLoading}
+                  errorSystem={errorSystem}
+                  errorUsers={errorUsers}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                />
+              )}
             </div>
           </div>
         )}
