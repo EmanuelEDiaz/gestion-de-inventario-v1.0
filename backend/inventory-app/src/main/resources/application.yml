@@ -27,6 +27,7 @@ spring:
     password: postgres
     locations: classpath:db/migration
     baseline-on-migrate: true
+    out-of-order: true
 
   # Jackson
   jackson:

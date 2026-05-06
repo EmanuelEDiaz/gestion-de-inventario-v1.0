@@ -111,4 +111,10 @@ echo -e "${CY}============================================${NC}"
 echo
 
 # Subshell para no cambiar el CWD del caller
-(cd "$BACKEND_DIR" && mvn spring-boot:run -Dmaven.test.skip=true)
+(cd "$BACKEND_DIR" && \
+    echo ">> Reparando migraciones Flyway..." && \
+    mvn flyway:repair \
+        -Dflyway.url=jdbc:postgresql://localhost:5432/inventory \
+        -Dflyway.user=postgres \
+        -Dflyway.password=postgres 2>&1 | grep -E "(repair|Repair|ERROR|WARN)" || true && \
+    mvn spring-boot:run -Dmaven.test.skip=true)

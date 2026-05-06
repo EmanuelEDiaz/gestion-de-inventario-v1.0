@@ -204,7 +204,7 @@ done
 # INICIAR SERVICIOS
 # -------------------------------------------------------------------
 write_step "Iniciando Backend (Spring Boot :8080)..."
-BACKEND_CMD="cd '$BACKEND_DIR' && echo '=== BACKEND (Spring Boot) ===' && mvn spring-boot:run -DskipTests"
+BACKEND_CMD="cd '$BACKEND_DIR' && echo '=== BACKEND (Spring Boot) ===' && echo '>> Reparando migraciones Flyway...' && mvn flyway:repair -Dflyway.url=jdbc:postgresql://localhost:5432/inventory -Dflyway.user=postgres -Dflyway.password=postgres 2>&1 | grep -E '(repair|Repair|ERROR|WARN)' || true && mvn spring-boot:run -DskipTests"
 backend_info=$(open_terminal "BACKEND - Spring Boot" "$BACKEND_CMD")
 backend_window="${backend_info%:*}"
 backend_process="${backend_info#*:}"

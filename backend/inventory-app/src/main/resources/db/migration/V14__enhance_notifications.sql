@@ -3,6 +3,28 @@
 -- Creates: notification_preferences (per-user notification settings)
 -- Creates: notification_schedules (per-user quiet hours)
 
+-- 0. Ensure notifications table exists (idempotent - covers fresh DB or missing V9/V11)
+CREATE TABLE IF NOT EXISTS notifications (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    type text NOT NULL,
+    category text NOT NULL,
+    title text NOT NULL,
+    body text,
+    target_type text NOT NULL,
+    target_user_id uuid REFERENCES users(id),
+    created_by uuid REFERENCES users(id),
+    entity_type text,
+    entity_id uuid,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS notification_reads (
+    notification_id uuid NOT NULL REFERENCES notifications(id),
+    user_id uuid NOT NULL REFERENCES users(id),
+    read_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (notification_id, user_id)
+);
+
 -- 1. Extend notifications table
 ALTER TABLE notifications
 ADD COLUMN IF NOT EXISTS source VARCHAR(50) NOT NULL DEFAULT 'SYSTEM'
