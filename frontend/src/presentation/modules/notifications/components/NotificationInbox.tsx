@@ -10,12 +10,17 @@ import { TooltipWrapper } from '@/presentation/shared/components/ui';
 
 interface Props {
   includeRead?: boolean;
+  sourceFilter?: 'SYSTEM' | 'USER';
 }
 
-export function NotificationInbox({ includeRead = false }: Props) {
-  const { data: notifications = [], isLoading } = useNotifications(includeRead);
+export function NotificationInbox({ includeRead = false, sourceFilter }: Props) {
+  const { data: allNotifications = [], isLoading } = useNotifications(includeRead);
   const { markOne, markAll, deleteOne, deleteMany } = useNotificationActions();
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const notifications = sourceFilter
+    ? allNotifications.filter((n) => n.source === sourceFilter)
+    : allNotifications;
 
   const toggle = useCallback((id: string) => {
     setSelected((prev) => {
@@ -77,7 +82,9 @@ export function NotificationInbox({ includeRead = false }: Props) {
       )}
 
       {notifications.length === 0 ? (
-        <div className="py-12 text-center text-gray-400 text-sm">Sin notificaciones</div>
+        <div className="py-12 text-center text-gray-400 text-sm">
+          {sourceFilter === 'USER' ? 'Sin mensajes recibidos' : 'Sin notificaciones'}
+        </div>
       ) : (
         <div className="divide-y divide-gray-100">
           {notifications.map((n) => (

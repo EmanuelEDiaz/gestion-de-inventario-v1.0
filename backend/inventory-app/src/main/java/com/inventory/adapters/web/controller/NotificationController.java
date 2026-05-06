@@ -5,6 +5,7 @@ import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.application.service.NotificationPreferencesService;
 import com.inventory.application.service.NotificationSchedulesService;
 import com.inventory.domain.model.Notification;
+import com.inventory.domain.ports.in.AdminUserQueryPort;
 import com.inventory.domain.ports.in.NotificationCommandPort;
 import com.inventory.domain.ports.in.NotificationQueryPort;
 import jakarta.validation.Valid;
@@ -29,17 +30,20 @@ public class NotificationController {
     private final SupplementaryApplicationMapper mapper;
     private final NotificationPreferencesService preferencesService;
     private final NotificationSchedulesService schedulesService;
+    private final AdminUserQueryPort userQuery;
 
     public NotificationController(NotificationCommandPort commandPort,
                                   NotificationQueryPort queryPort,
                                   SupplementaryApplicationMapper mapper,
                                   NotificationPreferencesService preferencesService,
-                                  NotificationSchedulesService schedulesService) {
+                                  NotificationSchedulesService schedulesService,
+                                  AdminUserQueryPort userQuery) {
         this.commandPort = commandPort;
         this.queryPort = queryPort;
         this.mapper = mapper;
         this.preferencesService = preferencesService;
         this.schedulesService = schedulesService;
+        this.userQuery = userQuery;
     }
 
     @GetMapping
@@ -50,7 +54,7 @@ public class NotificationController {
     ) {
         UUID userId = extractUserId(userDetails);
         return queryPort.listForUser(userId, includeRead)
-            .map(n -> mapper.toDto(n, false));
+            .flatMap(n -> enrichWithSenderName(n).map(name -> mapper.toDto(n, false, name)));
     }
 
     @GetMapping("/unread-count")
@@ -127,6 +131,25 @@ public class NotificationController {
         return schedulesService.updateSchedule(userId, request);
     }
 
+    @PostMapping("/send")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("isAuthenticated()")
+    public Mono<NotificationDto> send(
+        @Valid @RequestBody SendMessageRequest request,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID senderId = extractUserId(userDetails);
+        UUID targetUserId = UUID.fromString(request.targetUserId());
+        return commandPort.create(new NotificationCommandPort.CreateCommand(
+            request.title(),
+            request.body(),
+            Notification.NotificationCategory.MANUAL,
+            Notification.TargetType.USER,
+            targetUserId,
+            senderId
+        )).flatMap(n -> enrichWithSenderName(n).map(name -> mapper.toDto(n, false, name)));
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
@@ -179,5 +202,16 @@ public class NotificationController {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    /** Resuelve el displayName del emisor si source=USER; devuelve Mono<null> en otros casos. */
+    private Mono<String> enrichWithSenderName(Notification n) {
+        if (n.createdBy() == null || n.source() != Notification.NotificationSource.USER) {
+            return Mono.justOrEmpty((String) null);
+        }
+        return userQuery.findById(n.createdBy())
+            .map(u -> u.getDisplayName())
+            .defaultIfEmpty("Usuario desconocido")
+            .onErrorReturn("Usuario desconocido");
     }
 }

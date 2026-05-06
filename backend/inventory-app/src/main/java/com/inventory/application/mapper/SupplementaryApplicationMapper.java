@@ -74,6 +74,10 @@ public class SupplementaryApplicationMapper {
     }
 
     public NotificationDto toDto(Notification n, boolean read) {
+        return toDto(n, read, null);
+    }
+
+    public NotificationDto toDto(Notification n, boolean read, String createdByName) {
         return new NotificationDto(
             n.id(),
             n.source() != null ? n.source().name() : null,
@@ -81,6 +85,7 @@ public class SupplementaryApplicationMapper {
             n.title(), n.body(),
             n.targetType() != null ? n.targetType().name() : null,
             n.targetUserId(), n.createdBy(),
+            createdByName,
             n.entityType(), n.entityId(),
             n.createdAt(), read
         );

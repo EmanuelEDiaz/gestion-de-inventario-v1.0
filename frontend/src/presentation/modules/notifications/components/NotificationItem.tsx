@@ -25,7 +25,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export function NotificationItem({ notification, isSelected, onToggleSelect, onMarkRead, onDelete }: Props) {
-  const { title, body, category, createdAt, read } = notification;
+  const { title, body, category, createdAt, read, source, createdByName } = notification;
   const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: es });
 
   return (
@@ -50,6 +50,9 @@ export function NotificationItem({ notification, isSelected, onToggleSelect, onM
           </span>
           <span className="text-xs text-gray-400 ml-auto shrink-0">{timeAgo}</span>
         </div>
+        {source === 'USER' && createdByName && (
+          <p className="text-[11px] text-blue-600 font-medium mb-0.5">De: {createdByName}</p>
+        )}
         <p className="text-sm font-medium text-gray-800 leading-snug">{title}</p>
         {body && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{body}</p>}
       </div>

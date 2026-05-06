@@ -1,5 +1,5 @@
 import type { INotificationRepository } from '@/core/interfaces/INotificationRepository';
-import type { Notification, CreateNotificationData } from '@/core/entities/notification';
+import type { Notification, CreateNotificationData, SendMessageRequest } from '@/core/entities/notification';
 import { notificationApi } from '@/infrastructure/api/notification-api';
 
 export class NotificationRepository implements INotificationRepository {
@@ -13,6 +13,10 @@ export class NotificationRepository implements INotificationRepository {
 
   async create(data: CreateNotificationData): Promise<Notification> {
     return notificationApi.create(data);
+  }
+
+  async send(data: SendMessageRequest): Promise<Notification> {
+    return notificationApi.send(data);
   }
 
   async markRead(id: string): Promise<void> {
