@@ -13,6 +13,8 @@ public interface AdminUserCommandPort {
 
     Mono<Void> deactivateUser(UUID id);
 
+    Mono<Void> changePassword(UUID id, ChangePasswordCommand command);
+
     // ===== Command Records =====
 
     record CreateUserCommand(
@@ -28,5 +30,11 @@ public interface AdminUserCommandPort {
         String displayName,
         UUID roleId,
         Boolean isActive
+    ) {}
+
+    record ChangePasswordCommand(
+        String currentPassword,
+        String newPassword,
+        boolean isAdminReset
     ) {}
 }

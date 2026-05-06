@@ -1,0 +1,14 @@
+package com.inventory.domain.ports.in;
+
+import com.inventory.domain.model.Role;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+public interface RoleQueryPort {
+
+    Flux<Role> findAll();
+
+    Mono<Role> findById(UUID id);
+}

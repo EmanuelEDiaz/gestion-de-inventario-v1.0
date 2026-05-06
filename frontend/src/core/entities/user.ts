@@ -14,14 +14,27 @@ export interface User {
   updatedAt?: string;
 }
 
-export interface Role {
+export interface Permission {
   id: string;
-  code: RoleCode;
+  code: string;
   name: string;
-  permissions: string[];
+  category: string;
 }
 
-export type RoleCode = 'ADMIN' | 'SELLER';
+export interface Role {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  isSystem: boolean;
+  isActive: boolean;
+  permissions: Permission[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** @deprecated usar Role.code directamente */
+export type RoleCode = string;
 
 export interface CreateUserData {
   username: string;
@@ -36,6 +49,24 @@ export interface UpdateUserData {
   displayName?: string;
   roleId?: string;
   isActive?: boolean;
+}
+
+export interface CreateRoleData {
+  code: string;
+  name: string;
+  description?: string;
+  permissionIds: string[];
+}
+
+export interface UpdateRoleData {
+  name?: string;
+  description?: string;
+  permissionIds?: string[];
+}
+
+export interface ChangePasswordData {
+  currentPassword?: string;
+  newPassword: string;
 }
 
 // ===== Auth Types =====

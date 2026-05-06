@@ -6,16 +6,19 @@ import {
   GetUsersUseCase,
   CreateUserUseCase,
   UpdateUserUseCase,
+  ChangePasswordUseCase,
 } from '@/core/use-cases/user';
-import type { CreateUserData, UpdateUserData } from '@/core/entities/user';
-import { toast } from 'sonner';
+import type { CreateUserData, UpdateUserData, ChangePasswordData } from '@/core/entities/user';
+import { toast } from '@/presentation/shared/components/ui/toast';
 
 const getUsers = new GetUsersUseCase(userRepository);
 const createUser = new CreateUserUseCase(userRepository);
 const updateUser = new UpdateUserUseCase(userRepository);
+const changePassword = new ChangePasswordUseCase(userRepository);
 
 export function useUsersController() {
   const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['users'] });
 
   const query = useQuery({
     queryKey: ['users'],
@@ -24,30 +27,28 @@ export function useUsersController() {
 
   const createMutation = useMutation({
     mutationFn: (data: CreateUserData) => createUser.execute(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Usuario creado');
-    },
+    onSuccess: () => { invalidate(); toast.success('Usuario creado'); },
     onError: (error: Error) => toast.error(error.message || 'Error al crear usuario'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserData }) =>
       updateUser.execute(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Usuario actualizado');
-    },
+    onSuccess: () => { invalidate(); toast.success('Usuario actualizado'); },
     onError: (error: Error) => toast.error(error.message || 'Error al actualizar usuario'),
+  });
+
+  const passwordMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ChangePasswordData }) =>
+      changePassword.execute(id, data),
+    onSuccess: () => toast.success('Contraseña actualizada'),
+    onError: (error: Error) => toast.error(error.message || 'Error al cambiar contraseña'),
   });
 
   const avatarMutation = useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) =>
       userRepository.uploadAvatar(id, file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Avatar actualizado');
-    },
+    onSuccess: () => { invalidate(); toast.success('Avatar actualizado'); },
     onError: (error: Error) => toast.error(error.message || 'Error al subir avatar'),
   });
 
@@ -57,8 +58,10 @@ export function useUsersController() {
     error: query.error?.message ?? null,
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
+    changeUserPassword: passwordMutation.mutateAsync,
     uploadAvatar: avatarMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
+    isChangingPassword: passwordMutation.isPending,
   };
 }

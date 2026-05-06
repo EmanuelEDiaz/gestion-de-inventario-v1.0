@@ -22,6 +22,7 @@ public interface TransferEntityMapper {
 
     @Mapping(target = "status", expression = "java(com.inventory.domain.model.Transfer.TransferStatus.valueOf(entity.getStatus()))")
     @Mapping(target = "lines", ignore = true)
+    @Mapping(target = "complete", ignore = true)
     Transfer toDomain(TransferEntity entity);
 
     default Transfer toDomainWithLines(TransferEntity entity, List<TransferLine> lines) {
@@ -41,6 +42,7 @@ public interface TransferEntityMapper {
         );
     }
 
+    @Mapping(target = "transferId", ignore = true)
     TransferLineEntity toLineEntity(TransferLine line);
 
     @Mapping(target = "transferId", source = "transferId")

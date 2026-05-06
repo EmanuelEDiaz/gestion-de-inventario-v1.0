@@ -1,8 +1,12 @@
 package com.inventory.adapters.web.controller;
 
+import com.inventory.adapters.web.dto.ChangePasswordRequest;
 import com.inventory.adapters.web.dto.CreateUserRequest;
+import com.inventory.adapters.web.dto.PermissionResponse;
+import com.inventory.adapters.web.dto.RoleResponse;
 import com.inventory.adapters.web.dto.UpdateUserRequest;
 import com.inventory.adapters.web.dto.UserResponse;
+import com.inventory.domain.model.Role;
 import com.inventory.domain.model.User;
 import com.inventory.domain.ports.in.AdminUserCommandPort;
 import com.inventory.domain.ports.in.AdminUserQueryPort;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -68,11 +73,33 @@ public class UserController {
             .thenReturn(ResponseEntity.<Void>noContent().build());
     }
 
+    @PatchMapping("/{id}/password")
+    public Mono<ResponseEntity<Void>> changePassword(
+            @PathVariable UUID id,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        var command = new AdminUserCommandPort.ChangePasswordCommand(
+            request.currentPassword(), request.newPassword(), true
+        );
+        return userCommand.changePassword(id, command)
+            .thenReturn(ResponseEntity.<Void>noContent().<Void>build());
+    }
+
     private UserResponse toResponse(User u) {
         return new UserResponse(
             u.getId(), u.getUsername(), u.getEmail(), u.getDisplayName(),
-            u.getRole() != null ? u.getRole().getCode() : null,
+            toRoleResponse(u.getRole()),
             u.isActive(), u.getCreatedAt(), u.getUpdatedAt()
+        );
+    }
+
+    private RoleResponse toRoleResponse(Role role) {
+        if (role == null) return null;
+        List<PermissionResponse> perms = role.getPermissions().stream()
+            .map(p -> new PermissionResponse(p.getId(), p.getCode(), p.getName(), p.getCategory()))
+            .toList();
+        return new RoleResponse(
+            role.getId(), role.getCode(), role.getName(), role.getDescription(),
+            role.isSystem(), role.isActive(), perms, role.getCreatedAt(), role.getUpdatedAt()
         );
     }
 }

@@ -1,6 +1,6 @@
 import { apiClient } from '@/presentation/shared/lib/api-client';
 import type { IUserRepository } from '@/core/interfaces/IUserRepository';
-import type { User, CreateUserData, UpdateUserData } from '@/core/entities/user';
+import type { User, CreateUserData, UpdateUserData, ChangePasswordData } from '@/core/entities/user';
 
 export class UserRepository implements IUserRepository {
   private readonly basePath = '/api/v1/users';
@@ -31,6 +31,10 @@ export class UserRepository implements IUserRepository {
     }
     const response = await apiClient.patch<User>(`${this.basePath}/${id}`, data, { headers });
     return response.data;
+  }
+
+  async changePassword(id: string, data: ChangePasswordData): Promise<void> {
+    await apiClient.patch(`${this.basePath}/${id}/password`, data);
   }
 
   async uploadAvatar(id: string, file: File): Promise<string> {

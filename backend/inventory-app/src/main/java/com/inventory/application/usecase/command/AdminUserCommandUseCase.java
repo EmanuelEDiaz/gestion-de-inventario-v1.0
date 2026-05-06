@@ -59,6 +59,27 @@ public class AdminUserCommandUseCase implements AdminUserCommandPort {
             .then();
     }
 
+    @Override
+    public Mono<Void> changePassword(UUID id, ChangePasswordCommand command) {
+        return userRepository.findById(id)
+            .switchIfEmpty(Mono.error(new IllegalArgumentException("User not found: " + id)))
+            .flatMap(existing -> {
+                if (!command.isAdminReset() && command.currentPassword() != null) {
+                    if (!passwordEncoder.matches(command.currentPassword(), existing.getPasswordHash())) {
+                        return Mono.error(new IllegalArgumentException("Contraseña actual incorrecta"));
+                    }
+                }
+                String newHash = passwordEncoder.encode(command.newPassword());
+                User updated = new User(
+                    existing.getId(), existing.getUsername(), newHash,
+                    existing.getDisplayName(), existing.getEmail(), existing.getRole(),
+                    existing.isActive(), existing.getCreatedAt(), Instant.now()
+                );
+                return userRepository.save(updated);
+            })
+            .then();
+    }
+
     private Mono<User> buildUpdatedUser(User existing, UpdateUserCommand command, com.inventory.domain.model.Role role) {
         String email       = command.email()       != null ? command.email()       : existing.getEmail();
         String displayName = command.displayName() != null ? command.displayName() : existing.getDisplayName();

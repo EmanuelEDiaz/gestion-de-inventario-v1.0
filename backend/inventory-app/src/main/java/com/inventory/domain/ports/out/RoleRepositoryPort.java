@@ -4,6 +4,7 @@ import com.inventory.domain.model.Role;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -31,7 +32,12 @@ public interface RoleRepositoryPort {
      * Guarda un rol (inserción o actualización).
      */
     Mono<Role> save(Role role);
-    
+
+    /**
+     * Reemplaza todos los permisos de un rol con los nuevos.
+     */
+    Mono<Role> saveWithPermissions(Role role, Set<UUID> permissionIds);
+
     /**
      * Verifica si existe un rol con el código dado.
      */

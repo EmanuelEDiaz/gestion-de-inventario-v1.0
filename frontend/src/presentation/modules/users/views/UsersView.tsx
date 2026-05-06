@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import type { User } from '@/core/entities/user';
 import { useUsersController } from '../hooks/useUsersController';
 import { UserTable } from '../components/table/UserTable';
 import { UserFormFields } from '../components/form/UserFormFields';
+import { EditUserDialog } from '../components/dialogs/EditUserDialog';
+import { ChangePasswordDialog } from '../components/dialogs/ChangePasswordDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
@@ -12,12 +14,15 @@ import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
 import { Plus } from 'lucide-react';
 
 export function UsersView() {
-  const { users, isLoading, error, create, update, isCreating } = useUsersController();
+  const { users, isLoading, error, create, update, changeUserPassword, isCreating } = useUsersController();
   const [showForm, setShowForm] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [dialogType, setDialogType] = useState<'edit' | 'password' | null>(null);
 
-  const handleToggle = (id: string, isActive: boolean) => {
-    update({ id, data: { isActive } });
-  };
+  const handleToggle = (id: string, isActive: boolean) => update({ id, data: { isActive } });
+  const handleEdit = (user: User) => { setSelectedUser(user); setDialogType('edit'); };
+  const handleChangePassword = (user: User) => { setSelectedUser(user); setDialogType('password'); };
+  const closeDialog = () => { setSelectedUser(null); setDialogType(null); };
 
   if (isLoading) return <LoadingSpinner />;
   if (error) return <AlertMessage variant="error" message={error} />;
@@ -29,15 +34,7 @@ export function UsersView() {
           <CardHeader><CardTitle>Nuevo Usuario</CardTitle></CardHeader>
           <CardContent>
             <UserFormFields
-              onSubmit={async (data) => {
-                try {
-                  await create(data);
-                  setShowForm(false);
-                  toast.success('Usuario creado correctamente');
-                } catch (error) {
-                  toast.error(error instanceof Error ? error.message : 'Error al crear usuario');
-                }
-              }}
+              onSubmit={async (data) => { await create(data); setShowForm(false); }}
               isSubmitting={isCreating}
               onCancel={() => setShowForm(false)}
             />
@@ -56,9 +53,16 @@ export function UsersView() {
           )}
         </CardHeader>
         <CardContent>
-          <UserTable users={users} onToggle={handleToggle} />
+          <UserTable users={users} onToggle={handleToggle} onEdit={handleEdit} onChangePassword={handleChangePassword} />
         </CardContent>
       </Card>
+
+      {selectedUser && dialogType === 'edit' && (
+        <EditUserDialog user={selectedUser} onSave={(data) => update({ id: selectedUser.id, data })} onClose={closeDialog} />
+      )}
+      {selectedUser && dialogType === 'password' && (
+        <ChangePasswordDialog userId={selectedUser.id} onSave={(data) => changeUserPassword({ id: selectedUser.id, data })} onClose={closeDialog} />
+      )}
     </div>
   );
 }
