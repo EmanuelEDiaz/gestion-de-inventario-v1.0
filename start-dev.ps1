@@ -83,7 +83,7 @@ if ($prev8080) {
 
 $backendDir = Join-Path $ROOT "backend\inventory-app"
 $backendProc = Start-Process powershell `
-    -ArgumentList "-NoExit", "-NoProfile", "-Command", "Set-Location '$backendDir'; Write-Host '=== BACKEND (Spring Boot) ===' -ForegroundColor Cyan; mvn spring-boot:run -DskipTests" `
+    -ArgumentList "-NoExit", "-NoProfile", "-Command", "Set-Location '$backendDir'; Write-Host '=== BACKEND (Spring Boot) ===' -ForegroundColor Cyan; Write-Host '>> Reparando migraciones Flyway...' -ForegroundColor Cyan; mvn flyway:repair '-Dflyway.url=jdbc:postgresql://localhost:5432/inventory' '-Dflyway.user=postgres' '-Dflyway.password=postgres' 2>&1 | Select-String '(repair|Repair|ERROR|WARN)'; mvn spring-boot:run -DskipTests" `
     -PassThru
 Write-OK "Ventana backend abierta (PID $($backendProc.Id))"
 

@@ -68,6 +68,13 @@ Write-Host ""
 
 Push-Location $backendDir
 try {
+    # Repair any failed Flyway migrations before starting
+    Write-Step "Reparando historial de migraciones Flyway..."
+    mvn flyway:repair "-Dflyway.url=jdbc:postgresql://localhost:5432/inventory" `
+        "-Dflyway.user=postgres" "-Dflyway.password=postgres" `
+        "-Dflyway.locations=classpath:db/migration" 2>&1 | Where-Object { $_ -match "(ERROR|WARN|Repair|repair)" } | ForEach-Object { Write-Host "   $_" }
+    Write-OK "Flyway repair completado"
+
     mvn spring-boot:run "-Dmaven.test.skip=true"
 } finally {
     Pop-Location
