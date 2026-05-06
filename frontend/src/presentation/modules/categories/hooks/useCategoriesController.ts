@@ -3,6 +3,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Category, CreateCategoryData } from '@/core/entities/category';
 import { GetCategoriesUseCase } from '@/core/use-cases/category/GetCategoriesUseCase';
 import { SaveCategoryUseCase } from '@/core/use-cases/category/SaveCategoryUseCase';
@@ -22,6 +23,7 @@ const saveCategoryUseCase = new SaveCategoryUseCase(categoryRepository);
 const deleteCategoryUseCase = new DeleteCategoryUseCase(categoryRepository);
 
 export function useCategoriesController() {
+  const queryClient = useQueryClient();
   const [state, setState] = useState<UseCategoriesControllerState>({
     categories: [],
     isLoading: true,
@@ -67,12 +69,13 @@ export function useCategoriesController() {
   const saveCategory = useCallback(async (data: CreateCategoryData) => {
     try {
       await saveCategoryUseCase.execute(data, state.editingCategory?.id);
+      await queryClient.invalidateQueries({ queryKey: ['categories'] });
       closeForm();
       fetchCategories();
     } catch {
       setState((prev) => ({ ...prev, error: 'Error al guardar la categoría' }));
     }
-  }, [state.editingCategory, closeForm, fetchCategories]);
+  }, [state.editingCategory, closeForm, fetchCategories, queryClient]);
 
   const deleteCategory = useCallback(async (category: Category) => {
     if (!confirm(`¿Estás seguro de eliminar la categoría "${category.name}"?`)) {
@@ -80,12 +83,13 @@ export function useCategoriesController() {
     }
     try {
       await deleteCategoryUseCase.execute(category.id);
+      await queryClient.invalidateQueries({ queryKey: ['categories'] });
       fetchCategories();
     } catch (err: unknown) {
       const message = getDeleteErrorMessage(err);
       setState((prev) => ({ ...prev, error: message }));
     }
-  }, [fetchCategories]);
+  }, [fetchCategories, queryClient]);
 
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
