@@ -7,9 +7,11 @@ import { EmptyState } from '@/presentation/shared/components/EmptyState';
 interface UserTableProps {
   users: User[];
   onToggle: (id: string, isActive: boolean) => void;
+  onEdit: (user: User) => void;
+  onChangePassword: (user: User) => void;
 }
 
-export function UserTable({ users, onToggle }: UserTableProps) {
+export function UserTable({ users, onToggle, onEdit, onChangePassword }: UserTableProps) {
   if (users.length === 0) {
     return <EmptyState message="No hay usuarios registrados" />;
   }
@@ -29,7 +31,7 @@ export function UserTable({ users, onToggle }: UserTableProps) {
         </thead>
         <tbody>
           {users.map((user) => (
-            <UserRow key={user.id} user={user} onToggle={onToggle} />
+            <UserRow key={user.id} user={user} onToggle={onToggle} onEdit={onEdit} onChangePassword={onChangePassword} />
           ))}
         </tbody>
       </table>

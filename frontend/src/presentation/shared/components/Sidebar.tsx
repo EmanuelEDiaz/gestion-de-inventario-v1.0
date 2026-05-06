@@ -21,6 +21,7 @@ import {
   Inventory,
   SupervisorAccount,
   CurrencyExchange,
+  AdminPanelSettings,
 } from '@material-symbols-svg/react';
 
 interface SidebarProps {
@@ -56,6 +57,7 @@ export const Icons = {
   stock: <Inventory {...iconProps} />,
   movements: <TrendingUp {...iconProps} />,
   users: <SupervisorAccount {...iconProps} />,
+  roles: <AdminPanelSettings {...iconProps} />,
   currency: <Payments {...iconProps} />,
   exchangeRate: <CurrencyExchange {...iconProps} />,
   importData: <UploadFile {...iconProps} />,

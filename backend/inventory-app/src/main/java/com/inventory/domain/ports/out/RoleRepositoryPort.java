@@ -31,7 +31,12 @@ public interface RoleRepositoryPort {
      * Guarda un rol (inserción o actualización).
      */
     Mono<Role> save(Role role);
-    
+
+    /**
+     * Reemplaza todos los permisos de un rol con los nuevos.
+     */
+    Mono<Role> saveWithPermissions(Role role, Set<UUID> permissionIds);
+
     /**
      * Verifica si existe un rol con el código dado.
      */

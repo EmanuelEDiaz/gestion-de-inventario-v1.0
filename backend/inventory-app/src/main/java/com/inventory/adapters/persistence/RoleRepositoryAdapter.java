@@ -6,11 +6,14 @@ import com.inventory.adapters.persistence.repository.PermissionR2dbcRepository;
 import com.inventory.adapters.persistence.repository.RoleR2dbcRepository;
 import com.inventory.domain.model.Role;
 import com.inventory.domain.ports.out.RoleRepositoryPort;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -23,13 +26,16 @@ public class RoleRepositoryAdapter implements RoleRepositoryPort {
     private final RoleR2dbcRepository roleRepository;
     private final PermissionR2dbcRepository permissionRepository;
     private final PersistenceMapper mapper;
+    private final DatabaseClient databaseClient;
     
     public RoleRepositoryAdapter(RoleR2dbcRepository roleRepository,
                                   PermissionR2dbcRepository permissionRepository,
-                                  PersistenceMapper mapper) {
+                                  PersistenceMapper mapper,
+                                  DatabaseClient databaseClient) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.mapper = mapper;
+        this.databaseClient = databaseClient;
     }
     
     @Override
@@ -65,6 +71,30 @@ public class RoleRepositoryAdapter implements RoleRepositoryPort {
         return roleRepository.existsByCode(code);
     }
     
+    @Override
+    public Mono<Role> saveWithPermissions(Role role, Set<UUID> permissionIds) {
+        return roleRepository.save(mapper.toEntity(role))
+                .flatMap(saved -> replacePermissions(saved.getId(), permissionIds)
+                        .then(loadRoleWithPermissions(saved)))
+                .map(mapper::toDomain);
+    }
+
+    private Mono<Void> replacePermissions(UUID roleId, Set<UUID> permissionIds) {
+        Mono<Void> deleteExisting = databaseClient
+                .sql("DELETE FROM role_permissions WHERE role_id = :roleId")
+                .bind("roleId", roleId)
+                .then();
+        if (permissionIds == null || permissionIds.isEmpty()) return deleteExisting;
+        return deleteExisting.thenMany(
+                Flux.fromIterable(permissionIds)
+                        .flatMap(pid -> databaseClient
+                                .sql("INSERT INTO role_permissions (role_id, permission_id) VALUES (:roleId, :permId)")
+                                .bind("roleId", roleId)
+                                .bind("permId", pid)
+                                .then()))
+                .then();
+    }
+
     /**
      * Carga el rol con sus permisos asociados.
      */

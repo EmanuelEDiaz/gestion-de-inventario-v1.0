@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { CreateUserData, RoleCode } from '@/core/entities/user';
+import type { CreateUserData } from '@/core/entities/user';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
+import { useRoles } from '@/presentation/modules/roles/hooks/useRoles';
 
 interface UserFormFieldsProps {
   onSubmit: (data: CreateUserData) => void;
@@ -11,27 +12,17 @@ interface UserFormFieldsProps {
   onCancel: () => void;
 }
 
-const ROLES: { id: string; code: RoleCode; label: string }[] = [
-  { id: 'admin', code: 'ADMIN', label: 'Administrador' },
-  { id: 'seller', code: 'SELLER', label: 'Vendedor' },
-];
-
 export function UserFormFields({ onSubmit, isSubmitting, onCancel }: UserFormFieldsProps) {
+  const { data: roles = [], isLoading: loadingRoles } = useRoles();
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [roleId, setRoleId] = useState(ROLES[1].id);
+  const [roleId, setRoleId] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      username,
-      displayName,
-      email: email || undefined,
-      password,
-      roleId,
-    });
+    onSubmit({ username, displayName, email: email || undefined, password, roleId });
   };
 
   return (
@@ -39,76 +30,43 @@ export function UserFormFields({ onSubmit, isSubmitting, onCancel }: UserFormFie
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <label htmlFor="username" className="text-sm font-medium">Usuario</label>
-          <Input
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="juanperez"
-            required
-            title="Nombre de usuario para iniciar sesión"
-          />
+          <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)}
+            placeholder="juanperez" required title="Nombre de usuario para iniciar sesión" />
         </div>
         <div className="space-y-1">
           <label htmlFor="displayName" className="text-sm font-medium">Nombre Completo</label>
-          <Input
-            id="displayName"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Juan Pérez"
-            required
-            title="Nombre que se mostrará en la aplicación"
-          />
+          <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Juan Pérez" required title="Nombre que se mostrará en la aplicación" />
         </div>
         <div className="space-y-1">
           <label htmlFor="email" className="text-sm font-medium">Email (opcional)</label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="juan@empresa.com"
-            title="Dirección de correo electrónico del usuario"
-          />
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="juan@empresa.com" title="Dirección de correo electrónico del usuario" />
         </div>
         <div className="space-y-1">
           <label htmlFor="password" className="text-sm font-medium">Contraseña</label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-            minLength={8}
-            title="Contraseña de al menos 8 caracteres"
-          />
+          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••" required minLength={8} title="Contraseña de al menos 8 caracteres" />
         </div>
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium">Rol</label>
-        <div className="flex gap-4">
-          {ROLES.map((role) => (
-            <label key={role.id} className="flex items-center gap-2 cursor-pointer" title={`Asignar rol de ${role.label}`}>
-              <input
-                type="radio"
-                name="role"
-                value={role.id}
-                checked={roleId === role.id}
-                onChange={() => setRoleId(role.id)}
-                className="h-4 w-4"
-              />
-              <span className="text-sm">{role.label}</span>
-            </label>
+        <label htmlFor="roleId" className="text-sm font-medium">Rol</label>
+        <select id="roleId" value={roleId} onChange={(e) => setRoleId(e.target.value)}
+          required title="Rol del usuario en el sistema"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50">
+          <option value="" disabled>{loadingRoles ? 'Cargando roles...' : 'Seleccionar rol'}</option>
+          {roles.filter((r) => r.isActive).map((r) => (
+            <option key={r.id} value={r.id}>{r.name}</option>
           ))}
-        </div>
+        </select>
       </div>
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || !roleId}>
           {isSubmitting ? 'Creando...' : 'Crear Usuario'}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
+        <Button type="button" variant="outline" onClick={onCancel} title="Cancelar">Cancelar</Button>
       </div>
     </form>
   );

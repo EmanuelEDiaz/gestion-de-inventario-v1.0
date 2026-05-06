@@ -6,6 +6,7 @@ import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -24,4 +25,10 @@ public interface PermissionR2dbcRepository extends R2dbcRepository<PermissionEnt
         ORDER BY p.category, p.code
         """)
     Flux<PermissionEntity> findByRoleId(UUID roleId);
+
+    @Query("SELECT * FROM permissions ORDER BY category, code")
+    Flux<PermissionEntity> findAllOrdered();
+
+    @Query("SELECT * FROM permissions WHERE id IN (:ids)")
+    Flux<PermissionEntity> findByIdIn(Set<UUID> ids);
 }

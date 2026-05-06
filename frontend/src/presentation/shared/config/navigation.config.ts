@@ -30,6 +30,7 @@ export type IconKey =
   | 'exportData'
   | 'report'
   | 'users'
+  | 'roles'
   | 'currency'
   | 'exchangeRate'
   | 'settings';
@@ -120,6 +121,7 @@ export const NAVIGATION_CONFIG: NavSectionConfig[] = [
     defaultOpen: false,
     items: [
       { href: '/users',          label: 'Usuarios',        description: 'Gestiona las cuentas y niveles de acceso al sistema', iconKey: 'users'        },
+      { href: '/roles',          label: 'Roles',           description: 'Gestiona los roles y permisos del sistema',            iconKey: 'roles'        },
       { href: '/currencies',     label: 'Monedas',         description: 'Configura las monedas que acepta el sistema',         iconKey: 'currency'     },
       { href: '/exchange-rates', label: 'Tasas de Cambio', description: 'Define los valores de conversión entre monedas',      iconKey: 'exchangeRate' },
       { href: '/settings',       label: 'Configuración',   description: 'Ajusta las preferencias generales del sistema',       iconKey: 'settings'     },
