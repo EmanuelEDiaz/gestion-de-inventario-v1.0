@@ -16,6 +16,10 @@ export {
   type UseNotificationPreferencesReturn,
 } from './useNotificationPreferences';
 
+export {
+  useNotificationToasts,
+} from './useNotificationToasts';
+
 // Re-export existing hooks for convenience
 export { useAuthStore } from './useAuthStore';
 export { useCacheProgress } from './useCacheProgress';

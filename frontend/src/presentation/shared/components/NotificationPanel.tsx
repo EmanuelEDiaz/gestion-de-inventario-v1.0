@@ -16,9 +16,11 @@ import React, { useState, useCallback } from 'react';
 import { Bell, Settings, CheckCheck } from 'lucide-react';
 import { NotificationTabs, type TabType } from './NotificationTabs';
 import { PreferencesPanel } from './PreferencesPanel';
+import { NotificationBadge } from './NotificationBadge';
 import { 
   useSystemNotifications, 
-  useUserNotifications 
+  useUserNotifications,
+  useNotificationToasts,
 } from '@/presentation/shared/hooks';
 
 interface NotificationPanelProps {
@@ -61,7 +63,8 @@ export function NotificationPanel({
   const errorSystem = systemNotifications.error?.message;
   const errorUsers = userNotifications.error?.message;
 
-
+  // Activate toasts for CRITICAL notifications
+  useNotificationToasts(systemNotifications, userNotifications);
   // Handle mark all as read
   const handleMarkAllAsRead = useCallback(async () => {
     // Mark all in system tab
@@ -120,11 +123,7 @@ export function NotificationPanel({
           className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <Bell className="h-6 w-6" />
-          {totalUnreadCount > 0 && (
-            <span className="absolute top-0 right-0 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-              {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
-            </span>
-          )}
+          <NotificationBadge count={totalUnreadCount} />
         </button>
 
         {/* Panel Dropdown */}
