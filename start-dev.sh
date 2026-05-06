@@ -57,21 +57,51 @@ node_ok() {
 }
 
 # ---- Abre terminal nueva (detecta emulador disponible) ----
+# Retorna: "terminal_pid:process_pid" para rastrear ambos
 open_terminal() {
     local title="$1" cmd="$2"
+    local terminal_pid process_pid
+    
+    # Crear un wrapper script que captura el PID del proceso real
+    local wrapper="$ROOT/.terminal_wrapper_$$.sh"
+    cat > "$wrapper" << 'EOF'
+#!/usr/bin/env bash
+# Wrapper para rastrear el PID del proceso real
+eval "$1"
+EOF
+    chmod +x "$wrapper"
+    
     if command -v gnome-terminal &>/dev/null; then
-        gnome-terminal --title="$title" -- bash -c "$cmd; exec bash" &
+        gnome-terminal --title="$title" -- bash -c "$wrapper '$cmd'; exec bash" &
+        terminal_pid=$!
     elif command -v xfce4-terminal &>/dev/null; then
-        xfce4-terminal --title="$title" -e "bash -c '$cmd; exec bash'" &
+        xfce4-terminal --title="$title" -e "bash -c '$wrapper \"$cmd\"; exec bash'" &
+        terminal_pid=$!
     elif command -v konsole &>/dev/null; then
-        konsole --new-tab -p tabtitle="$title" -e bash -c "$cmd; exec bash" &
+        konsole --new-tab -p tabtitle="$title" -e bash -c "$wrapper '$cmd'; exec bash" &
+        terminal_pid=$!
     elif command -v xterm &>/dev/null; then
-        xterm -title "$title" -e bash -c "$cmd; exec bash" &
+        xterm -title "$title" -e bash -c "$wrapper '$cmd'; exec bash" &
+        terminal_pid=$!
     else
         write_warn "Sin emulador GUI. '$title' ejecutandose en background (log: ${title// /_}.log)"
         bash -c "$cmd" >"$ROOT/${title// /_}.log" 2>&1 &
+        terminal_pid=$!
     fi
-    echo $!
+    
+    # Esperar a que el proceso real inicie (máx 10 segundos)
+    for ((i=0; i<100; i++)); do
+        # Buscar procesos hijos del terminal que NO sean bash
+        process_pid=$(pgrep -P "$terminal_pid" 2>/dev/null | grep -v bash | head -1 || true)
+        [ -n "$process_pid" ] && break
+        sleep 0.1
+    done
+    
+    # Si no encontramos el proceso, devolver el PID del terminal
+    process_pid="${process_pid:-$terminal_pid}"
+    
+    echo "$terminal_pid:$process_pid"
+    rm -f "$wrapper"
 }
 
 echo
@@ -175,16 +205,21 @@ done
 # -------------------------------------------------------------------
 write_step "Iniciando Backend (Spring Boot :8080)..."
 BACKEND_CMD="cd '$BACKEND_DIR' && echo '=== BACKEND (Spring Boot) ===' && mvn spring-boot:run -DskipTests"
-backend_pid=$(open_terminal "BACKEND - Spring Boot" "$BACKEND_CMD")
-write_ok "Ventana backend abierta (PID $backend_pid)"
+backend_info=$(open_terminal "BACKEND - Spring Boot" "$BACKEND_CMD")
+backend_window="${backend_info%:*}"
+backend_process="${backend_info#*:}"
+write_ok "Backend iniciado (terminal PID: $backend_window, proceso: $backend_process)"
 
 write_step "Iniciando Frontend (Next.js :3000)..."
 FRONTEND_CMD="cd '$FRONTEND_DIR' && echo '=== FRONTEND (Next.js) ===' && pnpm dev"
-frontend_pid=$(open_terminal "FRONTEND - Next.js" "$FRONTEND_CMD")
-write_ok "Ventana frontend abierta (PID $frontend_pid)"
+frontend_info=$(open_terminal "FRONTEND - Next.js" "$FRONTEND_CMD")
+frontend_window="${frontend_info%:*}"
+frontend_process="${frontend_info#*:}"
+write_ok "Frontend iniciado (terminal PID: $frontend_window, proceso: $frontend_process)"
 
 # --- Guardar PIDs ---
-printf '{"backendWindow": %s, "frontendWindow": %s}\n' "$backend_pid" "$frontend_pid" > "$PID_FILE"
+printf '{"backendWindow": %s, "backendProcess": %s, "frontendWindow": %s, "frontendProcess": %s}\n' \
+    "$backend_window" "$backend_process" "$frontend_window" "$frontend_process" > "$PID_FILE"
 write_ok "PIDs guardados en .dev-pids.json"
 
 # -------------------------------------------------------------------
