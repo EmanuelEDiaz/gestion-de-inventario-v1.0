@@ -86,6 +86,70 @@ public class SupplementaryApplicationMapper {
         );
     }
 
+    public NotificationResponse toNotificationResponse(Notification n, boolean read) {
+        return new NotificationResponse(
+            n.id(),
+            n.source() != null ? n.source().name() : null,
+            n.category() != null ? n.category().name() : null,
+            n.priority() != null ? n.priority().name() : "MEDIUM",
+            n.title(),
+            n.body(),
+            n.actionUrl(),
+            n.tags(),
+            n.deliveryChannel(),
+            n.targetType() != null ? n.targetType().name() : null,
+            n.targetUserId(),
+            n.createdBy(),
+            n.entityType(),
+            n.entityId(),
+            n.createdAt(),
+            read
+        );
+    }
+
+    public NotificationPreferencesResponse toNotificationPreferencesResponse(
+        com.inventory.adapters.persistence.entity.NotificationPreferencesEntity entity
+    ) {
+        return new NotificationPreferencesResponse(
+            entity.getId(),
+            entity.getUserId(),
+            entity.getEnabled(),
+            entity.getLowStockEnabled(),
+            entity.getSyncEnabled(),
+            entity.getOperationsEnabled(),
+            entity.getDebtEnabled(),
+            entity.getUserActionsEnabled(),
+            entity.getSystemEnabled(),
+            entity.getPushNotificationsEnabled(),
+            entity.getToastNotificationsEnabled(),
+            entity.getSseEnabled(),
+            entity.getSoundEnabled(),
+            entity.getDesktopNotificationEnabled(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
+        );
+    }
+
+    public NotificationScheduleResponse toNotificationScheduleResponse(
+        com.inventory.adapters.persistence.entity.NotificationSchedulesEntity entity
+    ) {
+        java.util.List<Integer> quietDays = entity.getQuietDaysList() != null
+            ? java.util.Arrays.asList(entity.getQuietDaysList())
+            : java.util.List.of();
+        
+        return new NotificationScheduleResponse(
+            entity.getId(),
+            entity.getUserId(),
+            entity.getQuietHoursStart(),
+            entity.getQuietHoursEnd(),
+            entity.getQuietHoursEnabled(),
+            quietDays,
+            entity.getBypassOnCritical(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
+        );
+    }
+
     public SyncIncidentDto toDto(SyncIncident incident) {
         return new SyncIncidentDto(
             incident.getId(), incident.getDeviceId(), incident.getOperationId(),

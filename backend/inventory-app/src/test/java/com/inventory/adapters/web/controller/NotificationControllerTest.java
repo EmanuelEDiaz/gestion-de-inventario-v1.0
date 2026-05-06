@@ -40,7 +40,14 @@ class NotificationControllerTest {
     @MockBean
     private SupplementaryApplicationMapper mapper;
 
+    @MockBean
+    private com.inventory.application.service.NotificationPreferencesService preferencesService;
+
+    @MockBean
+    private com.inventory.application.service.NotificationSchedulesService schedulesService;
+
     private final UUID notifId = UUID.randomUUID();
+    private final String testUserId = "550e8400-e29b-41d4-a716-446655440000";
 
     private NotificationDto sampleDto() {
         return new NotificationDto(
@@ -60,7 +67,7 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "SELLER")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000", roles = "SELLER")
     @DisplayName("GET /api/v1/notifications devuelve notificaciones al usuario autenticado")
     void list_returns200WhenAuthenticated() {
         NotificationDto dto = sampleDto();
@@ -75,7 +82,7 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "SELLER")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000", roles = "SELLER")
     @DisplayName("GET /api/v1/notifications/unread-count devuelve conteo")
     void unreadCount_returns200() {
         when(queryPort.getUnreadCount(any())).thenReturn(Mono.just(5L));
@@ -88,7 +95,7 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "SELLER")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000", roles = "SELLER")
     @DisplayName("POST /api/v1/notifications devuelve 403 con rol SELLER")
     void create_returns403WhenSeller() {
         webTestClient.post()
@@ -102,7 +109,7 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000", roles = "ADMIN")
     @DisplayName("POST /api/v1/notifications crea notificación con rol ADMIN")
     void create_returns201WhenAdmin() {
         NotificationDto dto = sampleDto();
@@ -120,7 +127,7 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "SELLER")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000", roles = "SELLER")
     @DisplayName("POST /api/v1/notifications/{id}/read marca como leída")
     void markRead_returns200() {
         when(commandPort.markRead(eq(notifId), any())).thenReturn(Mono.empty());
@@ -132,7 +139,7 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "SELLER")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000", roles = "SELLER")
     @DisplayName("POST /api/v1/notifications/read-all marca todas como leídas")
     void markAllRead_returns200() {
         when(commandPort.markAllRead(any())).thenReturn(Mono.empty());

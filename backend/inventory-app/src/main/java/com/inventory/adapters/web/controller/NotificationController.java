@@ -1,12 +1,15 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.CreateNotificationRequest;
-import com.inventory.application.dto.NotificationDto;
+import com.inventory.application.dto.*;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
+import com.inventory.application.service.NotificationPreferencesService;
+import com.inventory.application.service.NotificationSchedulesService;
 import com.inventory.domain.model.Notification;
 import com.inventory.domain.ports.in.NotificationCommandPort;
 import com.inventory.domain.ports.in.NotificationQueryPort;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,13 +27,19 @@ public class NotificationController {
     private final NotificationCommandPort commandPort;
     private final NotificationQueryPort queryPort;
     private final SupplementaryApplicationMapper mapper;
+    private final NotificationPreferencesService preferencesService;
+    private final NotificationSchedulesService schedulesService;
 
     public NotificationController(NotificationCommandPort commandPort,
                                   NotificationQueryPort queryPort,
-                                  SupplementaryApplicationMapper mapper) {
+                                  SupplementaryApplicationMapper mapper,
+                                  NotificationPreferencesService preferencesService,
+                                  NotificationSchedulesService schedulesService) {
         this.commandPort = commandPort;
         this.queryPort = queryPort;
         this.mapper = mapper;
+        this.preferencesService = preferencesService;
+        this.schedulesService = schedulesService;
     }
 
     @GetMapping
@@ -52,6 +61,70 @@ public class NotificationController {
             return Mono.just(0L);
         }
         return queryPort.getUnreadCount(userId);
+    }
+
+    @GetMapping("/system")
+    @PreAuthorize("isAuthenticated()")
+    public Flux<NotificationResponse> listSystem(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "50") int size,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID userId = extractUserId(userDetails);
+        Pageable pageable = PageRequest.of(page, size);
+        return queryPort.listSystemNotifications(userId, pageable)
+            .map(n -> mapper.toNotificationResponse(n, false));
+    }
+
+    @GetMapping("/users")
+    @PreAuthorize("isAuthenticated()")
+    public Flux<NotificationResponse> listUsers(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "50") int size,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID userId = extractUserId(userDetails);
+        Pageable pageable = PageRequest.of(page, size);
+        return queryPort.listUserNotifications(userId, pageable)
+            .map(n -> mapper.toNotificationResponse(n, false));
+    }
+
+    @GetMapping("/preferences")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<NotificationPreferencesResponse> getPreferences(
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID userId = extractUserId(userDetails);
+        return preferencesService.getPreferences(userId);
+    }
+
+    @PutMapping("/preferences")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<NotificationPreferencesResponse> updatePreferences(
+        @Valid @RequestBody UpdateNotificationPreferencesRequest request,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID userId = extractUserId(userDetails);
+        return preferencesService.updatePreferences(userId, request);
+    }
+
+    @GetMapping("/schedules")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<NotificationScheduleResponse> getSchedule(
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID userId = extractUserId(userDetails);
+        return schedulesService.getSchedule(userId);
+    }
+
+    @PutMapping("/schedules")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<NotificationScheduleResponse> updateSchedule(
+        @Valid @RequestBody UpdateNotificationScheduleRequest request,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID userId = extractUserId(userDetails);
+        return schedulesService.updateSchedule(userId, request);
     }
 
     @PostMapping
