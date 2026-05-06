@@ -1,11 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { Edit } from '@material-symbols-svg/react';
+import { Button } from '@/presentation/shared/components/ui';
 import { useNotificationStream } from '../hooks/useNotificationStream';
 import { NotificationInbox } from '../components/NotificationInbox';
+import { ComposeMessageDialog } from '../components/ComposeMessageDialog';
+
+type Tab = 'SYSTEM' | 'USER';
 
 export function NotificationsView() {
   const [includeRead, setIncludeRead] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('SYSTEM');
+  const [composeOpen, setComposeOpen] = useState(false);
 
   useNotificationStream();
 
@@ -19,13 +26,56 @@ export function NotificationsView() {
             checked={includeRead}
             onChange={(e) => setIncludeRead(e.target.checked)}
             className="rounded"
+            title="Mostrar notificaciones ya leídas"
           />
           Mostrar leídas
         </label>
       </div>
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-        <NotificationInbox includeRead={includeRead} />
+
+      {/* Tabs */}
+      <div className="mb-3 flex items-center gap-1 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('SYSTEM')}
+          title="Ver notificaciones del sistema"
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            activeTab === 'SYSTEM'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Sistema
+        </button>
+        <button
+          onClick={() => setActiveTab('USER')}
+          title="Ver mensajes de otros usuarios"
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            activeTab === 'USER'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Mensajes
+        </button>
+
+        {activeTab === 'USER' && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="ml-auto mb-1"
+            onClick={() => setComposeOpen(true)}
+            title="Redactar nuevo mensaje para otro usuario"
+          >
+            <Edit className="mr-1.5 h-4 w-4" />
+            Redactar
+          </Button>
+        )}
       </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <NotificationInbox includeRead={includeRead} sourceFilter={activeTab} />
+      </div>
+
+      <ComposeMessageDialog open={composeOpen} onClose={() => setComposeOpen(false)} />
     </div>
   );
 }

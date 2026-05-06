@@ -2,15 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Notifications, NotificationsFill, Close, OpenInNew } from '@material-symbols-svg/react';
+import { Notifications, NotificationsFill, Close, OpenInNew, Edit } from '@material-symbols-svg/react';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { useUnreadCount } from '../hooks/useNotifications';
 import { useNotificationStream } from '../hooks/useNotificationStream';
 import { NotificationInbox } from './NotificationInbox';
+import { ComposeMessageDialog } from './ComposeMessageDialog';
 import { cn } from '@/presentation/shared/lib/utils';
+
+type Tab = 'SYSTEM' | 'USER';
 
 export function NotificationTray() {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('SYSTEM');
+  const [composeOpen, setComposeOpen] = useState(false);
   const { data: unreadCount = 0 } = useUnreadCount();
 
   // Real-time updates via SSE when tray is open
@@ -100,9 +105,47 @@ export function NotificationTray() {
           </TooltipWrapper>
         </div>
 
+        {/* Tabs */}
+        <div className="flex items-center border-b border-gray-100 px-1 shrink-0">
+          <button
+            onClick={() => setActiveTab('SYSTEM')}
+            title="Ver notificaciones del sistema"
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'SYSTEM'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Sistema
+          </button>
+          <button
+            onClick={() => setActiveTab('USER')}
+            title="Ver mensajes de otros usuarios"
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'USER'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Mensajes
+          </button>
+          {activeTab === 'USER' && (
+            <TooltipWrapper content="Redactar nuevo mensaje" side="bottom">
+              <button
+                onClick={() => setComposeOpen(true)}
+                title="Redactar nuevo mensaje"
+                className="ml-auto mr-1 rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+                aria-label="Redactar mensaje"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+            </TooltipWrapper>
+          )}
+        </div>
+
         {/* Scrollable notification list */}
         <div className="flex-1 overflow-y-auto">
-          <NotificationInbox includeRead={false} />
+          <NotificationInbox includeRead={false} sourceFilter={activeTab} />
         </div>
 
         {/* Footer */}
@@ -116,6 +159,8 @@ export function NotificationTray() {
           </Link>
         </div>
       </div>
+
+      <ComposeMessageDialog open={composeOpen} onClose={() => setComposeOpen(false)} />
     </>
   );
 }

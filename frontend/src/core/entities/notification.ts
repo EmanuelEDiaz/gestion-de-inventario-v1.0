@@ -104,8 +104,28 @@ export interface Notification {
   deliveryChannel: DeliveryChannel;
   targetType: NotificationTargetType;
   targetUserId?: string;         // UUID del usuario si targetType=SPECIFIC_USER
+  createdBy?: string;            // UUID del emisor
+  createdByName?: string;        // Nombre del emisor (resuelto en backend si source=USER)
   createdAt: string;            // ISO 8601 timestamp
   read: boolean;
+}
+
+/**
+ * Entrada del directorio de usuarios (para picker en formulario de mensajes)
+ */
+export interface UserDirectoryEntry {
+  id: string;
+  displayName: string;
+  username: string;
+}
+
+/**
+ * Request para enviar un mensaje directo a otro usuario
+ */
+export interface SendMessageRequest {
+  title: string;
+  body: string;
+  targetUserId: string;
 }
 
 /**

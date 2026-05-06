@@ -12,6 +12,7 @@ public record NotificationDto(
     String targetType,
     UUID targetUserId,
     UUID createdBy,
+    String createdByName,
     String entityType,
     UUID entityId,
     Instant createdAt,

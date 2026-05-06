@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Notification, CreateNotificationData } from '@/core/entities/notification';
+import type { Notification, CreateNotificationData, SendMessageRequest, UserDirectoryEntry } from '@/core/entities/notification';
 
 const BASE = '/api/v1/notifications';
 
@@ -18,6 +18,10 @@ export const notificationApi = {
     return apiClient.post<Notification>(BASE, data).then((r) => r.data);
   },
 
+  send(data: SendMessageRequest): Promise<Notification> {
+    return apiClient.post<Notification>(`${BASE}/send`, data).then((r) => r.data);
+  },
+
   markRead(id: string): Promise<void> {
     return apiClient.post<void>(`${BASE}/${id}/read`).then(() => undefined);
   },
@@ -28,5 +32,11 @@ export const notificationApi = {
 
   deleteOne(id: string): Promise<void> {
     return apiClient.delete<void>(`${BASE}/${id}`).then(() => undefined);
+  },
+};
+
+export const userDirectoryApi = {
+  getAll(): Promise<UserDirectoryEntry[]> {
+    return apiClient.get<UserDirectoryEntry[]>('/api/v1/users/directory').then((r) => r.data);
   },
 };
