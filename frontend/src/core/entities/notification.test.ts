@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Notification, CreateNotificationData, NotificationType, NotificationCategory, NotificationTargetType } from './notification';
-import { NOTIFICATION_CATEGORY_LABELS } from './notification';
+import { getCategoryLabel } from './notification';
 
 describe('Notification Entity', () => {
   const mockNotification: Notification = {
@@ -84,16 +84,22 @@ describe('Notification Entity', () => {
   });
 });
 
-describe('NOTIFICATION_CATEGORY_LABELS', () => {
+describe('getCategoryLabel', () => {
   it('should have a Spanish label for every category', () => {
     // Arrange
     const categories: NotificationCategory[] = [
-      'LOW_STOCK', 'SYSTEM', 'SALE', 'PURCHASE', 'SYNC',
+      'LOW_STOCK', 'CRITICAL_STOCK', 'STOCK_ADJUSTMENT',
+      'SYNC_STARTED', 'SYNC_COMPLETED', 'SYNC_FAILED',
+      'SALE_COMPLETED', 'PURCHASE_COMPLETED', 'RETURN_PROCESSED',
+      'TRANSFER_INITIATED', 'TRANSFER_COMPLETED',
+      'CREDIT_LIMIT_WARNING', 'CREDIT_LIMIT_EXCEEDED', 'CREDIT_PAYMENT_DUE',
+      'USER_MENTIONED', 'PERMISSION_GRANTED', 'PERMISSION_REVOKED', 'USER_INVITE',
+      'SYSTEM_MAINTENANCE', 'BACKUP_COMPLETED', 'ERROR_OCCURRED', 'VERSION_UPDATE'
     ];
 
     // Assert
     categories.forEach((cat) => {
-      expect(NOTIFICATION_CATEGORY_LABELS[cat]).toBeTruthy();
+      expect(getCategoryLabel(cat)).toBeTruthy();
     });
   });
 });

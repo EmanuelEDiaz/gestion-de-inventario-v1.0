@@ -1,7 +1,7 @@
 'use client';
 
 import type { Notification } from '@/core/entities/notification';
-import { NOTIFICATION_CATEGORY_LABELS } from '@/core/entities/notification';
+import { getCategoryLabel } from '@/core/entities/notification';
 import { cn } from '@/presentation/shared/lib/utils';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { CheckBox, CheckBoxOutlineBlank, MarkEmailRead, Delete } from '@material-symbols-svg/react';
@@ -46,7 +46,7 @@ export function NotificationItem({ notification, isSelected, onToggleSelect, onM
         <div className="flex items-center gap-1.5 mb-0.5">
           {!read && <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" aria-label="No leída" />}
           <span className={cn('rounded px-1.5 py-px text-[10px] font-medium leading-4', CATEGORY_COLORS[category] ?? 'bg-gray-100 text-gray-600')}>
-            {NOTIFICATION_CATEGORY_LABELS[category]}
+            {getCategoryLabel(category)}
           </span>
           <span className="text-xs text-gray-400 ml-auto shrink-0">{timeAgo}</span>
         </div>
