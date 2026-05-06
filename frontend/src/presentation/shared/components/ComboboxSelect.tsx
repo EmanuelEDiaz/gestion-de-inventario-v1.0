@@ -54,6 +54,14 @@ export function ComboboxSelect({
     );
   }, [options, search]);
 
+  // Re-validate selected option and filtered options when options change
+  useEffect(() => {
+    // If options changed, ensure selected option still exists
+    if (value && !options.find((opt) => opt.value === value)) {
+      onChange('');
+    }
+  }, [options, value, onChange]);
+
   useEffect(() => {
     if (!isOpen) {
       setSearch('');

@@ -2,7 +2,7 @@
  * CategoryForm - Inline form for create/edit category
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { Category, CreateCategoryData } from '@/core/entities/category';
 import { Button } from '@/presentation/shared/components/ui';
 import { Input } from '@/presentation/shared/components/ui';
@@ -47,12 +47,15 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onCancel }
     [formData, onSubmit]
   );
 
-  const parentOptions = categories
-    .filter((c) => c.id !== editingCategory?.id)
-    .map((c) => ({
-      value: c.id,
-      label: '─'.repeat(c.level) + ' ' + c.name,
-    }));
+  const parentOptions = useMemo(
+    () => categories
+      .filter((c) => c.id !== editingCategory?.id)
+      .map((c) => ({
+        value: c.id,
+        label: '─'.repeat(c.level) + ' ' + c.name,
+      })),
+    [categories, editingCategory?.id]
+  );
 
   return (
     <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow">
