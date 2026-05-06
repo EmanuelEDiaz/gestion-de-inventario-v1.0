@@ -1,6 +1,12 @@
 /**
  * ComboboxSelect - Select with search functionality
  * Reusable component for selecting items with fuzzy search
+ * 
+ * Features:
+ * - Reactive: automatically updates when options change (by length or content)
+ * - Validates: clears invalid selections when options are removed
+ * - Smart filtering: fuzzy search with memoization
+ * - Keyboard friendly: focus management and keyboard navigation
  */
 
 'use client';
@@ -41,6 +47,10 @@ export function ComboboxSelect({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Track options by length for change detection (more reliable than reference equality)
+  const optionsLength = options.length;
+  const optionsKey = useMemo(() => options.map(o => o.value).join(','), [options]);
+
   const selectedOption = useMemo(
     () => options.find((opt) => opt.value === value),
     [options, value]
@@ -54,13 +64,22 @@ export function ComboboxSelect({
     );
   }, [options, search]);
 
-  // Re-validate selected option and filtered options when options change
+  // Re-validate and force update when options change (by length or content)
   useEffect(() => {
-    // If options changed, ensure selected option still exists
+    // If selected value no longer exists in options, clear it
     if (value && !options.find((opt) => opt.value === value)) {
       onChange('');
     }
-  }, [options, value, onChange]);
+  }, [optionsKey, value, onChange]);
+
+  // Force dropdown refresh when options change length
+  useEffect(() => {
+    // If dropdown is open and options changed significantly, keep it open
+    // This ensures the user sees updated options without closing/reopening
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [optionsLength, isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -130,7 +149,7 @@ export function ComboboxSelect({
             />
           </div>
 
-          <ul className="max-h-60 overflow-y-auto py-1">
+          <ul className="max-h-60 overflow-y-auto py-1" key={optionsKey}>
             {filteredOptions.length === 0 ? (
               <li className="px-4 py-3 text-sm text-gray-500">{emptyMessage}</li>
             ) : (
