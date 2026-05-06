@@ -14,7 +14,7 @@ import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
 import { Plus } from 'lucide-react';
 
 export function UsersView() {
-  const { users, isLoading, error, create, update, changeUserPassword, isCreating } = useUsersController();
+  const { users, isLoading, error, create, update, changeUserPassword, isCreating, isUpdating, isChangingPassword } = useUsersController();
   const [showForm, setShowForm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dialogType, setDialogType] = useState<'edit' | 'password' | null>(null);
@@ -57,11 +57,23 @@ export function UsersView() {
         </CardContent>
       </Card>
 
-      {selectedUser && dialogType === 'edit' && (
-        <EditUserDialog user={selectedUser} onSave={(data) => update({ id: selectedUser.id, data })} onClose={closeDialog} />
+      {selectedUser && (
+        <EditUserDialog
+          open={dialogType === 'edit'}
+          user={selectedUser}
+          onSave={(id, data) => update({ id, data })}
+          onClose={closeDialog}
+          isSaving={isUpdating}
+        />
       )}
-      {selectedUser && dialogType === 'password' && (
-        <ChangePasswordDialog userId={selectedUser.id} onSave={(data) => changeUserPassword({ id: selectedUser.id, data })} onClose={closeDialog} />
+      {selectedUser && (
+        <ChangePasswordDialog
+          open={dialogType === 'password'}
+          user={selectedUser}
+          onSave={(id, password) => changeUserPassword({ id, data: { newPassword: password } })}
+          onClose={closeDialog}
+          isSaving={isChangingPassword}
+        />
       )}
     </div>
   );

@@ -2,16 +2,13 @@
 
 import { ReactNode } from 'react';
 import { LucideIcon } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { cn } from '@/presentation/shared/lib/utils';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from './ui/table';
-import { IconButton } from './IconButton';
+import { Table } from './ui/table';
+import { Button } from './ui/Button';
+import { GenericTableHeader } from './GenericTableHeader';
+import { GenericTableBody } from './GenericTableBody';
+import { useTableSelection } from '@/presentation/shared/hooks/useTableSelection';
 
 export interface Column<T> {
   key: string;
@@ -38,31 +35,18 @@ export interface GenericTableProps<T> {
   emptyMessage?: string;
   className?: string;
   onRowClick?: (row: T) => void;
+  selectable?: boolean;
+  onDeleteSelected?: (ids: string[]) => void;
 }
 
 export function GenericTable<T extends { id: string }>({
-  data,
-  columns,
-  actions = [],
-  onSort,
-  sortKey,
-  sortDirection,
-  emptyMessage = 'No hay datos para mostrar',
-  className,
-  onRowClick,
+  data, columns, actions = [], onSort, sortKey, sortDirection,
+  emptyMessage = 'No hay datos para mostrar', className, onRowClick,
+  selectable = false, onDeleteSelected,
 }: GenericTableProps<T>) {
-  const getValue = (row: T, key: string): unknown => {
-    const keys = key.split('.');
-    let value: unknown = row;
-    for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
-        value = (value as Record<string, unknown>)[k];
-      } else {
-        return undefined;
-      }
-    }
-    return value;
-  };
+  const allIds = data.map((r) => r.id);
+  const { selectedIds, toggleOne, toggleAll, clearSelection, isAllSelected, isIndeterminate } =
+    useTableSelection(allIds);
 
   if (data.length === 0) {
     return (
@@ -73,105 +57,36 @@ export function GenericTable<T extends { id: string }>({
   }
 
   return (
-    <div className={cn('relative w-full rounded-xl bg-card shadow-sm', className)}>
-      <div className="overflow-x-auto">
+    <div className={cn('relative w-full space-y-2', className)}>
+      {selectable && selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-muted bg-muted/30 px-4 py-2">
+          <span className="text-sm text-muted-foreground" title="Cantidad de filas seleccionadas">
+            {selectedIds.size} seleccionado(s)
+          </span>
+          {onDeleteSelected && (
+            <Button variant="destructive" size="sm"
+              onClick={() => { onDeleteSelected([...selectedIds]); clearSelection(); }}
+              title="Eliminar los elementos seleccionados">
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
+              Eliminar seleccionados
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={clearSelection} title="Cancelar selección">
+            Cancelar
+          </Button>
+        </div>
+      )}
+      <div className="relative w-full overflow-x-auto rounded-xl bg-card shadow-sm">
         <Table>
-          <TableHeader>
-            <TableRow className="border-b-0 bg-muted/30 hover:bg-transparent">
-              {columns.map((column) => (
-                <TableHead
-                  key={column.key}
-                  className={cn(
-                    'text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground',
-                    column.className,
-                    column.sortable && 'cursor-pointer select-none hover:bg-muted/50'
-                  )}
-                  onClick={() => column.sortable && onSort?.(column.key)}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    <span>{column.label}</span>
-                    {column.sortable && (
-                      <span className={cn(
-                        'text-muted-foreground/70 transition-transform duration-200',
-                        sortKey === column.key ? 'text-foreground' : 'opacity-0 group-hover:opacity-50'
-                      )}>
-                        {sortKey === column.key && sortDirection === 'asc' ? (
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                          </svg>
-                        ) : sortKey === column.key ? (
-                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        ) : (
-                          <svg className="h-3 w-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                          </svg>
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </TableHead>
-              ))}
-              {actions.length > 0 && (
-                <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground w-24">
-                  Acciones
-                </TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((row) => (
-              <TableRow
-                key={row.id}
-                className={cn(
-                  'group border-b border-muted/50 transition-colors duration-150',
-                  'hover:bg-muted/50',
-                  onRowClick && 'cursor-pointer'
-                )}
-                onClick={() => onRowClick?.(row)}
-              >
-                {columns.map((column) => {
-                  const value = getValue(row, column.key);
-                  return (
-                    <TableCell key={column.key} className={cn('py-3.5 px-4 text-sm', column.className)}>
-                      {column.render
-                        ? column.render(value, row)
-                        : String(value ?? '-')}
-                    </TableCell>
-                  );
-                })}
-                {actions.length > 0 && (
-                  <TableCell
-                    className="py-3.5 px-4 text-center"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <div className={cn(
-                      'flex items-center justify-center gap-1 transition-opacity duration-150',
-                      'opacity-100 md:opacity-0 md:group-hover:opacity-100'
-                    )}>
-                      {actions.map((action, idx) => {
-                        const isDelete = action.title?.toLowerCase().includes('eliminar') || action.title?.toLowerCase().includes('delete');
-                        const isEdit = action.title?.toLowerCase().includes('modificar') || action.title?.toLowerCase().includes('edit') || action.title?.toLowerCase().includes('editar');
-                        const variant = isDelete ? 'danger' : isEdit ? 'outline' : 'ghost';
-                        return (
-                          <IconButton
-                            key={idx}
-                            icon={action.icon}
-                            title={action.title}
-                            href={action.href?.(row)}
-                            onClick={action.onClick ? () => action.onClick!(row) : undefined}
-                            size="sm"
-                            variant={variant}
-                          />
-                        );
-                      })}
-                    </div>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
+          <GenericTableHeader
+            columns={columns} actions={actions} selectable={selectable}
+            isAllSelected={isAllSelected} isIndeterminate={isIndeterminate}
+            onToggleAll={toggleAll} onSort={onSort} sortKey={sortKey} sortDirection={sortDirection}
+          />
+          <GenericTableBody
+            data={data} columns={columns} actions={actions} selectable={selectable}
+            selectedIds={selectedIds} onToggleOne={toggleOne} onRowClick={onRowClick}
+          />
         </Table>
       </div>
     </div>
