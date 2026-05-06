@@ -76,7 +76,7 @@ public class SupplementaryApplicationMapper {
     public NotificationDto toDto(Notification n, boolean read) {
         return new NotificationDto(
             n.id(),
-            n.type() != null ? n.type().name() : null,
+            n.source() != null ? n.source().name() : null,
             n.category() != null ? n.category().name() : null,
             n.title(), n.body(),
             n.targetType() != null ? n.targetType().name() : null,

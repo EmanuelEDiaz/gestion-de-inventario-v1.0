@@ -146,11 +146,19 @@ class NotificationControllerTest {
     private Notification buildNotification() {
         return new Notification(
             notifId,
-            Notification.NotificationType.SYSTEM_AUTO,
+            Notification.NotificationSource.SYSTEM,
             Notification.NotificationCategory.LOW_STOCK,
-            "Stock bajo", "Producto X tiene stock bajo",
-            Notification.TargetType.ALL, null, null,
-            "Product", UUID.randomUUID(),
+            Notification.NotificationPriority.MEDIUM,
+            "Stock bajo",
+            "Producto X tiene stock bajo",
+            null,
+            java.util.List.of(),
+            "SSE",
+            Notification.TargetType.ALL,
+            null,
+            null,
+            "Product",
+            UUID.randomUUID(),
             Instant.now()
         );
     }

@@ -15,17 +15,29 @@ public class NotificationEntity implements Persistable<UUID> {
     @Id
     private UUID id;
 
-    @Column("type")
-    private String type;
+    @Column("source")
+    private String source;
 
     @Column("category")
     private String category;
+
+    @Column("priority")
+    private String priority;
 
     @Column("title")
     private String title;
 
     @Column("body")
     private String body;
+
+    @Column("action_url")
+    private String actionUrl;
+
+    @Column("tags")
+    private String[] tags;
+
+    @Column("delivery_channel")
+    private String deliveryChannel;
 
     @Column("target_type")
     private String targetType;
@@ -53,17 +65,29 @@ public class NotificationEntity implements Persistable<UUID> {
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
     public String getBody() { return body; }
     public void setBody(String body) { this.body = body; }
+
+    public String getActionUrl() { return actionUrl; }
+    public void setActionUrl(String actionUrl) { this.actionUrl = actionUrl; }
+
+    public String[] getTags() { return tags; }
+    public void setTags(String[] tags) { this.tags = tags; }
+
+    public String getDeliveryChannel() { return deliveryChannel; }
+    public void setDeliveryChannel(String deliveryChannel) { this.deliveryChannel = deliveryChannel; }
 
     public String getTargetType() { return targetType; }
     public void setTargetType(String targetType) { this.targetType = targetType; }

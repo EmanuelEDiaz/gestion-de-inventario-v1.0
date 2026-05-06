@@ -1,6 +1,6 @@
 # CLAUDE.md — Inventario Offline‑First
 
-> **⚠️ PRIMERO**: Leer [Pendiente.md](Pendiente.md) antes de cualquier tarea.
+> **⚠️ PRIMERO**: Leer sección de Reglas de este documento antes de cualquier tarea.
 
 Sistema de gestión de inventario offline-first con Spring Boot WebFlux + Next.js PWA.
 
@@ -270,3 +270,44 @@ Ver documentación en `docs/contracts/`:
 - [ ] Imágenes usuario/producto
 - [ ] Auditoría completa
 - [ ] CI bloqueante con tests
+
+---
+
+## 8) Reglas del Proyecto (Obligatorias)
+
+### Idioma
+- **UI visible**: Español (labels, texto, tooltips, mensajes de error)
+- **Código**: Inglés (variables, funciones, clases, comentarios)
+- **Tooltips obligatorios**: Todo campo, input, botón, label debe tener `title` explicativo en español
+
+### Versions
+- Java 21 LTS (Eclipse Temurin)
+- Spring Boot 3.4+ (WebFlux)
+- Next.js 16+ (App Router)
+- Node.js 20+ LTS
+- PostgreSQL 16+
+- pnpm para gestión de paquetes frontend
+
+### Middleware Autenticación
+- JWT HS256 (access 15min, refresh 7 días)
+- bcrypt cost 12
+- RBAC: ADMIN, MANAGER, SELLER
+- Middleware obligatorio para todo acceso sin autenticación
+
+### Runtime Offline
+- Sin CDNs, Google Fonts remotas, scripts remotos
+- Todo asset debe servirse localmente
+- Fuentes locales en `/public/fonts`
+
+### No Deprecated
+- Nunca usar APIs, librerías o patrones deprecated
+- Verificar versiones estables antes de usar dependencias externas
+
+### Pruebas Pre/Post Build
+- La aplicación debe funcionar para pruebas antes del build
+- La aplicación debe funcionar después del build
+- Docker solo cuando todo pase tests
+
+---
+
+*Última actualización: Abril 2026*

@@ -4,9 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 export type BackendStatus = 'connected' | 'disconnected' | 'checking';
 
-const HEALTH_URL = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL}/actuator/health`
-  : 'http://localhost:8080/actuator/health';
+const LOCAL_HEALTH_URL = 'http://localhost:8080/actuator/health';
 
 const PING_INTERVAL_ONLINE = 15_000;
 const PING_INTERVAL_OFFLINE = 5_000;
@@ -19,17 +17,12 @@ export function useNetworkHealth() {
   const mountedRef = useRef(true);
 
   const checkHealth = useCallback(async (): Promise<boolean> => {
-    if (!navigator.onLine) {
-      if (mountedRef.current) setBackendStatus('disconnected');
-      return false;
-    }
-
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
-      await fetch(HEALTH_URL, {
+      await fetch(LOCAL_HEALTH_URL, {
         method: 'GET',
         cache: 'no-store',
         signal: AbortSignal.any([
@@ -37,11 +30,9 @@ export function useNetworkHealth() {
           AbortSignal.timeout(PING_TIMEOUT),
         ]),
       });
-      // Any HTTP response (even 500) means backend is reachable
       if (mountedRef.current) setBackendStatus('connected');
       return true;
     } catch {
-      // Network error or timeout — backend truly unreachable
       if (mountedRef.current) setBackendStatus('disconnected');
       return false;
     }
@@ -86,14 +77,12 @@ export function useNetworkHealth() {
 
 /** One-shot check (no hook, for login page pre-submit) */
 export async function checkBackendHealth(): Promise<boolean> {
-  if (!navigator.onLine) return false;
   try {
-    await fetch(HEALTH_URL, {
+    await fetch(LOCAL_HEALTH_URL, {
       method: 'GET',
       cache: 'no-store',
       signal: AbortSignal.timeout(PING_TIMEOUT),
     });
-    // Any HTTP response = backend reachable
     return true;
   } catch {
     return false;

@@ -242,10 +242,14 @@ public class SupplementaryPersistenceMapper {
         if (e == null) return null;
         return new Notification(
             e.getId(),
-            Notification.NotificationType.valueOf(e.getType()),
+            e.getSource() != null ? Notification.NotificationSource.valueOf(e.getSource()) : Notification.NotificationSource.SYSTEM,
             Notification.NotificationCategory.valueOf(e.getCategory()),
+            e.getPriority() != null ? Notification.NotificationPriority.valueOf(e.getPriority()) : Notification.NotificationPriority.MEDIUM,
             e.getTitle(),
             e.getBody(),
+            e.getActionUrl(),
+            e.getTags() != null ? java.util.Arrays.asList(e.getTags()) : java.util.List.of(),
+            e.getDeliveryChannel() != null ? e.getDeliveryChannel() : "SSE",
             Notification.TargetType.valueOf(e.getTargetType()),
             e.getTargetUserId(),
             e.getCreatedBy(),
@@ -259,10 +263,14 @@ public class SupplementaryPersistenceMapper {
         if (d == null) return null;
         NotificationEntity e = new NotificationEntity();
         e.setId(d.id());
-        e.setType(d.type().name());
+        e.setSource(d.source().name());
         e.setCategory(d.category().name());
+        e.setPriority(d.priority().name());
         e.setTitle(d.title());
         e.setBody(d.body());
+        e.setActionUrl(d.actionUrl());
+        e.setTags(d.tags() != null ? d.tags().toArray(new String[0]) : null);
+        e.setDeliveryChannel(d.deliveryChannel());
         e.setTargetType(d.targetType().name());
         e.setTargetUserId(d.targetUserId());
         e.setCreatedBy(d.createdBy());

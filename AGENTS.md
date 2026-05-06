@@ -1,117 +1,91 @@
-# AGENTS.md — Guía para Agentes
+# AGENTS.md — Inventario Offline-First
 
 > **LEER ANTES DE ESCRIBIR CÓDIGO**
-> Sistema de inventario offline-first: Spring Boot WebFlux + Next.js 16 PWA
+> ⚠️ Next.js 16 tiene breaking changes — leer `node_modules/next/dist/docs/` antes de código
 
 ---
 
-## 1. Comandos de Build / Lint / Test
+## Comandos Clave
 
 ### Frontend (`cd frontend`, usar pnpm)
 
 ```bash
 pnpm dev          # Dev server localhost:3000
 pnpm build        # Build producción
-pnpm start        # Servidor producción
 pnpm lint         # ESLint
 pnpm lint --fix   # Auto-corregir
-
-# Testing
-pnpm test         # Vitest watch mode
-pnpm test:run     # Vitest una vez
+pnpm test:run     # Tests una vez
 pnpm test:coverage
 
-# Ejecutar un solo test (IMPORTANTE)
+# Ejecutar un solo test
 pnpm vitest run src/core/entities/product.test.ts
-pnpm vitest run --related src/presentation/modules/products/
-
-# TypeScript check
-pnpm tsc --noEmit    # Verificar tipos sin compilar
-pnpm tsc --noEmit --watch  # Modo watch
 ```
 
 ### Backend (`cd backend/inventory-app`, maven)
 
 ```bash
-./mvnw spring-boot:run   # Iniciar aplicación
-./mvnw compile            # Compilar
-./mvnw test               # Ejecutar tests
-./mvnw test -Dtest=ProductControllerTest  # Test específico
-./mvnw verify             # Tests + verify (incluye integration)
+./mvnw spring-boot:run   # Puerto 8080
+./mvnw test -Dtest=ProductControllerTest
+```
+
+### Docker Compose
+
+```bash
+docker compose up -d    # PostgreSQL + Backend + Frontend + Caddy
+# URLs: http://localhost:8080 (API), https://localhost (App)
 ```
 
 ---
 
-## 2. Reglas Obligatorias
+## Reglas Críticas
 
-- **Idioma**: Español en respuestas
-- **Skills obligatorios**: Antes de cualquier tarea, cargar el skill `senior-frontend` o `senior-fullstack` según corresponda. Si la tarea es de un dominio específico (UI/UX, testing, seguridad, etc.), cargar también el skill apropiado de `.claude/skills/`.
+- **Idioma**: Español en UI, Inglés en código
+- **Skills obligatorios**: Cargar `senior-frontend` o `senior-fullstack` antes de cualquier tarea
 - **Mobile-first**: UI debe funcionar en móvil
-- **Pre-check**: Revisar entidades en `src/core/entities/`, interfaces en `src/core/interfaces/`
-- **Componente ≤ 100 líneas**, **Hook ≤ 150 líneas**
-- **TanStack Query** para datos servidor, **Zustand** para estado UI (NO Redux)
+- **Offline**: Sin CDNs, sin APIs externas en runtime. Assets locales en `/public`
+- **Sin `any`** sin justificación
+
+### Stack Estado
+- **TanStack Query** para datos servidor
+- **Zustand** para estado UI (NO Redux)
 
 ---
 
-## 3. Estándares de Código
+## Estándares de Código
 
 ### TypeScript
 - Target ES2017, Strict true, Module Resolution bundler
 - Path alias: `@/*` → `./src/*`
-- **Nunca usar `any` sin justificación**
 
 ### Java/Spring (Backend)
 - Java 21, Spring Boot 3.4+, WebFlux (reactivo)
 - **Clean Architecture + Hexagonal**: domain NO depende de Spring/DB/JSON
 - Paquetes: `domain/model`, `domain/ports`, `application/usecase`, `adapters/web`, `adapters/persistence`
 - Usar `record` para DTOs inmutables
--Errores custom extender `DomainException`, responder `application/problem+json`
 
 ### Convenciones de Nombres
+| Archivos TS | kebab-case: `product-repository.ts` |
+| Archivos TSX | PascalCase: `ProductTable.tsx` |
 
-| Elemento | Convención | Ejemplo |
-|----------|-------------|---------|
-| Archivos TS | kebab-case | `product-repository.ts` |
-| Archivos TSX | PascalCase | `ProductTable.tsx` |
-| Interfaces/Types | PascalCase | `Product` |
-| Funciones/Hooks | camelCase | `useProducts` |
-| Constantes | UPPER_SNAKE | `API_BASE_URL` |
-
-### Orden de Imports (5 grupos)
-```typescript
-// 1. Externos
-import { useState } from 'react';
-
-// 2. Core domain
-import type { Product } from '@/core/entities/product';
-
-// 3. Interfaces
-import type { IProductRepository } from '@/core/interfaces/IProductRepository';
-
-// 4. Infraestructura
-import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
-
-// 5. Presentación (relativo)
-import { ProductTable } from '@/presentation/modules/products/components/ProductTable';
-```
+### Orden de Imports
+1. Externos → 2. Core domain → 3. Interfaces → 4. Infraestructura → 5. Presentación
 
 ---
 
-## 4. Arquitectura Hexagonal
+## Arquitectura Hexagonal
 
 ```
 src/
 ├── core/          # DOMINIO (TypeScript puro)
-│   ├── entities/  # Modelos
-│   ├── interfaces/ # Puertos
-│   └── use-cases/ # Lógica de negocio
 ├── infrastructure/# ADAPTERS (API, repositories, IndexedDB)
 └── presentation/  # UI (shared + modules)
 ```
 
 ---
 
-## 5. Manejo de Errores (OBLIGATORIO)
+## Errores (OBLIGATORIO)
+
+Errores custom Extender `DomainException`, responder `application/problem+json`
 
 ```typescript
 class ProductNotFoundError extends Error {
@@ -120,43 +94,20 @@ class ProductNotFoundError extends Error {
     this.name = 'ProductNotFoundError';
   }
 }
-
-try {
-  await productRepository.delete(id);
-} catch (error) {
-  if (error instanceof ProductNotFoundError) {
-    return { success: false, error: error.message };
-  }
-  throw error;
-}
 ```
 
 **Prohibido**: `catch (e) {}` sin tipar, `console.log` en producción
 
 ---
 
-## 6. Testing
+## Testing
 
 - Tests junto al código con extensión `.test.ts` o `.spec.ts`
-- Usar `@testing-library/react`
-- **Pattern AAA**: Arrange, Act, Assert
-
-```typescript
-describe('ProductRepository', () => {
-  it('should get all products', async () => {
-    // Arrange
-    const mockProducts = [{ id: '1', name: 'Test' }];
-    // Act
-    const result = await repository.getAll();
-    // Assert
-    expect(result).toEqual(mockProducts);
-  });
-});
-```
+- Pattern AAA: Arrange, Act, Assert
 
 ---
 
-## 7. Patrones Prohibidos
+## Patrones Prohibidos
 
 - ❌ `any` sin justificación
 - ❌ Console.log en producción
@@ -167,7 +118,7 @@ describe('ProductRepository', () => {
 
 ---
 
-## 8. Stack
+## Stack
 
 | Capa | Tecnología |
 |------|------------|
@@ -180,7 +131,7 @@ describe('ProductRepository', () => {
 
 ---
 
-## 9. Documentación
+## Documentación
 
 - Arquitectura: `CLAUDE.md`
 - Contratos DB: `docs/contracts/database-schema.md`
