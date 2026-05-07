@@ -1,71 +1,43 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from '@/presentation/shared/components/ui/toast';
 import { useTransfers } from '../hooks/useTransfers';
-import { TransferTable } from '../components/TransferTable';
+import { useTransferColumns } from '../hooks/useTransferColumns';
 import { TransferFormFields } from '../components/form/TransferFormFields';
-import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { PageHeader } from '@/presentation/shared/components/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/GenericTable';
 
 export function TransfersListView() {
   const { transfers, loading, error, create, confirm, ship, complete, cancel, remove } = useTransfers();
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const { columns, actions } = useTransferColumns({ onConfirm: confirm, onShip: ship, onComplete: complete, onCancel: cancel, onDelete: remove });
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <AlertMessage variant="error" message={error} />;
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Transferencias" description="Gestiona las transferencias entre almacenes"
+        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nueva transferencia">+ Nueva Transferencia</Button>}
+      />
       {showForm && (
-        <Card>
-          <CardHeader><CardTitle>Nueva Transferencia</CardTitle></CardHeader>
-          <CardContent>
-            <TransferFormFields
-              onSubmit={async (data) => {
-                setIsCreating(true);
-                try {
-                  await create(data);
-                  toast.success('Transferencia creada');
-                  setShowForm(false);
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : 'Error al crear transferencia');
-                } finally {
-                  setIsCreating(false);
-                }
-              }}
-              isSubmitting={isCreating}
-              onCancel={() => setShowForm(false)}
-            />
-          </CardContent>
-        </Card>
+        <TransferFormFields
+          onSubmit={async (data) => {
+            setIsCreating(true);
+            try { await create(data); toast.success('Transferencia creada'); setShowForm(false); }
+            catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear transferencia'); }
+            finally { setIsCreating(false); }
+          }}
+          isSubmitting={isCreating} onCancel={() => setShowForm(false)}
+        />
       )}
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Transferencias</CardTitle>
-          {!showForm && (
-            <Button size="sm" onClick={() => setShowForm(true)} title="Crear nueva transferencia">
-              <Plus className="h-4 w-4 mr-2" />Nueva Transferencia
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          {loading && <LoadingSpinner />}
-          {error && <AlertMessage variant="error" message={error} />}
-          {!loading && !error && (
-            <TransferTable
-              transfers={transfers}
-              onConfirm={confirm}
-              onShip={ship}
-              onComplete={complete}
-              onCancel={cancel}
-              onDelete={remove}
-            />
-          )}
-        </CardContent>
-      </Card>
+      <GenericTable data={transfers} columns={columns} actions={actions} emptyMessage="No hay transferencias registradas" />
     </div>
   );
 }
+

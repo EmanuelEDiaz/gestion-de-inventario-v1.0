@@ -1,66 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/presentation/shared/components/ui/toast';
 import { usePurchases } from '../hooks/usePurchases';
-import { PurchaseTable } from '../components/PurchaseTable';
+import { usePurchaseColumns } from '../hooks/usePurchaseColumns';
 import { PurchaseFormFields } from '../components/form/PurchaseFormFields';
-import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { Plus } from 'lucide-react';
+import { PageHeader } from '@/presentation/shared/components/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/GenericTable';
 
 export function PurchasesListView() {
   const { purchases, isLoading, error, create, confirm, receive, cancel } = usePurchases();
   const [showForm, setShowForm] = useState(false);
+  const { columns, actions } = usePurchaseColumns({ onConfirm: confirm, onReceive: receive, onCancel: cancel });
 
   if (isLoading) return <LoadingSpinner />;
   if (error) return <AlertMessage variant="error" message={error} />;
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Compras" description="Gestiona las compras del sistema"
+        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nueva compra">+ Nueva Compra</Button>}
+      />
       {showForm && (
-        <Card>
-          <CardHeader><CardTitle>Nueva Compra</CardTitle></CardHeader>
-          <CardContent>
-            <PurchaseFormFields
-              onSubmit={async (data) => {
-                try {
-                  const result = await create(data);
-                  if (result) {
-                    setShowForm(false);
-                    toast.success('Compra creada correctamente');
-                  }
-                } catch (error) {
-                  toast.error(error instanceof Error ? error.message : 'Error al crear compra');
-                }
-              }}
-              isSubmitting={false}
-              onCancel={() => setShowForm(false)}
-            />
-          </CardContent>
-        </Card>
+        <PurchaseFormFields
+          onSubmit={async (data) => {
+            try { const r = await create(data); if (r) { setShowForm(false); toast.success('Compra creada correctamente'); } }
+            catch (e) { toast.error(e instanceof Error ? e.message : 'Error al crear compra'); }
+          }}
+          isSubmitting={false} onCancel={() => setShowForm(false)}
+        />
       )}
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Compras</CardTitle>
-          {!showForm && (
-            <Button size="sm" onClick={() => setShowForm(true)} title="Crear nueva compra">
-              <Plus className="h-4 w-4 mr-2" />Nueva Compra
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <PurchaseTable
-            purchases={purchases}
-            onConfirm={(purchase) => confirm(purchase.id)}
-            onReceive={(purchase) => receive(purchase.id)}
-            onCancel={(purchase) => cancel(purchase.id)}
-          />
-        </CardContent>
-      </Card>
+      <GenericTable data={purchases} columns={columns} actions={actions} emptyMessage="No hay compras registradas" />
     </div>
   );
 }
+
