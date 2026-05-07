@@ -1,16 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Ban, Pencil } from 'lucide-react';
 import { useRoles } from '../hooks/useRoles';
 import { useRoleActions } from '../hooks/useRoleActions';
-import { RoleCard } from '../components/RoleCard';
 import { RoleForm } from '../components/RoleForm';
 import type { Role, CreateRoleData, UpdateRoleData } from '@/core/entities/user';
-import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { Plus } from 'lucide-react';
+import { PageHeader } from '@/presentation/shared/components/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/GenericTable';
+import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
+
+const COLUMNS: Column<Role>[] = [
+  { key: 'code', label: 'Código', render: (_, r) => <span className="font-mono font-medium" title="Código del rol">{r.code}</span> },
+  { key: 'name', label: 'Nombre', render: (_, r) => <span title="Nombre del rol">{r.name}</span> },
+  { key: 'permissions', label: 'Permisos', render: (_, r) => <span title="Número de permisos asignados">{r.permissions.length}</span> },
+  {
+    key: 'isSystem', label: 'Tipo',
+    render: (_, r) => (
+      <span title={r.isSystem ? 'Rol del sistema (no modificable)' : 'Rol personalizado'}
+        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.isSystem ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+        {r.isSystem ? 'Sistema' : 'Personalizado'}
+      </span>
+    ),
+  },
+];
 
 export function RolesView() {
   const { data: roles = [], isLoading, error } = useRoles();
@@ -18,14 +34,15 @@ export function RolesView() {
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
+  const actions = useMemo<TableAction<Role>[]>(() => [
+    { icon: Pencil, title: 'Editar rol', onClick: setEditingRole, hidden: (r) => r.isSystem },
+    { icon: Ban, title: 'Desactivar rol', onClick: (r) => deactivate(r.id), hidden: (r) => r.isSystem || !r.isActive },
+  ], [deactivate]);
+
   if (isLoading) return <LoadingSpinner />;
   if (error) return <AlertMessage variant="error" message={(error as Error).message} />;
 
-  const handleCreate = async (data: CreateRoleData | UpdateRoleData) => {
-    await create(data as CreateRoleData);
-    setShowCreate(false);
-  };
-
+  const handleCreate = async (data: CreateRoleData | UpdateRoleData) => { await create(data as CreateRoleData); setShowCreate(false); };
   const handleUpdate = async (data: CreateRoleData | UpdateRoleData) => {
     if (!editingRole) return;
     await update({ id: editingRole.id, data: data as UpdateRoleData });
@@ -34,38 +51,18 @@ export function RolesView() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Roles" description="Gestiona los roles y permisos del sistema"
+        actions={!showCreate && !editingRole && <Button size="sm" onClick={() => setShowCreate(true)} title="Crear nuevo rol">+ Nuevo Rol</Button>}
+      />
       {(showCreate || editingRole) && (
-        <Card>
-          <CardHeader><CardTitle>{editingRole ? 'Editar Rol' : 'Nuevo Rol'}</CardTitle></CardHeader>
-          <CardContent>
-            <RoleForm
-              role={editingRole ?? undefined}
-              onSubmit={editingRole ? handleUpdate : handleCreate}
-              onCancel={() => { setShowCreate(false); setEditingRole(null); }}
-              isSubmitting={editingRole ? isUpdating : isCreating}
-            />
-          </CardContent>
-        </Card>
+        <RoleForm role={editingRole ?? undefined}
+          onSubmit={editingRole ? handleUpdate : handleCreate}
+          onCancel={() => { setShowCreate(false); setEditingRole(null); }}
+          isSubmitting={editingRole ? isUpdating : isCreating}
+        />
       )}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Roles</CardTitle>
-          {!showCreate && !editingRole && (
-            <Button size="sm" onClick={() => setShowCreate(true)} title="Crear nuevo rol">
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Rol
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {roles.map((role) => (
-              <RoleCard key={role.id} role={role} onEdit={setEditingRole} onDeactivate={deactivate} />
-            ))}
-          </div>
-          {roles.length === 0 && <p className="text-center text-muted-foreground py-8">No hay roles configurados</p>}
-        </CardContent>
-      </Card>
+      <GenericTable data={roles} columns={COLUMNS} actions={actions} emptyMessage="No hay roles configurados" />
     </div>
   );
 }
+

@@ -91,6 +91,17 @@ export function useCategoriesController() {
     }
   }, [fetchCategories, queryClient]);
 
+  const deleteManyCategories = useCallback(async (ids: string[]) => {
+    if (!confirm(`¿Eliminar ${ids.length} categoría(s) seleccionadas?`)) return;
+    try {
+      await Promise.all(ids.map((id) => deleteCategoryUseCase.execute(id)));
+      await queryClient.invalidateQueries({ queryKey: ['categories'] });
+      fetchCategories();
+    } catch {
+      setState((prev) => ({ ...prev, error: 'Error al eliminar las categorías seleccionadas' }));
+    }
+  }, [fetchCategories, queryClient]);
+
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
   }, []);
@@ -101,6 +112,7 @@ export function useCategoriesController() {
     closeForm,
     saveCategory,
     deleteCategory,
+    deleteManyCategories,
     refresh: fetchCategories,
     clearError,
   };

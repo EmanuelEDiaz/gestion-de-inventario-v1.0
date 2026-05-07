@@ -1,66 +1,63 @@
 'use client';
 
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useMemo, useState } from 'react';
+import { Power } from 'lucide-react';
+import { toast } from '@/presentation/shared/components/ui/toast';
 import { useCurrenciesController } from '../hooks/useCurrenciesController';
-import { CurrencyTable } from '../components/table/CurrencyTable';
 import { CurrencyFormFields } from '../components/form/CurrencyFormFields';
-import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { Plus } from 'lucide-react';
+import { PageHeader } from '@/presentation/shared/components/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/GenericTable';
+import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
+import type { Currency } from '@/core/entities/currency';
+
+type CurrencyRow = Currency & { id: string };
+
+const COLUMNS: Column<CurrencyRow>[] = [
+  { key: 'code', label: 'Código', render: (_, r) => <span className="font-mono font-semibold" title="Código ISO de la moneda">{r.code}</span> },
+  { key: 'name', label: 'Nombre', render: (_, r) => <span title="Nombre de la moneda">{r.name}</span> },
+  { key: 'symbol', label: 'Símbolo', render: (_, r) => <span title="Símbolo de la moneda">{r.symbol ?? '—'}</span> },
+  {
+    key: 'isActive', label: 'Estado',
+    render: (_, r) => (
+      <span title={r.isActive ? 'Moneda activa' : 'Moneda inactiva'}
+        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+        {r.isActive ? 'Activa' : 'Inactiva'}
+      </span>
+    ),
+  },
+];
 
 export function CurrenciesView() {
   const { currencies, isLoading, error, create, update, isCreating } = useCurrenciesController();
   const [showForm, setShowForm] = useState(false);
 
-  const handleToggle = (code: string, isActive: boolean) => {
-    update({ code, data: { isActive } });
-  };
+  const rows = useMemo<CurrencyRow[]>(() => currencies.map(c => ({ ...c, id: c.code })), [currencies]);
+
+  const actions = useMemo<TableAction<CurrencyRow>[]>(() => [
+    { icon: Power, title: 'Activar/desactivar moneda', onClick: (row) => update({ code: row.code, data: { isActive: !row.isActive } }) },
+  ], [update]);
 
   if (isLoading) return <LoadingSpinner />;
   if (error) return <AlertMessage variant="error" message={error} />;
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Monedas" description="Gestiona las monedas del sistema"
+        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Agregar nueva moneda">+ Nueva Moneda</Button>}
+      />
       {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Nueva Moneda</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CurrencyFormFields
-              onSubmit={async (data) => {
-                try {
-                  await create(data);
-                  setShowForm(false);
-                  toast.success('Moneda creada correctamente');
-                } catch (error) {
-                  toast.error(error instanceof Error ? error.message : 'Error al crear moneda');
-                }
-              }}
-              isSubmitting={isCreating}
-              onCancel={() => setShowForm(false)}
-            />
-          </CardContent>
-        </Card>
+        <CurrencyFormFields
+          onSubmit={async (data) => {
+            try { await create(data); setShowForm(false); toast.success('Moneda creada correctamente'); }
+            catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear moneda'); }
+          }}
+          isSubmitting={isCreating} onCancel={() => setShowForm(false)}
+        />
       )}
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Monedas</CardTitle>
-          {!showForm && (
-            <Button size="sm" onClick={() => setShowForm(true)} title="Agregar nueva moneda">
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Moneda
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <CurrencyTable currencies={currencies} onToggle={handleToggle} />
-        </CardContent>
-      </Card>
+      <GenericTable data={rows} columns={COLUMNS} actions={actions} emptyMessage="No hay monedas registradas" />
     </div>
   );
 }

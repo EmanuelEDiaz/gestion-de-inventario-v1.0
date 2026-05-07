@@ -4,8 +4,8 @@ import { ReactNode } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { Trash2 } from 'lucide-react';
 import { cn } from '@/presentation/shared/lib/utils';
-import { Table } from './ui/table';
-import { Button } from './ui/Button';
+import { Table } from '../ui/table';
+import { Button } from '../ui/Button';
 import { GenericTableHeader } from './GenericTableHeader';
 import { GenericTableBody } from './GenericTableBody';
 import { useTableSelection } from '@/presentation/shared/hooks/useTableSelection';
@@ -23,7 +23,6 @@ export interface TableAction<T> {
   title?: string;
   onClick?: (row: T) => void;
   href?: (row: T) => string;
-  hidden?: (row: T) => boolean;
 }
 
 export interface GenericTableProps<T> {

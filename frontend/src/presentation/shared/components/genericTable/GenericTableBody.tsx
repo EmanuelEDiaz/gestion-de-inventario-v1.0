@@ -1,8 +1,8 @@
 'use client';
 
 import { cn } from '@/presentation/shared/lib/utils';
-import { TableBody, TableCell, TableRow } from './ui/table';
-import { IconButton } from './IconButton';
+import { TableBody, TableCell, TableRow } from '../ui/table';
+import { IconButton } from '../IconButton';
 import type { Column, TableAction } from './GenericTable';
 
 function getValue(row: unknown, key: string): unknown {
@@ -52,7 +52,6 @@ export function GenericTableBody<T extends { id: string }>({
             <TableCell className="px-4 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
               <div className={cn('flex items-center justify-center gap-1 transition-opacity duration-150', 'opacity-100 md:opacity-0 md:group-hover:opacity-100')}>
                 {actions.map((action, idx) => {
-                  if (action.hidden?.(row)) return null;
                   const isDelete = action.title?.toLowerCase().includes('eliminar');
                   const isEdit = action.title?.toLowerCase().includes('editar') || action.title?.toLowerCase().includes('modificar');
                   const variant = isDelete ? 'danger' : isEdit ? 'outline' : 'ghost';
