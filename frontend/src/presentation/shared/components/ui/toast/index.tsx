@@ -6,9 +6,6 @@ import type { ToastVariant } from './ToastIcons';
 
 export { ToastContent } from './ToastContent';
 
-/**
- * Toaster container - include once in root layout
- */
 export function Toaster() {
   return (
     <SonnerToaster
@@ -25,32 +22,59 @@ export function Toaster() {
   );
 }
 
-interface ToastOptions {
+export interface ToastOptions {
   description?: string;
   duration?: number;
+  statusCode?: number;
+  action?: string;
+  requiredPermission?: string;
+  showCopyButton?: boolean;
+}
+
+export interface PermissionDeniedOptions extends ToastOptions {
+  action: string;
+  requiredPermission: string;
 }
 
 const DEFAULT_DURATIONS: Record<ToastVariant, number> = {
-  error: 5000,
+  error: 8000,
   success: 4000,
-  warning: 5000,
+  warning: 6000,
   info: 4000,
 };
 
 function showToast(variant: ToastVariant, title: string, options?: ToastOptions) {
   const duration = options?.duration ?? DEFAULT_DURATIONS[variant];
   sonnerToast.custom(
-    () => <ToastContent title={title} description={options?.description} variant={variant} duration={duration} />,
+    () => (
+      <ToastContent
+        title={title}
+        description={options?.description}
+        variant={variant}
+        duration={duration}
+        statusCode={options?.statusCode}
+        action={options?.action}
+        requiredPermission={options?.requiredPermission}
+        showCopyButton={options?.showCopyButton ?? true}
+      />
+    ),
     { duration }
   );
 }
 
-/**
- * Toast notification functions with progress bar
- */
 export const toast = {
   error: (title: string, options?: ToastOptions) => showToast('error', title, options),
   success: (title: string, options?: ToastOptions) => showToast('success', title, options),
   warning: (title: string, options?: ToastOptions) => showToast('warning', title, options),
   info: (title: string, options?: ToastOptions) => showToast('info', title, options),
+  
+  permissionDenied: (options: PermissionDeniedOptions) => {
+    const title = `No tienes permisos para "${options.action}"`;
+    const description = options.description || 'Contacta al administrador si necesitas acceso.';
+    showToast('error', title, {
+      ...options,
+      statusCode: options.statusCode || 403,
+      description,
+    });
+  },
 };
