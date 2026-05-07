@@ -22,6 +22,7 @@ import {
   useUserNotifications,
   useNotificationToasts,
 } from '@/presentation/shared/hooks';
+import { INotification } from '@/core/entities/notification';
 
 interface NotificationPanelProps {
   /**
@@ -69,13 +70,13 @@ export function NotificationPanel({
   const handleMarkAllAsRead = useCallback(async () => {
     // Mark all in system tab
     const systemIds = systemNotifications.notifications
-      .filter(n => !n.read)
-      .map(n => n.id);
+      ?.filter((n: INotification) => !n.read)
+      .map((n: INotification) => n.id) ?? [];
     
     // Mark all in user tab
     const userIds = userNotifications.notifications
-      .filter(n => !n.read)
-      .map(n => n.id);
+      ?.filter((n: INotification) => !n.read)
+      .map((n: INotification) => n.id) ?? [];
 
     // Batch operations
     const allIds = [...systemIds, ...userIds];

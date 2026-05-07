@@ -32,7 +32,7 @@ export function WarehousesListView() {
 
   const actions = useMemo<TableAction<Warehouse>[]>(() => [
     { icon: Pencil, title: 'Editar almacén', href: (r) => `/warehouses/${r.id}` },
-    { icon: Power, title: 'Activar/desactivar almacén', onClick: (r) => toggleWarehouseStatus(r.id) },
+    { icon: Power, title: 'Activar/desactivar almacén', onClick: (r: Warehouse) => toggleWarehouseStatus(r.id) },
   ], [toggleWarehouseStatus]);
 
   return (

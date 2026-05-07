@@ -11,8 +11,10 @@ import {
   updateNotificationSchedule,
 } from '@/infrastructure/api/notifications.api';
 import {
-  INotificationPreferences,
-  INotificationSchedule,
+  NotificationPreferences,
+  NotificationPreferences as INotificationPreferences,
+  NotificationSchedule,
+  NotificationSchedule as INotificationSchedule,
   ApiError,
 } from '@/core/entities/notification';
 
@@ -90,44 +92,34 @@ export function useNotificationPreferences(
   const queryClient = useQueryClient();
 
   // Fetch preferences
-  const preferencesQuery = useQuery<
-    INotificationPreferences,
-    ApiError
-  >({
+  const preferencesQuery = useQuery<NotificationPreferences, ApiError>({
     queryKey: QUERY_KEYS.preferences(),
-    queryFn: getNotificationPreferences,
+    queryFn: () => getNotificationPreferences() as Promise<NotificationPreferences>,
     refetchInterval,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // Fetch schedule
-  const scheduleQuery = useQuery<
-    INotificationSchedule,
-    ApiError
-  >({
+  const scheduleQuery = useQuery<NotificationSchedule, ApiError>({
     queryKey: QUERY_KEYS.schedules(),
-    queryFn: getNotificationSchedule,
+    queryFn: () => getNotificationSchedule() as Promise<NotificationSchedule>,
     refetchInterval,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
   // Update preferences mutation
-  const updatePreferencesMutation = useMutation<
-    INotificationPreferences,
-    ApiError,
-    INotificationPreferences
-  >({
-    mutationFn: updateNotificationPreferences,
-    onMutate: async (newPreferences) => {
+  const updatePreferencesMutation = useMutation<NotificationPreferences, ApiError, NotificationPreferences, { previousPreferences: NotificationPreferences | undefined }>({
+    mutationFn: (data) => updateNotificationPreferences(data) as Promise<NotificationPreferences>,
+    onMutate: async (newPreferences): Promise<{ previousPreferences: NotificationPreferences | undefined }> => {
       // Cancel in-flight queries
       await queryClient.cancelQueries({ queryKey: QUERY_KEYS.preferences() });
 
       // Snapshot old data
       const previousPreferences = queryClient.getQueryData(
         QUERY_KEYS.preferences()
-      );
+      ) as NotificationPreferences | undefined;
 
       // Optimistic update
       queryClient.setQueryData(
@@ -161,20 +153,16 @@ export function useNotificationPreferences(
   });
 
   // Update schedule mutation
-  const updateScheduleMutation = useMutation<
-    INotificationSchedule,
-    ApiError,
-    INotificationSchedule
-  >({
-    mutationFn: updateNotificationSchedule,
-    onMutate: async (newSchedule) => {
+  const updateScheduleMutation = useMutation<NotificationSchedule, ApiError, NotificationSchedule, { previousSchedule: NotificationSchedule | undefined }>({
+    mutationFn: (data) => updateNotificationSchedule(data) as Promise<NotificationSchedule>,
+    onMutate: async (newSchedule): Promise<{ previousSchedule: NotificationSchedule | undefined }> => {
       // Cancel in-flight queries
       await queryClient.cancelQueries({ queryKey: QUERY_KEYS.schedules() });
 
       // Snapshot old data
       const previousSchedule = queryClient.getQueryData(
         QUERY_KEYS.schedules()
-      );
+      ) as NotificationSchedule | undefined;
 
       // Optimistic update
       queryClient.setQueryData(
@@ -207,15 +195,32 @@ export function useNotificationPreferences(
     retry: 2,
   });
 
+  // Mapping de nombres adaptados a nombres originales del backend
+  const categoryKeyMap: Record<string, keyof NotificationPreferences> = {
+    inventoryEnabled: 'lowStockEnabled',
+    syncEnabled: 'syncEnabled',
+    operationsEnabled: 'operationsEnabled',
+    creditEnabled: 'debtEnabled',
+    userActionsEnabled: 'userActionsEnabled',
+    systemEnabled: 'systemEnabled',
+  };
+
+  const channelKeyMap: Record<string, keyof NotificationPreferences> = {
+    sseEnabled: 'sseEnabled',
+    toastEnabled: 'toastNotificationsEnabled',
+    pushEnabled: 'pushNotificationsEnabled',
+  };
+
   // Helper function to toggle category
   const toggleCategory = useCallback(
-    (categoryKey: keyof INotificationPreferences) => {
+    (categoryKey: string) => {
       const currentPreferences = preferencesQuery.data;
       if (!currentPreferences) return;
 
+      const originalKey = categoryKeyMap[categoryKey] || categoryKey as keyof NotificationPreferences;
       updatePreferencesMutation.mutate({
         ...currentPreferences,
-        [categoryKey]: !currentPreferences[categoryKey],
+        [originalKey]: !currentPreferences[originalKey],
       });
     },
     [preferencesQuery.data, updatePreferencesMutation]
@@ -223,13 +228,14 @@ export function useNotificationPreferences(
 
   // Helper function to toggle delivery channel
   const toggleDeliveryChannel = useCallback(
-    (channel: 'sseEnabled' | 'toastEnabled' | 'pushEnabled') => {
+    (channel: string) => {
       const currentPreferences = preferencesQuery.data;
       if (!currentPreferences) return;
 
+      const originalKey = channelKeyMap[channel] || channel as keyof NotificationPreferences;
       updatePreferencesMutation.mutate({
         ...currentPreferences,
-        [channel]: !currentPreferences[channel],
+        [originalKey]: !currentPreferences[originalKey],
       });
     },
     [preferencesQuery.data, updatePreferencesMutation]
@@ -243,8 +249,8 @@ export function useNotificationPreferences(
 
       updateScheduleMutation.mutate({
         ...currentSchedule,
-        quietHoursStartTime: startTime,
-        quietHoursEndTime: endTime,
+        quietHoursStart: startTime,
+        quietHoursEnd: endTime,
       });
     },
     [scheduleQuery.data, updateScheduleMutation]
@@ -271,11 +277,15 @@ export function useNotificationPreferences(
     }
 
     const schedule = scheduleQuery.data;
+    if (!schedule?.quietHoursEnabled) return false;
+
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    const startTime = schedule.quietHoursStartTime;
-    const endTime = schedule.quietHoursEndTime;
+    const startTime = schedule.quietHoursStart;
+    const endTime = schedule.quietHoursEnd;
+
+    if (!startTime || !endTime) return false;
 
     // Handle wrap-around midnight (e.g., 22:00 - 08:00)
     if (startTime > endTime) {
@@ -285,10 +295,37 @@ export function useNotificationPreferences(
     return currentTime >= startTime && currentTime < endTime;
   }, [scheduleQuery.data]);
 
+  // Mapper: adaptar nombres del backend a nombres que los componentes esperan
+  const adaptedPreferences = useMemo(() => {
+    const prefs = preferencesQuery.data;
+    if (!prefs) return null;
+    return {
+      ...prefs,
+      // Mapear nombres del servidor a nombres del componente
+      toastEnabled: prefs.toastNotificationsEnabled,
+      pushEnabled: prefs.pushNotificationsEnabled,
+      inventoryEnabled: prefs.lowStockEnabled,
+      creditEnabled: prefs.debtEnabled,
+    };
+  }, [preferencesQuery.data]);
+
+  const adaptedSchedule = useMemo(() => {
+    const sched = scheduleQuery.data;
+    if (!sched) return null;
+    return {
+      ...sched,
+      quietHoursStartTime: sched.quietHoursStart,
+      quietHoursEndTime: sched.quietHoursEnd,
+    };
+  }, [scheduleQuery.data]);
+
   return {
-    // Data
-    preferences: preferencesQuery.data,
-    schedule: scheduleQuery.data,
+    // Data (adaptada para componentes UI)
+    preferences: adaptedPreferences,
+    schedule: adaptedSchedule,
+    // Data raw (para lógica de negocio si se necesita)
+    rawPreferences: preferencesQuery.data,
+    rawSchedule: scheduleQuery.data,
 
     // Query status
     isLoading: preferencesQuery.isLoading || scheduleQuery.isLoading,
@@ -298,6 +335,9 @@ export function useNotificationPreferences(
     // Mutation status
     isPending: updatePreferencesMutation.isPending || updateScheduleMutation.isPending,
     updateError: updatePreferencesMutation.error || updateScheduleMutation.error,
+    updateErrorMessage: (updatePreferencesMutation.error || updateScheduleMutation.error)
+      ? (updatePreferencesMutation.error as ApiError)?.detail || (updateScheduleMutation.error as ApiError)?.detail || 'Error desconocido'
+      : null,
 
     // Helpers
     toggleCategory,

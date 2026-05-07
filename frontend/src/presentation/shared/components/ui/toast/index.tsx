@@ -4,6 +4,8 @@ import { Toaster as SonnerToaster, toast as sonnerToast } from 'sonner';
 import { ToastContent } from './ToastContent';
 import type { ToastVariant } from './ToastIcons';
 
+export { ToastContent } from './ToastContent';
+
 /**
  * Toaster container - include once in root layout
  */

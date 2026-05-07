@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { 
+  getUserNotifications,
   listUserNotifications,
   subscribeToNotifications,
   unsubscribeFromNotifications,
@@ -14,7 +15,6 @@ import {
 import { 
   INotification,
   ApiError,
-  PaginationParams,
 } from '@/core/entities/notification';
 
 const QUERY_KEYS = {
@@ -116,27 +116,19 @@ export function useUserNotifications(
 
   const queryClient = useQueryClient();
   const eventSourceRef = useRef<EventSource | null>(null);
-  const unsubscribeTimerRef = useRef<NodeJS.Timeout>();
+  const unsubscribeTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pageCountRef = useRef(0);
 
   // Main paginated query
-  const query = useInfiniteQuery<
-    { content: INotification[]; totalElements: number; hasMore: boolean },
-    ApiError
-  >({
+  const query = useInfiniteQuery({
     queryKey: QUERY_KEYS.usersInfinite(filters),
-    queryFn: async ({ pageParam = 0 }) => {
-      const params: PaginationParams = {
-        page: pageParam,
-        size: USER_NOTIFICATIONS_PAGE_SIZE,
-        ...filters,
-      };
-      const response = await listUserNotifications(params);
+    queryFn: async ({ pageParam = 0 }: { pageParam: number }) => {
+      const response = await getUserNotifications(pageParam, USER_NOTIFICATIONS_PAGE_SIZE);
       pageCountRef.current = Math.max(pageCountRef.current, pageParam + 1);
       return {
-        content: response.content,
-        totalElements: response.totalElements,
-        hasMore: response.hasMore ?? false,
+        content: response.items,
+        totalElements: response.pagination.totalItems,
+        hasMore: response.pagination.hasNext,
       };
     },
     initialPageParam: 0,
@@ -160,6 +152,7 @@ export function useUserNotifications(
 
     const setupSSE = () => {
       const unsubscribe = subscribeToNotifications(
+        undefined,
         (notification: INotification) => {
           // Solo procesar notificaciones USER en este hook
           if (notification.source !== 'USER') {
@@ -207,7 +200,7 @@ export function useUserNotifications(
 
     return () => {
       if (eventSourceRef.current) {
-        unsubscribeFromNotifications();
+        unsubscribeFromNotifications(eventSourceRef.current);
         eventSourceRef.current = null;
       }
     };

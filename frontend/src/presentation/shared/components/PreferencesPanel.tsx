@@ -24,7 +24,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
     schedule,
     isLoading,
     isPending,
-    updateError,
+    updateErrorMessage,
     toggleCategory,
     toggleDeliveryChannel,
     updateQuietHours,
@@ -89,9 +89,9 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
       </div>
 
       {/* Error Message */}
-      {updateError && (
+      {updateErrorMessage && (
         <div className="mx-4 mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">
-          Error: {updateError.message || 'Error desconocido'}
+          Error: {updateErrorMessage}
         </div>
       )}
 
@@ -240,7 +240,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
                   <input
                     type="time"
                     value={schedule.quietHoursStartTime}
-                    onChange={(e) => updateQuietHours(e.target.value, schedule.quietHoursEndTime)}
+                    onChange={(e) => updateQuietHours(e.target.value, schedule.quietHoursEndTime || '')}
                     disabled={isPending}
                     className="w-full px-2 py-1 border rounded text-sm disabled:opacity-50"
                   />
@@ -250,7 +250,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
                   <input
                     type="time"
                     value={schedule.quietHoursEndTime}
-                    onChange={(e) => updateQuietHours(schedule.quietHoursStartTime, e.target.value)}
+                    onChange={(e) => updateQuietHours(schedule.quietHoursStartTime || '', e.target.value)}
                     disabled={isPending}
                     className="w-full px-2 py-1 border rounded text-sm disabled:opacity-50"
                   />

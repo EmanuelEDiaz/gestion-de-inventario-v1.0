@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { toast } from 'sonner';
 import { UseSystemNotificationsReturn } from './useSystemNotifications';
 import { UseUserNotificationsReturn } from './useUserNotifications';
@@ -39,10 +39,10 @@ export function useNotificationToasts(
 
     // Monitor system notifications for new critical ones
     const criticalNotifs = systemNotifications.notifications?.filter(
-      (n) => n.priority === NotificationPriority.CRITICAL && !n.read
+      (n: INotification) => n.priority === NotificationPriority.CRITICAL && !n.read
     ) ?? [];
 
-    criticalNotifs.forEach((notif) => {
+    criticalNotifs.forEach((notif: INotification) => {
       // Avoid showing duplicate toasts
       if (shownNotificationsRef.has(notif.id)) {
         return;
@@ -55,18 +55,21 @@ export function useNotificationToasts(
 
       // Show toast
       toast.custom(
-        (t) => (
-          <ToastContent
-            title={notif.title}
-            description={getCategoryDescription(notif.category)}
-            variant={toastVariant}
-            duration={5000}
-          />
+        (t) => React.createElement(
+          ToastContent,
+          {
+            title: notif.title,
+            description: getCategoryDescription(notif.category),
+            variant: toastVariant,
+            duration: 5000
+          }
         ),
         {
           duration: 5000,
           position: 'top-right',
-          classNameToast: 'p-0 shadow-lg rounded-lg',
+          classNames: {
+            toast: 'p-0 shadow-lg rounded-lg',
+          },
         }
       );
     });
@@ -77,10 +80,10 @@ export function useNotificationToasts(
 
     // Monitor user notifications for new critical ones
     const criticalNotifs = userNotifications.notifications?.filter(
-      (n) => n.priority === NotificationPriority.CRITICAL && !n.read
+      (n: INotification) => n.priority === NotificationPriority.CRITICAL && !n.read
     ) ?? [];
 
-    criticalNotifs.forEach((notif) => {
+    criticalNotifs.forEach((notif: INotification) => {
       if (shownNotificationsRef.has(notif.id)) {
         return;
       }
@@ -90,18 +93,21 @@ export function useNotificationToasts(
       const toastVariant = getToastVariant(notif);
 
       toast.custom(
-        (t) => (
-          <ToastContent
-            title={notif.title}
-            description={getCategoryDescription(notif.category)}
-            variant={toastVariant}
-            duration={5000}
-          />
+        (t) => React.createElement(
+          ToastContent,
+          {
+            title: notif.title,
+            description: getCategoryDescription(notif.category),
+            variant: toastVariant,
+            duration: 5000
+          }
         ),
         {
           duration: 5000,
           position: 'top-right',
-          classNameToast: 'p-0 shadow-lg rounded-lg',
+          classNames: {
+            toast: 'p-0 shadow-lg rounded-lg',
+          },
         }
       );
     });

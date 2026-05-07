@@ -6,6 +6,7 @@ import {
   UseQueryResult,
 } from '@tanstack/react-query';
 import { 
+  getSystemNotifications,
   listSystemNotifications,
   subscribeToNotifications,
   unsubscribeFromNotifications,
@@ -15,8 +16,13 @@ import {
 import { 
   INotification,
   ApiError,
-  PaginationParams,
 } from '@/core/entities/notification';
+
+interface PaginationParams {
+  page: number;
+  size: number;
+  [key: string]: unknown;
+}
 
 const QUERY_KEYS = {
   all: ['notifications'] as const,
@@ -116,27 +122,19 @@ export function useSystemNotifications(
 
   const queryClient = useQueryClient();
   const eventSourceRef = useRef<EventSource | null>(null);
-  const unsubscribeTimerRef = useRef<NodeJS.Timeout>();
+  const unsubscribeTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pageCountRef = useRef(0);
 
   // Main paginated query
-  const query = useInfiniteQuery<
-    { content: INotification[]; totalElements: number; hasMore: boolean },
-    ApiError
-  >({
+  const query = useInfiniteQuery({
     queryKey: QUERY_KEYS.systemInfinite(filters),
-    queryFn: async ({ pageParam = 0 }) => {
-      const params: PaginationParams = {
-        page: pageParam,
-        size: SYSTEM_NOTIFICATIONS_PAGE_SIZE,
-        ...filters,
-      };
-      const response = await listSystemNotifications(params);
+    queryFn: async ({ pageParam = 0 }: { pageParam: number }) => {
+      const response = await getSystemNotifications(pageParam, SYSTEM_NOTIFICATIONS_PAGE_SIZE);
       pageCountRef.current = Math.max(pageCountRef.current, pageParam + 1);
       return {
-        content: response.content,
-        totalElements: response.totalElements,
-        hasMore: response.hasMore ?? false,
+        content: response.items,
+        totalElements: response.pagination.totalItems,
+        hasMore: response.pagination.hasNext,
       };
     },
     initialPageParam: 0,
@@ -164,6 +162,7 @@ export function useSystemNotifications(
 
     const setupSSE = () => {
       const unsubscribe = subscribeToNotifications(
+        undefined,
         (notification: INotification) => {
           // Invalidate cache para trigger re-fetch
           queryClient.invalidateQueries({
@@ -206,7 +205,7 @@ export function useSystemNotifications(
 
     return () => {
       if (eventSourceRef.current) {
-        unsubscribeFromNotifications();
+        unsubscribeFromNotifications(eventSourceRef.current);
         eventSourceRef.current = null;
       }
     };

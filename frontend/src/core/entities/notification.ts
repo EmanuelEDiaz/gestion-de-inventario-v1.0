@@ -5,6 +5,13 @@
  * Usado por hooks y componentes para type-safety en todo el frontend
  */
 
+import type { ApiError as ClientApiError } from '@/infrastructure/api/client';
+
+/**
+ * Re-export ApiError from client for consistency across the app
+ */
+export type ApiError = ClientApiError;
+
 /**
  * Fuente de la notificación: sistema o usuario
  */
@@ -111,6 +118,11 @@ export interface Notification {
 }
 
 /**
+ * Alias para Notification (compatibilidad con hooks)
+ */
+export type INotification = Notification;
+
+/**
  * Entrada del directorio de usuarios (para picker en formulario de mensajes)
  */
 export interface UserDirectoryEntry {
@@ -185,6 +197,11 @@ export interface NotificationSchedule {
   createdAt?: string;
   updatedAt?: string;
 }
+
+/**
+ * Alias para NotificationSchedule (compatibilidad con hooks)
+ */
+export type INotificationSchedule = NotificationSchedule;
 
 /**
  * Request para crear notificación (solo ADMIN/MANAGER)

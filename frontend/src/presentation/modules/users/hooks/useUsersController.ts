@@ -57,7 +57,9 @@ export function useUsersController() {
     isLoading: query.isLoading,
     error: query.error?.message ?? null,
     create: createMutation.mutateAsync,
-    update: updateMutation.mutateAsync,
+    update: async (params: { id: string; data: UpdateUserData }) => {
+      await updateMutation.mutateAsync(params);
+    },
     changeUserPassword: passwordMutation.mutateAsync,
     uploadAvatar: avatarMutation.mutateAsync,
     isCreating: createMutation.isPending,

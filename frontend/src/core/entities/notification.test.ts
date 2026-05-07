@@ -1,135 +1,113 @@
 import { describe, it, expect } from 'vitest';
-import type { Notification, CreateNotificationData, NotificationType, NotificationCategory, NotificationTargetType } from './notification';
-import { getCategoryLabel } from './notification';
+import type { Notification, CreateNotificationRequest } from './notification';
+import {
+  NotificationCategory,
+  NotificationTargetType,
+  NotificationSource,
+  NotificationPriority,
+  DeliveryChannel,
+  getCategoryLabel,
+} from './notification';
 
 describe('Notification Entity', () => {
   const mockNotification: Notification = {
     id: 'notif-1',
-    type: 'SYSTEM_AUTO',
-    category: 'LOW_STOCK',
     title: 'Stock bajo: Arroz',
     body: 'El producto Arroz tiene 3 unidades restantes.',
-    targetType: 'ALL',
-    targetUserId: null,
-    createdBy: null,
-    entityType: 'Product',
-    entityId: 'prod-1',
+    category: NotificationCategory.LOW_STOCK,
+    source: NotificationSource.SYSTEM,
+    priority: NotificationPriority.MEDIUM,
+    deliveryChannel: DeliveryChannel.TOAST,
+    targetType: NotificationTargetType.ALL,
     createdAt: '2026-01-01T10:00:00Z',
     read: false,
   };
 
   it('should create a valid Notification', () => {
-    // Assert
     expect(mockNotification.id).toBe('notif-1');
-    expect(mockNotification.type).toBe('SYSTEM_AUTO');
     expect(mockNotification.read).toBe(false);
   });
 
-  it('should validate NotificationType — solo SYSTEM_AUTO y USER_MANUAL', () => {
-    // Arrange
-    const validTypes: NotificationType[] = ['SYSTEM_AUTO', 'USER_MANUAL'];
-
-    // Assert — verificado en tests del backend: 'SYSTEM' y 'MANUAL' no existen
-    expect(validTypes).toContain(mockNotification.type);
-    expect(validTypes).not.toContain('SYSTEM');
-    expect(validTypes).not.toContain('MANUAL');
-  });
-
-  it('should validate all NotificationCategory values', () => {
-    // Arrange
-    const validCategories: NotificationCategory[] = [
-      'LOW_STOCK', 'SYSTEM', 'SALE', 'PURCHASE', 'SYNC',
-    ];
-
-    // Assert
-    expect(validCategories).toContain(mockNotification.category);
-  });
-
   it('should validate NotificationTargetType values', () => {
-    // Arrange
-    const validTargets: NotificationTargetType[] = ['USER', 'ALL'];
-
-    // Assert
+    const validTargets: NotificationTargetType[] = [
+      NotificationTargetType.ALL,
+      NotificationTargetType.SPECIFIC_USER,
+      NotificationTargetType.ROLE_BASED,
+    ];
     expect(validTargets).toContain(mockNotification.targetType);
   });
 
-  it('should allow null on nullable fields', () => {
-    // Arrange
-    const notifWithNulls: Notification = {
-      ...mockNotification,
-      body: null,
-      targetUserId: null,
-      createdBy: null,
-      entityType: null,
-      entityId: null,
-    };
-
-    // Assert
-    expect(notifWithNulls.body).toBeNull();
-    expect(notifWithNulls.entityId).toBeNull();
-  });
-
-  it('should support USER targetType with targetUserId', () => {
-    // Arrange
+  it('should support SPECIFIC_USER targetType with targetUserId', () => {
     const userNotif: Notification = {
       ...mockNotification,
-      type: 'USER_MANUAL',
-      targetType: 'USER',
+      targetType: NotificationTargetType.SPECIFIC_USER,
       targetUserId: 'user-123',
     };
-
-    // Assert
-    expect(userNotif.targetType).toBe('USER');
+    expect(userNotif.targetType).toBe(NotificationTargetType.SPECIFIC_USER);
     expect(userNotif.targetUserId).toBe('user-123');
+  });
+
+  it('should allow optional fields to be absent', () => {
+    expect(mockNotification.actionUrl).toBeUndefined();
+    expect(mockNotification.tags).toBeUndefined();
+    expect(mockNotification.targetUserId).toBeUndefined();
   });
 });
 
 describe('getCategoryLabel', () => {
   it('should have a Spanish label for every category', () => {
-    // Arrange
     const categories: NotificationCategory[] = [
-      'LOW_STOCK', 'CRITICAL_STOCK', 'STOCK_ADJUSTMENT',
-      'SYNC_STARTED', 'SYNC_COMPLETED', 'SYNC_FAILED',
-      'SALE_COMPLETED', 'PURCHASE_COMPLETED', 'RETURN_PROCESSED',
-      'TRANSFER_INITIATED', 'TRANSFER_COMPLETED',
-      'CREDIT_LIMIT_WARNING', 'CREDIT_LIMIT_EXCEEDED', 'CREDIT_PAYMENT_DUE',
-      'USER_MENTIONED', 'PERMISSION_GRANTED', 'PERMISSION_REVOKED', 'USER_INVITE',
-      'SYSTEM_MAINTENANCE', 'BACKUP_COMPLETED', 'ERROR_OCCURRED', 'VERSION_UPDATE'
+      NotificationCategory.LOW_STOCK,
+      NotificationCategory.CRITICAL_STOCK,
+      NotificationCategory.STOCK_ADJUSTMENT,
+      NotificationCategory.SYNC_STARTED,
+      NotificationCategory.SYNC_COMPLETED,
+      NotificationCategory.SYNC_FAILED,
+      NotificationCategory.SALE_COMPLETED,
+      NotificationCategory.PURCHASE_COMPLETED,
+      NotificationCategory.RETURN_PROCESSED,
+      NotificationCategory.TRANSFER_INITIATED,
+      NotificationCategory.TRANSFER_COMPLETED,
+      NotificationCategory.CREDIT_LIMIT_WARNING,
+      NotificationCategory.CREDIT_LIMIT_EXCEEDED,
+      NotificationCategory.CREDIT_PAYMENT_DUE,
+      NotificationCategory.USER_MENTIONED,
+      NotificationCategory.PERMISSION_GRANTED,
+      NotificationCategory.PERMISSION_REVOKED,
+      NotificationCategory.USER_INVITE,
+      NotificationCategory.SYSTEM_MAINTENANCE,
+      NotificationCategory.BACKUP_COMPLETED,
+      NotificationCategory.ERROR_OCCURRED,
+      NotificationCategory.VERSION_UPDATE,
     ];
-
-    // Assert
     categories.forEach((cat) => {
       expect(getCategoryLabel(cat)).toBeTruthy();
     });
   });
 });
 
-describe('CreateNotificationData', () => {
-  it('should accept valid create data for USER_MANUAL', () => {
-    // Arrange
-    const createData: CreateNotificationData = {
+describe('CreateNotificationRequest', () => {
+  it('should accept valid create request', () => {
+    const createData: CreateNotificationRequest = {
       title: 'Recordatorio',
       body: 'Revisar deuda del cliente Juan',
-      category: 'SYSTEM',
-      targetType: 'USER',
+      category: NotificationCategory.USER_MENTIONED,
+      targetType: NotificationTargetType.SPECIFIC_USER,
       targetUserId: 'user-1',
     };
-
-    // Assert
-    expect(createData.targetType).toBe('USER');
+    expect(createData.targetType).toBe(NotificationTargetType.SPECIFIC_USER);
     expect(createData.targetUserId).toBe('user-1');
   });
 
   it('should allow omitting optional fields for broadcast', () => {
-    // Arrange
-    const broadcastData: CreateNotificationData = {
+    const broadcastData: CreateNotificationRequest = {
       title: 'Cierre de caja',
-      category: 'SYSTEM',
-      targetType: 'ALL',
+      body: 'El sistema se cerrará en 5 minutos.',
+      category: NotificationCategory.SYSTEM_MAINTENANCE,
+      targetType: NotificationTargetType.ALL,
     };
-
-    // Assert
-    expect(broadcastData.body).toBeUndefined();
     expect(broadcastData.targetUserId).toBeUndefined();
+    expect(broadcastData.priority).toBeUndefined();
   });
 });
+

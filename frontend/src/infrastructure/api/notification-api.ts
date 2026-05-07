@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Notification, CreateNotificationData, SendMessageRequest, UserDirectoryEntry } from '@/core/entities/notification';
+import type { Notification, CreateNotificationRequest, SendMessageRequest, UserDirectoryEntry } from '@/core/entities/notification';
 
 const BASE = '/api/v1/notifications';
 
@@ -14,7 +14,7 @@ export const notificationApi = {
     return apiClient.get<number>(`${BASE}/unread-count`).then((r) => r.data);
   },
 
-  create(data: CreateNotificationData): Promise<Notification> {
+  create(data: CreateNotificationRequest): Promise<Notification> {
     return apiClient.post<Notification>(BASE, data).then((r) => r.data);
   },
 

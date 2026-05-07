@@ -48,9 +48,11 @@ export function useWarehousesController() {
     setState((prev) => ({ ...prev, showInactive: show }));
   }, []);
 
-  const toggleWarehouseStatus = useCallback(async (warehouse: Warehouse) => {
+  const toggleWarehouseStatus = useCallback(async (id: string) => {
+    const warehouse = state.warehouses.find(w => w.id === id);
+    if (!warehouse) return;
     try {
-      await toggleStatusUseCase.execute(warehouse.id, !warehouse.active);
+      await toggleStatusUseCase.execute(id, !warehouse.active);
       fetchWarehouses(state.showInactive);
     } catch {
       setState((prev) => ({
@@ -58,7 +60,7 @@ export function useWarehousesController() {
         error: 'Error al cambiar el estado del almacén',
       }));
     }
-  }, [fetchWarehouses, state.showInactive]);
+  }, [fetchWarehouses, state.showInactive, state.warehouses]);
 
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));

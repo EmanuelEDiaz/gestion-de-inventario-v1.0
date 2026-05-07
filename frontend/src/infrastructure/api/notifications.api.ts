@@ -1,4 +1,4 @@
-/**
+ /**
  * Notifications API Client
  * 
  * Funciones para comunicarse con el backend WebFlux
@@ -14,14 +14,21 @@ import {
   CreateNotificationRequest,
   UpdateNotificationPreferencesRequest,
   UpdateNotificationScheduleRequest,
+  ApiError,
 } from '@/core/entities/notification';
 
 const BASE_URL = '/api/v1/notifications';
 
-interface ApiError {
-  status: number;
-  message: string;
-  details?: unknown;
+/**
+ * Crea un ApiError con la estructura correcta del cliente
+ */
+function createApiError(status: number, message: string): ApiError {
+  return {
+    type: 'about:blank',
+    title: 'API Error',
+    status,
+    detail: message,
+  };
 }
 
 /**
@@ -46,11 +53,7 @@ export async function getSystemNotifications(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to fetch system notifications: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to fetch system notifications: ${response.statusText}`);
   }
 
   return response.json();
@@ -78,11 +81,7 @@ export async function getUserNotifications(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to fetch user notifications: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to fetch user notifications: ${response.statusText}`);
   }
 
   return response.json();
@@ -104,14 +103,10 @@ export async function getNotificationPreferences(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to fetch notification preferences: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to fetch notification preferences: ${response.statusText}`);
   }
 
-  return response.json();
+  return response.json() as Promise<NotificationPreferences>;
 }
 
 /**
@@ -132,11 +127,7 @@ export async function updateNotificationPreferences(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to update notification preferences: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to update notification preferences: ${response.statusText}`);
   }
 
   return response.json();
@@ -158,11 +149,7 @@ export async function getNotificationSchedule(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to fetch notification schedule: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to fetch notification schedule: ${response.statusText}`);
   }
 
   return response.json();
@@ -186,11 +173,7 @@ export async function updateNotificationSchedule(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to update notification schedule: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to update notification schedule: ${response.statusText}`);
   }
 
   return response.json();
@@ -213,11 +196,7 @@ export async function markNotificationAsRead(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to mark notification as read: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to mark notification as read: ${response.statusText}`);
   }
 }
 
@@ -237,11 +216,7 @@ export async function markAllNotificationsAsRead(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to mark all notifications as read: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to mark all notifications as read: ${response.statusText}`);
   }
 }
 
@@ -262,11 +237,7 @@ export async function deleteNotification(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to delete notification: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to delete notification: ${response.statusText}`);
   }
 }
 
@@ -285,20 +256,16 @@ export async function getUnreadNotificationCount(
     },
   });
 
-  if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to fetch unread count: ${response.statusText}`,
-    };
-    throw error;
+if (!response.ok) {
+    throw createApiError(response.status, `Failed to fetch unread count: ${response.statusText}`);
   }
 
   return response.json();
 }
 
 /**
- * POST /api/v1/notifications (solo ADMIN/MANAGER)
- * Crear nueva notificación
+ * POST /api/v1/notifications
+ * Crear nueva notificación (solo ADMIN/MANAGER)
  */
 export async function createNotification(
   notification: CreateNotificationRequest,
@@ -314,11 +281,7 @@ export async function createNotification(
   });
 
   if (!response.ok) {
-    const error: ApiError = {
-      status: response.status,
-      message: `Failed to create notification: ${response.statusText}`,
-    };
-    throw error;
+    throw createApiError(response.status, `Failed to create notification: ${response.statusText}`);
   }
 
   return response.json();
@@ -369,3 +332,9 @@ export function unsubscribeFromNotifications(eventSource: EventSource | null): v
     eventSource.close();
   }
 }
+
+/**
+ * Aliases para compatibilidad con código existente
+ */
+export const listSystemNotifications = getSystemNotifications;
+export const listUserNotifications = getUserNotifications;
