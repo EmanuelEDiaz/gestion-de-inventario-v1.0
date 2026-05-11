@@ -10,6 +10,7 @@ La adopción es **compatible** con las reglas offline del proyecto si se usa sol
 
 1. **Instalación y paquete oficial**
    - El paquete oficial en PyPI es `graphifyy` (CLI: `graphify`).
+   - Nota: la doble `y` es intencional y está documentada por el propio proyecto.
    - Requiere Python `>=3.10`.
    - Fuente: `pyproject.toml` y README oficiales.
 
@@ -41,18 +42,54 @@ Este repositorio exige runtime 100% offline y sin APIs externas en producción (
 - ✅ Compatible para análisis estructural de código (AST local con tree-sitter).
 - ⚠️ Para mantener cumplimiento offline estricto, usar Graphify en modo local de código (AST) y **no habilitar extracción semántica con backends externos** ni `graphify add <url>` en este proyecto.
 
+### Configuración recomendada (modo local-only)
+
+```bash
+# 1) Ignorar docs y binarios para evitar extracción semántica externa
+cat > .graphifyignore <<'EOF'
+docs/
+*.pdf
+*.png
+*.jpg
+*.webp
+*.gif
+node_modules/
+.next/
+target/
+dist/
+EOF
+
+# 2) Ejecutar solo en código fuente
+graphify ./backend/inventory-app/src
+graphify ./frontend/src
+```
+
 ## Recomendación de adopción (paso a paso)
 
 1. **Prueba controlada local (1 desarrollador)**
    ```bash
    uv tool install graphifyy
    graphify --help
-   graphify .
+   graphify ./backend/inventory-app/src
+   graphify ./frontend/src
    ```
 
 2. **Aislar alcance para este monorepo**
    - Crear `.graphifyignore` para excluir `node_modules`, `.next`, `target`, binarios y artefactos.
-   - Ejecutar en raíz para mapear backend + frontend + docs.
+   - Ejemplo mínimo recomendado:
+     ```gitignore
+     docs/
+     *.pdf
+     *.png
+     *.jpg
+     *.webp
+     *.gif
+     node_modules/
+     .next/
+     target/
+     dist/
+     ```
+   - Ejecutar en raíz para mapear backend + frontend en perfil offline estricto.
 
 3. **Consulta operativa para arquitectura**
    ```bash
