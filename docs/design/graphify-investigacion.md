@@ -39,7 +39,7 @@ Este repositorio exige runtime 100% offline y sin APIs externas en producción (
 **Evaluación:**
 - ✅ Compatible si Graphify se limita a desarrollo local/CI interno.
 - ✅ Compatible para análisis estructural de código (AST local con tree-sitter).
-- ⚠️ Para extracción semántica de docs/PDF/imágenes puede requerir backend LLM externo según configuración de uso; debe tratarse como opción de desarrollo, nunca runtime.
+- ⚠️ Para mantener cumplimiento offline estricto, usar Graphify en modo local de código (AST) y **no habilitar extracción semántica con backends externos** ni `graphify add <url>` en este proyecto.
 
 ## Recomendación de adopción (paso a paso)
 
@@ -99,5 +99,5 @@ graphify . --wiki
 - Seguridad (threat model y mitigaciones): https://github.com/safishamsi/graphify/blob/4cec58e07242a42a94e7d7c41568120e46aac862/SECURITY.md
 - Metadatos del paquete y dependencias: https://github.com/safishamsi/graphify/blob/4cec58e07242a42a94e7d7c41568120e46aac862/pyproject.toml
 - Políticas del proyecto (offline/runtime):
-  - `/home/runner/work/gestion-de-inventario-v1.0/gestion-de-inventario-v1.0/CLAUDE.md`
-  - `/home/runner/work/gestion-de-inventario-v1.0/gestion-de-inventario-v1.0/AGENTS.md`
+  - `CLAUDE.md`
+  - `AGENTS.md`
