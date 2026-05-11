@@ -57,51 +57,43 @@ node_ok() {
 }
 
 # ---- Abre terminal nueva (detecta emulador disponible) ----
-# Retorna: "terminal_pid:process_pid" para rastrear ambos
+# Retorna: "window_pid:process_pid" para rastrear ambos
 open_terminal() {
     local title="$1" cmd="$2"
-    local terminal_pid process_pid
-    
-    # Crear un wrapper script que captura el PID del proceso real
-    local wrapper="$ROOT/.terminal_wrapper_$$.sh"
-    cat > "$wrapper" << 'EOF'
-#!/usr/bin/env bash
-# Wrapper para rastrear el PID del proceso real
-eval "$1"
-EOF
-    chmod +x "$wrapper"
+    local window_pid process_pid
     
     if command -v gnome-terminal &>/dev/null; then
-        gnome-terminal --title="$title" -- bash -c "$wrapper '$cmd'; exec bash" &
-        terminal_pid=$!
+        gnome-terminal --title="$title" -- bash -c "$cmd" &
+        window_pid=$!
+        sleep 2
+        process_pid=$(pgrep -P "$window_pid" 2>/dev/null | tail -1 || echo "$window_pid")
+        
     elif command -v xfce4-terminal &>/dev/null; then
-        xfce4-terminal --title="$title" -e "bash -c '$wrapper \"$cmd\"; exec bash'" &
-        terminal_pid=$!
+        xfce4-terminal --title="$title" --command="bash -c '$cmd'" &
+        window_pid=$!
+        sleep 2
+        process_pid=$(pgrep -P "$window_pid" 2>/dev/null | tail -1 || echo "$window_pid")
+        
     elif command -v konsole &>/dev/null; then
-        konsole --new-tab -p tabtitle="$title" -e bash -c "$wrapper '$cmd'; exec bash" &
-        terminal_pid=$!
+        konsole --new-tab -p tabtitle="$title" -e bash -c "$cmd" &
+        window_pid=$!
+        sleep 2
+        process_pid=$(pgrep -P "$window_pid" 2>/dev/null | tail -1 || echo "$window_pid")
+        
     elif command -v xterm &>/dev/null; then
-        xterm -title "$title" -e bash -c "$wrapper '$cmd'; exec bash" &
-        terminal_pid=$!
+        xterm -title "$title" -e bash -c "$cmd" &
+        window_pid=$!
+        sleep 2
+        process_pid=$(pgrep -P "$window_pid" 2>/dev/null | tail -1 || echo "$window_pid")
+        
     else
         write_warn "Sin emulador GUI. '$title' ejecutandose en background (log: ${title// /_}.log)"
-        bash -c "$cmd" >"$ROOT/${title// /_}.log" 2>&1 &
-        terminal_pid=$!
+        setsid bash -c "$cmd" >"$ROOT/${title// /_}.log" 2>&1 &
+        window_pid=$!
+        process_pid=$!
     fi
     
-    # Esperar a que el proceso real inicie (máx 10 segundos)
-    for ((i=0; i<100; i++)); do
-        # Buscar procesos hijos del terminal que NO sean bash
-        process_pid=$(pgrep -P "$terminal_pid" 2>/dev/null | grep -v bash | head -1 || true)
-        [ -n "$process_pid" ] && break
-        sleep 0.1
-    done
-    
-    # Si no encontramos el proceso, devolver el PID del terminal
-    process_pid="${process_pid:-$terminal_pid}"
-    
-    echo "$terminal_pid:$process_pid"
-    rm -f "$wrapper"
+    echo "$window_pid:$process_pid"
 }
 
 echo

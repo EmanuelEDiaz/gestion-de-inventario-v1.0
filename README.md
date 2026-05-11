@@ -300,6 +300,7 @@ Incluye: PostgreSQL, backend, frontend+BFF, Caddy (HTTPS local).
 | [docs/contracts/ports-interfaces.md](docs/contracts/ports-interfaces.md) | Use cases y repository ports |
 | [docs/contracts/image-handling.md](docs/contracts/image-handling.md) | Imágenes y thumbnails |
 | [docs/design/offline-strategy.md](docs/design/offline-strategy.md) | Sync offline y outbox |
+| [docs/design/graphify-investigacion.md](docs/design/graphify-investigacion.md) | Investigación de Graphify, adopción y uso recomendado |
 | [docs/design/glossary.md](docs/design/glossary.md) | Glosario del dominio |
 | [docs/adr/architecture-decisions.md](docs/adr/architecture-decisions.md) | Decisiones de arquitectura |
 
