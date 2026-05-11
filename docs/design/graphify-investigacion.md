@@ -10,7 +10,7 @@ La adopción es **compatible** con las reglas offline del proyecto si se usa sol
 
 1. **Instalación y paquete oficial**
    - El paquete oficial en PyPI es `graphifyy` (CLI: `graphify`).
-   - Nota: la doble `y` es intencional y está documentada por el propio proyecto.
+   - Nota: la doble `y` es intencional y está documentada por el propio proyecto en README y `pyproject.toml`.
    - Requiere Python `>=3.10`.
    - Fuente: `pyproject.toml` y README oficiales.
 
@@ -62,6 +62,11 @@ EOF
 # 2) Ejecutar solo en código fuente
 graphify ./backend/inventory-app/src
 graphify ./frontend/src
+
+# 3) Verificación rápida (no usar ingest ni backends externos)
+# - No ejecutar: graphify add <url>
+# - No ejecutar extracción sobre docs/, PDFs o imágenes
+# - Mantener variables API sin configurar (OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY)
 ```
 
 ## Recomendación de adopción (paso a paso)
@@ -99,13 +104,15 @@ graphify ./frontend/src
    ```
 
 4. **Integración gradual de equipo**
-   - Empezar sin hooks automáticos.
-   - Si el equipo lo aprueba, activar `graphify hook install`.
-   - Versionar solo artefactos útiles y controlar tamaño del repo.
+    - Empezar sin hooks automáticos.
+    - Si el equipo lo aprueba, activar `graphify hook install`.
+    - Versionar solo artefactos útiles y controlar tamaño del repo:
+      - ✅ Versionar: `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`
+      - 🚫 Ignorar: `graphify-out/manifest.json`, `graphify-out/cost.json` (y `graphify-out/cache/` si crece demasiado)
 
 5. **Regla de seguridad interna**
-   - No usar Graphify para exponer código sensible en servicios externos.
-   - Mantenerlo fuera de runtime y contenedores productivos.
+    - No usar Graphify para exponer código sensible en servicios externos (ejemplos: secretos JWT, credenciales DB de `.env`, tokens API, datos personales de clientes/proveedores, reglas internas sensibles de negocio).
+    - Mantenerlo fuera de runtime y contenedores productivos.
 
 ## Comandos sugeridos para este proyecto
 
@@ -113,11 +120,13 @@ graphify ./frontend/src
 # instalación
 uv tool install graphifyy
 
-# análisis inicial del monorepo
-graphify .
+# análisis inicial en modo local-only (solo código)
+graphify ./backend/inventory-app/src
+graphify ./frontend/src
 
 # actualización incremental
-graphify . --update
+graphify ./backend/inventory-app/src --update
+graphify ./frontend/src --update
 
 # consultas
 graphify query "what connects JWT to WebFlux security?"
@@ -135,6 +144,7 @@ graphify . --wiki
 - Arquitectura interna (pipeline y módulos): https://github.com/safishamsi/graphify/blob/4cec58e07242a42a94e7d7c41568120e46aac862/ARCHITECTURE.md
 - Seguridad (threat model y mitigaciones): https://github.com/safishamsi/graphify/blob/4cec58e07242a42a94e7d7c41568120e46aac862/SECURITY.md
 - Metadatos del paquete y dependencias: https://github.com/safishamsi/graphify/blob/4cec58e07242a42a94e7d7c41568120e46aac862/pyproject.toml
+- Paquete oficial en PyPI (`graphifyy`): https://pypi.org/project/graphifyy/
 - Políticas del proyecto (offline/runtime):
   - `CLAUDE.md`
   - `AGENTS.md`
