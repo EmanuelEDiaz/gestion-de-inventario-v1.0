@@ -1,24 +1,23 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 # ============================================================
 #   INVENTARIO - INICIO DE DESARROLLO (Linux)
 #   Uso: ./start-dev.sh
-#   Para detener todo: ./stop-dev.sh
+#   Para detener todo: Ctrl+C o ./stop-dev.sh
 #   Auto-instala: JDK 21, Maven, Node.js 22 LTS, pnpm
 #   (requiere sudo para instalaciones del sistema)
 # ============================================================
 
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_PATH="${(%):-%x}"
+ROOT="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 PID_FILE="$ROOT/.dev-pids.json"
 
-# --- Colores ---
 CY='\033[0;36m'; GN='\033[0;32m'; YL='\033[0;33m'; RD='\033[0;31m'
 MG='\033[0;35m'; DG='\033[0;90m'; NC='\033[0m'
 
 write_step() { echo; echo -e "${CY}>> $1${NC}"; }
 write_ok()   { echo -e "${GN}   [OK] $1${NC}"; }
 write_warn() { echo -e "${YL}   [!]  $1${NC}"; }
-write_fail() { echo -e "${RD}   [X]  $1${NC}"; }
 
 test_port() {
     (echo >/dev/tcp/localhost/"$1") 2>/dev/null
@@ -40,7 +39,6 @@ wait_for_port() {
     fi
 }
 
-# ---- Verificar version de Java >= 21 ----
 java_ok() {
     command -v java &>/dev/null || return 1
     local ver
@@ -48,60 +46,55 @@ java_ok() {
     [ "${ver:-0}" -ge 21 ] 2>/dev/null
 }
 
-# ---- Verificar version de Node >= 20 ----
 node_ok() {
     command -v node &>/dev/null || return 1
     local ver
-    ver=$(node -v 2>/dev/null | grep -oP '[0-9]+' | head -1)
+    ver=$(node -v 2>&1 | grep -oP '[0-9]+' | head -1)
     [ "${ver:-0}" -ge 20 ] 2>/dev/null
 }
 
-# ---- Abre terminal nueva (detecta emulador disponible) ----
-# Retorna: "terminal_pid:process_pid" para rastrear ambos
+TERMINAL_SCRIPTS=()
+
 open_terminal() {
-    local title="$1" cmd="$2"
-    local terminal_pid process_pid
-    
-    # Crear un wrapper script que captura el PID del proceso real
-    local wrapper="$ROOT/.terminal_wrapper_$$.sh"
-    cat > "$wrapper" << 'EOF'
-#!/usr/bin/env bash
-# Wrapper para rastrear el PID del proceso real
-eval "$1"
-EOF
-    chmod +x "$wrapper"
-    
-    if command -v gnome-terminal &>/dev/null; then
-        gnome-terminal --title="$title" -- bash -c "$wrapper '$cmd'; exec bash" &
+    local title="$1" dir="$2" cmd="$3" suffix="${4:-default}"
+    local terminal_pid=$$
+    local script_file
+
+    script_file="/tmp/.dev_terminal_${suffix}_$$.sh"
+    {
+        echo "#!/bin/bash"
+        echo "cd \"$dir\""
+        echo "$cmd"
+        echo "exec bash"
+    } > "$script_file"
+    chmod +x "$script_file"
+    TERMINAL_SCRIPTS+=("$script_file")
+
+    if command -v konsole &>/dev/null; then
+        konsole --separate --noclose --title "$title" -e "\"$script_file\"" &
+        terminal_pid=$!
+    elif command -v kitty &>/dev/null; then
+        kitty --hold --title "$title" -e "\"$script_file\"" &
+        terminal_pid=$!
+    elif command -v gnome-terminal &>/dev/null; then
+        gnome-terminal --title="$title" -- "\"$script_file\"" &
         terminal_pid=$!
     elif command -v xfce4-terminal &>/dev/null; then
-        xfce4-terminal --title="$title" -e "bash -c '$wrapper \"$cmd\"; exec bash'" &
-        terminal_pid=$!
-    elif command -v konsole &>/dev/null; then
-        konsole --new-tab -p tabtitle="$title" -e bash -c "$wrapper '$cmd'; exec bash" &
-        terminal_pid=$!
-    elif command -v xterm &>/dev/null; then
-        xterm -title "$title" -e bash -c "$wrapper '$cmd'; exec bash" &
+        xfce4-terminal --title="$title" -e "\"$script_file\"" &
         terminal_pid=$!
     else
         write_warn "Sin emulador GUI. '$title' ejecutandose en background (log: ${title// /_}.log)"
-        bash -c "$cmd" >"$ROOT/${title// /_}.log" 2>&1 &
+        zsh "$script_file" >"$ROOT/${title// /_}.log" 2>&1 &
         terminal_pid=$!
     fi
-    
-    # Esperar a que el proceso real inicie (máx 10 segundos)
-    for ((i=0; i<100; i++)); do
-        # Buscar procesos hijos del terminal que NO sean bash
-        process_pid=$(pgrep -P "$terminal_pid" 2>/dev/null | grep -v bash | head -1 || true)
-        [ -n "$process_pid" ] && break
-        sleep 0.1
+
+    echo "$terminal_pid"
+}
+
+cleanup_scripts() {
+    for script in "${TERMINAL_SCRIPTS[@]}"; do
+        rm -f "$script" 2>/dev/null || true
     done
-    
-    # Si no encontramos el proceso, devolver el PID del terminal
-    process_pid="${process_pid:-$terminal_pid}"
-    
-    echo "$terminal_pid:$process_pid"
-    rm -f "$wrapper"
 }
 
 echo
@@ -109,18 +102,13 @@ echo -e "${CY}============================================${NC}"
 echo -e "${CY}   INVENTARIO - ENTORNO DE DESARROLLO${NC}"
 echo -e "${CY}============================================${NC}"
 
-# -------------------------------------------------------------------
-# DEPENDENCIAS DEL SISTEMA
-# -------------------------------------------------------------------
 write_step "Verificando e instalando dependencias del sistema..."
 
-# -- Java 21 --
 if ! java_ok; then
     write_warn "Java 21+ no encontrado. Instalando Eclipse Temurin 21..."
     sudo apt-get install -y wget apt-transport-https gnupg
     wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public \
         | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/adoptium.gpg
-    # Linux Mint 21.x -> jammy | Mint 22.x -> noble
     UBUNTU_CODENAME=$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
     echo "deb https://packages.adoptium.net/artifactory/deb ${UBUNTU_CODENAME} main" \
         | sudo tee /etc/apt/sources.list.d/adoptium.list
@@ -129,7 +117,6 @@ if ! java_ok; then
 fi
 write_ok "Java: $(java -version 2>&1 | head -1)"
 
-# -- Maven --
 if ! command -v mvn &>/dev/null; then
     write_warn "Maven no encontrado. Instalando..."
     sudo apt-get update -qq
@@ -137,7 +124,6 @@ if ! command -v mvn &>/dev/null; then
 fi
 write_ok "Maven: $(mvn -v 2>&1 | head -1)"
 
-# -- Node.js 22 LTS --
 if ! node_ok; then
     write_warn "Node.js 20+ no encontrado. Instalando Node.js 22 LTS via NodeSource..."
     curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
@@ -145,14 +131,12 @@ if ! node_ok; then
 fi
 write_ok "Node.js: $(node -v)"
 
-# -- pnpm --
 if ! command -v pnpm &>/dev/null; then
     write_warn "pnpm no encontrado. Instalando..."
     npm install -g pnpm
 fi
 write_ok "pnpm: $(pnpm -v)"
 
-# -- PostgreSQL check (requiere config manual de BD) --
 if systemctl is-active --quiet postgresql 2>/dev/null; then
     write_ok "PostgreSQL servicio ejecutandose"
 elif test_port 5432; then
@@ -166,9 +150,6 @@ else
     [[ "$resp" =~ ^[Ss]$ ]] || exit 1
 fi
 
-# -------------------------------------------------------------------
-# DEPENDENCIAS DEL PROYECTO (primera vez)
-# -------------------------------------------------------------------
 write_step "Verificando dependencias del proyecto..."
 
 FRONTEND_DIR="$ROOT/frontend"
@@ -186,9 +167,6 @@ if [ ! -d "$BACKEND_DIR/target/classes" ]; then
 fi
 write_ok "Backend: dependencias listas"
 
-# -------------------------------------------------------------------
-# LIBERAR PUERTOS
-# -------------------------------------------------------------------
 for port in 8080 3000; do
     if test_port "$port"; then
         pid_port=$(lsof -ti :"$port" 2>/dev/null | head -1 || true)
@@ -200,37 +178,26 @@ for port in 8080 3000; do
     fi
 done
 
-# -------------------------------------------------------------------
-# INICIAR SERVICIOS
-# -------------------------------------------------------------------
 write_step "Iniciando Backend (Spring Boot :8080)..."
-BACKEND_CMD="cd '$BACKEND_DIR' && echo '=== BACKEND (Spring Boot) ===' && echo '>> Reparando migraciones Flyway...' && mvn flyway:repair -Dflyway.url=jdbc:postgresql://localhost:5432/inventory -Dflyway.user=postgres -Dflyway.password=postgres 2>&1 | grep -E '(repair|Repair|ERROR|WARN)' || true && mvn spring-boot:run -DskipTests"
-backend_info=$(open_terminal "BACKEND - Spring Boot" "$BACKEND_CMD")
-backend_window="${backend_info%:*}"
-backend_process="${backend_info#*:}"
-write_ok "Backend iniciado (terminal PID: $backend_window, proceso: $backend_process)"
+open_terminal "BACKEND - Spring Boot" "$ROOT" "./start-backend.sh" "backend" &
+backend_pid=$!
+write_ok "Backend iniciado (PID: $backend_pid)"
 
 write_step "Iniciando Frontend (Next.js :3000)..."
-FRONTEND_CMD="cd '$FRONTEND_DIR' && echo '=== FRONTEND (Next.js) ===' && pnpm dev"
-frontend_info=$(open_terminal "FRONTEND - Next.js" "$FRONTEND_CMD")
-frontend_window="${frontend_info%:*}"
-frontend_process="${frontend_info#*:}"
-write_ok "Frontend iniciado (terminal PID: $frontend_window, proceso: $frontend_process)"
+FRONTEND_CMD="echo '=== FRONTEND (Next.js) ===' && pnpm approve-builds sharp unrs-resolver && pnpm dev"
+open_terminal "FRONTEND - Next.js" "$FRONTEND_DIR" "$FRONTEND_CMD" "frontend" &
+frontend_pid=$!
+write_ok "Frontend iniciado (PID: $frontend_pid)"
 
-# --- Guardar PIDs ---
-printf '{"backendWindow": %s, "backendProcess": %s, "frontendWindow": %s, "frontendProcess": %s}\n' \
-    "$backend_window" "$backend_process" "$frontend_window" "$frontend_process" > "$PID_FILE"
+printf '{"backend": %s, "frontend": %s}\n' "$backend_pid" "$frontend_pid" > "$PID_FILE"
 write_ok "PIDs guardados en .dev-pids.json"
 
-# -------------------------------------------------------------------
-# ESPERAR Y MOSTRAR RESUMEN
-# -------------------------------------------------------------------
 write_step "Esperando que los servicios respondan..."
 echo -e "${DG}   (El backend puede tardar 1-2 min la primera vez)${NC}"
 
 back_ok=0; front_ok=0
 wait_for_port 8080 "Backend"  120 && back_ok=1 || true
-wait_for_port 3000 "Frontend"  60 && front_ok=1 || true
+wait_for_port 3000 "Frontend" 60 && front_ok=1 || true
 
 echo
 echo -e "${CY}============================================${NC}"
@@ -248,6 +215,16 @@ echo -e "${DG}   API       : http://localhost:8080/api/v1${NC}"
 echo
 echo    "   Credenciales: admin / admin123"
 echo
-echo -e "${YL}   Para detener: ./stop-dev.sh${NC}"
+echo -e "${YL}   Para detener: Ctrl+C${NC}"
 echo -e "${CY}============================================${NC}"
 echo
+
+cleanup() {
+    echo
+    echo -e "${YL}>> Cerrando ventanas...${NC}"
+    kill -9 "$backend_pid" "$frontend_pid" 2>/dev/null || true
+    exit 0
+}
+trap cleanup INT TERM
+
+wait
