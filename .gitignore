@@ -56,3 +56,9 @@ logs/
 #===otros===
 nul frontend
 .dev-pids.json
+
+#===Graphify===
+graphify-out/
+graphify-out/manifest.json
+graphify-out/cost.json
+# graphify-out/cache/    # opcional: commit para velocidad, omitir para repo pequeño
