@@ -2,43 +2,37 @@
 
 > **LEER ANTES DE ESCRIBIR CÓDIGO**
 > ⚠️ Next.js 16 tiene breaking changes — leer `node_modules/next/dist/docs/` antes de código
+> ⚠️ Prohibido usar `kill` para detener node/npm (ver reglas-globales-opencode)
 
 ---
 
 ## Comandos Clave
 
-### Frontend (`cd frontend`, usar pnpm)
+### Desarrollo Local
+```bash
+./start-dev.sh     # Backend(:8080) + Frontend(:3000) en terminales separadas
+./stop-dev.sh      # Detener servicios
+```
 
+### Frontend (`cd frontend`, usar pnpm)
 ```bash
 pnpm dev                 # Dev server localhost:3000
 pnpm build               # Build producción
 pnpm lint                # ESLint
 pnpm lint --fix          # Auto-corregir
-pnpm test:run            # Tests una vez
-pnpm test:coverage       # Coverage report
-
-# Tests unitarios específicos
-pnpm vitest run src/core/entities/product.test.ts
-pnpm vitest run --grep "ProductEntity"    # Tests con patrón
+pnpm test:run            # Tests una vez (Vitest)
+pnpm vitest run src/core/entities/product.test.ts  # Test específico
 ```
 
-### Backend (`cd backend/inventory-app`, maven)
-
+### Backend (`cd backend/inventory-app`, Maven)
 ```bash
 ./mvnw spring-boot:run             # Puerto 8080
-./mvnw clean package                # Build JAR
-
-# Tests unitarios específicos
-./mvnw test -Dtest=ProductControllerTest
-./mvnw test -Dtest=ProductControllerTest#testGetProduct
-./mvnw test -Dtest=*ServiceTest     # Patrón
+./mvnw test -Dtest=ProductControllerTest  # Test específico
 ```
 
-### Docker Compose
-
+### Docker Compose (producción)
 ```bash
 docker compose up -d     # PostgreSQL + Backend + Frontend + Caddy
-docker compose logs -f  # Ver logs (Ctrl+C para salir)
 # URLs: http://localhost:8080 (API), https://localhost (App)
 ```
 
@@ -46,11 +40,14 @@ docker compose logs -f  # Ver logs (Ctrl+C para salir)
 
 ## Reglas Críticas
 
-- **Idioma**: Español en UI, Inglés en código
-- **Skills**: Cargar `senior-frontend` o `senior-fullstack` antes de cualquier tarea
-- **Mobile-first**: UI debe funcionar en móvil
-- **Offline**: Sin CDNs, sin APIs externas en runtime. Assets locales en `/public`
-- **Sin `any`** sin justificación
+- **Graphify como mapa**: `graphify query "<pregunta>"` antes de grep. Ver `graphify-out/GRAPH_REPORT.md`.
+- **Offline**: Sin CDNs, sin APIs externas en runtime. Assets locales en `/public`.
+- **Idioma**: Español en UI, Inglés en código.
+- **Skills obligatorios**: `senior-frontend` o `senior-fullstack` antes de código.
+- **Skills con Symlinks**: Al agregar una skill nueva, crear symlink en `.opencode/skills/` apuntando a `.claude/skills/<skill-name>`. Esto asegura que OpenCode detecte todas las skills disponibles (evita bugs de auto-descubrimiento).
+- **Mobile-first**: UI debe funcionar en móvil (Touch-first).
+- **Sin `any`** sin justificación.
+- **Errores**: Extender `Error` y tipar en catch (frontend), `DomainException` (backend).
 
 ### Stack Estado
 - **TanStack Query** para datos servidor (NO React state)
@@ -199,12 +196,43 @@ src/main/java/com/inventory/
 
 Ver `.github/copilot-instructions.md` para guía completa de arquitectura y tareas comunes.
 
-## graphify
+---
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+## graphify — Knowledge Graph
 
-Rules:
-- ALWAYS read graphify-out/GRAPH_REPORT.md before reading any source files, running grep/glob searches, or answering codebase questions. The graph is your primary map of the codebase.
-- IF graphify-out/wiki/index.md EXISTS, navigate it instead of reading raw files
-- For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+> **ANTES de buscar archivos, usar el grafo.** El graphify-out/ es el mapa principal.
+
+### Archivos del grafo
+```
+graphify-out/
+├── graph.json          # ~5,600 nodes, ~8,200 edges, 588 comunidades
+├── GRAPH_REPORT.md     # God nodes, comunidades, conexiones sorprendentes
+├── graph.html          # Visualización interactiva (comunidades agregadas)
+├── wiki/index.md       # Wiki navegable (generar con: graphify export wiki)
+└── cache/              # AST cache (no re-procesa sin cambios)
+```
+
+### Flujo obligatorio (cada pregunta)
+```
+1. graphify query "pregunta" --budget 2000     # BFS: contexto amplio
+2. graphify path "NODO_A" "NODO_B"             # Si busca camino entre A y B
+3. graphify explain "NodeName"                 # Si pide detalle de un componente
+4. Solo si el grafo no tiene la respuesta → leer archivos con grep/glob
+5. Después de modificar código → graphify update .
+```
+
+### God nodes (core abstractions)
+- Button, cn(), ProductEntity, InventoryMovementEntity, NotificationPreferencesEntity
+
+### Actualización post-cambio
+```bash
+graphify update .              # Rápido: solo AST, $0 (recomendado)
+graphify update . --force      # Completo: re-extracción LLM
+graphify export html           # Regenerar visualización
+```
+
+### Solución de problemas
+```bash
+# Grafo vacío → rebuild completo
+rm -rf graphify-out/ && graphify extract . --backend claude
+```
