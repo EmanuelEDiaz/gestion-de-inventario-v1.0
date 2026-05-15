@@ -5,6 +5,7 @@
     "./AGENTS.md"
   ],
   "plugin": [
-    ".opencode/plugins/graphify.js"
+    ".opencode/plugins/graphify.js",
+    ".opencode/plugins/skills-checker.js"
   ]
 }
