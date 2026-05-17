@@ -71,16 +71,16 @@ open_terminal() {
     TERMINAL_SCRIPTS+=("$script_file")
 
     if command -v konsole &>/dev/null; then
-        konsole --separate --noclose --title "$title" -e "\"$script_file\"" &
+        konsole --separate --noclose --title "$title" -e "$script_file" &
         terminal_pid=$!
     elif command -v kitty &>/dev/null; then
-        kitty --hold --title "$title" -e "\"$script_file\"" &
+        kitty --hold --title "$title" -e "$script_file" &
         terminal_pid=$!
     elif command -v gnome-terminal &>/dev/null; then
-        gnome-terminal --title="$title" -- "\"$script_file\"" &
+        gnome-terminal --title="$title" -- "$script_file" &
         terminal_pid=$!
     elif command -v xfce4-terminal &>/dev/null; then
-        xfce4-terminal --title="$title" -e "\"$script_file\"" &
+        xfce4-terminal --title="$title" -e "$script_file" &
         terminal_pid=$!
     else
         write_warn "Sin emulador GUI. '$title' ejecutandose en background (log: ${title// /_}.log)"
