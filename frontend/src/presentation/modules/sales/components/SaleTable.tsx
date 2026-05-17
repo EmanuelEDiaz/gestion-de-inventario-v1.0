@@ -1,7 +1,10 @@
 'use client';
 
+import { useMemo } from 'react';
+import { CheckCircle2, Truck, XCircle } from 'lucide-react';
 import { Sale, getSaleStatusLabel, getSaleStatusColor } from '@/core/entities/sale';
 import { formatCurrency, formatDateShort } from '@/presentation/shared/lib/utils';
+import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
 
 interface SaleTableProps {
   sales: Sale[];
@@ -11,86 +14,31 @@ interface SaleTableProps {
   onCancel?: (sale: Sale) => void;
 }
 
-export function SaleTable({ 
-  sales, 
-  onRowClick,
-  onConfirm,
-  onDeliver,
-  onCancel 
-}: SaleTableProps) {
-  if (sales.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        No hay ventas registradas
-      </div>
-    );
-  }
+const COLUMNS: Column<Sale>[] = [
+  { key: 'saleNumber', label: 'Número', render: (_, r) => <span className="font-mono">{r.saleNumber}</span> },
+  { key: 'saleDate', label: 'Fecha', render: (_, r) => <span>{formatDateShort(r.saleDate)}</span> },
+  { key: 'customerName', label: 'Cliente', render: (_, r) => <span>{r.customerName || '-'}</span> },
+  { key: 'warehouseName', label: 'Almacén', render: (_, r) => <span>{r.warehouseName || r.warehouseId}</span> },
+  {
+    key: 'status', label: 'Estado',
+    render: (_, r) => (
+      <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${getSaleStatusColor(r.status)}`}>
+        {getSaleStatusLabel(r.status)}
+      </span>
+    ),
+  },
+  { key: 'total', label: 'Total', className: 'text-right', render: (_, r) => <span className="font-medium">{formatCurrency(r.total, r.currencyCode)}</span> },
+];
+
+export function SaleTable({ sales, onRowClick, onConfirm, onDeliver, onCancel }: SaleTableProps) {
+  const actions = useMemo<TableAction<Sale>[]>(() => [
+    { icon: CheckCircle2, title: 'Confirmar', onClick: (r) => onConfirm?.(r), hidden: () => !onConfirm },
+    { icon: Truck, title: 'Entregar', onClick: (r) => onDeliver?.(r), hidden: () => !onDeliver },
+    { icon: XCircle, title: 'Cancelar', onClick: (r) => onCancel?.(r), hidden: () => !onCancel },
+  ], [onConfirm, onDeliver, onCancel]);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="text-left p-3 font-medium">Número</th>
-            <th className="text-left p-3 font-medium">Fecha</th>
-            <th className="text-left p-3 font-medium">Cliente</th>
-            <th className="text-left p-3 font-medium">Almacén</th>
-            <th className="text-left p-3 font-medium">Estado</th>
-            <th className="text-right p-3 font-medium">Total</th>
-            <th className="text-center p-3 font-medium">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sales.map((sale) => (
-            <tr 
-              key={sale.id}
-              className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
-              onClick={() => onRowClick?.(sale)}
-            >
-              <td className="p-3 font-mono">{sale.saleNumber}</td>
-              <td className="p-3">{formatDateShort(sale.saleDate)}</td>
-              <td className="p-3">{sale.customerName || '-'}</td>
-              <td className="p-3">{sale.warehouseName || sale.warehouseId}</td>
-              <td className="p-3">
-                <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${getSaleStatusColor(sale.status)}`}>
-                  {getSaleStatusLabel(sale.status)}
-                </span>
-              </td>
-              <td className="p-3 text-right font-medium">
-                {formatCurrency(sale.total, sale.currencyCode)}
-              </td>
-              <td className="p-3 text-center" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-center gap-1">
-                  {sale.status === 'DRAFT' && onConfirm && (
-                    <button
-                      onClick={() => onConfirm(sale)}
-                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                    >
-                      Confirmar
-                    </button>
-                  )}
-                  {sale.status === 'CONFIRMED' && onDeliver && (
-                    <button
-                      onClick={() => onDeliver(sale)}
-                      className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
-                    >
-                      Entregar
-                    </button>
-                  )}
-                  {(sale.status === 'DRAFT' || sale.status === 'CONFIRMED') && onCancel && (
-                    <button
-                      onClick={() => onCancel(sale)}
-                      className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
-                    >
-                      Cancelar
-                    </button>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <GenericTable data={sales} columns={COLUMNS} actions={actions}
+      onRowClick={onRowClick} emptyMessage="No hay ventas registradas" />
   );
 }

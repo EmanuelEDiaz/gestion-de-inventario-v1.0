@@ -30,7 +30,7 @@
 | Sección | Estado | Archivos | Commit msg |
 |---------|--------|----------|------------|
 | **1** | ✅ Completado | 30 | `feat(http): unify HTTP clients, centralize API_URL with getMediaUrl()` |
-| **2** ⬅️ Actual | ❌ Pendiente | 10 | — |
+| **2** | ✅ Completado | 10 | `refactor(frontend): unify GenericTable, migrate 7 manual tables` |
 | **3** | ❌ Pendiente | 10 | — |
 | **4** | ❌ Pendiente | 10 | — |
 | **5** | ❌ Pendiente | 8 | — |

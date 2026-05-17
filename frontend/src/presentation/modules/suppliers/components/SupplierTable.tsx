@@ -1,14 +1,11 @@
 'use client';
 
+import { useMemo } from 'react';
+import { CheckCircle, CircleOff, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import type { Supplier } from '@/core/entities/supplier';
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/presentation/shared/components/ui/table';
-import { SupplierRow } from './SupplierRow';
+import { formatDateShort } from '@/presentation/shared/lib/utils';
+import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -17,39 +14,31 @@ interface SupplierTableProps {
   onDelete?: (id: string) => void;
 }
 
+const COLUMNS: Column<Supplier>[] = [
+  { key: 'code', label: 'Código', render: (_, r) => <Link href={`/suppliers/${r.id}`} className="hover:underline text-blue-600 font-medium">{r.code || 'N/A'}</Link> },
+  { key: 'name', label: 'Nombre' },
+  { key: 'phone', label: 'Teléfono', render: (_, r) => <span>{r.phone || 'N/A'}</span> },
+  { key: 'email', label: 'Email', render: (_, r) => <span>{r.email || 'N/A'}</span> },
+  {
+    key: 'active', label: 'Estado',
+    render: (_, r) => (
+      <span className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        {r.active ? 'Activo' : 'Inactivo'}
+      </span>
+    ),
+  },
+  { key: 'createdAt', label: 'Creado', render: (_, r) => <span>{formatDateShort(r.createdAt)}</span> },
+];
+
 export function SupplierTable({ suppliers, onActivate, onDeactivate, onDelete }: SupplierTableProps) {
-  if (suppliers.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        No hay proveedores registrados
-      </div>
-    );
-  }
+  const actions = useMemo<TableAction<Supplier>[]>(() => [
+    { icon: CheckCircle, title: 'Activar', onClick: (r) => onActivate?.(r.id), hidden: (r) => r.active || !onActivate },
+    { icon: CircleOff, title: 'Desactivar', onClick: (r) => onDeactivate?.(r.id), hidden: (r) => !r.active || !onDeactivate },
+    { icon: Trash2, title: 'Eliminar', onClick: (r) => onDelete?.(r.id), hidden: () => !onDelete },
+  ], [onActivate, onDeactivate, onDelete]);
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Código</TableHead>
-          <TableHead>Nombre</TableHead>
-          <TableHead>Teléfono</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Estado</TableHead>
-          <TableHead>Creado</TableHead>
-          <TableHead className="text-right">Acciones</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {suppliers.map(supplier => (
-          <SupplierRow 
-            key={supplier.id} 
-            supplier={supplier}
-            onActivate={onActivate}
-            onDeactivate={onDeactivate}
-            onDelete={onDelete}
-          />
-        ))}
-      </TableBody>
-    </Table>
+    <GenericTable data={suppliers} columns={COLUMNS} actions={actions}
+      emptyMessage="No hay proveedores registrados" />
   );
 }

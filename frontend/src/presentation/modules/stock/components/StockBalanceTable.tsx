@@ -1,7 +1,9 @@
 'use client';
 
+import { useMemo } from 'react';
 import { StockBalance } from '@/core/entities/stock-balance';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
+import { GenericTable, type Column } from '@/presentation/shared/components/GenericTable';
 
 interface StockBalanceTableProps {
   balances: StockBalance[];
@@ -10,73 +12,32 @@ interface StockBalanceTableProps {
   onRowClick?: (balance: StockBalance) => void;
 }
 
-export function StockBalanceTable({ 
-  balances, 
-  showWarehouse = true,
-  showProduct = true,
-  onRowClick 
-}: StockBalanceTableProps) {
-  if (balances.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        No hay balances de stock disponibles
-      </div>
+export function StockBalanceTable({ balances, showWarehouse = true, showProduct = true, onRowClick }: StockBalanceTableProps) {
+  const columns = useMemo<Column<StockBalance & { id: string }>[]>(() => {
+    const cols: Column<StockBalance & { id: string }>[] = [];
+    if (showWarehouse) cols.push({ key: 'warehouseName', label: 'Almacén', render: (_, r) => <span>{r.warehouseName || r.warehouseId}</span> });
+    if (showProduct) cols.push({ key: 'productName', label: 'Producto', render: (_, r) => <span>{r.productName || r.productId}</span> });
+    cols.push(
+      { key: 'productSku', label: 'SKU', render: (_, r) => <span className="font-mono text-sm">{r.productSku || '-'}</span> },
+      {
+        key: 'available', label: 'Disponible', className: 'text-right',
+        render: (_, r) => <span className={`font-medium ${r.available <= 0 ? 'text-red-600' : ''}`}>{r.available.toFixed(2)}</span>,
+      },
+      { key: 'reserved', label: 'Reservado', className: 'text-right', render: (_, r) => <span className="text-muted-foreground">{r.reserved.toFixed(2)}</span> },
+      { key: 'onHand', label: 'En Mano', className: 'text-right', render: (_, r) => <span>{r.onHand.toFixed(2)}</span> },
+      { key: 'avgCost', label: 'Costo Prom.', className: 'text-right', render: (_, r) => <span>{r.avgCost != null ? formatCurrency(r.avgCost) : '-'}</span> },
+      { key: 'totalValue', label: 'Valor Total', className: 'text-right', render: (_, r) => <span className="font-medium">{r.totalValue != null ? formatCurrency(r.totalValue) : '-'}</span> },
     );
-  }
+    return cols;
+  }, [showWarehouse, showProduct]);
+
+  const data = useMemo(() =>
+    balances.map(b => ({ ...b, id: `${b.warehouseId}-${b.productId}` })),
+    [balances]
+  );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            {showWarehouse && <th className="text-left p-3 font-medium">Almacén</th>}
-            {showProduct && <th className="text-left p-3 font-medium">Producto</th>}
-            <th className="text-left p-3 font-medium">SKU</th>
-            <th className="text-right p-3 font-medium">Disponible</th>
-            <th className="text-right p-3 font-medium">Reservado</th>
-            <th className="text-right p-3 font-medium">En Mano</th>
-            <th className="text-right p-3 font-medium">Costo Prom.</th>
-            <th className="text-right p-3 font-medium">Valor Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {balances.map((balance, idx) => {
-            const isLowStock = balance.available <= 0;
-            return (
-              <tr 
-                key={`${balance.warehouseId}-${balance.productId}`}
-                className={`border-b hover:bg-muted/30 cursor-pointer transition-colors ${
-                  isLowStock ? 'bg-red-50 dark:bg-red-950/20' : ''
-                }`}
-                onClick={() => onRowClick?.(balance)}
-              >
-                {showWarehouse && (
-                  <td className="p-3">{balance.warehouseName || balance.warehouseId}</td>
-                )}
-                {showProduct && (
-                  <td className="p-3">{balance.productName || balance.productId}</td>
-                )}
-                <td className="p-3 font-mono text-sm">{balance.productSku || '-'}</td>
-                <td className={`p-3 text-right font-medium ${isLowStock ? 'text-red-600' : ''}`}>
-                  {balance.available.toFixed(2)}
-                </td>
-                <td className="p-3 text-right text-muted-foreground">
-                  {balance.reserved.toFixed(2)}
-                </td>
-                <td className="p-3 text-right">
-                  {balance.onHand.toFixed(2)}
-                </td>
-                <td className="p-3 text-right">
-                  {balance.avgCost != null ? formatCurrency(balance.avgCost) : '-'}
-                </td>
-                <td className="p-3 text-right font-medium">
-                  {balance.totalValue != null ? formatCurrency(balance.totalValue) : '-'}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <GenericTable data={data} columns={columns}
+      onRowClick={onRowClick} emptyMessage="No hay balances de stock disponibles" />
   );
 }
