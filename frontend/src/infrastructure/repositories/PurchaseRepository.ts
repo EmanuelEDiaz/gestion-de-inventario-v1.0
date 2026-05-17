@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import { IPurchaseRepository } from '@/core/interfaces/IPurchaseRepository';
 import { Purchase, PurchaseFilter, CreatePurchaseInput } from '@/core/entities/purchase';
 

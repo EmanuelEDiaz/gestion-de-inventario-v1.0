@@ -8,8 +8,7 @@ import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner'
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Plus, Image as ImageIcon, Star, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from '@/presentation/shared/components/ui/toast';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { getMediaUrl } from '@/presentation/shared/lib/utils';
 const MAX_IMAGES = 8;
 const MAX_SIZE_MB = 5;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -110,7 +109,7 @@ export function ProductImageGallery({ productId, editable = false }: ProductImag
               className="relative aspect-video cursor-zoom-in"
             >
               <img
-                src={`${API_URL}/media${activeImage.filePath}`}
+                src={getMediaUrl(activeImage.filePath)}
                 alt={activeImage.originalFilename || 'Imagen del producto'}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               />
@@ -195,7 +194,7 @@ export function ProductImageGallery({ productId, editable = false }: ProductImag
                   safeActiveIndex === idx ? 'ring-2 ring-cyan-500 border-cyan-500' : 'border-slate-200'
                 }`}
               >
-                <img src={`${API_URL}/media${img.filePath}`} alt="" className="w-full h-full object-cover" />
+                <img src={getMediaUrl(img.filePath)} alt="" className="w-full h-full object-cover" />
                 {img.isPrimary && (
                   <span className="absolute left-1 top-1 rounded bg-amber-300 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950">
                     P

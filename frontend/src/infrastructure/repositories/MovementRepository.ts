@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import { IMovementRepository } from '@/core/interfaces/IMovementRepository';
 import { InventoryMovement, MovementFilter } from '@/core/entities/inventory-movement';
 

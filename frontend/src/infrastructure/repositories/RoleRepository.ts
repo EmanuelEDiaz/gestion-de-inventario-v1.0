@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { Role, Permission, CreateRoleData, UpdateRoleData } from '@/core/entities/user';
 import type { IRoleRepository, IPermissionRepository } from '@/core/interfaces/IRoleRepository';
 

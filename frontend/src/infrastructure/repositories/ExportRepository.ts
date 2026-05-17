@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { IExportRepository, ExportFilter } from '@/core/interfaces/IExportRepository';
 
 export class ExportRepository implements IExportRepository {

@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { IDashboardRepository } from '@/core/interfaces/IDashboardRepository';
 import type { DashboardStats, LowStockItem } from '@/core/entities/dashboard';
 

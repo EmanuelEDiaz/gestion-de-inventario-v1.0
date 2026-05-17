@@ -7,8 +7,7 @@ import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner'
 import { EmptyState } from '@/presentation/shared/components/EmptyState';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { Star, Trash2, Plus } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface CustomerImageCarouselProps {
   customerId: string;
@@ -105,7 +104,7 @@ export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps
           <div key={image.id} className="relative group rounded-lg overflow-hidden border bg-gray-100 aspect-square">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${API_URL}/media${image.filePath}`}
+              src={getMediaUrl(image.filePath)}
               alt={image.originalFilename || 'Imagen del cliente'}
               className="w-full h-full object-cover"
             />

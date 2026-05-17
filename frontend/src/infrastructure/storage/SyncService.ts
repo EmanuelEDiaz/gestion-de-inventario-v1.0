@@ -25,7 +25,7 @@
  * CÓDIGO COMENTADO - NO USAR HASTA IMPLEMENTACIÓN
  */
 
-// import { apiClient } from '@/presentation/shared/lib/api-client';
+// import { apiClient } from '@/infrastructure/api/client';
 // import { getSyncCursor, setSyncCursor } from './db';
 // import { getPendingOutbox, removeFromOutbox, incrementRetry } from './outbox';
 

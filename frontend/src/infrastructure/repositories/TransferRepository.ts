@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { ITransferRepository } from '@/core/interfaces/ITransferRepository';
 import type { Transfer, CreateTransferRequest, UpdateTransferRequest, TransferStatus } from '@/core/entities/transfer';
 

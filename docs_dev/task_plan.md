@@ -29,9 +29,8 @@
 
 | Sección | Estado | Archivos | Commit msg |
 |---------|--------|----------|------------|
-| **0** ⬅️ Actual | ❌ Pendiente | — | — |
-| **1** | ❌ Pendiente | 10 | — |
-| **2** | ❌ Pendiente | 10 | — |
+| **1** | ✅ Completado | 30 | `feat(http): unify HTTP clients, centralize API_URL with getMediaUrl()` |
+| **2** ⬅️ Actual | ❌ Pendiente | 10 | — |
 | **3** | ❌ Pendiente | 10 | — |
 | **4** | ❌ Pendiente | 10 | — |
 | **5** | ❌ Pendiente | 8 | — |

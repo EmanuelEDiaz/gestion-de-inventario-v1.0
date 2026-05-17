@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { IAdjustmentRepository } from '@/core/interfaces/IAdjustmentRepository';
 import type { 
   Adjustment, 

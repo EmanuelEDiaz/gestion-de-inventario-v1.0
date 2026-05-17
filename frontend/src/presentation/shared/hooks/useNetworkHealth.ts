@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { API_BASE_URL } from '@/presentation/shared/lib/utils';
 
 export type BackendStatus = 'connected' | 'disconnected' | 'checking';
 
-const LOCAL_HEALTH_URL = 'http://localhost:8080/actuator/health';
+const LOCAL_HEALTH_URL = `${API_BASE_URL}/actuator/health`;
 
 const PING_INTERVAL_ONLINE = 15_000;
 const PING_INTERVAL_OFFLINE = 5_000;

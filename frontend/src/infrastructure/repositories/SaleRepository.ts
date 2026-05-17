@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import { ISaleRepository } from '@/core/interfaces/ISaleRepository';
 import { Sale, SaleFilter, CreateSaleInput } from '@/core/entities/sale';
 

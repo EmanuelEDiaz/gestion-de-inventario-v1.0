@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { ISupplierRepository } from '@/core/interfaces/ISupplierRepository';
 import type { Supplier, CreateSupplierData, UpdateSupplierData } from '@/core/entities/supplier';
 

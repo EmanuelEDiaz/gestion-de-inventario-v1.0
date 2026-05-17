@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { ICurrencyRepository } from '@/core/interfaces/ICurrencyRepository';
 import type { Currency, CreateCurrencyInput, UpdateCurrencyInput } from '@/core/entities/currency';
 

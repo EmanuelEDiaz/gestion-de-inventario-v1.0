@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { IImportRepository } from '@/core/interfaces/IImportRepository';
 import type { ImportJob } from '@/core/entities/import-job';
 

@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { IReturnRepository } from '@/core/interfaces/IReturnRepository';
 import type { Return, ReturnType, ReturnStatus, CreateReturnData, UpdateReturnData } from '@/core/entities/return';
 

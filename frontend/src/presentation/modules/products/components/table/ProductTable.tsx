@@ -14,8 +14,7 @@ import { GenericTable, type Column, type TableAction } from '@/presentation/shar
 import { toast } from 'sonner';
 import { productRepository } from '@/infrastructure/repositories/ProductRepository';
 import { ImagePreview } from '../ImagePreview';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface ProductTableProps {
   products: Product[];
@@ -66,14 +65,14 @@ export function ProductTable({
             onClick={(e) => {
               e.stopPropagation();
               if (product.mainImage) {
-                setPreviewImage(`${API_URL}/media${product.mainImage}`);
+                setPreviewImage(getMediaUrl(product.mainImage));
               }
             }}
           >
             {product.mainImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={`${API_URL}/media${product.mainImage}`}
+                src={getMediaUrl(product.mainImage)}
                 alt={product.name}
                 className="h-full w-full object-cover"
               />

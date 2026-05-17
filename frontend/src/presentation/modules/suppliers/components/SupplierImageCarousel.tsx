@@ -7,8 +7,7 @@ import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner'
 import { EmptyState } from '@/presentation/shared/components/EmptyState';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { Star, Trash2, Plus } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface SupplierImageCarouselProps {
   supplierId: string;
@@ -104,7 +103,7 @@ export function SupplierImageCarousel({ supplierId }: SupplierImageCarouselProps
         {images.map((img) => (
           <div key={img.id} className="relative group rounded-lg border overflow-hidden">
             <img
-              src={`${API_URL}/media${img.filePath}`}
+              src={getMediaUrl(img.filePath)}
               alt={img.originalFilename || 'Imagen proveedor'}
               className="w-full h-32 object-cover"
               title={img.originalFilename || img.filePath}

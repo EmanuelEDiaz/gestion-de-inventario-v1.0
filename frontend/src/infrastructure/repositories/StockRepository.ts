@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import { IStockRepository } from '@/core/interfaces/IStockRepository';
 import { StockBalance, StockFilter } from '@/core/entities/stock-balance';
 

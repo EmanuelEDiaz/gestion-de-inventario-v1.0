@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { IExchangeRateRepository } from '@/core/interfaces/IExchangeRateRepository';
 import type { ExchangeRate, CreateExchangeRateInput, ExchangeRateFilter } from '@/core/entities/exchange-rate';
 

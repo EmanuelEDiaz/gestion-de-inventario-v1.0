@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ProductImage } from '@/core/entities/product-image';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface ImageLightboxProps {
   images: ProductImage[];
@@ -55,7 +54,7 @@ export function ImageLightbox({ images, initialIndex, onClose }: ImageLightboxPr
       
       <div className="max-w-[90vw] max-h-[90vh] p-4" onClick={(e) => e.stopPropagation()}>
         <img 
-          src={`${API_URL}/media${image.filePath}`} 
+          src={getMediaUrl(image.filePath)} 
           alt={image.originalFilename || 'Imagen producto'}
           className="max-w-full max-h-[85vh] object-contain rounded-lg"
         />

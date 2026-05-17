@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { ISettingsRepository } from '@/core/interfaces/ISettingsRepository';
 import type { AppSettings, UpdateSettingsInput } from '@/core/entities/app-settings';
 

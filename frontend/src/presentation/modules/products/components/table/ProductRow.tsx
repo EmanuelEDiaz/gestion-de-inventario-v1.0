@@ -9,8 +9,7 @@ import { IconButton } from '@/presentation/shared/components/IconButton';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { productRepository } from '@/infrastructure/repositories/ProductRepository';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface ProductRowProps {
   product: Product;
@@ -43,7 +42,7 @@ export function ProductRow({ product, onDeleteSuccess }: ProductRowProps) {
             {product.mainImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={`${API_URL}/media${product.mainImage}`}
+                src={getMediaUrl(product.mainImage)}
                 alt={product.name}
                 className="h-full w-full object-cover"
               />

@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { IUserRepository } from '@/core/interfaces/IUserRepository';
 import type { User, CreateUserData, UpdateUserData, ChangePasswordData } from '@/core/entities/user';
 

@@ -1,4 +1,4 @@
-import { apiClient } from '@/presentation/shared/lib/api-client';
+import { apiClient } from '@/infrastructure/api/client';
 import type { ICustomerRepository } from '@/core/interfaces/ICustomerRepository';
 import type { Customer, CreateCustomerData, UpdateCustomerData } from '@/core/entities/customer';
 

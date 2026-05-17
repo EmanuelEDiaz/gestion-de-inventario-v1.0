@@ -51,3 +51,11 @@ export function formatDateShort(dateString: string): string {
     day: 'numeric'
   });
 }
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
+export function getMediaUrl(filePath: string): string {
+  if (!filePath) return '';
+  if (filePath.startsWith('http')) return filePath;
+  return `${API_BASE_URL}/media${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+}
