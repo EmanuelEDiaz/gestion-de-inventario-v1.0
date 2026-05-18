@@ -1,37 +1,38 @@
 'use client';
 
+import { useMemo } from 'react';
+import { Power } from 'lucide-react';
 import type { Currency } from '@/core/entities/currency';
-import { CurrencyRow } from './CurrencyRow';
-import { EmptyState } from '@/presentation/shared/components/EmptyState';
+import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
+import { Badge } from '@/presentation/shared/components/ui/badge';
 
 interface CurrencyTableProps {
   currencies: Currency[];
   onToggle: (code: string, isActive: boolean) => void;
 }
 
+type MappedCurrency = Currency & { id: string };
+
+const COLUMNS: Column<MappedCurrency>[] = [
+  { key: 'code', label: 'Código', render: (_, r) => <span className="font-mono font-medium">{r.code}</span> },
+  { key: 'name', label: 'Nombre', render: (_, r) => <span>{r.name}</span> },
+  { key: 'symbol', label: 'Símbolo', className: 'text-center', render: (_, r) => <span>{r.symbol ?? '—'}</span> },
+  {
+    key: 'isActive', label: 'Estado',
+    render: (_, r) => <Badge variant={r.isActive ? 'default' : 'secondary'}>{r.isActive ? 'Activa' : 'Inactiva'}</Badge>,
+  },
+];
+
 export function CurrencyTable({ currencies, onToggle }: CurrencyTableProps) {
-  if (currencies.length === 0) {
-    return <EmptyState message="No hay monedas registradas" />;
-  }
+  const mappedData = useMemo(() => currencies.map(c => ({ ...c, id: c.code })), [currencies]);
+
+  const actions = useMemo<TableAction<MappedCurrency>[]>(() => [
+    { icon: Power, title: 'Desactivar', onClick: (r) => onToggle(r.code, false), hidden: (r) => !onToggle || !r.isActive },
+    { icon: Power, title: 'Activar', onClick: (r) => onToggle(r.code, true), hidden: (r) => !onToggle || r.isActive },
+  ], [onToggle]);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="p-3 text-left font-medium">Código</th>
-            <th className="p-3 text-left font-medium">Nombre</th>
-            <th className="p-3 text-center font-medium">Símbolo</th>
-            <th className="p-3 text-left font-medium">Estado</th>
-            <th className="p-3 text-left font-medium">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currencies.map((c) => (
-            <CurrencyRow key={c.code} currency={c} onToggle={onToggle} />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <GenericTable data={mappedData} columns={COLUMNS} actions={actions}
+      emptyMessage="No hay monedas registradas" />
   );
 }

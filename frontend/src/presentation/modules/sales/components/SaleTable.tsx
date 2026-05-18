@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
 import { CheckCircle2, Truck, XCircle } from 'lucide-react';
 import { Sale, getSaleStatusLabel, getSaleStatusColor } from '@/core/entities/sale';
 import { formatCurrency, formatDateShort } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
+import { GenericTable, type Column } from '@/presentation/shared/components/GenericTable';
+import { useStatusActions } from '@/presentation/shared/hooks/useStatusActions';
 
 interface SaleTableProps {
   sales: Sale[];
@@ -31,11 +31,11 @@ const COLUMNS: Column<Sale>[] = [
 ];
 
 export function SaleTable({ sales, onRowClick, onConfirm, onDeliver, onCancel }: SaleTableProps) {
-  const actions = useMemo<TableAction<Sale>[]>(() => [
-    { icon: CheckCircle2, title: 'Confirmar', onClick: (r) => onConfirm?.(r), hidden: () => !onConfirm },
-    { icon: Truck, title: 'Entregar', onClick: (r) => onDeliver?.(r), hidden: () => !onDeliver },
-    { icon: XCircle, title: 'Cancelar', onClick: (r) => onCancel?.(r), hidden: () => !onCancel },
-  ], [onConfirm, onDeliver, onCancel]);
+  const actions = useStatusActions([
+    { icon: CheckCircle2, label: 'Confirmar', onClick: onConfirm ? (r) => onConfirm(r) : undefined },
+    { icon: Truck, label: 'Entregar', onClick: onDeliver ? (r) => onDeliver(r) : undefined },
+    { icon: XCircle, label: 'Cancelar', onClick: onCancel ? (r) => onCancel(r) : undefined },
+  ]);
 
   return (
     <GenericTable data={sales} columns={COLUMNS} actions={actions}

@@ -1,16 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { CreatePurchaseInput } from '@/core/entities/purchase';
 import type { Warehouse } from '@/core/entities/warehouse';
 import type { Supplier } from '@/core/entities/supplier';
 import type { Product } from '@/core/entities/product';
-import { GetWarehousesUseCase } from '@/core/use-cases/warehouse/GetWarehousesUseCase';
-import { GetSuppliersUseCase } from '@/core/use-cases/supplier/get-suppliers';
-import { GetProductsUseCase } from '@/core/use-cases/product/GetProductsUseCase';
-import { WarehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
-import { SupplierRepository } from '@/infrastructure/repositories/SupplierRepository';
-import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
+import { useReferenceData } from '@/presentation/shared/hooks/useReferenceData';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/Textarea';
@@ -37,15 +32,7 @@ export function PurchaseFormFields({ onSubmit, isSubmitting, onCancel }: Purchas
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<PurchaseLineInput[]>([emptyLine()]);
 
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    new GetWarehousesUseCase(new WarehouseRepository()).execute().then(setWarehouses).catch(() => {});
-    new GetSuppliersUseCase(new SupplierRepository()).execute().then(setSuppliers).catch(() => {});
-    new GetProductsUseCase(new ProductRepository()).execute({ size: 200 }).then((r) => setProducts(r?.content ?? [])).catch(() => {});
-  }, []);
+  const { warehouses, products, suppliers } = useReferenceData({ withSuppliers: true });
 
   const updateLine = (i: number, field: keyof PurchaseLineInput, value: string) => {
     setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));

@@ -1,13 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { CreateTransferRequest } from '@/core/entities/transfer';
 import type { Warehouse } from '@/core/entities/warehouse';
 import type { Product } from '@/core/entities/product';
-import { GetWarehousesUseCase } from '@/core/use-cases/warehouse/GetWarehousesUseCase';
-import { GetProductsUseCase } from '@/core/use-cases/product/GetProductsUseCase';
-import { WarehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
-import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
+import { useReferenceData } from '@/presentation/shared/hooks/useReferenceData';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/Textarea';
@@ -33,13 +30,7 @@ export function TransferFormFields({ onSubmit, isSubmitting, onCancel }: Transfe
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<TransferLineInput[]>([emptyLine()]);
 
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    new GetWarehousesUseCase(new WarehouseRepository()).execute().then(setWarehouses).catch(() => {});
-    new GetProductsUseCase(new ProductRepository()).execute({ size: 200 }).then((r) => setProducts(r?.content ?? [])).catch(() => {});
-  }, []);
+  const { warehouses, products } = useReferenceData();
 
   const updateLine = (i: number, field: keyof TransferLineInput, value: string) => {
     setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));

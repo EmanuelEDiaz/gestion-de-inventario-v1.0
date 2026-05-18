@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
 import { CheckCircle2, PackageCheck, XCircle } from 'lucide-react';
 import { Purchase, getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/entities/purchase';
 import { formatCurrency, formatDateShort } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
+import { GenericTable, type Column } from '@/presentation/shared/components/GenericTable';
+import { useStatusActions } from '@/presentation/shared/hooks/useStatusActions';
 
 interface PurchaseTableProps {
   purchases: Purchase[];
@@ -31,11 +31,11 @@ const COLUMNS: Column<Purchase>[] = [
 ];
 
 export function PurchaseTable({ purchases, onRowClick, onConfirm, onReceive, onCancel }: PurchaseTableProps) {
-  const actions = useMemo<TableAction<Purchase>[]>(() => [
-    { icon: CheckCircle2, title: 'Confirmar', onClick: (r) => onConfirm?.(r), hidden: () => !onConfirm },
-    { icon: PackageCheck, title: 'Recibir', onClick: (r) => onReceive?.(r), hidden: () => !onReceive },
-    { icon: XCircle, title: 'Cancelar', onClick: (r) => onCancel?.(r), hidden: () => !onCancel },
-  ], [onConfirm, onReceive, onCancel]);
+  const actions = useStatusActions([
+    { icon: CheckCircle2, label: 'Confirmar', onClick: onConfirm ? (r) => onConfirm(r) : undefined },
+    { icon: PackageCheck, label: 'Recibir', onClick: onReceive ? (r) => onReceive(r) : undefined },
+    { icon: XCircle, label: 'Cancelar', onClick: onCancel ? (r) => onCancel(r) : undefined },
+  ]);
 
   return (
     <GenericTable data={purchases} columns={COLUMNS} actions={actions}

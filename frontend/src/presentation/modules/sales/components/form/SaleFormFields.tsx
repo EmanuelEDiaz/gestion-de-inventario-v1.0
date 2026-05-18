@@ -1,16 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { CreateSaleInput } from '@/core/entities/sale';
 import type { Warehouse } from '@/core/entities/warehouse';
 import type { Customer } from '@/core/entities/customer';
 import type { Product } from '@/core/entities/product';
-import { GetWarehousesUseCase } from '@/core/use-cases/warehouse/GetWarehousesUseCase';
-import { GetCustomersUseCase } from '@/core/use-cases/customer/get-customers';
-import { GetProductsUseCase } from '@/core/use-cases/product/GetProductsUseCase';
-import { WarehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
-import { CustomerRepository } from '@/infrastructure/repositories/CustomerRepository';
-import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
+import { useReferenceData } from '@/presentation/shared/hooks/useReferenceData';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/Textarea';
@@ -43,15 +38,7 @@ export function SaleFormFields({ onSubmit, isSubmitting, onCancel }: SaleFormFie
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<SaleLineInput[]>([emptyLine()]);
 
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    new GetWarehousesUseCase(new WarehouseRepository()).execute().then(setWarehouses).catch(() => {});
-    new GetCustomersUseCase(new CustomerRepository()).execute().then(setCustomers).catch(() => {});
-    new GetProductsUseCase(new ProductRepository()).execute({ size: 200 }).then((r) => setProducts(r?.content ?? [])).catch(() => {});
-  }, []);
+  const { warehouses, products, customers } = useReferenceData({ withCustomers: true });
 
   const updateLine = (index: number, field: keyof SaleLineInput, value: string) => {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, [field]: value } : l)));
