@@ -2,18 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import type { ReturnType as ReturnDocType, CreateReturnData } from '@/core/entities/return';
-import { RETURN_TYPE_LABELS } from '@/core/entities/return';
 import type { Warehouse } from '@/core/entities/warehouse';
 import type { Product } from '@/core/entities/product';
 import { GetWarehousesUseCase } from '@/core/use-cases/warehouse/GetWarehousesUseCase';
 import { GetProductsUseCase } from '@/core/use-cases/product/GetProductsUseCase';
 import { WarehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
 import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
-import { Button } from '@/presentation/shared/components/ui/Button';
-import { Input } from '@/presentation/shared/components/ui/Input';
-import { Textarea } from '@/presentation/shared/components/Textarea';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import { Trash2, Plus } from 'lucide-react';
+import { ReturnFormBasicFields } from './ReturnFormBasicFields';
+import { ReturnFormItems } from './ReturnFormItems';
+import { ReturnFormActions } from './ReturnFormActions';
 
 interface ReturnLineInput {
   productId: string;
@@ -27,7 +24,6 @@ interface ReturnFormFieldsProps {
   onCancel: () => void;
 }
 
-const RETURN_TYPES: ReturnDocType[] = ['SALE_RETURN', 'PURCHASE_RETURN'];
 const emptyLine = (): ReturnLineInput => ({ productId: '', quantity: '1', unitPrice: '' });
 
 export function ReturnFormFields({ onSubmit, isSubmitting, onCancel }: ReturnFormFieldsProps) {
@@ -70,77 +66,30 @@ export function ReturnFormFields({ onSubmit, isSubmitting, onCancel }: ReturnFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Tipo de Devolución</label>
-          <ComboboxSelect
-            options={RETURN_TYPES.map((t) => ({ value: t, label: RETURN_TYPE_LABELS[t] }))}
-            value={type}
-            onChange={(val) => setType(val as ReturnDocType)}
-            placeholder="Seleccionar tipo..."
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="warehouseId" className="text-sm font-medium">Almacén *</label>
-          <ComboboxSelect
-            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-            value={warehouseId}
-            onChange={setWarehouseId}
-            placeholder={warehouses.length === 0 ? 'No hay almacenes disponibles' : 'Seleccionar almacén...'}
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="originalDocumentId" className="text-sm font-medium">Documento Original</label>
-          <Input id="originalDocumentId" value={originalDocumentId} onChange={(e) => setOriginalDocumentId(e.target.value)} placeholder="ID de la venta/compra original" title="ID del documento original" />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="reason" className="text-sm font-medium">Razón</label>
-          <Input id="reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo de la devolución" title="Razón de la devolución" />
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Productos a Devolver</h3>
-          <Button type="button" size="sm" variant="outline" onClick={addLine} title="Agregar producto"><Plus className="h-4 w-4 mr-1" /> Línea</Button>
-        </div>
-        <div className="space-y-2">
-          {lines.map((line, i) => (
-            <div key={i} className="grid grid-cols-[1fr_80px_100px_40px] gap-2 items-end">
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Producto</label>}
-                <ComboboxSelect
-                  options={products.map((p) => ({ value: p.id, label: p.sku ? `${p.sku} - ${p.name}` : p.name }))}
-                  value={line.productId}
-                  onChange={(val) => updateLine(i, 'productId', val)}
-                  placeholder={products.length === 0 ? 'No hay productos' : 'Seleccionar producto...'}
-                />
-              </div>
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Cant.</label>}
-                <Input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(i, 'quantity', e.target.value)} required title="Cantidad" />
-              </div>
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Precio</label>}
-                <Input type="number" step="0.01" min="0" value={line.unitPrice} onChange={(e) => updateLine(i, 'unitPrice', e.target.value)} required title="Precio unitario" />
-              </div>
-              <button type="button" onClick={() => removeLine(i)} className="p-2 text-red-500 hover:text-red-700" title="Eliminar" disabled={lines.length === 1}>
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-1">
-        <label htmlFor="notes" className="text-sm font-medium">Notas</label>
-        <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." rows={2} />
-      </div>
-
-      <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creando...' : 'Crear Devolución'}</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
-      </div>
+      <ReturnFormBasicFields
+        type={type}
+        warehouseId={warehouseId}
+        originalDocumentId={originalDocumentId}
+        reason={reason}
+        warehouses={warehouses}
+        onTypeChange={setType}
+        onWarehouseChange={setWarehouseId}
+        onOriginalDocumentChange={setOriginalDocumentId}
+        onReasonChange={setReason}
+      />
+      <ReturnFormItems
+        lines={lines}
+        products={products}
+        onUpdateLine={updateLine}
+        onAddLine={addLine}
+        onRemoveLine={removeLine}
+      />
+      <ReturnFormActions
+        notes={notes}
+        isSubmitting={isSubmitting}
+        onNotesChange={setNotes}
+        onCancel={onCancel}
+      />
     </form>
   );
 }

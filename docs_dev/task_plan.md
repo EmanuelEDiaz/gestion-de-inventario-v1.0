@@ -35,7 +35,7 @@
 | **4** | ✅ Completado | 10 | `refactor(frontend): add useStatusActions and useReferenceData hooks, migrate 3 tables` |
 | **5** | ✅ Completado | 8 (+26 subcomponentes) | `refactor(frontend): split 8 products components into ≤100-line subcomponents` |
 | **6** | ✅ Completado | 10 (+26 subcomponentes) | `refactor(frontend): split 10 shared components into ≤100-line subcomponents` |
-| **7** | ❌ Pendiente | 10 | — |
+| **7** | ✅ Completado | 10 (+34 subcomponentes) | `refactor(frontend): split 10 remaining components into ≤100-line subcomponents` |
 | **8** | ❌ Pendiente | 10 | — |
 | **9** | ❌ Pendiente | 10 | — |
 | **10** | ❌ Pendiente | 7 | — |

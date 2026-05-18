@@ -2,18 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import type { AdjustmentType, CreateAdjustmentData } from '@/core/entities/adjustment';
-import { ADJUSTMENT_TYPE_LABELS } from '@/core/entities/adjustment';
 import type { Warehouse } from '@/core/entities/warehouse';
 import type { Product } from '@/core/entities/product';
 import { GetWarehousesUseCase } from '@/core/use-cases/warehouse/GetWarehousesUseCase';
 import { GetProductsUseCase } from '@/core/use-cases/product/GetProductsUseCase';
 import { WarehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
 import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
-import { Button } from '@/presentation/shared/components/ui/Button';
-import { Input } from '@/presentation/shared/components/ui/Input';
-import { Textarea } from '@/presentation/shared/components/Textarea';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import { Trash2, Plus } from 'lucide-react';
+import { AdjustmentHeaderFields } from './AdjustmentHeaderFields';
+import { AdjustmentReasonField } from './AdjustmentReasonField';
+import { AdjustmentLinesSection } from './AdjustmentLinesSection';
+import { AdjustmentNotesField } from './AdjustmentNotesField';
+import { AdjustmentFormActions } from './AdjustmentFormActions';
 
 interface AdjustmentLineInput {
   productId: string;
@@ -27,7 +26,6 @@ interface AdjustmentFormFieldsProps {
   onCancel: () => void;
 }
 
-const TYPES: AdjustmentType[] = ['COUNT', 'DAMAGE', 'THEFT', 'EXPIRY', 'OTHER'];
 const emptyLine = (): AdjustmentLineInput => ({ productId: '', systemQty: '0', countedQty: '0' });
 
 export function AdjustmentFormFields({ onSubmit, isSubmitting, onCancel }: AdjustmentFormFieldsProps) {
@@ -36,7 +34,6 @@ export function AdjustmentFormFields({ onSubmit, isSubmitting, onCancel }: Adjus
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<AdjustmentLineInput[]>([emptyLine()]);
-
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -68,74 +65,27 @@ export function AdjustmentFormFields({ onSubmit, isSubmitting, onCancel }: Adjus
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label htmlFor="warehouseId" className="text-sm font-medium">Almacén *</label>
-          <ComboboxSelect
-            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-            value={warehouseId}
-            onChange={setWarehouseId}
-            placeholder={warehouses.length === 0 ? 'No hay almacenes disponibles' : 'Seleccionar almacén...'}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Tipo de Ajuste</label>
-          <ComboboxSelect
-            options={TYPES.map((t) => ({ value: t, label: ADJUSTMENT_TYPE_LABELS[t] }))}
-            value={type}
-            onChange={(val) => setType(val as AdjustmentType)}
-            placeholder="Seleccionar tipo..."
-          />
-        </div>
-      </div>
+      <AdjustmentHeaderFields
+        warehouses={warehouses}
+        warehouseId={warehouseId}
+        onWarehouseChange={setWarehouseId}
+        type={type}
+        onTypeChange={(val) => setType(val as AdjustmentType)}
+      />
 
-      <div className="space-y-1">
-        <label htmlFor="reason" className="text-sm font-medium">Razón</label>
-        <Input id="reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Razón del ajuste" title="Motivo del ajuste" />
-      </div>
+      <AdjustmentReasonField value={reason} onChange={setReason} />
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Líneas de Ajuste</h3>
-          <Button type="button" size="sm" variant="outline" onClick={addLine} title="Agregar línea"><Plus className="h-4 w-4 mr-1" /> Línea</Button>
-        </div>
-        <div className="space-y-2">
-          {lines.map((line, i) => (
-            <div key={i} className="grid grid-cols-[1fr_80px_80px_40px] gap-2 items-end">
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Producto</label>}
-                <ComboboxSelect
-                  options={products.map((p) => ({ value: p.id, label: p.sku ? `${p.sku} - ${p.name}` : p.name }))}
-                  value={line.productId}
-                  onChange={(val) => updateLine(i, 'productId', val)}
-                  placeholder={products.length === 0 ? 'No hay productos' : 'Seleccionar producto...'}
-                />
-              </div>
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Sistema</label>}
-                <Input type="number" min="0" value={line.systemQty} onChange={(e) => updateLine(i, 'systemQty', e.target.value)} required title="Cantidad en sistema" />
-              </div>
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Conteo</label>}
-                <Input type="number" min="0" value={line.countedQty} onChange={(e) => updateLine(i, 'countedQty', e.target.value)} required title="Cantidad contada" />
-              </div>
-              <button type="button" onClick={() => removeLine(i)} className="p-2 text-red-500 hover:text-red-700" title="Eliminar" disabled={lines.length === 1}>
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+      <AdjustmentLinesSection
+        lines={lines}
+        products={products}
+        onAddLine={addLine}
+        onUpdate={updateLine}
+        onRemove={removeLine}
+      />
 
-      <div className="space-y-1">
-        <label htmlFor="notes" className="text-sm font-medium">Notas</label>
-        <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." rows={2} />
-      </div>
+      <AdjustmentNotesField value={notes} onChange={setNotes} />
 
-      <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creando...' : 'Crear Ajuste'}</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
-      </div>
+      <AdjustmentFormActions isSubmitting={isSubmitting} onCancel={onCancel} />
     </form>
   );
 }

@@ -2,21 +2,12 @@
 
 import { useState } from 'react';
 import type { CreatePurchaseInput } from '@/core/entities/purchase';
-import type { Warehouse } from '@/core/entities/warehouse';
-import type { Supplier } from '@/core/entities/supplier';
-import type { Product } from '@/core/entities/product';
 import { useReferenceData } from '@/presentation/shared/hooks/useReferenceData';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Input } from '@/presentation/shared/components/ui/Input';
-import { Textarea } from '@/presentation/shared/components/Textarea';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import { Trash2, Plus } from 'lucide-react';
-
-interface PurchaseLineInput {
-  productId: string;
-  quantity: string;
-  unitCost: string;
-}
+import { Plus } from 'lucide-react';
+import { PurchaseSupplierSelector } from './PurchaseSupplierSelector';
+import { PurchaseItemRow, type PurchaseLineInput } from './PurchaseItemRow';
+import { PurchaseSummary } from './PurchaseSummary';
 
 interface PurchaseFormFieldsProps {
   onSubmit: (data: CreatePurchaseInput) => void;
@@ -56,27 +47,14 @@ export function PurchaseFormFields({ onSubmit, isSubmitting, onCancel }: Purchas
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label htmlFor="warehouseId" className="text-sm font-medium">Almacén *</label>
-          <ComboboxSelect
-            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
-            value={warehouseId}
-            onChange={setWarehouseId}
-            placeholder={warehouses.length === 0 ? 'No hay almacenes' : 'Seleccionar...'}
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="supplierId" className="text-sm font-medium">Proveedor</label>
-          <ComboboxSelect
-            options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
-            value={supplierId}
-            onChange={setSupplierId}
-            placeholder={suppliers.length === 0 ? 'No hay proveedores' : 'Sin proveedor...'}
-          />
-        </div>
-      </div>
-
+      <PurchaseSupplierSelector
+        warehouses={warehouses}
+        suppliers={suppliers}
+        warehouseId={warehouseId}
+        supplierId={supplierId}
+        onWarehouseChange={setWarehouseId}
+        onSupplierChange={setSupplierId}
+      />
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">Líneas de Compra</h3>
@@ -84,41 +62,24 @@ export function PurchaseFormFields({ onSubmit, isSubmitting, onCancel }: Purchas
         </div>
         <div className="space-y-2">
           {lines.map((line, i) => (
-            <div key={i} className="grid grid-cols-[1fr_80px_100px_40px] gap-2 items-end">
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Producto</label>}
-                <ComboboxSelect
-                  options={products.map((p) => ({ value: p.id, label: p.sku ? `${p.sku} - ${p.name}` : p.name }))}
-                  value={line.productId}
-                  onChange={(val) => updateLine(i, 'productId', val)}
-                  placeholder={products.length === 0 ? 'No hay productos' : 'Seleccionar...'}
-                />
-              </div>
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Cant.</label>}
-                <Input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(i, 'quantity', e.target.value)} required title="Cantidad" />
-              </div>
-              <div className="space-y-1">
-                {i === 0 && <label className="text-xs text-muted-foreground">Costo</label>}
-                <Input type="number" step="0.01" min="0" value={line.unitCost} onChange={(e) => updateLine(i, 'unitCost', e.target.value)} required title="Costo unitario" />
-              </div>
-              <button type="button" onClick={() => removeLine(i)} className="p-2 text-red-500 hover:text-red-700" title="Eliminar línea" disabled={lines.length === 1}>
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+            <PurchaseItemRow
+              key={i}
+              line={line}
+              index={i}
+              products={products}
+              onUpdate={updateLine}
+              onRemove={removeLine}
+              isOnlyLine={lines.length === 1}
+            />
           ))}
         </div>
       </div>
-
-      <div className="space-y-1">
-        <label htmlFor="notes" className="text-sm font-medium">Notas</label>
-        <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." rows={2} />
-      </div>
-
-      <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creando...' : 'Crear Compra'}</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
-      </div>
+      <PurchaseSummary
+        notes={notes}
+        onNotesChange={setNotes}
+        isSubmitting={isSubmitting}
+        onCancel={onCancel}
+      />
     </form>
   );
 }
