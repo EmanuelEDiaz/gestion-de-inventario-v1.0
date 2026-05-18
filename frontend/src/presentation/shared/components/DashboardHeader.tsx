@@ -1,0 +1,70 @@
+'use client';
+
+import { Sidebar } from './Sidebar';
+import { Header } from './Header';
+import { cn } from '@/presentation/shared/lib/utils';
+
+interface DashboardHeaderProps {
+  navigationSections: {
+    id: string;
+    label: string;
+    items: { label: string; href: string; icon: React.ReactNode }[];
+  }[];
+  isCollapsed: boolean;
+  isMobileOpen: boolean;
+  openSections: Record<string, boolean>;
+  onToggleSidebar: () => void;
+  onToggleSection: (id: string) => void;
+  onCloseMobileMenu: () => void;
+  onLogoutRequest: () => void;
+  onToggleMobileMenu: () => void;
+}
+
+export function DashboardHeader({
+  navigationSections,
+  isCollapsed,
+  isMobileOpen,
+  openSections,
+  onToggleSidebar,
+  onToggleSection,
+  onCloseMobileMenu,
+  onLogoutRequest,
+  onToggleMobileMenu,
+}: DashboardHeaderProps) {
+  return (
+    <>
+      <div className="hidden md:block">
+        <Sidebar
+          sections={navigationSections}
+          isCollapsed={isCollapsed}
+          onToggle={onToggleSidebar}
+          openSections={openSections}
+          onToggleSection={onToggleSection}
+        />
+      </div>
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={onCloseMobileMenu}
+        />
+      )}
+      <div className={cn(
+        'fixed left-0 top-0 z-50 h-screen w-64 transform transition-transform duration-300 md:hidden',
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+      )}>
+        <Sidebar
+          sections={navigationSections}
+          isCollapsed={false}
+          onToggle={onCloseMobileMenu}
+          openSections={openSections}
+          onToggleSection={onToggleSection}
+        />
+      </div>
+      <Header
+        isSidebarCollapsed={isCollapsed}
+        onLogoutRequest={onLogoutRequest}
+        onToggleMobileMenu={onToggleMobileMenu}
+      />
+    </>
+  );
+}

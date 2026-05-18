@@ -3,20 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar, Icons } from './Sidebar';
-import { Header } from './Header';
+import { DashboardHeader } from './DashboardHeader';
+import { DashboardMain } from './DashboardMain';
 import { NetworkStatusWidget } from './NetworkStatusWidget';
 import { LogoutConfirmDialog } from './LogoutConfirmDialog';
 import { LoadingOverlay } from './LoadingSpinner';
 import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
 import { useSidebarSections } from '@/presentation/shared/hooks/useSidebarSections';
 import { getOutboxCount } from '@/infrastructure/storage/db';
-import { cn } from '@/presentation/shared/lib/utils';
+import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.config';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
-
-import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.config';
 
 const navigationSections = NAVIGATION_CONFIG.map((section) => ({
   ...section,
@@ -28,37 +27,22 @@ const navigationSections = NAVIGATION_CONFIG.map((section) => ({
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const { openSections, toggleSection } = useSidebarSections({ 
-    sections: navigationSections,
-    currentPathname: pathname 
+  const { openSections, toggleSection } = useSidebarSections({
+    sections: navigationSections, currentPathname: pathname,
   });
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Read sidebar preference only after mount to avoid hydration mismatch
-  useEffect(() => {
-    const saved = localStorage.getItem('sidebar-collapsed');
-    if (saved !== null) setIsCollapsed(JSON.parse(saved));
-  }, []);
+  useEffect(() => { const saved = localStorage.getItem('sidebar-collapsed'); if (saved !== null) setIsCollapsed(JSON.parse(saved)); }, []);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [pendingForLogout, setPendingForLogout] = useState(0);
   const { isAuthenticated, hasHydrated, logout } = useAuthStore();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!hasHydrated) return;
-    if (!isAuthenticated) {
-      router.push('/login');
-    }
-  }, [hasHydrated, isAuthenticated, router]);
+  useEffect(() => { if (!hasHydrated) return; if (!isAuthenticated) router.push('/login'); }, [hasHydrated, isAuthenticated, router]);
 
   const handleLogoutRequest = async () => {
-    try {
-      const count = await getOutboxCount();
-      setPendingForLogout(count);
-    } catch {
-      setPendingForLogout(0);
-    }
+    try { setPendingForLogout(await getOutboxCount()); } catch { setPendingForLogout(0); }
     setShowLogoutDialog(true);
   };
 
@@ -68,33 +52,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     window.location.href = '/login';
   };
 
-  const handleToggleSidebar = () => {
-    setIsCollapsed((prev: boolean) => {
-      const newValue = !prev;
-      localStorage.setItem('sidebar-collapsed', JSON.stringify(newValue));
-      return newValue;
-    });
-  };
+  const handleToggleSidebar = () => setIsCollapsed((prev) => {
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(!prev));
+    return !prev;
+  });
 
-  const handleToggleMobileMenu = () => {
-    setIsMobileOpen((prev) => !prev);
-  };
-
-  const handleCloseMobileMenu = () => {
-    setIsMobileOpen(false);
-  };
+  const handleToggleMobileMenu = () => setIsMobileOpen((prev) => !prev);
+  const handleCloseMobileMenu = () => setIsMobileOpen(false);
 
   if (!hasHydrated) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="hidden md:block">
-          <Sidebar
-            sections={navigationSections}
-            isCollapsed={isCollapsed}
-            onToggle={handleToggleSidebar}
-            openSections={openSections}
-            onToggleSection={toggleSection}
-          />
+          <Sidebar sections={navigationSections} isCollapsed={isCollapsed} onToggle={handleToggleSidebar} openSections={openSections} onToggleSection={toggleSection} />
         </div>
         <NetworkStatusWidget />
         <LoadingOverlay message="Iniciando..." />
@@ -102,69 +72,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sidebar desktop */}
-      <div className="hidden md:block">
-        <Sidebar
-          sections={navigationSections}
-          isCollapsed={isCollapsed}
-          onToggle={handleToggleSidebar}
-          openSections={openSections}
-          onToggleSection={toggleSection}
-        />
-      </div>
-
-      {/* Sidebar mobile overlay */}
-      {isMobileOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={handleCloseMobileMenu}
-        />
-      )}
-      
-      {/* Sidebar mobile */}
-      <div className={cn(
-        'fixed left-0 top-0 z-50 h-screen w-64 transform transition-transform duration-300 md:hidden',
-        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-      )}>
-        <Sidebar
-          sections={navigationSections}
-          isCollapsed={false}
-          onToggle={handleCloseMobileMenu}
-          openSections={openSections}
-          onToggleSection={toggleSection}
-        />
-      </div>
-
-      <Header 
-        isSidebarCollapsed={isCollapsed} 
-        onLogoutRequest={handleLogoutRequest}
-        onToggleMobileMenu={handleToggleMobileMenu}
-      />
-      
-      <main
-        className={cn(
-          'pt-16 transition-all duration-300',
-          isCollapsed ? 'pl-0 md:pl-16' : 'pl-0 md:pl-16 lg:pl-64'
-        )}
-      >
-        <div className="p-4 md:p-6">
-          {children}
-        </div>
-      </main>
-
+      <DashboardHeader navigationSections={navigationSections} isCollapsed={isCollapsed} isMobileOpen={isMobileOpen} openSections={openSections} onToggleSidebar={handleToggleSidebar} onToggleSection={toggleSection} onCloseMobileMenu={handleCloseMobileMenu} onLogoutRequest={handleLogoutRequest} onToggleMobileMenu={handleToggleMobileMenu} />
+      <DashboardMain isCollapsed={isCollapsed}>{children}</DashboardMain>
       <NetworkStatusWidget />
-      <LogoutConfirmDialog
-        isOpen={showLogoutDialog}
-        pendingCount={pendingForLogout}
-        onConfirm={handleLogoutConfirm}
-        onCancel={() => setShowLogoutDialog(false)}
-      />
+      <LogoutConfirmDialog isOpen={showLogoutDialog} pendingCount={pendingForLogout} onConfirm={handleLogoutConfirm} onCancel={() => setShowLogoutDialog(false)} />
     </div>
   );
 }
