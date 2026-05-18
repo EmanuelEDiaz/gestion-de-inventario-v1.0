@@ -1,7 +1,7 @@
 # Plan de Reestructuración del Proyecto - Gestión de Inventario
 
 > Created: 2026-05-17 | Auditoría completa con 3 agentes paralelos + graphify
-> ⚠️ **Sección actual: 5 — Pendiente de inicio**
+> ⚠️ **Sección actual: 6 — Pendiente de inicio**
 
 ---
 
@@ -33,7 +33,7 @@
 | **2** | ✅ Completado | 10 | `refactor(frontend): unify GenericTable, migrate 7 manual tables` |
 | **3** | ✅ Completado | 48 | `refactor(frontend): migrate hardcoded colors to semantic tokens` |
 | **4** | ✅ Completado | 10 | `refactor(frontend): add useStatusActions and useReferenceData hooks, migrate 3 tables` |
-| **5** | ❌ Pendiente | 8 | — |
+| **5** | ✅ Completado | 8 (+26 subcomponentes) | `refactor(frontend): split 8 products components into ≤100-line subcomponents` |
 | **6** | ❌ Pendiente | 10 | — |
 | **7** | ❌ Pendiente | 10 | — |
 | **8** | ❌ Pendiente | 10 | — |

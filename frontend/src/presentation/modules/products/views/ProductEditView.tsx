@@ -3,37 +3,24 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Sparkles } from 'lucide-react';
-import { Button } from '@/presentation/shared/components/ui';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
 import { Card } from '@/presentation/shared/components/ui/card';
+import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { ProductFormFields, type ProductFormData } from '../components/form/ProductFormFields';
+import { EditViewHeader } from './EditViewHeader';
+import { EditViewTabs } from './EditViewTabs';
+import { EditViewFormContent } from './EditViewFormContent';
 import { ProductImageGallery } from '../components/ProductImageGallery';
+import type { ProductFormData } from '../components/form/ProductFormFields';
 import { useCategories } from '../hooks/useCategories';
 import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
 import { UpdateProductUseCase } from '@/core/use-cases/product/UpdateProductUseCase';
 import type { UpdateProductData } from '@/core/entities/product';
 
-const INITIAL_FORM: ProductFormData = {
-  name: '',
-  sku: '',
-  barcode: '',
-  description: '',
-  categoryId: '',
-  standardCost: '',
-  salePrice: '',
-  reorderPoint: '',
-  taxRate: '0',
-  unitOfMeasure: 'UNIT',
-};
-
+const INITIAL_FORM: ProductFormData = { name: '', sku: '', barcode: '', description: '', categoryId: '', standardCost: '', salePrice: '', reorderPoint: '', taxRate: '0', unitOfMeasure: 'UNIT' };
 const repository = new ProductRepository();
 const updateProductUseCase = new UpdateProductUseCase(repository);
 
-interface ProductEditViewProps {
-  productId: string;
-}
+interface ProductEditViewProps { productId: string }
 
 export function ProductEditView({ productId }: ProductEditViewProps) {
   const router = useRouter();
@@ -52,16 +39,12 @@ export function ProductEditView({ productId }: ProductEditViewProps) {
   useEffect(() => {
     if (!product) return;
     setFormData({
-      name: product.name,
-      sku: product.sku ?? '',
-      barcode: product.barcode ?? '',
-      description: product.description ?? '',
-      categoryId: product.categoryId ?? '',
+      name: product.name, sku: product.sku ?? '', barcode: product.barcode ?? '',
+      description: product.description ?? '', categoryId: product.categoryId ?? '',
       standardCost: product.standardCost?.toString() ?? '',
       salePrice: product.salePrice?.toString() ?? '',
       reorderPoint: product.reorderPoint?.toString() ?? '',
-      taxRate: product.taxRate.toString(),
-      unitOfMeasure: product.unitOfMeasure,
+      taxRate: product.taxRate.toString(), unitOfMeasure: product.unitOfMeasure,
     });
   }, [product]);
 
@@ -74,10 +57,8 @@ export function ProductEditView({ productId }: ProductEditViewProps) {
     setIsSaving(true);
     setError(null);
     const payload: UpdateProductData = {
-      name: formData.name,
-      sku: formData.sku || undefined,
-      barcode: formData.barcode || undefined,
-      description: formData.description || undefined,
+      name: formData.name, sku: formData.sku || undefined,
+      barcode: formData.barcode || undefined, description: formData.description || undefined,
       categoryId: formData.categoryId || undefined,
       standardCost: formData.standardCost ? parseFloat(formData.standardCost) : undefined,
       salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
@@ -85,7 +66,6 @@ export function ProductEditView({ productId }: ProductEditViewProps) {
       taxRate: formData.taxRate ? parseFloat(formData.taxRate) : 0,
       unitOfMeasure: formData.unitOfMeasure,
     };
-
     try {
       await updateProductUseCase.execute(productId, payload);
       router.push(`/products/${productId}`);
@@ -100,56 +80,18 @@ export function ProductEditView({ productId }: ProductEditViewProps) {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="rounded-2xl bg-linear-to-r from-indigo-600 via-blue-600 to-cyan-600 p-6 text-white shadow-lg">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
-          <h1 className="text-2xl font-bold text-white">Modificar Producto</h1>
-        </div>
-        <p className="mt-1 text-indigo-100">Edita datos y administra el carrusel con imagen principal (máximo 8).</p>
-      </div>
-
+      <EditViewHeader />
       {error && <AlertMessage message={error} onDismiss={() => setError(null)} />}
-
-      <div className="flex gap-0 border-b">
-        <button
-          type="button"
-          title="Editar datos del producto"
-          onClick={() => setActiveTab('form')}
-          className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'form' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Datos
-        </button>
-        <button
-          type="button"
-          title="Gestionar imágenes del producto"
-          onClick={() => setActiveTab('images')}
-          className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'images' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Imágenes
-        </button>
-      </div>
-
+      <EditViewTabs activeTab={activeTab} onTabChange={setActiveTab} />
       {activeTab === 'form' ? (
-        <Card className="border-0 bg-white/85 backdrop-blur-sm shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <ProductFormFields data={formData} categories={categories} onChange={handleFieldChange} />
-            <div className="flex justify-end gap-4 border-t pt-6">
-              <Button type="button" variant="secondary" onClick={() => router.push(`/products/${productId}`)} title="Cancelar edición">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSaving} title="Guardar cambios del producto">
-                {isSaving ? 'Guardando...' : 'Guardar cambios'}
-              </Button>
-            </div>
-          </form>
-        </Card>
+        <EditViewFormContent
+          formData={formData} categories={categories} isSaving={isSaving}
+          onSubmit={handleSubmit} onChange={handleFieldChange}
+          onCancel={() => router.push(`/products/${productId}`)}
+        />
       ) : (
         <Card className="border-0 bg-white/85 backdrop-blur-sm shadow-xl">
-          <ProductImageGallery productId={productId} editable={true} />
+          <ProductImageGallery productId={productId} editable />
         </Card>
       )}
     </div>

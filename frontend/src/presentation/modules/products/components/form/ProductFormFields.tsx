@@ -1,14 +1,8 @@
-/**
- * ProductFormFields - Form fields for product create/edit
- * Reusable across create and edit views
- */
-
 import type { Category } from '@/core/entities/category';
 import type { UnitOfMeasure } from '@/core/entities/product';
-import { Input } from '@/presentation/shared/components/ui';
-import { FormField } from '@/presentation/shared/components/FormField';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import { Textarea } from '@/presentation/shared/components/Textarea';
+import { ProductBasicInfoSection } from './ProductBasicInfoSection';
+import { ProductPricingSection } from './ProductPricingSection';
+import { ProductInventorySection } from './ProductInventorySection';
 
 export interface ProductFormData {
   name: string;
@@ -47,101 +41,20 @@ export function ProductFormFields({ data, categories, onChange }: ProductFormFie
 
   return (
     <div className="space-y-6">
-      {/* Basic Info */}
-      <section className="space-y-4">
-        <h2 className="font-semibold text-gray-900">Información Básica</h2>
-        <Input
-          label="Nombre del Producto"
-          value={data.name}
-          onChange={(e) => onChange('name', e.target.value)}
-          required
-          placeholder="Ej: Aceite de Motor 5W-30"
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            label="SKU"
-            value={data.sku}
-            onChange={(e) => onChange('sku', e.target.value)}
-            placeholder="Ej: ACE-5W30-1L"
-          />
-          <Input
-            label="Código de Barras"
-            value={data.barcode}
-            onChange={(e) => onChange('barcode', e.target.value)}
-            placeholder="Ej: 7501234567890"
-          />
-        </div>
-        <FormField label="Descripción">
-          <Textarea
-            value={data.description}
-            onChange={(e) => onChange('description', e.target.value)}
-            rows={3}
-            placeholder="Descripción del producto..."
-          />
-        </FormField>
-        <FormField label="Categoría">
-          <ComboboxSelect
-            value={data.categoryId}
-            onChange={(val) => onChange('categoryId', val)}
-            options={categoryOptions}
-            placeholder="Sin categoría"
-            searchPlaceholder="Buscar categoría..."
-          />
-        </FormField>
-      </section>
-
-      {/* Pricing */}
-      <section className="space-y-4 border-t pt-6">
-        <h2 className="font-semibold text-gray-900">Precios e Inventario</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            label="Costo Estándar"
-            type="number"
-            step="0.01"
-            min="0"
-            value={data.standardCost}
-            onChange={(e) => onChange('standardCost', e.target.value)}
-            placeholder="0.00"
-          />
-          <Input
-            label="Precio de Venta"
-            type="number"
-            step="0.01"
-            min="0"
-            value={data.salePrice}
-            onChange={(e) => onChange('salePrice', e.target.value)}
-            placeholder="0.00"
-          />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Input
-            label="Punto de Reorden"
-            type="number"
-            min="0"
-            value={data.reorderPoint}
-            onChange={(e) => onChange('reorderPoint', e.target.value)}
-            placeholder="10"
-          />
-          <Input
-            label="Tasa de Impuesto (%)"
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            value={data.taxRate}
-            onChange={(e) => onChange('taxRate', e.target.value)}
-            placeholder="0"
-          />
-          <FormField label="Unidad de Medida">
-            <ComboboxSelect
-              value={data.unitOfMeasure}
-              onChange={(val) => onChange('unitOfMeasure', val)}
-              options={UNIT_OPTIONS}
-              placeholder="Seleccionar..."
-            />
-          </FormField>
-        </div>
-      </section>
+      <ProductBasicInfoSection
+        data={data}
+        onChange={onChange}
+        categoryOptions={categoryOptions}
+      />
+      <ProductPricingSection
+        data={data}
+        onChange={onChange}
+      />
+      <ProductInventorySection
+        data={data}
+        onChange={onChange}
+        unitOptions={UNIT_OPTIONS}
+      />
     </div>
   );
 }

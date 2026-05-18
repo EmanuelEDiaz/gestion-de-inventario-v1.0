@@ -1,0 +1,42 @@
+'use client';
+
+import { ChevronDown } from 'lucide-react';
+import { cn } from '@/presentation/shared/lib/utils';
+
+interface ComboboxButtonOption {
+  label: string;
+}
+
+interface ComboboxButtonProps {
+  selectedOption?: ComboboxButtonOption;
+  placeholder: string;
+  isOpen: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}
+
+export function ComboboxButton({ selectedOption, placeholder, isOpen, disabled, onClick }: ComboboxButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'w-full flex items-center justify-between rounded-lg border border-gray-300 px-4 py-2 text-left',
+        'focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
+        'disabled:bg-gray-100 disabled:cursor-not-allowed',
+        isOpen && 'border-blue-500 ring-1 ring-blue-500'
+      )}
+    >
+      <span className={cn('truncate', !selectedOption && 'text-gray-400')}>
+        {selectedOption?.label || placeholder}
+      </span>
+      <ChevronDown
+        className={cn(
+          'h-4 w-4 text-gray-400 transition-transform',
+          isOpen && 'rotate-180'
+        )}
+      />
+    </button>
+  );
+}

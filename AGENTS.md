@@ -40,6 +40,7 @@ docker compose up -d     # PostgreSQL + Backend + Frontend + Caddy
 
 ## Reglas Críticas
 
+- **Hasta 3 sub-agentes en paralelo**: Para toda tarea, usar como máximo 3 sub-agentes del tipo `general` o `explore` simultáneamente para maximizar paralelismo. No lanzar más de 3 agentes concurrentes en un mismo mensaje.
 - **Graphify como mapa**: `graphify query "<pregunta>"` antes de grep. Ver `graphify-out/GRAPH_REPORT.md`.
 - **Offline**: Sin CDNs, sin APIs externas en runtime. Assets locales en `/public`.
 - **Idioma**: Español en UI, Inglés en código.
