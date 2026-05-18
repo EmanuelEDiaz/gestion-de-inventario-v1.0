@@ -360,10 +360,10 @@ export function getCategoryLabel(category: NotificationCategory): string {
  */
 export function getPriorityColor(priority: NotificationPriority): string {
   const colors: Record<NotificationPriority, string> = {
-    [NotificationPriority.LOW]: 'bg-blue-100 text-blue-800',
-    [NotificationPriority.MEDIUM]: 'bg-yellow-100 text-yellow-800',
-    [NotificationPriority.HIGH]: 'bg-orange-100 text-orange-800',
-    [NotificationPriority.CRITICAL]: 'bg-red-100 text-red-800'
+    [NotificationPriority.LOW]: 'bg-info/10 text-info',
+    [NotificationPriority.MEDIUM]: 'bg-warning/10 text-warning',
+    [NotificationPriority.HIGH]: 'bg-warning/20 text-warning',
+    [NotificationPriority.CRITICAL]: 'bg-danger/10 text-danger'
   };
   
   return colors[priority] || 'bg-gray-100 text-gray-800';

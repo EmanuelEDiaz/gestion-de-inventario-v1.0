@@ -107,7 +107,7 @@ export function NotificationItem({
             <button
               onClick={handleMarkAsRead}
               title="Marcar como leída"
-              className="p-1 hover:bg-green-100 rounded text-green-600 transition-colors"
+              className="p-1 hover:bg-success/5 rounded text-success transition-colors"
             >
               <Check className="h-4 w-4" />
             </button>
@@ -115,7 +115,7 @@ export function NotificationItem({
           <button
             onClick={handleDelete}
             title="Eliminar"
-            className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
+            className="p-1 hover:bg-danger/5 rounded text-danger transition-colors"
           >
             <Trash2 className="h-4 w-4" />
           </button>

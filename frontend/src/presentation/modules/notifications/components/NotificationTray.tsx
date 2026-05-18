@@ -79,7 +79,7 @@ export function NotificationTray() {
           <h2 className="flex-1 text-base font-semibold text-gray-900">
             Notificaciones
             {unreadCount > 0 && (
-              <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+              <span className="ml-2 rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger">
                 {unreadCount}
               </span>
             )}
@@ -112,8 +112,8 @@ export function NotificationTray() {
             title="Ver notificaciones del sistema"
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               activeTab === 'SYSTEM'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Sistema
@@ -123,8 +123,8 @@ export function NotificationTray() {
             title="Ver mensajes de otros usuarios"
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               activeTab === 'USER'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Mensajes
@@ -134,7 +134,7 @@ export function NotificationTray() {
               <button
                 onClick={() => setComposeOpen(true)}
                 title="Redactar nuevo mensaje"
-                className="ml-auto mr-1 rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+                className="ml-auto mr-1 rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-primary transition-colors"
                 aria-label="Redactar mensaje"
               >
                 <Edit className="h-4 w-4" />
@@ -153,7 +153,7 @@ export function NotificationTray() {
           <Link
             href="/notifications"
             onClick={() => setIsOpen(false)}
-            className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            className="text-sm text-primary hover:text-primary/80 transition-colors"
           >
             Ver todas las notificaciones →
           </Link>

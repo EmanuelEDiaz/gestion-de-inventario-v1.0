@@ -8,7 +8,7 @@ import { useState, useCallback } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/presentation/shared/components/ui';
 import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { Card } from '@/presentation/shared/components/Card';
+import { Card } from '@/presentation/shared/components/ui/card';
 import { ProductFormFields, type ProductFormData } from '../components/form/ProductFormFields';
 import { ProductCreateImageCarousel } from '../components/ProductCreateImageCarousel';
 import { useProductFormController } from '../hooks/useProductFormController';

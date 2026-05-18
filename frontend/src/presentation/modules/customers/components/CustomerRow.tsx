@@ -5,6 +5,7 @@ import type { Customer } from '@/core/entities/customer';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { TableCell, TableRow } from '@/presentation/shared/components/ui/table';
+import { statusBadge } from '@/presentation/shared/lib/colors';
 import { CustomerActions } from './CustomerActions';
 
 interface CustomerRowProps {
@@ -18,7 +19,7 @@ export function CustomerRow({ customer, onActivate, onDeactivate, onDelete }: Cu
   return (
     <TableRow>
       <TableCell className="font-medium">
-        <Link href={`/customers/${customer.id}`} className="hover:underline text-blue-600" title="Ver detalle del cliente">
+        <Link href={`/customers/${customer.id}`} className="hover:underline text-primary" title="Ver detalle del cliente">
           {customer.code || 'N/A'}
         </Link>
       </TableCell>
@@ -26,7 +27,7 @@ export function CustomerRow({ customer, onActivate, onDeactivate, onDelete }: Cu
       <TableCell>{customer.phone || 'N/A'}</TableCell>
       <TableCell>{customer.email || 'N/A'}</TableCell>
       <TableCell>
-        <Badge className={customer.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+        <Badge className={statusBadge(customer.active)}>
           {customer.active ? 'Activo' : 'Inactivo'}
         </Badge>
       </TableCell>

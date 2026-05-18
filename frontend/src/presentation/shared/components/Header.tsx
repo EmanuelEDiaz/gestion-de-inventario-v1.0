@@ -55,7 +55,7 @@ export function Header({ onLogoutRequest, onToggleMobileMenu }: HeaderProps) {
             {Icons.user}
             <span>{user?.displayName || user?.username || 'Usuario'}</span>
             {user?.role && (
-              <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
+              <span className="rounded bg-info/10 px-2 py-0.5 text-xs text-info">
                 {user.role.name}
               </span>
             )}
@@ -64,7 +64,7 @@ export function Header({ onLogoutRequest, onToggleMobileMenu }: HeaderProps) {
           {/* Botón de cerrar sesión */}
           <button
             onClick={onLogoutRequest}
-            className="flex items-center gap-1 rounded-lg px-2 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-red-600 md:px-3 md:gap-2"
+            className="flex items-center gap-1 rounded-lg px-2 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-danger md:px-3 md:gap-2"
             title="Cerrar sesión"
           >
             {Icons.logout}

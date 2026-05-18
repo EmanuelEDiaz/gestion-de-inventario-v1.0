@@ -57,12 +57,12 @@ export function NotificationInbox({ includeRead = false, sourceFilter }: Props) 
         <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border-b border-blue-100 text-sm">
           <span className="text-blue-700 font-medium flex-1">{selected.size} seleccionadas</span>
           <TooltipWrapper content="Marcar seleccionadas como leídas">
-            <button onClick={handleMarkSelected} className="flex items-center gap-1 rounded px-2 py-1 text-blue-600 hover:bg-blue-100 transition-colors" aria-label="Marcar leídas">
+            <button onClick={handleMarkSelected} className="flex items-center gap-1 rounded px-2 py-1 text-primary hover:bg-primary/10 transition-colors" aria-label="Marcar leídas">
               <DoneAll className="h-4 w-4" /><span>Leídas</span>
             </button>
           </TooltipWrapper>
           <TooltipWrapper content="Eliminar seleccionadas">
-            <button onClick={handleDeleteSelected} disabled={deleteMany.isPending} className="flex items-center gap-1 rounded px-2 py-1 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50" aria-label="Eliminar seleccionadas">
+            <button onClick={handleDeleteSelected} disabled={deleteMany.isPending} className="flex items-center gap-1 rounded px-2 py-1 text-danger hover:bg-danger/5 transition-colors disabled:opacity-50" aria-label="Eliminar seleccionadas">
               <Delete className="h-4 w-4" /><span>Eliminar</span>
             </button>
           </TooltipWrapper>
@@ -74,7 +74,7 @@ export function NotificationInbox({ includeRead = false, sourceFilter }: Props) 
       {selected.size === 0 && unreadCount > 0 && (
         <div className="flex justify-end px-3 py-2 border-b border-gray-100">
           <TooltipWrapper content="Marcar todas las notificaciones como leídas">
-            <button onClick={() => markAll.mutate()} disabled={markAll.isPending} className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50" aria-label="Marcar todas como leídas">
+            <button onClick={() => markAll.mutate()} disabled={markAll.isPending} className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 disabled:opacity-50" aria-label="Marcar todas como leídas">
               <DoneAll className="h-4 w-4" />Marcar todas leídas
             </button>
           </TooltipWrapper>

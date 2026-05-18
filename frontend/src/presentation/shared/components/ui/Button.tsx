@@ -13,7 +13,7 @@ const buttonVariants = cva(
         outline: 'border border-gray-300 bg-white hover:bg-gray-100 focus-visible:ring-gray-400',
         secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus-visible:ring-gray-400',
         ghost: 'hover:bg-gray-100 focus-visible:ring-gray-400',
-        link: 'text-blue-600 underline-offset-4 hover:underline focus-visible:ring-blue-500',
+        link: 'text-primary underline-offset-4 hover:underline focus-visible:ring-blue-500',
       },
       size: {
         default: 'h-10 px-4 py-2',

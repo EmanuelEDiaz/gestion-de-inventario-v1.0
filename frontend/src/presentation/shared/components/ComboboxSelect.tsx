@@ -168,7 +168,7 @@ export function ComboboxSelect({
                   >
                     <span className="truncate">{option.label}</span>
                     {option.value === value && (
-                      <Check className="h-4 w-4 text-blue-600" />
+                      <Check className="h-4 w-4 text-primary" />
                     )}
                   </button>
                 </li>

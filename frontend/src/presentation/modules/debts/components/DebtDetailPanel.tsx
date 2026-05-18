@@ -53,7 +53,7 @@ export function DebtDetailPanel({ debt }: DebtDetailPanelProps) {
               <Button
                 type="button"
                 variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50"
+                className="text-danger border-danger/20 hover:bg-danger/5"
                 onClick={() => cancelMutation.mutate()}
                 disabled={cancelMutation.isPending}
                 title="Cancelar esta deuda — acción irreversible"

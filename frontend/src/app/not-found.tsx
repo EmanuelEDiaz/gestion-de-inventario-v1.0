@@ -10,7 +10,7 @@ export default function NotFound() {
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 p-4">
       <Card className="max-w-md w-full text-center shadow-xl border-0">
         <CardHeader className="pb-2">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
             <Warning {...iconProps} />
           </div>
           <CardTitle className="text-6xl font-bold text-gray-900">404</CardTitle>

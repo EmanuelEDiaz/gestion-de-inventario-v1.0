@@ -23,8 +23,8 @@ export function MovementTable({ movements, showWarehouse = true, showProduct = t
           return (
             <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
               isInbound
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                ? 'bg-success/10 text-success'
+                : 'bg-danger/10 text-danger'
             }`}>
               {isInbound ? '↑' : '↓'} {getMovementTypeLabel(r.movementType)}
             </span>
@@ -39,7 +39,7 @@ export function MovementTable({ movements, showWarehouse = true, showProduct = t
         key: 'quantity', label: 'Cantidad', className: 'text-right',
         render: (_, r) => {
           const isInbound = isInboundMovement(r.movementType);
-          return <span className={`font-medium ${isInbound ? 'text-green-600' : 'text-red-600'}`}>{isInbound ? '+' : ''}{r.quantity.toFixed(2)}</span>;
+          return <span className={`font-medium ${isInbound ? 'text-success' : 'text-danger'}`}>{isInbound ? '+' : ''}{r.quantity.toFixed(2)}</span>;
         },
       },
       { key: 'unitCost', label: 'Costo Unit.', className: 'text-right', render: (_, r) => <span>{r.unitCost != null ? formatCurrency(r.unitCost) : '-'}</span> },

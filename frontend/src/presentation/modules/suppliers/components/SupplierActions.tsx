@@ -22,12 +22,12 @@ export function SupplierActions({ id, active, onActivate, onDeactivate, onDelete
       )}
       {!active && onActivate && (
         <Button size="sm" variant="ghost" onClick={() => onActivate(id)} title="Activar">
-          <Eye className="h-4 w-4 text-green-600" />
+          <Eye className="h-4 w-4 text-success" />
         </Button>
       )}
       {onDelete && (
         <Button size="sm" variant="ghost" onClick={() => onDelete(id)} title="Eliminar">
-          <Trash2 className="h-4 w-4 text-red-600" />
+          <Trash2 className="h-4 w-4 text-danger" />
         </Button>
       )}
     </div>

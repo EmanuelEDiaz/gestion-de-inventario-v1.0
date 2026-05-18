@@ -21,7 +21,7 @@ export function FormField({ label, htmlFor, required, error, children }: FormFie
         {required && <span className="text-red-500"> *</span>}
       </label>
       {children}
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-sm text-danger">{error}</p>}
     </div>
   );
 }

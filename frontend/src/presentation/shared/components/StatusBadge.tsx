@@ -17,7 +17,7 @@ export function StatusBadge({
     <span
       className={`rounded-full px-2 py-1 text-xs font-medium ${
         active
-          ? 'bg-green-100 text-green-700'
+          ? 'bg-success/10 text-success'
           : 'bg-gray-100 text-gray-600'
       }`}
     >

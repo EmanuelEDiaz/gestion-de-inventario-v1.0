@@ -12,6 +12,7 @@ import { PageHeader } from '@/presentation/shared/components/PageHeader';
 import { GenericTable } from '@/presentation/shared/components/GenericTable';
 import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
 import type { Supplier } from '@/core/entities/supplier';
+import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Supplier>[] = [
   { key: 'code', label: 'Código', render: (_, r) => <span className="font-mono text-sm" title="Código del proveedor">{r.code ?? '—'}</span> },
@@ -23,7 +24,7 @@ const COLUMNS: Column<Supplier>[] = [
     key: 'active', label: 'Estado',
     render: (_, r) => (
       <span title={r.active ? 'Proveedor activo' : 'Proveedor inactivo'}
-        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${statusBadge(r.active)}`}>
         {r.active ? 'Activo' : 'Inactivo'}
       </span>
     ),

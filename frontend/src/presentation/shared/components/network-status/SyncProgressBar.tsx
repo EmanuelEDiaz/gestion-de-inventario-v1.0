@@ -24,7 +24,7 @@ export function SyncProgressBar({ pendingCount, syncStatus, backendStatus, lastS
       </div>
 
       {noPending && isConnected && (
-        <div className="flex items-center gap-1.5 text-xs font-medium text-green-600">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-success">
           <CheckCircle2 size={14} className="shrink-0" />
           <span>Todo actualizado</span>
         </div>
@@ -65,7 +65,7 @@ export function SyncProgressBar({ pendingCount, syncStatus, backendStatus, lastS
           <button
             onClick={onSync}
             disabled={isSyncing}
-            className="rounded px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+            className="rounded px-2 py-0.5 text-[10px] font-medium text-info hover:bg-info/5 disabled:opacity-50"
           >
             {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
           </button>

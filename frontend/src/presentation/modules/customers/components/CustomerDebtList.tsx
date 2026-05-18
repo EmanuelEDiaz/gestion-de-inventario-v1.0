@@ -56,7 +56,7 @@ export function CustomerDebtList({ customerId }: CustomerDebtListProps) {
             <p>Total: <span className="font-medium">{debt.originalAmount} {debt.currencyCode}</span></p>
             <p>Pendiente: <span className="font-semibold text-orange-600">{debt.pendingAmount} {debt.currencyCode}</span></p>
             {debt.paidAmount > 0 && (
-              <p>Pagado: <span className="text-green-600">{debt.paidAmount} {debt.currencyCode}</span></p>
+              <p>Pagado: <span className="text-success">{debt.paidAmount} {debt.currencyCode}</span></p>
             )}
           </div>
 

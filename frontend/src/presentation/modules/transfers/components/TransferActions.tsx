@@ -34,17 +34,17 @@ export function TransferActions({
       )}
       {status === 'IN_TRANSIT' && onComplete && (
         <Button size="sm" variant="outline" onClick={() => onComplete(id)} title="Completar">
-          <CheckCircle className="h-4 w-4 text-green-600" />
+          <CheckCircle className="h-4 w-4 text-success" />
         </Button>
       )}
       {canCancel && onCancel && (
         <Button size="sm" variant="ghost" onClick={() => onCancel(id)} title="Cancelar">
-          <XCircle className="h-4 w-4 text-red-600" />
+          <XCircle className="h-4 w-4 text-danger" />
         </Button>
       )}
       {canDelete && onDelete && (
         <Button size="sm" variant="ghost" onClick={() => onDelete(id)} title="Eliminar">
-          <Trash2 className="h-4 w-4 text-red-600" />
+          <Trash2 className="h-4 w-4 text-danger" />
         </Button>
       )}
     </div>

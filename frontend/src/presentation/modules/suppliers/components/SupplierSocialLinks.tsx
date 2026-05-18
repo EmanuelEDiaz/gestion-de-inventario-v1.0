@@ -124,7 +124,7 @@ export function SupplierSocialLinks({ supplierId }: SupplierSocialLinksProps) {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 text-sm truncate hover:underline"
+                className="text-primary text-sm truncate hover:underline"
                 title={link.url}
               >
                 {link.label || link.url}

@@ -40,7 +40,7 @@ export function CacheProgressBar({ modules, overallPercent, isComplete }: CacheP
         ))}
       </ul>
       {isComplete && (
-        <p className="text-xs font-medium text-green-600">
+        <p className="text-xs font-medium text-success">
           Seguro desconectarse del servidor
         </p>
       )}

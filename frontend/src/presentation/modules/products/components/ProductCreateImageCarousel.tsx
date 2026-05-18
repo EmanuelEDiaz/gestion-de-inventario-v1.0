@@ -109,7 +109,7 @@ export function ProductCreateImageCarousel({ files, primaryIndex, onChange }: Pr
                     type="button"
                     title="Eliminar esta imagen"
                     onClick={() => removeImage(index)}
-                    className="rounded bg-white/90 p-1 text-red-600 hover:bg-white"
+                    className="rounded bg-white/90 p-1 text-danger hover:bg-white"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

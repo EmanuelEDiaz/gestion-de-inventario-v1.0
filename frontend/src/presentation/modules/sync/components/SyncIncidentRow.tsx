@@ -16,15 +16,15 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  RESOLVED: 'bg-green-100 text-green-800',
+  PENDING: 'bg-warning/10 text-warning',
+  RESOLVED: 'bg-success/10 text-success',
   IGNORED: 'bg-gray-100 text-gray-600',
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  STOCK_CONFLICT: 'bg-red-100 text-red-800',
+  STOCK_CONFLICT: 'bg-danger/10 text-danger',
   ENTITY_DUPLICATE: 'bg-orange-100 text-orange-800',
-  VERSION_MISMATCH: 'bg-blue-100 text-blue-800',
+  VERSION_MISMATCH: 'bg-info/10 text-info',
   CHECKSUM_ERROR: 'bg-purple-100 text-purple-800',
 };
 

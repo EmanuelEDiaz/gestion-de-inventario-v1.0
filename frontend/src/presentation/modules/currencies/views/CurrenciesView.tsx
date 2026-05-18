@@ -12,6 +12,7 @@ import { PageHeader } from '@/presentation/shared/components/PageHeader';
 import { GenericTable } from '@/presentation/shared/components/GenericTable';
 import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
 import type { Currency } from '@/core/entities/currency';
+import { statusBadge } from '@/presentation/shared/lib/colors';
 
 type CurrencyRow = Currency & { id: string };
 
@@ -23,7 +24,7 @@ const COLUMNS: Column<CurrencyRow>[] = [
     key: 'isActive', label: 'Estado',
     render: (_, r) => (
       <span title={r.isActive ? 'Moneda activa' : 'Moneda inactiva'}
-        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${statusBadge(r.isActive)}`}>
         {r.isActive ? 'Activa' : 'Inactiva'}
       </span>
     ),

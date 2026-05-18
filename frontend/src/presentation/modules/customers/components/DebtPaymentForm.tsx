@@ -78,7 +78,7 @@ export function DebtPaymentForm({ debtId, pendingAmount, onSubmit, onCancel }: D
           rows={2}
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <div className="flex gap-2 justify-end">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} title="Cancelar pago">
           Cancelar

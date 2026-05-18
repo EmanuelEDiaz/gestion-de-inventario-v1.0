@@ -3,22 +3,23 @@
 import type { Sale, PaymentMode, SaleStatus } from '@/core/entities/sale';
 import Link from 'next/link';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
+import { statusColors } from '@/presentation/shared/lib/colors';
 
 interface SaleDetailViewProps {
   sale: Sale;
 }
 
 const STATUS_LABEL: Record<SaleStatus, { label: string; classes: string }> = {
-  DRAFT: { label: 'Borrador', classes: 'bg-gray-100 text-gray-700' },
-  CONFIRMED: { label: 'Confirmada', classes: 'bg-blue-100 text-blue-700' },
-  DELIVERED: { label: 'Entregada', classes: 'bg-green-100 text-green-700' },
-  CANCELLED: { label: 'Cancelada', classes: 'bg-red-100 text-red-700' },
+  DRAFT: { label: 'Borrador', classes: statusColors.inactive },
+  CONFIRMED: { label: 'Confirmada', classes: statusColors.info },
+  DELIVERED: { label: 'Entregada', classes: statusColors.success },
+  CANCELLED: { label: 'Cancelada', classes: statusColors.destructive },
 };
 
 const MODE_LABEL: Record<PaymentMode, { label: string; classes: string }> = {
-  IMMEDIATE: { label: 'Cobrado', classes: 'bg-green-100 text-green-700' },
-  CREDIT: { label: 'Fiado (Crédito)', classes: 'bg-yellow-100 text-yellow-800' },
-  RESERVE: { label: 'Reserva', classes: 'bg-purple-100 text-purple-700' },
+  IMMEDIATE: { label: 'Cobrado', classes: statusColors.success },
+  CREDIT: { label: 'Fiado (Crédito)', classes: statusColors.warning },
+  RESERVE: { label: 'Reserva', classes: 'bg-purple-100 text-purple-800' },
 };
 
 export function SaleDetailView({ sale }: SaleDetailViewProps) {
@@ -79,7 +80,7 @@ export function SaleDetailView({ sale }: SaleDetailViewProps) {
           <span className="text-yellow-800">Deuda generada por esta venta</span>
           <Link
             href={`/customers/${sale.customerId}/debts`}
-            className="text-blue-600 underline hover:text-blue-800 font-medium"
+            className="text-primary underline hover:text-primary/80 font-medium"
             title="Ver deuda vinculada a esta venta"
           >
             Ver deuda
@@ -124,7 +125,7 @@ export function SaleDetailView({ sale }: SaleDetailViewProps) {
             <span>{formatCurrency(sale.subtotal, sale.currencyCode)}</span>
           </div>
           {sale.discountAmount > 0 && (
-            <div className="flex justify-between text-red-600">
+            <div className="flex justify-between text-danger">
               <span>Descuento</span>
               <span>-{formatCurrency(sale.discountAmount, sale.currencyCode)}</span>
             </div>

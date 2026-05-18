@@ -11,10 +11,10 @@ interface AlertMessageProps {
 }
 
 const variantStyles: Record<AlertVariant, string> = {
-  error: 'bg-red-50 text-red-600 border-red-200',
-  success: 'bg-green-50 text-green-600 border-green-200',
-  warning: 'bg-yellow-50 text-yellow-600 border-yellow-200',
-  info: 'bg-blue-50 text-blue-600 border-blue-200',
+  error: 'bg-danger/5 text-danger border-danger/20',
+  success: 'bg-success/5 text-success border-success/20',
+  warning: 'bg-warning/5 text-warning border-warning/20',
+  info: 'bg-info/5 text-info border-info/20',
 };
 
 export function AlertMessage({ variant = 'error', message, onDismiss }: AlertMessageProps) {

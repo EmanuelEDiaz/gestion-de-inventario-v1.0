@@ -25,7 +25,7 @@ const sizeClasses = {
 const variantClasses = {
   ghost: 'hover:bg-gray-100 text-gray-600',
   outline: 'border border-gray-300 hover:bg-gray-50 text-gray-700',
-  danger: 'hover:bg-red-50 text-red-600',
+  danger: 'hover:bg-danger/5 text-danger',
 };
 
 const IconButtonContent = memo(function IconButtonContent({

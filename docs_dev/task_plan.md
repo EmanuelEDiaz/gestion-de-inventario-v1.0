@@ -31,7 +31,7 @@
 |---------|--------|----------|------------|
 | **1** | ✅ Completado | 30 | `feat(http): unify HTTP clients, centralize API_URL with getMediaUrl()` |
 | **2** | ✅ Completado | 10 | `refactor(frontend): unify GenericTable, migrate 7 manual tables` |
-| **3** | ❌ Pendiente | 10 | — |
+| **3** | ✅ Completado | 48 | `refactor(frontend): migrate hardcoded colors to semantic tokens` |
 | **4** | ❌ Pendiente | 10 | — |
 | **5** | ❌ Pendiente | 8 | — |
 | **6** | ❌ Pendiente | 10 | — |

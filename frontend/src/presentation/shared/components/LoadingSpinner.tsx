@@ -32,7 +32,7 @@ export function LoadingOverlay({ message }: LoadingOverlayProps = {}) {
       aria-live="polite"
     >
       <div className="flex flex-col items-center gap-3 rounded-2xl bg-white/80 px-8 py-6 shadow-xl ring-1 ring-gray-200/60">
-        <LoadingSpinner size="lg" className="text-blue-600" />
+        <LoadingSpinner size="lg" className="text-primary" />
         {message && <p className="text-sm font-medium text-gray-600">{message}</p>}
       </div>
     </div>

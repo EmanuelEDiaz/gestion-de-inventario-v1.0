@@ -5,6 +5,7 @@ import type { Supplier } from '@/core/entities/supplier';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { TableCell, TableRow } from '@/presentation/shared/components/ui/table';
+import { statusBadge } from '@/presentation/shared/lib/colors';
 import { SupplierActions } from './SupplierActions';
 
 interface SupplierRowProps {
@@ -20,7 +21,7 @@ export function SupplierRow({ supplier, onActivate, onDeactivate, onDelete }: Su
       <TableCell className="font-medium">
         <Link
           href={`/suppliers/${supplier.id}`}
-          className="text-blue-600 hover:underline"
+          className="text-primary hover:underline"
           title={`Ver detalle de ${supplier.name}`}
         >
           {supplier.code || 'N/A'}
@@ -30,7 +31,7 @@ export function SupplierRow({ supplier, onActivate, onDeactivate, onDelete }: Su
       <TableCell>{supplier.phone || 'N/A'}</TableCell>
       <TableCell>{supplier.email || 'N/A'}</TableCell>
       <TableCell>
-        <Badge className={supplier.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+        <Badge className={statusBadge(supplier.active)}>
           {supplier.active ? 'Activo' : 'Inactivo'}
         </Badge>
       </TableCell>

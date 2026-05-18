@@ -12,6 +12,7 @@ import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/PageHeader';
 import { GenericTable } from '@/presentation/shared/components/GenericTable';
 import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
+import { statusColors } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Role>[] = [
   { key: 'code', label: 'Código', render: (_, r) => <span className="font-mono font-medium" title="Código del rol">{r.code}</span> },
@@ -21,7 +22,7 @@ const COLUMNS: Column<Role>[] = [
     key: 'isSystem', label: 'Tipo',
     render: (_, r) => (
       <span title={r.isSystem ? 'Rol del sistema (no modificable)' : 'Rol personalizado'}
-        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.isSystem ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.isSystem ? 'bg-purple-100 text-purple-700' : statusColors.info}`}>
         {r.isSystem ? 'Sistema' : 'Personalizado'}
       </span>
     ),

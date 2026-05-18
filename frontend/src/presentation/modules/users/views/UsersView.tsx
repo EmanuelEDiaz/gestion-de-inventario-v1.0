@@ -13,6 +13,7 @@ import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/PageHeader';
 import { GenericTable } from '@/presentation/shared/components/GenericTable';
 import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
+import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<User>[] = [
   {
@@ -31,12 +32,12 @@ const COLUMNS: Column<User>[] = [
     ),
   },
   { key: 'email', label: 'Email', render: (_, r) => <span title="Correo electrónico">{r.email ?? '—'}</span> },
-  { key: 'role', label: 'Rol', render: (_, r) => <span title={`Rol: ${r.role.name}`} className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700">{r.role.name}</span> },
+  { key: 'role', label: 'Rol', render: (_, r) => <span title={`Rol: ${r.role.name}`} className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-info/10 text-info">{r.role.name}</span> },
   {
     key: 'isActive', label: 'Estado',
     render: (_, r) => (
       <span title={r.isActive ? 'Usuario activo' : 'Usuario inactivo'}
-        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${statusBadge(r.isActive)}`}>
         {r.isActive ? 'Activo' : 'Inactivo'}
       </span>
     ),

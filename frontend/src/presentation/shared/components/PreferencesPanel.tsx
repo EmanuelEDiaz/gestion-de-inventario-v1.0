@@ -61,7 +61,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
     return (
       <div className="h-screen md:h-96 flex items-center justify-center bg-white">
         <div className="text-center">
-          <p className="text-red-600">Error cargando preferencias</p>
+          <p className="text-danger">Error cargando preferencias</p>
           <button
             onClick={onClose}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -121,7 +121,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.sseEnabled}
               onChange={() => toggleDeliveryChannel('sseEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">En Tiempo Real (SSE)</span>
           </label>
@@ -131,7 +131,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.toastEnabled}
               onChange={() => toggleDeliveryChannel('toastEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Notificaciones en la UI (Toast)</span>
           </label>
@@ -141,7 +141,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.pushEnabled}
               onChange={() => toggleDeliveryChannel('pushEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Notificaciones Push (PWA)</span>
           </label>
@@ -157,7 +157,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.inventoryEnabled}
               onChange={() => toggleCategory('inventoryEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Inventario (Stock Bajo)</span>
           </label>
@@ -168,7 +168,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.syncEnabled}
               onChange={() => toggleCategory('syncEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Sincronización</span>
           </label>
@@ -179,7 +179,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.operationsEnabled}
               onChange={() => toggleCategory('operationsEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Operaciones (Compras/Ventas)</span>
           </label>
@@ -190,7 +190,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.creditEnabled}
               onChange={() => toggleCategory('creditEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Crédito</span>
           </label>
@@ -201,7 +201,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.userActionsEnabled}
               onChange={() => toggleCategory('userActionsEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Acciones de Usuarios</span>
           </label>
@@ -212,7 +212,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={preferences.systemEnabled}
               onChange={() => toggleCategory('systemEnabled')}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Sistema</span>
           </label>
@@ -227,7 +227,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
               checked={schedule.quietHoursEnabled}
               onChange={() => toggleQuietHours(!schedule.quietHoursEnabled)}
               disabled={isPending}
-              className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+              className="h-4 w-4 text-primary rounded disabled:opacity-50"
             />
             <span className="text-sm text-gray-700">Habilitar horario silencioso</span>
           </label>
@@ -265,7 +265,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
                     // Toggle is handled through schedule update
                   }}
                   disabled={isPending}
-                  className="h-4 w-4 text-blue-600 rounded disabled:opacity-50"
+                  className="h-4 w-4 text-primary rounded disabled:opacity-50"
                 />
                 <span className="text-sm text-gray-700">Permitir críticas durante horario silencioso</span>
               </label>

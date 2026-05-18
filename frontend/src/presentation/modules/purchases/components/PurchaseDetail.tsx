@@ -135,7 +135,7 @@ export function PurchaseDetail({
         {(purchase.status === 'DRAFT' || purchase.status === 'CONFIRMED') && onCancel && (
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+            className="px-4 py-2 bg-danger/10 text-danger rounded hover:bg-danger/20"
           >
             Cancelar Compra
           </button>

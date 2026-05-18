@@ -51,7 +51,7 @@ export function NotificationTabs({
           onClick={() => onTabChange('sistema')}
           className={`flex-1 px-4 py-3 text-sm font-semibold transition-colors border-b-2 ${
             activeTab === 'sistema'
-              ? 'border-blue-500 text-blue-600 bg-white'
+              ? 'border-primary text-primary bg-card'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -70,7 +70,7 @@ export function NotificationTabs({
           onClick={() => onTabChange('usuarios')}
           className={`flex-1 px-4 py-3 text-sm font-semibold transition-colors border-b-2 ${
             activeTab === 'usuarios'
-              ? 'border-blue-500 text-blue-600 bg-white'
+              ? 'border-primary text-primary bg-card'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >

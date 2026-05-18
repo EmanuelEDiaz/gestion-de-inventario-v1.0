@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/presentation/shared/components/ui';
 import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { Card } from '@/presentation/shared/components/Card';
+import { Card } from '@/presentation/shared/components/ui/card';
 import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
 import { ProductFormFields, type ProductFormData } from '../components/form/ProductFormFields';
 import { ProductImageGallery } from '../components/ProductImageGallery';
@@ -116,7 +116,7 @@ export function ProductEditView({ productId }: ProductEditViewProps) {
           title="Editar datos del producto"
           onClick={() => setActiveTab('form')}
           className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'form' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            activeTab === 'form' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           Datos
@@ -126,7 +126,7 @@ export function ProductEditView({ productId }: ProductEditViewProps) {
           title="Gestionar imágenes del producto"
           onClick={() => setActiveTab('images')}
           className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'images' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            activeTab === 'images' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           Imágenes

@@ -19,8 +19,8 @@ interface Props {
 const CATEGORY_COLORS: Record<string, string> = {
   LOW_STOCK: 'bg-orange-100 text-orange-700',
   SYSTEM: 'bg-gray-100 text-gray-600',
-  SALE: 'bg-green-100 text-green-700',
-  PURCHASE: 'bg-blue-100 text-blue-700',
+  SALE: 'bg-success/10 text-success',
+  PURCHASE: 'bg-info/10 text-info',
   SYNC: 'bg-purple-100 text-purple-700',
 };
 
@@ -37,7 +37,7 @@ export function NotificationItem({ notification, isSelected, onToggleSelect, onM
           aria-label={isSelected ? 'Deseleccionar' : 'Seleccionar'}
         >
           {isSelected
-            ? <CheckBox className="w-5 h-5 text-blue-600" />
+            ? <CheckBox className="w-5 h-5 text-primary" />
             : <CheckBoxOutlineBlank className="w-5 h-5" />}
         </button>
       </TooltipWrapper>
@@ -51,7 +51,7 @@ export function NotificationItem({ notification, isSelected, onToggleSelect, onM
           <span className="text-xs text-gray-400 ml-auto shrink-0">{timeAgo}</span>
         </div>
         {source === 'USER' && createdByName && (
-          <p className="text-[11px] text-blue-600 font-medium mb-0.5">De: {createdByName}</p>
+          <p className="text-[11px] text-primary font-medium mb-0.5">De: {createdByName}</p>
         )}
         <p className="text-sm font-medium text-gray-800 leading-snug">{title}</p>
         {body && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{body}</p>}
@@ -62,7 +62,7 @@ export function NotificationItem({ notification, isSelected, onToggleSelect, onM
           <TooltipWrapper content="Marcar como leída" side="left">
             <button
               onClick={onMarkRead}
-              className="rounded p-1 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              className="rounded p-1 text-gray-400 hover:bg-primary/10 hover:text-primary transition-colors"
               aria-label="Marcar como leída"
             >
               <MarkEmailRead className="h-4 w-4" />
@@ -72,7 +72,7 @@ export function NotificationItem({ notification, isSelected, onToggleSelect, onM
         <TooltipWrapper content="Eliminar notificación" side="left">
           <button
             onClick={onDelete}
-            className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="rounded p-1 text-gray-400 hover:bg-danger/10 hover:text-danger transition-colors"
             aria-label="Eliminar notificación"
           >
             <Delete className="h-4 w-4" />

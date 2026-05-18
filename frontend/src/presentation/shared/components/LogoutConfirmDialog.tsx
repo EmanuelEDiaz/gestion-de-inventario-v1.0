@@ -32,7 +32,7 @@ export function LogoutConfirmDialog({ isOpen, pendingCount, onConfirm, onCancel 
               Tienes <strong className="text-amber-700">{pendingCount} cambio{pendingCount > 1 ? 's' : ''}</strong> que
               no se ha{pendingCount > 1 ? 'n' : ''} subido al servidor.
             </p>
-            <p className="mb-6 text-sm text-red-600 font-medium">
+            <p className="mb-6 text-sm text-danger font-medium">
               Si cierras sesión ahora, estos cambios se perderán permanentemente.
             </p>
           </>

@@ -10,6 +10,7 @@ import type { Column, TableAction } from '@/presentation/shared/components/Gener
 import { CategoryForm } from '../components/form/CategoryForm';
 import { useCategoriesController } from '../hooks/useCategoriesController';
 import type { Category } from '@/core/entities/category';
+import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Category>[] = [
   {
@@ -26,7 +27,7 @@ const COLUMNS: Column<Category>[] = [
     label: 'Estado',
     render: (_, row) => (
       <span title={row.active ? 'Categoría activa' : 'Categoría inactiva'}
-        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${row.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+        className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${statusBadge(row.active)}`}>
         {row.active ? 'Activa' : 'Inactiva'}
       </span>
     ),

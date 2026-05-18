@@ -39,7 +39,7 @@ export function DebtRow({ debt, expanded, onToggle }: DebtRowProps) {
       </td>
       <td className="px-4 py-3 text-sm text-gray-500">
         {debt.dueDate
-          ? <span className={overdue ? 'text-red-600 font-medium' : ''}>
+          ? <span className={overdue ? 'text-danger font-medium' : ''}>
               {new Date(debt.dueDate).toLocaleDateString('es')}
             </span>
           : '—'}

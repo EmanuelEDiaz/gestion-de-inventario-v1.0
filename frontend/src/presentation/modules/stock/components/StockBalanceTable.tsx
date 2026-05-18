@@ -21,7 +21,7 @@ export function StockBalanceTable({ balances, showWarehouse = true, showProduct 
       { key: 'productSku', label: 'SKU', render: (_, r) => <span className="font-mono text-sm">{r.productSku || '-'}</span> },
       {
         key: 'available', label: 'Disponible', className: 'text-right',
-        render: (_, r) => <span className={`font-medium ${r.available <= 0 ? 'text-red-600' : ''}`}>{r.available.toFixed(2)}</span>,
+        render: (_, r) => <span className={`font-medium ${r.available <= 0 ? 'text-danger' : ''}`}>{r.available.toFixed(2)}</span>,
       },
       { key: 'reserved', label: 'Reservado', className: 'text-right', render: (_, r) => <span className="text-muted-foreground">{r.reserved.toFixed(2)}</span> },
       { key: 'onHand', label: 'En Mano', className: 'text-right', render: (_, r) => <span>{r.onHand.toFixed(2)}</span> },

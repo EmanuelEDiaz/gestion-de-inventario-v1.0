@@ -32,8 +32,8 @@ export const DEBT_STATUS_LABELS: Record<DebtStatus, string> = {
 };
 
 export const DEBT_STATUS_COLORS: Record<DebtStatus, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-700',
-  PARTIAL: 'bg-blue-100 text-blue-700',
-  PAID: 'bg-green-100 text-green-700',
+  PENDING: 'bg-warning/10 text-warning',
+  PARTIAL: 'bg-info/10 text-info',
+  PAID: 'bg-success/10 text-success',
   CANCELLED: 'bg-gray-100 text-gray-500',
 };

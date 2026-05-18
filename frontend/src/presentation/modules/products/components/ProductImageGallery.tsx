@@ -161,7 +161,7 @@ export function ProductImageGallery({ productId, editable = false }: ProductImag
                 title="Eliminar imagen actual"
                 disabled={isBusy}
                 onClick={() => handleDelete(activeImage.id)}
-                className="rounded-full bg-white/95 p-2 text-red-600 shadow transition hover:bg-white disabled:opacity-50"
+                className="rounded-full bg-white/95 p-2 text-danger shadow transition hover:bg-white disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
