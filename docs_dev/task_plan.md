@@ -1,7 +1,7 @@
 # Plan de Reestructuración del Proyecto - Gestión de Inventario
 
 > Created: 2026-05-17 | Auditoría completa con 3 agentes paralelos + graphify
-> ⚠️ **Sección actual: 11 — Pendiente de inicio**
+> ⚠️ **Sección actual: 12 — Pendiente de inicio**
 
 ---
 
@@ -19,7 +19,7 @@
 | Clientes HTTP duplicados | — | 2 (api-client.ts + client.ts) |
 | Tablas que NO usan GenericTable | — | 7 |
 | Versiones de Card | — | 2 (legacy + shadcn) |
-| DomainExceptions implementadas | 10 de ~30 necesarias | — |
+| DomainExceptions implementadas | 19 de ~30 necesarias | — |
 | API_URL hardcodeada | — | en 36 lugares |
 | Mappers manuales (sin MapStruct) | 24 en 3 capas | — |
 
@@ -39,7 +39,7 @@
 | **8** | ✅ Completado | 10 (+3 sub-hooks) | `refactor(frontend): split 4 notification hooks, create shared base hook` |
 | **9** | ✅ Completado | 10 (+2 extra) | — |
 | **10** | ✅ Completado | 7 (+2 adaptadores, 5 tests) | `fix(backend): corregir violaciones hexagonales, agregar tests de use cases, controllers y dominio` |
-| **11** | ❌ Pendiente | 10 | — |
+| **11** | ✅ Completado | 10 | `feat(backend): implement 9 specific DomainExceptions, add pattern-matching error handler` |
 | **12** | ❌ Pendiente | 8 | — |
 | **13** | ❌ Pendiente | 10 | — |
 | **14** | ❌ Pendiente | 10 | — |

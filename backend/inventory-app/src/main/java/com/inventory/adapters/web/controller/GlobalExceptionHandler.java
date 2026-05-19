@@ -7,7 +7,16 @@ import com.inventory.domain.errors.InvalidSettingsValueException;
 import com.inventory.domain.errors.InvalidTokenException;
 import com.inventory.domain.errors.SettingsVersionConflictException;
 import com.inventory.domain.errors.UserDisabledException;
+import com.inventory.domain.errors.CategoryNotFoundError;
+import com.inventory.domain.errors.CustomerNotFoundError;
+import com.inventory.domain.errors.InsufficientStockError;
+import com.inventory.domain.errors.ProductDuplicateError;
+import com.inventory.domain.errors.ProductNotFoundError;
+import com.inventory.domain.errors.ProductOutOfStockError;
+import com.inventory.domain.errors.SaleNotFoundError;
+import com.inventory.domain.errors.SupplierNotFoundError;
 import com.inventory.domain.errors.UserNotFoundException;
+import com.inventory.domain.errors.WarehouseNotFoundError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -160,19 +169,44 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DomainException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleDomainException(
             DomainException ex, ServerWebExchange exchange) {
-        log.error("Domain exception: {}", ex.getMessage());
-        
+        HttpStatus status = resolveHttpStatus(ex);
+        log.warn("Domain exception [{}]: {}", status, ex.getMessage());
+
         ProblemDetail problem = ProblemDetail.of(
                 "urn:inventory:error:" + ex.getErrorCode().toLowerCase().replace("_", "-"),
-                HttpStatus.BAD_REQUEST.value(),
-                "Domain Error",
+                status.value(),
+                status.getReasonPhrase(),
                 ex.getMessage(),
                 exchange.getRequest().getPath().value()
         );
-        
-        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+
+        return Mono.just(ResponseEntity.status(status)
                 .header("Content-Type", "application/problem+json")
                 .body(problem));
+    }
+
+    private HttpStatus resolveHttpStatus(DomainException ex) {
+        return switch (ex) {
+            case com.inventory.domain.errors.NotFoundException e -> HttpStatus.NOT_FOUND;
+            case com.inventory.domain.errors.ConflictException e -> HttpStatus.CONFLICT;
+            case com.inventory.domain.errors.BadRequestException e -> HttpStatus.BAD_REQUEST;
+            case com.inventory.domain.errors.InvalidCredentialsException e -> HttpStatus.UNAUTHORIZED;
+            case com.inventory.domain.errors.InvalidTokenException e -> HttpStatus.UNAUTHORIZED;
+            case com.inventory.domain.errors.UserNotFoundException e -> HttpStatus.NOT_FOUND;
+            case com.inventory.domain.errors.UserDisabledException e -> HttpStatus.FORBIDDEN;
+            case com.inventory.domain.errors.SettingsVersionConflictException e -> HttpStatus.CONFLICT;
+            case com.inventory.domain.errors.InvalidSettingsValueException e -> HttpStatus.UNPROCESSABLE_ENTITY;
+            case ProductNotFoundError e -> HttpStatus.NOT_FOUND;
+            case SaleNotFoundError e -> HttpStatus.NOT_FOUND;
+            case CustomerNotFoundError e -> HttpStatus.NOT_FOUND;
+            case CategoryNotFoundError e -> HttpStatus.NOT_FOUND;
+            case SupplierNotFoundError e -> HttpStatus.NOT_FOUND;
+            case WarehouseNotFoundError e -> HttpStatus.NOT_FOUND;
+            case ProductDuplicateError e -> HttpStatus.CONFLICT;
+            case ProductOutOfStockError e -> HttpStatus.CONFLICT;
+            case InsufficientStockError e -> HttpStatus.CONFLICT;
+            default -> HttpStatus.BAD_REQUEST;
+        };
     }
     
     @ExceptionHandler(ResponseStatusException.class)
