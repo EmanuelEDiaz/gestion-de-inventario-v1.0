@@ -1,7 +1,7 @@
 # Plan de Reestructuración del Proyecto - Gestión de Inventario
 
 > Created: 2026-05-17 | Auditoría completa con 3 agentes paralelos + graphify
-> ⚠️ **Sección actual: 7 — Pendiente de inicio**
+> ⚠️ **Sección actual: 9 — Pendiente de inicio**
 
 ---
 
@@ -36,7 +36,7 @@
 | **5** | ✅ Completado | 8 (+26 subcomponentes) | `refactor(frontend): split 8 products components into ≤100-line subcomponents` |
 | **6** | ✅ Completado | 10 (+26 subcomponentes) | `refactor(frontend): split 10 shared components into ≤100-line subcomponents` |
 | **7** | ✅ Completado | 10 (+34 subcomponentes) | `refactor(frontend): split 10 remaining components into ≤100-line subcomponents` |
-| **8** | ❌ Pendiente | 10 | — |
+| **8** | ✅ Completado | 10 (+3 sub-hooks) | `refactor(frontend): split 4 notification hooks, create shared base hook` |
 | **9** | ❌ Pendiente | 10 | — |
 | **10** | ❌ Pendiente | 7 | — |
 | **11** | ❌ Pendiente | 10 | — |
