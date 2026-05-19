@@ -8,9 +8,8 @@ import com.inventory.domain.model.Notification;
 import com.inventory.domain.ports.in.AdminUserQueryPort;
 import com.inventory.domain.ports.in.NotificationCommandPort;
 import com.inventory.domain.ports.in.NotificationQueryPort;
+import com.inventory.domain.shared.PageRequest;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -75,8 +74,8 @@ public class NotificationController {
         @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = extractUserId(userDetails);
-        Pageable pageable = PageRequest.of(page, size);
-        return queryPort.listSystemNotifications(userId, pageable)
+        var pageRequest = PageRequest.of(page, size);
+        return queryPort.listSystemNotifications(userId, pageRequest)
             .map(n -> mapper.toNotificationResponse(n, false));
     }
 
@@ -88,8 +87,8 @@ public class NotificationController {
         @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = extractUserId(userDetails);
-        Pageable pageable = PageRequest.of(page, size);
-        return queryPort.listUserNotifications(userId, pageable)
+        var pageRequest = PageRequest.of(page, size);
+        return queryPort.listUserNotifications(userId, pageRequest)
             .map(n -> mapper.toNotificationResponse(n, false));
     }
 

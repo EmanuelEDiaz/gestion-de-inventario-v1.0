@@ -135,6 +135,29 @@ public class SupplementaryApplicationMapper {
         );
     }
 
+    public NotificationPreferencesResponse toNotificationPreferencesResponse(
+        NotificationPreference domain
+    ) {
+        return new NotificationPreferencesResponse(
+            domain.id(),
+            domain.userId(),
+            domain.enabled(),
+            domain.lowStockEnabled(),
+            domain.syncEnabled(),
+            domain.operationsEnabled(),
+            domain.debtEnabled(),
+            domain.userActionsEnabled(),
+            domain.systemEnabled(),
+            domain.pushNotificationsEnabled(),
+            domain.toastNotificationsEnabled(),
+            domain.sseEnabled(),
+            domain.soundEnabled(),
+            domain.desktopNotificationEnabled(),
+            domain.createdAt(),
+            domain.updatedAt()
+        );
+    }
+
     public NotificationScheduleResponse toNotificationScheduleResponse(
         com.inventory.adapters.persistence.entity.NotificationSchedulesEntity entity
     ) {
@@ -152,6 +175,22 @@ public class SupplementaryApplicationMapper {
             entity.getBypassOnCritical(),
             entity.getCreatedAt(),
             entity.getUpdatedAt()
+        );
+    }
+
+    public NotificationScheduleResponse toNotificationScheduleResponse(
+        NotificationSchedule domain
+    ) {
+        return new NotificationScheduleResponse(
+            domain.id(),
+            domain.userId(),
+            domain.quietHoursStart(),
+            domain.quietHoursEnd(),
+            domain.quietHoursEnabled(),
+            domain.quietDaysList(),
+            domain.bypassOnCritical(),
+            domain.createdAt(),
+            domain.updatedAt()
         );
     }
 

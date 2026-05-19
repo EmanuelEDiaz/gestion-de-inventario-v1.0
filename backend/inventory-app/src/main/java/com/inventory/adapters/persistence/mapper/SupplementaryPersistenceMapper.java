@@ -281,6 +281,86 @@ public class SupplementaryPersistenceMapper {
         return e;
     }
 
+    // ==================== NotificationPreference ====================
+
+    public NotificationPreference toDomain(NotificationPreferencesEntity e) {
+        if (e == null) return null;
+        return new NotificationPreference(
+            e.getId(),
+            e.getUserId(),
+            e.getEnabled(),
+            e.getLowStockEnabled(),
+            e.getSyncEnabled(),
+            e.getOperationsEnabled(),
+            e.getDebtEnabled(),
+            e.getUserActionsEnabled(),
+            e.getSystemEnabled(),
+            e.getPushNotificationsEnabled(),
+            e.getToastNotificationsEnabled(),
+            e.getSseEnabled(),
+            e.getSoundEnabled(),
+            e.getDesktopNotificationEnabled(),
+            e.getCreatedAt(),
+            e.getUpdatedAt()
+        );
+    }
+
+    public NotificationPreferencesEntity toEntity(NotificationPreference d, boolean isNew) {
+        if (d == null) return null;
+        NotificationPreferencesEntity e = new NotificationPreferencesEntity();
+        e.setId(d.id());
+        e.setUserId(d.userId());
+        e.setEnabled(d.enabled());
+        e.setLowStockEnabled(d.lowStockEnabled());
+        e.setSyncEnabled(d.syncEnabled());
+        e.setOperationsEnabled(d.operationsEnabled());
+        e.setDebtEnabled(d.debtEnabled());
+        e.setUserActionsEnabled(d.userActionsEnabled());
+        e.setSystemEnabled(d.systemEnabled());
+        e.setPushNotificationsEnabled(d.pushNotificationsEnabled());
+        e.setToastNotificationsEnabled(d.toastNotificationsEnabled());
+        e.setSseEnabled(d.sseEnabled());
+        e.setSoundEnabled(d.soundEnabled());
+        e.setDesktopNotificationEnabled(d.desktopNotificationEnabled());
+        e.setCreatedAt(d.createdAt());
+        e.setUpdatedAt(d.updatedAt());
+        e.setNew(isNew);
+        return e;
+    }
+
+    // ==================== NotificationSchedule ====================
+
+    public NotificationSchedule toDomain(NotificationSchedulesEntity e) {
+        if (e == null) return null;
+        return new NotificationSchedule(
+            e.getId(),
+            e.getUserId(),
+            e.getQuietHoursStart(),
+            e.getQuietHoursEnd(),
+            e.getQuietHoursEnabled(),
+            e.getQuietDaysList() != null ? java.util.Arrays.asList(e.getQuietDaysList()) : java.util.List.of(),
+            e.getBypassOnCritical(),
+            e.getCreatedAt(),
+            e.getUpdatedAt()
+        );
+    }
+
+    public NotificationSchedulesEntity toEntity(NotificationSchedule d, boolean isNew) {
+        if (d == null) return null;
+        NotificationSchedulesEntity e = new NotificationSchedulesEntity();
+        e.setId(d.id());
+        e.setUserId(d.userId());
+        e.setQuietHoursStart(d.quietHoursStart());
+        e.setQuietHoursEnd(d.quietHoursEnd());
+        e.setQuietHoursEnabled(d.quietHoursEnabled());
+        e.setQuietDaysList(d.quietDaysList() != null ? d.quietDaysList().toArray(new Integer[0]) : new Integer[0]);
+        e.setBypassOnCritical(d.bypassOnCritical());
+        e.setCreatedAt(d.createdAt());
+        e.setUpdatedAt(d.updatedAt());
+        e.setNew(isNew);
+        return e;
+    }
+
     // ==================== NotificationRead ====================
 
     public NotificationRead toDomain(NotificationReadEntity e) {

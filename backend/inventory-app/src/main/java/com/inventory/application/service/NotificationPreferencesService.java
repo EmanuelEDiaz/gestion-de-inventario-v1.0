@@ -1,11 +1,10 @@
 package com.inventory.application.service;
 
-import com.inventory.adapters.persistence.entity.NotificationPreferencesEntity;
-import com.inventory.adapters.persistence.repository.NotificationPreferencesR2dbcRepository;
 import com.inventory.application.dto.NotificationPreferencesResponse;
 import com.inventory.application.dto.UpdateNotificationPreferencesRequest;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.model.NotificationPreference;
+import com.inventory.domain.ports.out.NotificationPreferencesPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -18,14 +17,14 @@ import java.util.UUID;
 @Service
 public class NotificationPreferencesService {
 
-    private final NotificationPreferencesR2dbcRepository repository;
+    private final NotificationPreferencesPort port;
     private final SupplementaryApplicationMapper mapper;
 
     public NotificationPreferencesService(
-        NotificationPreferencesR2dbcRepository repository,
+        NotificationPreferencesPort port,
         SupplementaryApplicationMapper mapper
     ) {
-        this.repository = repository;
+        this.port = port;
         this.mapper = mapper;
     }
 
@@ -33,29 +32,12 @@ public class NotificationPreferencesService {
      * Obtiene las preferencias del usuario, o crea defaults si no existen.
      */
     public Mono<NotificationPreferencesResponse> getPreferences(UUID userId) {
-        return repository.findByUserId(userId)
+        return port.findByUserId(userId)
             .map(mapper::toNotificationPreferencesResponse)
             .switchIfEmpty(
                 Mono.defer(() -> {
-                    NotificationPreferencesEntity entity = new NotificationPreferencesEntity();
-                    entity.setId(UUID.randomUUID());
-                    entity.setUserId(userId);
-                    entity.setEnabled(true);
-                    entity.setLowStockEnabled(true);
-                    entity.setSyncEnabled(true);
-                    entity.setOperationsEnabled(true);
-                    entity.setDebtEnabled(true);
-                    entity.setUserActionsEnabled(true);
-                    entity.setSystemEnabled(true);
-                    entity.setPushNotificationsEnabled(false);
-                    entity.setToastNotificationsEnabled(true);
-                    entity.setSseEnabled(true);
-                    entity.setSoundEnabled(true);
-                    entity.setDesktopNotificationEnabled(false);
-                    entity.setCreatedAt(Instant.now());
-                    entity.setUpdatedAt(Instant.now());
-                    entity.setNew(true);
-                    return repository.save(entity)
+                    NotificationPreference domain = NotificationPreference.createDefault(userId);
+                    return port.save(domain)
                         .map(mapper::toNotificationPreferencesResponse);
                 })
             );
@@ -68,26 +50,27 @@ public class NotificationPreferencesService {
         UUID userId,
         UpdateNotificationPreferencesRequest request
     ) {
-        return repository.findByUserId(userId)
+        return port.findByUserId(userId)
             .switchIfEmpty(Mono.error(new RuntimeException("Preferences not found for user: " + userId)))
-            .flatMap(entity -> {
-                // Actualizar campos si vienen en la request
-                if (request.enabled() != null) entity.setEnabled(request.enabled());
-                if (request.lowStockEnabled() != null) entity.setLowStockEnabled(request.lowStockEnabled());
-                if (request.syncEnabled() != null) entity.setSyncEnabled(request.syncEnabled());
-                if (request.operationsEnabled() != null) entity.setOperationsEnabled(request.operationsEnabled());
-                if (request.debtEnabled() != null) entity.setDebtEnabled(request.debtEnabled());
-                if (request.userActionsEnabled() != null) entity.setUserActionsEnabled(request.userActionsEnabled());
-                if (request.systemEnabled() != null) entity.setSystemEnabled(request.systemEnabled());
-                if (request.pushNotificationsEnabled() != null) entity.setPushNotificationsEnabled(request.pushNotificationsEnabled());
-                if (request.toastNotificationsEnabled() != null) entity.setToastNotificationsEnabled(request.toastNotificationsEnabled());
-                if (request.sseEnabled() != null) entity.setSseEnabled(request.sseEnabled());
-                if (request.soundEnabled() != null) entity.setSoundEnabled(request.soundEnabled());
-                if (request.desktopNotificationEnabled() != null) entity.setDesktopNotificationEnabled(request.desktopNotificationEnabled());
-                
-                entity.setUpdatedAt(Instant.now());
-                entity.setNew(false);
-                return repository.save(entity);
+            .flatMap(pref -> {
+                NotificationPreference updated = new NotificationPreference(
+                    pref.id(), pref.userId(),
+                    request.enabled() != null ? request.enabled() : pref.enabled(),
+                    request.lowStockEnabled() != null ? request.lowStockEnabled() : pref.lowStockEnabled(),
+                    request.syncEnabled() != null ? request.syncEnabled() : pref.syncEnabled(),
+                    request.operationsEnabled() != null ? request.operationsEnabled() : pref.operationsEnabled(),
+                    request.debtEnabled() != null ? request.debtEnabled() : pref.debtEnabled(),
+                    request.userActionsEnabled() != null ? request.userActionsEnabled() : pref.userActionsEnabled(),
+                    request.systemEnabled() != null ? request.systemEnabled() : pref.systemEnabled(),
+                    request.pushNotificationsEnabled() != null ? request.pushNotificationsEnabled() : pref.pushNotificationsEnabled(),
+                    request.toastNotificationsEnabled() != null ? request.toastNotificationsEnabled() : pref.toastNotificationsEnabled(),
+                    request.sseEnabled() != null ? request.sseEnabled() : pref.sseEnabled(),
+                    request.soundEnabled() != null ? request.soundEnabled() : pref.soundEnabled(),
+                    request.desktopNotificationEnabled() != null ? request.desktopNotificationEnabled() : pref.desktopNotificationEnabled(),
+                    pref.createdAt(),
+                    Instant.now()
+                );
+                return port.save(updated);
             })
             .map(mapper::toNotificationPreferencesResponse);
     }
