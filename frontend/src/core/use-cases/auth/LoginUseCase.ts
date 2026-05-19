@@ -1,24 +1,24 @@
 import { IAuthRepository } from '@/core/interfaces/IAuthRepository';
 import { AuthTokens, LoginCredentials } from '@/core/entities/user';
+import { AuthValidationError, InvalidCredentialsError } from '@/core/errors/AuthErrors';
 
-/**
- * Caso de uso: Iniciar sesión.
- * Responsabilidad única: autenticar usuario y obtener tokens.
- */
 export class LoginUseCase {
   constructor(private authRepository: IAuthRepository) {}
 
   async execute(credentials: LoginCredentials): Promise<AuthTokens> {
-    // Validaciones de dominio
     if (!credentials.username || credentials.username.trim().length === 0) {
-      throw new Error('El nombre de usuario es requerido');
-    }
-    
-    if (!credentials.password || credentials.password.length < 6) {
-      throw new Error('La contraseña debe tener al menos 6 caracteres');
+      throw new AuthValidationError('El nombre de usuario es requerido');
     }
 
-    // Delegar a repositorio
-    return this.authRepository.login(credentials);
+    if (!credentials.password || credentials.password.length < 6) {
+      throw new AuthValidationError('La contraseña debe tener al menos 6 caracteres');
+    }
+
+    try {
+      return await this.authRepository.login(credentials);
+    } catch (e) {
+      if (e instanceof InvalidCredentialsError) throw e;
+      throw new InvalidCredentialsError();
+    }
   }
 }

@@ -37,7 +37,7 @@
 | **6** | ✅ Completado | 10 (+26 subcomponentes) | `refactor(frontend): split 10 shared components into ≤100-line subcomponents` |
 | **7** | ✅ Completado | 10 (+34 subcomponentes) | `refactor(frontend): split 10 remaining components into ≤100-line subcomponents` |
 | **8** | ✅ Completado | 10 (+3 sub-hooks) | `refactor(frontend): split 4 notification hooks, create shared base hook` |
-| **9** | ❌ Pendiente | 10 | — |
+| **9** | ✅ Completado | 10 (+2 extra) | — |
 | **10** | ❌ Pendiente | 7 | — |
 | **11** | ❌ Pendiente | 10 | — |
 | **12** | ❌ Pendiente | 8 | — |
