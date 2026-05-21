@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.ProductImageDto;
+import com.inventory.application.product.dto.ProductImageDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.ports.in.ProductImageCommandPort;
 import org.springframework.core.io.buffer.DataBufferUtils;

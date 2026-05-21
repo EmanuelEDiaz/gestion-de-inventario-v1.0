@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.CreatePurchaseRequest;
-import com.inventory.application.dto.PurchaseDto;
+import com.inventory.application.purchase.dto.CreatePurchaseRequest;
+import com.inventory.application.purchase.dto.PurchaseDto;
 import com.inventory.application.mapper.PurchaseMapper;
 import com.inventory.domain.model.purchase.Purchase;
 import com.inventory.domain.ports.in.PurchaseCommandPort;

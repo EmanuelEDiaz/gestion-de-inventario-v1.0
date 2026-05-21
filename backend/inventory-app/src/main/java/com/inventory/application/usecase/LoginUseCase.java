@@ -1,7 +1,7 @@
 package com.inventory.application.usecase;
 
-import com.inventory.application.dto.AuthResult;
-import com.inventory.application.dto.LoginCommand;
+import com.inventory.application.user.dto.AuthResult;
+import com.inventory.application.user.dto.LoginCommand;
 import reactor.core.publisher.Mono;
 
 /**

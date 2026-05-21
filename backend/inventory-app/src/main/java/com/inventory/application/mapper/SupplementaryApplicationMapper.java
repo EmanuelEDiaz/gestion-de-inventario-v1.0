@@ -1,16 +1,27 @@
 package com.inventory.application.mapper;
 
-import com.inventory.application.dto.*;
-import com.inventory.domain.model.customer.CustomerImage;
+import com.inventory.application.customer.dto.CustomerDebtDto;
+import com.inventory.application.customer.dto.CustomerImageDto;
+import com.inventory.application.customer.dto.DebtPaymentDto;
+import com.inventory.application.notification.dto.NotificationDto;
+import com.inventory.application.notification.dto.NotificationPreferencesResponse;
+import com.inventory.application.notification.dto.NotificationResponse;
+import com.inventory.application.notification.dto.NotificationScheduleResponse;
+import com.inventory.application.product.dto.ProductImageDto;
+import com.inventory.application.supplier.dto.SupplierCatalogProductDto;
+import com.inventory.application.supplier.dto.SupplierImageDto;
+import com.inventory.application.supplier.dto.SupplierSocialLinkDto;
+import com.inventory.application.sync.dto.SyncIncidentDto;
 import com.inventory.domain.model.customer.CustomerDebt;
+import com.inventory.domain.model.customer.CustomerImage;
 import com.inventory.domain.model.customer.DebtPayment;
-import com.inventory.domain.model.product.ProductImage;
-import com.inventory.domain.model.supplier.SupplierImage;
-import com.inventory.domain.model.supplier.SupplierSocialLink;
-import com.inventory.domain.model.supplier.SupplierCatalogProduct;
 import com.inventory.domain.model.notification.Notification;
 import com.inventory.domain.model.notification.NotificationPreference;
 import com.inventory.domain.model.notification.NotificationSchedule;
+import com.inventory.domain.model.product.ProductImage;
+import com.inventory.domain.model.supplier.SupplierCatalogProduct;
+import com.inventory.domain.model.supplier.SupplierImage;
+import com.inventory.domain.model.supplier.SupplierSocialLink;
 import com.inventory.domain.model.sync.SyncIncident;
 import org.springframework.stereotype.Component;
 

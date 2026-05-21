@@ -1,8 +1,8 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.CreateSupplierRequest;
-import com.inventory.application.dto.SupplierDto;
-import com.inventory.application.dto.UpdateSupplierRequest;
+import com.inventory.application.supplier.dto.CreateSupplierRequest;
+import com.inventory.application.supplier.dto.SupplierDto;
+import com.inventory.application.supplier.dto.UpdateSupplierRequest;
 import com.inventory.application.mapper.SupplierMapper;
 import com.inventory.domain.ports.in.SupplierCommandPort;
 import com.inventory.domain.ports.in.SupplierQueryPort;

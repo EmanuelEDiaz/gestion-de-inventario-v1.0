@@ -1,6 +1,6 @@
 package com.inventory.application.usecase;
 
-import com.inventory.application.dto.UpdateNotificationScheduleRequest;
+import com.inventory.application.notification.dto.UpdateNotificationScheduleRequest;
 import java.util.UUID;
 
 /**

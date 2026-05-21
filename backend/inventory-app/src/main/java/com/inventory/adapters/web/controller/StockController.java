@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.StockBalanceDto;
+import com.inventory.application.stock.dto.StockBalanceDto;
 import com.inventory.application.mapper.StockBalanceMapper;
 import com.inventory.domain.ports.in.StockQueryPort;
 import org.springframework.web.bind.annotation.*;

@@ -1,8 +1,8 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.CreateCustomerRequest;
-import com.inventory.application.dto.CustomerDto;
-import com.inventory.application.dto.UpdateCustomerRequest;
+import com.inventory.application.customer.dto.CreateCustomerRequest;
+import com.inventory.application.customer.dto.CustomerDto;
+import com.inventory.application.customer.dto.UpdateCustomerRequest;
 import com.inventory.application.mapper.CustomerMapper;
 import com.inventory.domain.ports.in.CustomerCommandPort;
 import com.inventory.domain.ports.in.CustomerQueryPort;

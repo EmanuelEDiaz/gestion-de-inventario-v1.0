@@ -1,9 +1,9 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.CustomerDebtDto;
-import com.inventory.application.dto.DebtPaymentDto;
-import com.inventory.application.dto.RegisterDebtPaymentRequest;
-import com.inventory.application.dto.UpdateDebtRequest;
+import com.inventory.application.customer.dto.CustomerDebtDto;
+import com.inventory.application.customer.dto.DebtPaymentDto;
+import com.inventory.application.customer.dto.RegisterDebtPaymentRequest;
+import com.inventory.application.customer.dto.UpdateDebtRequest;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.model.customer.CustomerDebt;
 import com.inventory.domain.model.customer.DebtPayment;

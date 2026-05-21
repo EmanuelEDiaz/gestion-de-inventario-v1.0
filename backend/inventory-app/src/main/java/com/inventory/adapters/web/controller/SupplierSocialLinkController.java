@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.AddSocialLinkRequest;
-import com.inventory.application.dto.SupplierSocialLinkDto;
+import com.inventory.application.supplier.dto.AddSocialLinkRequest;
+import com.inventory.application.supplier.dto.SupplierSocialLinkDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.model.supplier.SupplierSocialLink;
 import com.inventory.domain.ports.in.SupplierSocialLinkCommandPort;

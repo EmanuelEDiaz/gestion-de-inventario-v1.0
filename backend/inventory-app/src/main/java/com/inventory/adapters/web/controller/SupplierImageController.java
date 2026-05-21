@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.SupplierImageDto;
+import com.inventory.application.supplier.dto.SupplierImageDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.ports.in.SupplierImageCommandPort;
 import org.springframework.http.HttpStatus;

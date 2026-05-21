@@ -1,6 +1,6 @@
 package com.inventory.application.mapper;
 
-import com.inventory.application.dto.SupplierDto;
+import com.inventory.application.supplier.dto.SupplierDto;
 import com.inventory.domain.model.supplier.Supplier;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;

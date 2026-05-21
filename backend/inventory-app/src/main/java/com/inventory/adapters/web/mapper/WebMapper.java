@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.mapper;
 
 import com.inventory.adapters.web.dto.AuthResponse;
-import com.inventory.application.dto.AuthResult;
+import com.inventory.application.user.dto.AuthResult;
 import org.springframework.stereotype.Component;
 
 /**

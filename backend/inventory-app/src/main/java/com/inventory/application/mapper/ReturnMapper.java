@@ -1,6 +1,6 @@
 package com.inventory.application.mapper;
 
-import com.inventory.application.dto.ReturnDto;
+import com.inventory.application.returns.dto.ReturnDto;
 import com.inventory.domain.model.returns.Return;
 import com.inventory.domain.model.returns.ReturnLine;
 import org.mapstruct.Mapper;

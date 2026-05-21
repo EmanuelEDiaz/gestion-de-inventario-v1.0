@@ -1,8 +1,8 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.CreateTransferRequest;
-import com.inventory.application.dto.TransferDto;
-import com.inventory.application.dto.UpdateTransferRequest;
+import com.inventory.application.transfer.dto.CreateTransferRequest;
+import com.inventory.application.transfer.dto.TransferDto;
+import com.inventory.application.transfer.dto.UpdateTransferRequest;
 import com.inventory.application.mapper.TransferMapper;
 import com.inventory.domain.model.transfer.Transfer;
 import com.inventory.domain.ports.in.TransferCommandPort;

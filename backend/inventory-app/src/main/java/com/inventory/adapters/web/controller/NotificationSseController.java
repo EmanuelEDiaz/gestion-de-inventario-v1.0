@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.NotificationDto;
+import com.inventory.application.notification.dto.NotificationDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.ports.out.NotificationSinkPort;
 import org.springframework.http.MediaType;

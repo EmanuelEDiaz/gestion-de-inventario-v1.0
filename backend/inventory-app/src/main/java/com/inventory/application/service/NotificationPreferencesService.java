@@ -1,7 +1,7 @@
 package com.inventory.application.service;
 
-import com.inventory.application.dto.NotificationPreferencesResponse;
-import com.inventory.application.dto.UpdateNotificationPreferencesRequest;
+import com.inventory.application.notification.dto.NotificationPreferencesResponse;
+import com.inventory.application.notification.dto.UpdateNotificationPreferencesRequest;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.model.notification.NotificationPreference;
 import com.inventory.domain.ports.out.NotificationPreferencesPort;

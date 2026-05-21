@@ -1,6 +1,6 @@
 package com.inventory.application.usecase;
 
-import com.inventory.application.dto.UpdateNotificationPreferencesRequest;
+import com.inventory.application.notification.dto.UpdateNotificationPreferencesRequest;
 import java.util.UUID;
 
 /**

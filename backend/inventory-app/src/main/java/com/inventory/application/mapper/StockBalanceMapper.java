@@ -1,6 +1,6 @@
 package com.inventory.application.mapper;
 
-import com.inventory.application.dto.StockBalanceDto;
+import com.inventory.application.stock.dto.StockBalanceDto;
 import com.inventory.domain.model.stock.StockBalance;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

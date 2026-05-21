@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.application.dto.AuthResult;
-import com.inventory.application.dto.RefreshTokenCommand;
+import com.inventory.application.user.dto.AuthResult;
+import com.inventory.application.user.dto.RefreshTokenCommand;
 import com.inventory.application.usecase.RefreshTokenUseCase;
 import com.inventory.domain.errors.InvalidTokenException;
 import com.inventory.domain.errors.UserNotFoundException;

@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.application.dto.AuthResult;
-import com.inventory.application.dto.LoginCommand;
+import com.inventory.application.user.dto.AuthResult;
+import com.inventory.application.user.dto.LoginCommand;
 import com.inventory.application.usecase.LoginUseCase;
 import com.inventory.domain.errors.InvalidCredentialsException;
 import com.inventory.domain.errors.UserDisabledException;

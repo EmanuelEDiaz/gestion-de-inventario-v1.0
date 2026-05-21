@@ -1,7 +1,7 @@
 package com.inventory.application.usecase;
 
-import com.inventory.application.dto.AuthResult;
-import com.inventory.application.dto.RefreshTokenCommand;
+import com.inventory.application.user.dto.AuthResult;
+import com.inventory.application.user.dto.RefreshTokenCommand;
 import reactor.core.publisher.Mono;
 
 /**

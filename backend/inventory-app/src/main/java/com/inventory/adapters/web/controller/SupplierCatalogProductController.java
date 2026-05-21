@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.application.dto.AddCatalogProductRequest;
-import com.inventory.application.dto.SupplierCatalogProductDto;
+import com.inventory.application.supplier.dto.AddCatalogProductRequest;
+import com.inventory.application.supplier.dto.SupplierCatalogProductDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.ports.in.SupplierCatalogProductCommandPort;
 import org.springframework.http.HttpStatus;
