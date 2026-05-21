@@ -1,6 +1,6 @@
 'use client';
 
-import type { Sale } from '@/core/entities/sale';
+import type { Sale } from '@/core/sale/entities/sale';
 import { SaleDetailHeader } from './SaleDetailHeader';
 import { SaleDetailInfo } from './SaleDetailInfo';
 import { SaleDetailDebtBanner } from './SaleDetailDebtBanner';

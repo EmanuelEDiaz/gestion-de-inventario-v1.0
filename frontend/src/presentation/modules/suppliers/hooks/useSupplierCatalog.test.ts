@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupplierCatalog } from './useSupplierCatalog';
-import type { SupplierCatalogProduct } from '@/core/entities/supplier-catalog-product';
+import type { SupplierCatalogProduct } from '@/core/supplier/entities/supplier-catalog-product';
 
 const mockProduct: SupplierCatalogProduct = {
   id: 'cat-1',

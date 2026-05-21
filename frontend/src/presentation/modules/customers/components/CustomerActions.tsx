@@ -1,6 +1,6 @@
 'use client';
 
-import type { Customer } from '@/core/entities/customer';
+import type { Customer } from '@/core/customer/entities/customer';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Eye, EyeOff, Trash2 } from 'lucide-react';
 

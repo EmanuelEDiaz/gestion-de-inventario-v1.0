@@ -1,13 +1,13 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { currencyRepository } from '@/infrastructure/repositories/CurrencyRepository';
+import { currencyRepository } from '@/infrastructure/repositories/currency/CurrencyRepository';
 import {
   GetCurrenciesUseCase,
   CreateCurrencyUseCase,
   UpdateCurrencyUseCase,
-} from '@/core/use-cases/currency';
-import type { CreateCurrencyInput, UpdateCurrencyInput } from '@/core/entities/currency';
+} from '@/core/currency/use-cases';
+import type { CreateCurrencyInput, UpdateCurrencyInput } from '@/core/currency/entities/currency';
 import { toast } from 'sonner';
 
 const getCurrencies = new GetCurrenciesUseCase(currencyRepository);

@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import { Button } from '@/presentation/shared/components/ui';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { Card } from '@/presentation/shared/components/ui/card';
 import { WarehouseFormFields, type WarehouseFormData } from '../components/form/WarehouseFormFields';
 import { useWarehouseFormController } from '../hooks/useWarehouseFormController';

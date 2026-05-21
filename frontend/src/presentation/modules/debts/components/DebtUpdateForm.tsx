@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { CustomerDebt, UpdateDebtData } from '@/core/entities/customer-debt';
+import type { CustomerDebt, UpdateDebtData } from '@/core/customer/entities/customer-debt';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
-import { Textarea } from '@/presentation/shared/components/Textarea';
+import { Textarea } from '@/presentation/shared/components/form/Textarea';
 
 interface DebtUpdateFormProps {
   debt: CustomerDebt;

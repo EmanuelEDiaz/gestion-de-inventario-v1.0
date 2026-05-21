@@ -1,12 +1,12 @@
 'use client';
 
 import { Fragment, useState } from 'react';
-import type { SyncIncidentType } from '@/core/entities/sync-incident';
-import { SYNC_INCIDENT_TYPE_LABELS } from '@/core/entities/sync-incident';
+import type { SyncIncidentType } from '@/core/settings/entities/sync-incident';
+import { SYNC_INCIDENT_TYPE_LABELS } from '@/core/settings/entities/sync-incident';
 import { useSyncIncidents } from '../hooks/useSyncIncidents';
 import { SyncIncidentRow } from '../components/SyncIncidentRow';
 import { SyncConflictResolver } from '../components/SyncConflictResolver';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 const ALL_TYPES = ['all', 'STOCK_CONFLICT', 'ENTITY_DUPLICATE', 'VERSION_MISMATCH', 'CHECKSUM_ERROR'] as const;
 type FilterType = typeof ALL_TYPES[number];

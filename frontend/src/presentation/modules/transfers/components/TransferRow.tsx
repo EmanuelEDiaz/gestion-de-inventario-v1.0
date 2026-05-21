@@ -1,7 +1,7 @@
 'use client';
 
-import type { Transfer } from '@/core/entities/transfer';
-import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_COLORS } from '@/core/entities/transfer';
+import type { Transfer } from '@/core/transfer/entities/transfer';
+import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_COLORS } from '@/core/transfer/entities/transfer';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { TableCell, TableRow } from '@/presentation/shared/components/ui/table';

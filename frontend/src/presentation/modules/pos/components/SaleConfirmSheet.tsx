@@ -1,6 +1,6 @@
 'use client';
 
-import type { PaymentMode } from '@/core/entities/sale';
+import type { PaymentMode } from '@/core/sale/entities/sale';
 import type { CartLine } from '../hooks/usePosCart';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { formatCurrency } from '@/presentation/shared/lib/utils';

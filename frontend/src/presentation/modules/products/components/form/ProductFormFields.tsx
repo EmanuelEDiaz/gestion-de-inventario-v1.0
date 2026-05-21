@@ -1,5 +1,5 @@
-import type { Category } from '@/core/entities/category';
-import type { UnitOfMeasure } from '@/core/entities/product';
+import type { Category } from '@/core/category/entities/category';
+import type { UnitOfMeasure } from '@/core/product/entities/product';
 import { ProductBasicInfoSection } from './ProductBasicInfoSection';
 import { ProductPricingSection } from './ProductPricingSection';
 import { ProductInventorySection } from './ProductInventorySection';

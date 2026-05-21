@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { CreateUserData } from '@/core/entities/user';
+import type { CreateUserData } from '@/core/user/entities/user';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { useRoles } from '@/presentation/modules/roles/hooks/useRoles';

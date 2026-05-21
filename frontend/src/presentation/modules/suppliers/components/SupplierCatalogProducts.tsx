@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useSupplierCatalog } from '../hooks/useSupplierCatalog';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { EmptyState } from '@/presentation/shared/components/EmptyState';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { Plus } from 'lucide-react';
 import { CatalogAddForm } from './CatalogAddForm';

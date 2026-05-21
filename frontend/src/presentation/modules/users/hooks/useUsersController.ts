@@ -1,14 +1,14 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { userRepository } from '@/infrastructure/repositories/UserRepository';
+import { userRepository } from '@/infrastructure/repositories/user/UserRepository';
 import {
   GetUsersUseCase,
   CreateUserUseCase,
   UpdateUserUseCase,
   ChangePasswordUseCase,
-} from '@/core/use-cases/user';
-import type { CreateUserData, UpdateUserData, ChangePasswordData } from '@/core/entities/user';
+} from '@/core/user/use-cases';
+import type { CreateUserData, UpdateUserData, ChangePasswordData } from '@/core/user/entities/user';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 const getUsers = new GetUsersUseCase(userRepository);

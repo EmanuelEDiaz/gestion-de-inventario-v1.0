@@ -1,6 +1,6 @@
 'use client';
 
-import { type Purchase } from '@/core/entities/purchase';
+import { type Purchase } from '@/core/purchase/entities/purchase';
 import { PurchaseDetailHeader } from './PurchaseDetailHeader';
 import { PurchaseDetailInfo } from './PurchaseDetailInfo';
 import { PurchaseDetailNotes } from './PurchaseDetailNotes';

@@ -6,10 +6,10 @@ import { useAdjustments } from '../hooks/useAdjustments';
 import { useAdjustmentColumns } from '../hooks/useAdjustmentColumns';
 import { AdjustmentFormFields } from '../components/form/AdjustmentFormFields';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { GenericTable } from '@/presentation/shared/components/GenericTable';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 
 export function AdjustmentsListView() {
   const { adjustments, loading, error, create, confirm, cancel, remove } = useAdjustments();

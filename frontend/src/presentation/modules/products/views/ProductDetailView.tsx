@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Pencil, Sparkles } from 'lucide-react';
-import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
+import { ProductRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { ProductImageGallery } from '../components/ProductImageGallery';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 
 type Tab = 'info' | 'images';

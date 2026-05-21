@@ -1,6 +1,6 @@
 'use client';
 
-import type { Sale, PaymentMode, SaleStatus } from '@/core/entities/sale';
+import type { Sale, PaymentMode, SaleStatus } from '@/core/sale/entities/sale';
 import { statusColors } from '@/presentation/shared/lib/colors';
 
 interface SaleDetailHeaderProps {

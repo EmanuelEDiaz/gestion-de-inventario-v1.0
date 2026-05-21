@@ -1,6 +1,6 @@
 'use client';
 
-import type { Transfer } from '@/core/entities/transfer';
+import type { Transfer } from '@/core/transfer/entities/transfer';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { CheckCircle, Truck, XCircle, Trash2 } from 'lucide-react';
 

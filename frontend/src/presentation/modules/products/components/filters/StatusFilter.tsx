@@ -1,7 +1,7 @@
 'use client';
 
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import type { ProductStatus } from '@/core/entities/product';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import type { ProductStatus } from '@/core/product/entities/product';
 
 const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
   { value: 'ACTIVE', label: 'Activo' },

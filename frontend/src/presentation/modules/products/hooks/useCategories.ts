@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { categoryRepository } from '@/infrastructure/repositories/CategoryRepository';
-import type { Category } from '@/core/entities/category';
+import { categoryRepository } from '@/infrastructure/repositories/category/CategoryRepository';
+import type { Category } from '@/core/category/entities/category';
 
 export function useCategories(activeOnly = true) {
   return useQuery<Category[]>({

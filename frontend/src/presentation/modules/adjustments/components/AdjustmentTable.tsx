@@ -1,6 +1,6 @@
 'use client';
 
-import type { Adjustment } from '@/core/entities/adjustment';
+import type { Adjustment } from '@/core/adjustment/entities/adjustment';
 import {
   Table,
   TableBody,

@@ -1,7 +1,7 @@
 # Plan de Reestructuración del Proyecto - Gestión de Inventario
 
 > Created: 2026-05-17 | Auditoría completa con 3 agentes paralelos + graphify
-> ⚠️ **Sección actual: 12 — Pendiente de inicio**
+> ⚠️ **Sección actual: 14 — Pendiente de inicio**
 
 ---
 
@@ -40,8 +40,8 @@
 | **9** | ✅ Completado | 10 (+2 extra) | — |
 | **10** | ✅ Completado | 7 (+2 adaptadores, 5 tests) | `fix(backend): corregir violaciones hexagonales, agregar tests de use cases, controllers y dominio` |
 | **11** | ✅ Completado | 10 | `feat(backend): implement 9 specific DomainExceptions, add pattern-matching error handler` |
-| **12** | ❌ Pendiente | 8 | — |
-| **13** | ❌ Pendiente | 10 | — |
+| **12** | ✅ Completado | 8 | `chore(backend): reorganize domain/model by subdomain` (+7 commits) |
+| **13** | ✅ Completado | 10 | `chore(frontend): reorganize core/, infrastructure/, shared/ by subdomain` |
 | **14** | ❌ Pendiente | 10 | — |
 | **15** | ❌ Pendiente | 9 | — |
 

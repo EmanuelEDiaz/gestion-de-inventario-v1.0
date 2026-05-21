@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import type { PaymentMode } from '@/core/entities/sale';
+import type { PaymentMode } from '@/core/sale/entities/sale';
 import { ChevronDown } from 'lucide-react';
 
 interface FiarButtonProps {

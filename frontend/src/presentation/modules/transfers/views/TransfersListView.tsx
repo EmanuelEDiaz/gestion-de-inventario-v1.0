@@ -6,10 +6,10 @@ import { useTransfers } from '../hooks/useTransfers';
 import { useTransferColumns } from '../hooks/useTransferColumns';
 import { TransferFormFields } from '../components/form/TransferFormFields';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { GenericTable } from '@/presentation/shared/components/GenericTable';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 
 export function TransfersListView() {
   const { transfers, loading, error, create, confirm, ship, complete, cancel, remove } = useTransfers();

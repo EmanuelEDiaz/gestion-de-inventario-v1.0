@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { CheckCircle2, Trash2, XCircle } from 'lucide-react';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
-import type { Adjustment } from '@/core/entities/adjustment';
-import { ADJUSTMENT_STATUS_LABELS, ADJUSTMENT_STATUS_COLORS, ADJUSTMENT_TYPE_LABELS } from '@/core/entities/adjustment';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Adjustment } from '@/core/adjustment/entities/adjustment';
+import { ADJUSTMENT_STATUS_LABELS, ADJUSTMENT_STATUS_COLORS, ADJUSTMENT_TYPE_LABELS } from '@/core/adjustment/entities/adjustment';
 
 const COLS: Column<Adjustment>[] = [
   { key: 'adjustmentNumber', label: 'Número', render: (_, r) => <span className="font-mono font-medium" title="Número de ajuste">{r.adjustmentNumber}</span> },

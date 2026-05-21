@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ResolveSyncIncidentData } from '@/core/entities/sync-incident';
-import { SyncIncidentRepository } from '@/infrastructure/repositories/SyncIncidentRepository';
+import type { ResolveSyncIncidentData } from '@/core/settings/entities/sync-incident';
+import { SyncIncidentRepository } from '@/infrastructure/repositories/settings/SyncIncidentRepository';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 const repo = new SyncIncidentRepository();

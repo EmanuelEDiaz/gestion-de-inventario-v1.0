@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { SyncIncident, ReportSyncIncidentData, ResolveSyncIncidentData } from '@/core/entities/sync-incident';
+import type { SyncIncident, ReportSyncIncidentData, ResolveSyncIncidentData } from '@/core/settings/entities/sync-incident';
 
 const BASE = '/api/v1/sync/incidents';
 

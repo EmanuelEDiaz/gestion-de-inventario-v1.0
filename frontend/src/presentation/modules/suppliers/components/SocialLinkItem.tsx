@@ -1,7 +1,7 @@
 'use client';
 
 import { ExternalLink, Trash2 } from 'lucide-react';
-import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from '@/core/entities/supplier-social-link';
+import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from '@/core/supplier/entities/supplier-social-link';
 
 interface SocialLinkItemProps {
   link: {

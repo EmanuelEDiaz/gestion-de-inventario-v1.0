@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { CreateCustomerData } from '@/core/entities/customer';
+import type { CreateCustomerData } from '@/core/customer/entities/customer';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
-import { Textarea } from '@/presentation/shared/components/Textarea';
+import { Textarea } from '@/presentation/shared/components/form/Textarea';
 
 interface CustomerFormFieldsProps {
   onSubmit: (data: CreateCustomerData) => void;

@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Return, CreateReturnData, UpdateReturnData } from '@/core/entities/return';
-import { ReturnRepository } from '@/infrastructure/repositories/ReturnRepository';
+import type { Return, CreateReturnData, UpdateReturnData } from '@/core/return/entities/return';
+import { ReturnRepository } from '@/infrastructure/repositories/return/ReturnRepository';
 import { 
   GetReturnsUseCase, CreateReturnUseCase, UpdateReturnUseCase,
   ConfirmReturnUseCase, CancelReturnUseCase, DeleteReturnUseCase
-} from '@/core/use-cases/return';
+} from '@/core/return/use-cases';
 
 // Singletons
 const repo = new ReturnRepository();

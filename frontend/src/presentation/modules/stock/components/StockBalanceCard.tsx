@@ -1,6 +1,6 @@
 'use client';
 
-import { StockBalance } from '@/core/entities/stock-balance';
+import { StockBalance } from '@/core/stock/entities/stock-balance';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
 import { statusColors } from '@/presentation/shared/lib/colors';

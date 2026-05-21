@@ -3,8 +3,8 @@
 import { useStock } from '@/presentation/modules/stock';
 import { StockBalanceTable } from '@/presentation/modules/stock';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 
 export default function StockPage() {
   const { balances, isLoading, error } = useStock();

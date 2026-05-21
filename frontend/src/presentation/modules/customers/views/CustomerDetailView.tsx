@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CustomerRepository } from '@/infrastructure/repositories/CustomerRepository';
+import { CustomerRepository } from '@/infrastructure/repositories/customer/CustomerRepository';
 import { CustomerImageCarousel } from '../components/CustomerImageCarousel';
 import { CustomerDebtList } from '../components/CustomerDebtList';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { statusBadge } from '@/presentation/shared/lib/colors';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 

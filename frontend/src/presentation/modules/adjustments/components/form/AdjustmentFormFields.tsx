@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { AdjustmentType, CreateAdjustmentData } from '@/core/entities/adjustment';
-import type { Warehouse } from '@/core/entities/warehouse';
-import type { Product } from '@/core/entities/product';
-import { GetWarehousesUseCase } from '@/core/use-cases/warehouse/GetWarehousesUseCase';
-import { GetProductsUseCase } from '@/core/use-cases/product/GetProductsUseCase';
-import { WarehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
-import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
+import type { AdjustmentType, CreateAdjustmentData } from '@/core/adjustment/entities/adjustment';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import type { Product } from '@/core/product/entities/product';
+import { GetWarehousesUseCase } from '@/core/warehouse/use-cases/GetWarehousesUseCase';
+import { GetProductsUseCase } from '@/core/product/use-cases/GetProductsUseCase';
+import { WarehouseRepository } from '@/infrastructure/repositories/warehouse/WarehouseRepository';
+import { ProductRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { AdjustmentHeaderFields } from './AdjustmentHeaderFields';
 import { AdjustmentReasonField } from './AdjustmentReasonField';
 import { AdjustmentLinesSection } from './AdjustmentLinesSection';

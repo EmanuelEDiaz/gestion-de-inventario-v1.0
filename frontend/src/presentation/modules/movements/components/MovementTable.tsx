@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { InventoryMovement, getMovementTypeLabel, isInboundMovement } from '@/core/entities/inventory-movement';
+import { InventoryMovement, getMovementTypeLabel, isInboundMovement } from '@/core/movement/entities/inventory-movement';
 import { formatCurrency, formatDate } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column } from '@/presentation/shared/components/GenericTable';
+import { GenericTable, type Column } from '@/presentation/shared/components/data-display/GenericTable';
 
 interface MovementTableProps {
   movements: InventoryMovement[];

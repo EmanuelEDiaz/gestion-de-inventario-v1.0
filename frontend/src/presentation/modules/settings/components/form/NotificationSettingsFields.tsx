@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { UiPreferences } from '@/core/entities/app-settings';
-import { DEFAULT_UI_PREFS } from '@/core/entities/app-settings';
+import type { UiPreferences } from '@/core/settings/entities/app-settings';
+import { DEFAULT_UI_PREFS } from '@/core/settings/entities/app-settings';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { toast } from '@/presentation/shared/components/ui/toast';

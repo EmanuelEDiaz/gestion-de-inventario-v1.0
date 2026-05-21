@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/presentation/shared/components/ui';
-import { useDebounce } from '@/presentation/shared/hooks/useDebounce';
+import { useDebounce } from '@/presentation/shared/hooks/ui/useDebounce';
 
 interface ProductSearchBarProps {
   initialValue?: string;

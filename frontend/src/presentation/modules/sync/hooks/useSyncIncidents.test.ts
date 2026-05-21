@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useQuery } from '@tanstack/react-query';
 import { useSyncIncidents, useSyncIncidentDetail } from './useSyncIncidents';
 
-vi.mock('@/infrastructure/repositories/SyncIncidentRepository', () => ({
+vi.mock('@/infrastructure/repositories/settings/SyncIncidentRepository', () => ({
   SyncIncidentRepository: class {
     findPending = vi.fn().mockResolvedValue([]);
     findById = vi.fn().mockResolvedValue(null);

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Supplier } from '@/core/entities/supplier';
+import type { Supplier } from '@/core/supplier/entities/supplier';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Eye, EyeOff, Trash2 } from 'lucide-react';
 

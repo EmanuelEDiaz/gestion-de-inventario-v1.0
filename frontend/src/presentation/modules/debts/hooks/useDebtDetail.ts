@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { CustomerDebtRepository } from '@/infrastructure/repositories/CustomerDebtRepository';
+import { CustomerDebtRepository } from '@/infrastructure/repositories/customer/CustomerDebtRepository';
 
 const repo = new CustomerDebtRepository();
 

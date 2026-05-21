@@ -1,7 +1,7 @@
 'use client';
 
-import type { ExchangeRate } from '@/core/entities/exchange-rate';
-import { RATE_TYPE_LABELS } from '@/core/entities/exchange-rate';
+import type { ExchangeRate } from '@/core/exchange-rate/entities/exchange-rate';
+import { RATE_TYPE_LABELS } from '@/core/exchange-rate/entities/exchange-rate';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 
 interface ExchangeRateRowProps {

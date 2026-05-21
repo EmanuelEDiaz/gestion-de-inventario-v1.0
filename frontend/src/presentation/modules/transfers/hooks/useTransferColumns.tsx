@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { CheckCircle2, PackageCheck, Send, Trash2, XCircle } from 'lucide-react';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
-import type { Transfer } from '@/core/entities/transfer';
-import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_COLORS } from '@/core/entities/transfer';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Transfer } from '@/core/transfer/entities/transfer';
+import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_COLORS } from '@/core/transfer/entities/transfer';
 
 const COLS: Column<Transfer>[] = [
   { key: 'transferNumber', label: 'Número', render: (_, r) => <span className="font-mono font-medium" title="Número de transferencia">{r.transferNumber}</span> },

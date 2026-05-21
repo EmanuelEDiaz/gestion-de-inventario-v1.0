@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { StockBalance } from '@/core/entities/stock-balance';
+import { StockBalance } from '@/core/stock/entities/stock-balance';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column } from '@/presentation/shared/components/GenericTable';
+import { GenericTable, type Column } from '@/presentation/shared/components/data-display/GenericTable';
 
 interface StockBalanceTableProps {
   balances: StockBalance[];

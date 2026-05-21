@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { DashboardStats, LowStockItem } from '@/core/entities/dashboard';
-import { DashboardRepository } from '@/infrastructure/repositories/DashboardRepository';
-import { GetDashboardStatsUseCase, GetLowStockItemsUseCase } from '@/core/use-cases/dashboard/get-dashboard';
+import type { DashboardStats, LowStockItem } from '@/core/dashboard/entities/dashboard';
+import { DashboardRepository } from '@/infrastructure/repositories/dashboard/DashboardRepository';
+import { GetDashboardStatsUseCase, GetLowStockItemsUseCase } from '@/core/dashboard/use-cases/get-dashboard';
 
 const repo = new DashboardRepository();
 const getStats = new GetDashboardStatsUseCase(repo);

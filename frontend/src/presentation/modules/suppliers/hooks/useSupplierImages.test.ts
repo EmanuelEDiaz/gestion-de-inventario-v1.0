@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupplierImages } from './useSupplierImages';
-import type { SupplierImage } from '@/core/entities/supplier-image';
+import type { SupplierImage } from '@/core/supplier/entities/supplier-image';
 
 const mockImage: SupplierImage = {
   id: 'img-1',

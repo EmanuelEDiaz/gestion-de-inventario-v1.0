@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { CheckCircle2, Trash2, XCircle } from 'lucide-react';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
-import type { Return } from '@/core/entities/return';
-import { RETURN_STATUS_LABELS, RETURN_STATUS_COLORS, RETURN_TYPE_LABELS } from '@/core/entities/return';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Return } from '@/core/return/entities/return';
+import { RETURN_STATUS_LABELS, RETURN_STATUS_COLORS, RETURN_TYPE_LABELS } from '@/core/return/entities/return';
 
 const COLS: Column<Return>[] = [
   { key: 'returnNumber', label: 'Número', render: (_, r) => <span className="font-mono font-medium" title="Número de devolución">{r.returnNumber}</span> },

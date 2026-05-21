@@ -4,11 +4,11 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Category, CreateCategoryData } from '@/core/entities/category';
-import { GetCategoriesUseCase } from '@/core/use-cases/category/GetCategoriesUseCase';
-import { SaveCategoryUseCase } from '@/core/use-cases/category/SaveCategoryUseCase';
-import { DeleteCategoryUseCase } from '@/core/use-cases/category/DeleteCategoryUseCase';
-import { categoryRepository } from '@/infrastructure/repositories/CategoryRepository';
+import type { Category, CreateCategoryData } from '@/core/category/entities/category';
+import { GetCategoriesUseCase } from '@/core/category/use-cases/GetCategoriesUseCase';
+import { SaveCategoryUseCase } from '@/core/category/use-cases/SaveCategoryUseCase';
+import { DeleteCategoryUseCase } from '@/core/category/use-cases/DeleteCategoryUseCase';
+import { categoryRepository } from '@/infrastructure/repositories/category/CategoryRepository';
 
 interface UseCategoriesControllerState {
   categories: Category[];

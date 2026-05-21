@@ -3,12 +3,12 @@
  */
 
 import { Image as ImageIcon } from 'lucide-react';
-import type { Product } from '@/core/entities/product';
-import { StatusBadge } from '@/presentation/shared/components/StatusBadge';
-import { IconButton } from '@/presentation/shared/components/IconButton';
+import type { Product } from '@/core/product/entities/product';
+import { StatusBadge } from '@/presentation/shared/components/data-display/StatusBadge';
+import { IconButton } from '@/presentation/shared/components/form/IconButton';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { productRepository } from '@/infrastructure/repositories/ProductRepository';
+import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface ProductRowProps {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Close } from '@material-symbols-svg/react';
 import { Button, Input } from '@/presentation/shared/components/ui';
 import { useRoles } from '@/presentation/modules/roles/hooks/useRoles';
-import type { User, UpdateUserData } from '@/core/entities/user';
+import type { User, UpdateUserData } from '@/core/user/entities/user';
 
 interface Props {
   open: boolean;

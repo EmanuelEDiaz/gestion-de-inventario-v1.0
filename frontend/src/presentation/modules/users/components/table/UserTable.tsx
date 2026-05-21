@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { Pencil, KeyRound, ToggleLeft } from 'lucide-react';
-import type { User } from '@/core/entities/user';
-import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
+import type { User } from '@/core/user/entities/user';
+import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 
 interface UserTableProps {

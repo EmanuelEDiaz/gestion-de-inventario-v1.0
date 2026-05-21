@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupplierSocialLinks } from './useSupplierSocialLinks';
-import type { SupplierSocialLink } from '@/core/entities/supplier-social-link';
+import type { SupplierSocialLink } from '@/core/supplier/entities/supplier-social-link';
 
 const mockLink: SupplierSocialLink = {
   id: 'link-1',

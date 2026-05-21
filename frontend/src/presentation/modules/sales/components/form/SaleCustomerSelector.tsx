@@ -1,8 +1,8 @@
 'use client';
 
-import type { Warehouse } from '@/core/entities/warehouse';
-import type { Customer } from '@/core/entities/customer';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import type { Customer } from '@/core/customer/entities/customer';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 interface SaleCustomerSelectorProps {
   warehouses: Warehouse[];

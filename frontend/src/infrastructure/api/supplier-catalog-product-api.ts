@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { SupplierCatalogProduct, AddSupplierCatalogProductData } from '@/core/entities/supplier-catalog-product';
+import type { SupplierCatalogProduct, AddSupplierCatalogProductData } from '@/core/supplier/entities/supplier-catalog-product';
 
 const base = (supplierId: string) => `/api/v1/suppliers/${supplierId}/catalog`;
 

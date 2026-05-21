@@ -6,10 +6,10 @@ import { useDebtPayment } from '../hooks/useDebtPayment';
 import { DebtPaymentForm } from './DebtPaymentForm';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { EmptyState } from '@/presentation/shared/components/EmptyState';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { DEBT_STATUS_LABELS, DEBT_STATUS_COLORS } from '@/core/entities/customer-debt';
-import type { RegisterDebtPaymentData } from '@/core/entities/debt-payment';
+import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { DEBT_STATUS_LABELS, DEBT_STATUS_COLORS } from '@/core/customer/entities/customer-debt';
+import type { RegisterDebtPaymentData } from '@/core/customer/entities/debt-payment';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { CreditCard } from 'lucide-react';
 

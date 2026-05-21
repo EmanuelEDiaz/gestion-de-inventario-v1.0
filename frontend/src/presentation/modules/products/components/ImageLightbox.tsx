@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { ProductImage } from '@/core/entities/product-image';
+import type { ProductImage } from '@/core/product/entities/product-image';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface ImageLightboxProps {

@@ -2,9 +2,9 @@
 
 import type { ProductFormData } from './ProductFormFields';
 import { Input } from '@/presentation/shared/components/ui';
-import { FormField } from '@/presentation/shared/components/FormField';
-import { Textarea } from '@/presentation/shared/components/Textarea';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import { FormField } from '@/presentation/shared/components/form/FormField';
+import { Textarea } from '@/presentation/shared/components/form/Textarea';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 interface ProductBasicInfoSectionProps {
   data: ProductFormData;

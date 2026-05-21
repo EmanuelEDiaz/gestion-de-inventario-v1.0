@@ -5,13 +5,13 @@ import { Ban, Pencil } from 'lucide-react';
 import { useRoles } from '../hooks/useRoles';
 import { useRoleActions } from '../hooks/useRoleActions';
 import { RoleForm } from '../components/RoleForm';
-import type { Role, CreateRoleData, UpdateRoleData } from '@/core/entities/user';
+import type { Role, CreateRoleData, UpdateRoleData } from '@/core/user/entities/user';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { GenericTable } from '@/presentation/shared/components/GenericTable';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { statusColors } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Role>[] = [

@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Notification } from '@/core/entities/notification';
-import { NotificationItem } from './NotificationItem';
+import { Notification } from '@/core/notification/entities/notification';
+import { NotificationItem } from './data-display/NotificationItem';
 import { Users } from 'lucide-react';
 
 interface UsersTabProps {

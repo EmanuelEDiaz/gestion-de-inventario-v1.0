@@ -1,6 +1,6 @@
 'use client';
 
-import type { DashboardReport, InventoryReport } from '@/core/interfaces/IReportRepository';
+import type { DashboardReport, InventoryReport } from '@/core/report/ports/IReportRepository';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 
 interface SalesReportCardProps {

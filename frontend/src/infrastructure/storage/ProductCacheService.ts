@@ -14,7 +14,7 @@
  */
 
 // import { getDB } from './db';
-// import type { Product } from '@/core/entities/product';
+// import type { Product } from '@/core/product/entities/product';
 
 /**
  * Interface para productos cacheados

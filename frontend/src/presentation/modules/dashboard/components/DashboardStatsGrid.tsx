@@ -1,7 +1,7 @@
 'use client';
 
 import { Package, Warehouse, Users, Truck, AlertTriangle, TrendingUp } from 'lucide-react';
-import type { DashboardStats } from '@/core/entities/dashboard';
+import type { DashboardStats } from '@/core/dashboard/entities/dashboard';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
 
 interface StatCardProps {

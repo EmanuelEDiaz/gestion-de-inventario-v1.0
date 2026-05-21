@@ -2,8 +2,8 @@
 
 import { useReportsController } from '../hooks/useReportsController';
 import { SalesReportCard, InventoryReportCard } from '../components/ReportCards';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 
 export function ReportsView() {
   const { salesReport, inventoryReport } = useReportsController();

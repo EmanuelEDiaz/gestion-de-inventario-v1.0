@@ -2,7 +2,7 @@
  * CategoryList - List of categories with hierarchical display
  */
 
-import type { Category } from '@/core/entities/category';
+import type { Category } from '@/core/category/entities/category';
 import { CategoryListItem } from './CategoryListItem';
 
 interface CategoryListProps {

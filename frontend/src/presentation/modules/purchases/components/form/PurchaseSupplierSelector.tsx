@@ -1,8 +1,8 @@
 'use client';
 
-import type { Warehouse } from '@/core/entities/warehouse';
-import type { Supplier } from '@/core/entities/supplier';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import type { Supplier } from '@/core/supplier/entities/supplier';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 interface PurchaseSupplierSelectorProps {
   warehouses: Warehouse[];

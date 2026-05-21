@@ -6,12 +6,12 @@ import { toast } from '@/presentation/shared/components/ui/toast';
 import { useCustomers } from '../hooks/useCustomers';
 import { CustomerFormFields } from '../components/form/CustomerFormFields';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { GenericTable } from '@/presentation/shared/components/GenericTable';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
-import type { Customer } from '@/core/entities/customer';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Customer } from '@/core/customer/entities/customer';
 import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Customer>[] = [

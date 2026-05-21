@@ -1,8 +1,8 @@
 'use client';
 
 import { Wifi, WifiOff, RefreshCw, Signal } from 'lucide-react';
-import type { BackendStatus } from '@/presentation/shared/hooks/useNetworkHealth';
-import type { SyncStatus } from '@/presentation/shared/hooks/useSyncStatus';
+import type { BackendStatus } from '@/presentation/shared/hooks/storage/useNetworkHealth';
+import type { SyncStatus } from '@/presentation/shared/hooks/storage/useSyncStatus';
 
 interface NetworkIconProps {
   backendStatus: BackendStatus;

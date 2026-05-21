@@ -2,14 +2,14 @@
 
 import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/presentation/shared/components/ui';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { LoadingOverlay } from '@/presentation/shared/components/LoadingSpinner';
-import { GenericTable } from '@/presentation/shared/components/GenericTable';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
+import { LoadingOverlay } from '@/presentation/shared/components/form/LoadingSpinner';
+import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { CategoryForm } from '../components/form/CategoryForm';
 import { useCategoriesController } from '../hooks/useCategoriesController';
-import type { Category } from '@/core/entities/category';
+import type { Category } from '@/core/category/entities/category';
 import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Category>[] = [

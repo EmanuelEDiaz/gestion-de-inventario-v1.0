@@ -1,10 +1,10 @@
 'use client';
 
-import type { SyncIncident } from '@/core/entities/sync-incident';
+import type { SyncIncident } from '@/core/settings/entities/sync-incident';
 import {
   SYNC_INCIDENT_TYPE_LABELS,
   SYNC_INCIDENT_STATUS_LABELS,
-} from '@/core/entities/sync-incident';
+} from '@/core/settings/entities/sync-incident';
 import { cn } from '@/presentation/shared/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';

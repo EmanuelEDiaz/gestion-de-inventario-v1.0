@@ -4,7 +4,7 @@ import { useImageGallery } from '../hooks/useImageGallery';
 import { ImageLightbox } from './ImageLightbox';
 import { ImageGalleryGrid } from './ImageGalleryGrid';
 import { ImageThumbnailsBar } from './ImageThumbnailsBar';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 
 interface ProductImageGalleryProps {
   productId: string;

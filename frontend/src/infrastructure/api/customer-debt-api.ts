@@ -1,6 +1,6 @@
 import { apiClient } from './client';
-import type { CustomerDebt, UpdateDebtData } from '@/core/entities/customer-debt';
-import type { DebtPayment, RegisterDebtPaymentData } from '@/core/entities/debt-payment';
+import type { CustomerDebt, UpdateDebtData } from '@/core/customer/entities/customer-debt';
+import type { DebtPayment, RegisterDebtPaymentData } from '@/core/customer/entities/debt-payment';
 
 const BASE = '/api/v1/debts';
 

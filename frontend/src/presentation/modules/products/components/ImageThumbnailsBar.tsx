@@ -1,6 +1,6 @@
 'use client';
 
-import type { ProductImage } from '@/core/entities/product-image';
+import type { ProductImage } from '@/core/product/entities/product-image';
 import { ImageThumbnail } from './ImageThumbnail';
 import { ImageUploadButton } from './ImageUploadButton';
 import { Button } from '@/presentation/shared/components/ui/Button';

@@ -1,9 +1,9 @@
 'use client';
 
-import type { Warehouse } from '@/core/entities/warehouse';
-import type { AdjustmentType } from '@/core/entities/adjustment';
-import { ADJUSTMENT_TYPE_LABELS } from '@/core/entities/adjustment';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import type { AdjustmentType } from '@/core/adjustment/entities/adjustment';
+import { ADJUSTMENT_TYPE_LABELS } from '@/core/adjustment/entities/adjustment';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 interface AdjustmentHeaderFieldsProps {
   warehouses: Warehouse[];

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { Warehouse } from '@/core/entities/warehouse';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
 import { Button } from '@/presentation/shared/components/ui';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/presentation/shared/components/ui/card';
 import { Badge } from '@/presentation/shared/components/ui/badge';

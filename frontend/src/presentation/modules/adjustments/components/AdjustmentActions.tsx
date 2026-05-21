@@ -1,6 +1,6 @@
 'use client';
 
-import type { Adjustment } from '@/core/entities/adjustment';
+import type { Adjustment } from '@/core/adjustment/entities/adjustment';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { CheckCircle, XCircle, Trash2 } from 'lucide-react';
 

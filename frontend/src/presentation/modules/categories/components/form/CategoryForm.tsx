@@ -3,11 +3,11 @@
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import type { Category, CreateCategoryData } from '@/core/entities/category';
+import type { Category, CreateCategoryData } from '@/core/category/entities/category';
 import { Button } from '@/presentation/shared/components/ui';
 import { Input } from '@/presentation/shared/components/ui';
-import { FormField } from '@/presentation/shared/components/FormField';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import { FormField } from '@/presentation/shared/components/form/FormField';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 interface CategoryFormProps {
   categories: Category[];

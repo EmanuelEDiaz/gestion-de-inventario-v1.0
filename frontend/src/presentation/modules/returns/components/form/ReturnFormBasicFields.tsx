@@ -1,10 +1,10 @@
 'use client';
 
-import type { ReturnType as ReturnDocType } from '@/core/entities/return';
-import { RETURN_TYPE_LABELS } from '@/core/entities/return';
-import type { Warehouse } from '@/core/entities/warehouse';
+import type { ReturnType as ReturnDocType } from '@/core/return/entities/return';
+import { RETURN_TYPE_LABELS } from '@/core/return/entities/return';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
 import { Input } from '@/presentation/shared/components/ui/Input';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 interface ReturnFormBasicFieldsProps {
   type: ReturnDocType;

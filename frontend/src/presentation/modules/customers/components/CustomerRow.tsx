@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { Customer } from '@/core/entities/customer';
+import type { Customer } from '@/core/customer/entities/customer';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { TableCell, TableRow } from '@/presentation/shared/components/ui/table';

@@ -1,9 +1,9 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { settingsRepository } from '@/infrastructure/repositories/SettingsRepository';
-import { GetSettingsUseCase, UpdateSettingsUseCase } from '@/core/use-cases/settings';
-import type { AppSettings, UpdateSettingsInput } from '@/core/entities/app-settings';
+import { settingsRepository } from '@/infrastructure/repositories/settings/SettingsRepository';
+import { GetSettingsUseCase, UpdateSettingsUseCase } from '@/core/settings/use-cases';
+import type { AppSettings, UpdateSettingsInput } from '@/core/settings/entities/app-settings';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 const getSettings = new GetSettingsUseCase(settingsRepository);

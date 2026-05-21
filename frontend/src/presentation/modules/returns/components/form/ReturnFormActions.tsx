@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Textarea } from '@/presentation/shared/components/Textarea';
+import { Textarea } from '@/presentation/shared/components/form/Textarea';
 
 interface ReturnFormActionsProps {
   notes: string;

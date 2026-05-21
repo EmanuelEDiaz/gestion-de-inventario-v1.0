@@ -10,7 +10,7 @@ vi.mock('@tanstack/react-query', () => ({
   useQueryClient: vi.fn().mockReturnValue({ invalidateQueries: vi.fn() }),
 }));
 
-vi.mock('@/infrastructure/repositories/CustomerDebtRepository', () => ({
+vi.mock('@/infrastructure/repositories/customer/CustomerDebtRepository', () => ({
   CustomerDebtRepository: class {
     findAll = vi.fn().mockResolvedValue([]);
     findOverdue = vi.fn().mockResolvedValue([]);

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { NotificationRepository } from '@/infrastructure/repositories/NotificationRepository';
+import { NotificationRepository } from '@/infrastructure/repositories/notification/NotificationRepository';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 const repo = new NotificationRepository();

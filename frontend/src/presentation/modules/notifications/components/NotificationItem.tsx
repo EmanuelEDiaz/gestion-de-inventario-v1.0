@@ -1,7 +1,7 @@
 'use client';
 
-import type { Notification } from '@/core/entities/notification';
-import { getCategoryLabel } from '@/core/entities/notification';
+import type { Notification } from '@/core/notification/entities/notification';
+import { getCategoryLabel } from '@/core/notification/entities/notification';
 import { cn } from '@/presentation/shared/lib/utils';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { CheckBox, CheckBoxOutlineBlank, MarkEmailRead, Delete } from '@material-symbols-svg/react';

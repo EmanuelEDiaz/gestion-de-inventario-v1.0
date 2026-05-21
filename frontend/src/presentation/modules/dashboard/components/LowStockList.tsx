@@ -1,6 +1,6 @@
 'use client';
 
-import type { LowStockItem } from '@/core/entities/dashboard';
+import type { LowStockItem } from '@/core/dashboard/entities/dashboard';
 import { AlertTriangle } from 'lucide-react';
 
 interface LowStockListProps {

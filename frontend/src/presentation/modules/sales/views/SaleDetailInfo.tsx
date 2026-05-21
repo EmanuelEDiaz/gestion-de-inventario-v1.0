@@ -1,6 +1,6 @@
 'use client';
 
-import type { Sale } from '@/core/entities/sale';
+import type { Sale } from '@/core/sale/entities/sale';
 
 interface SaleDetailInfoProps {
   sale: Sale;

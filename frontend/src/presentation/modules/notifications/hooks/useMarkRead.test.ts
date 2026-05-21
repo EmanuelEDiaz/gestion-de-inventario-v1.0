@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMarkRead } from './useMarkRead';
 
-vi.mock('@/infrastructure/repositories/NotificationRepository', () => ({
+vi.mock('@/infrastructure/repositories/notification/NotificationRepository', () => ({
   NotificationRepository: class {
     markRead = vi.fn().mockResolvedValue(undefined);
     markAllRead = vi.fn().mockResolvedValue(undefined);

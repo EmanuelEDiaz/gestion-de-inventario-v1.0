@@ -2,17 +2,17 @@
 
 import { useMemo, useState } from 'react';
 import { KeyRound, Pencil, Power } from 'lucide-react';
-import type { User } from '@/core/entities/user';
+import type { User } from '@/core/user/entities/user';
 import { useUsersController } from '../hooks/useUsersController';
 import { UserFormFields } from '../components/form/UserFormFields';
 import { EditUserDialog } from '../components/dialogs/EditUserDialog';
 import { ChangePasswordDialog } from '../components/dialogs/ChangePasswordDialog';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { GenericTable } from '@/presentation/shared/components/GenericTable';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<User>[] = [

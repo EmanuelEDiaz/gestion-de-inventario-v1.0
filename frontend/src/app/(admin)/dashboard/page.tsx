@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
+import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { useDashboard } from '@/presentation/modules/dashboard/hooks/useDashboard';
 import { DashboardStatsGrid } from '@/presentation/modules/dashboard/components/DashboardStatsGrid';
 import { LowStockList } from '@/presentation/modules/dashboard/components/LowStockList';

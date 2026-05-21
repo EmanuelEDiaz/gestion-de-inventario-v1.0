@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { CreateExchangeRateInput, RateType } from '@/core/entities/exchange-rate';
-import { RATE_TYPE_LABELS } from '@/core/entities/exchange-rate';
+import type { CreateExchangeRateInput, RateType } from '@/core/exchange-rate/entities/exchange-rate';
+import { RATE_TYPE_LABELS } from '@/core/exchange-rate/entities/exchange-rate';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 

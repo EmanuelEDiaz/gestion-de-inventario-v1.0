@@ -3,9 +3,9 @@
 import { useMemo } from 'react';
 import { CheckCircle, CircleOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import type { Supplier } from '@/core/entities/supplier';
+import type { Supplier } from '@/core/supplier/entities/supplier';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
+import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { statusBadge } from '@/presentation/shared/lib/colors';
 
 interface SupplierTableProps {

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/presentation/shared/components/ui';
-import { useAuthStore } from '@/presentation/shared/hooks/useAuthStore';
-import { useNetworkHealth, checkBackendHealth } from '@/presentation/shared/hooks/useNetworkHealth';
+import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
+import { useNetworkHealth, checkBackendHealth } from '@/presentation/shared/hooks/storage/useNetworkHealth';
 import axios from 'axios';
 import { LoginHeader } from './LoginHeader';
 import { LoginForm } from './LoginForm';

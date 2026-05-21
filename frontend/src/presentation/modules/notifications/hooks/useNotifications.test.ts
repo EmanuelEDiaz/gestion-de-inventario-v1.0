@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useQuery } from '@tanstack/react-query';
 import { useNotifications, useUnreadCount } from './useNotifications';
 
-vi.mock('@/infrastructure/repositories/NotificationRepository', () => ({
+vi.mock('@/infrastructure/repositories/notification/NotificationRepository', () => ({
   NotificationRepository: class {
     findAll = vi.fn().mockResolvedValue([]);
     getUnreadCount = vi.fn().mockResolvedValue(3);

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Sale, SaleFilter, CreateSaleInput } from '@/core/entities/sale';
-import { saleRepository } from '@/infrastructure/repositories/SaleRepository';
+import { Sale, SaleFilter, CreateSaleInput } from '@/core/sale/entities/sale';
+import { saleRepository } from '@/infrastructure/repositories/sale/SaleRepository';
 import {
   GetAllSalesUseCase,
   CreateSaleUseCase,
@@ -10,7 +10,7 @@ import {
   DeliverSaleUseCase,
   CancelSaleUseCase,
   DeleteSaleUseCase
-} from '@/core/use-cases/sale';
+} from '@/core/sale/use-cases';
 
 // Use cases singleton
 const useCases = {

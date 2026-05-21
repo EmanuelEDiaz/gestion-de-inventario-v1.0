@@ -2,10 +2,10 @@
 
 import { useMemo } from 'react';
 import { CheckCircle, XCircle, Trash2 } from 'lucide-react';
-import type { Return } from '@/core/entities/return';
-import { RETURN_STATUS_LABELS, RETURN_STATUS_COLORS, RETURN_TYPE_LABELS } from '@/core/entities/return';
+import type { Return } from '@/core/return/entities/return';
+import { RETURN_STATUS_LABELS, RETURN_STATUS_COLORS, RETURN_TYPE_LABELS } from '@/core/return/entities/return';
 import { formatDateShort, formatCurrency } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
+import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 
 interface ReturnTableProps {

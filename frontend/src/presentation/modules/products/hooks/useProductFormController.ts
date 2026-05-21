@@ -5,9 +5,9 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import type { CreateProductData } from '@/core/entities/product';
-import { CreateProductUseCase } from '@/core/use-cases/product/CreateProductUseCase';
-import { productRepository } from '@/infrastructure/repositories/ProductRepository';
+import type { CreateProductData } from '@/core/product/entities/product';
+import { CreateProductUseCase } from '@/core/product/use-cases/CreateProductUseCase';
+import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { productImageApi } from '@/infrastructure/api/image-upload-api';
 
 interface FormState {

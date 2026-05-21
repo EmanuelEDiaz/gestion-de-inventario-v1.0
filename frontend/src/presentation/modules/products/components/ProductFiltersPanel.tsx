@@ -8,8 +8,8 @@ import { CategoryFilter } from './filters/CategoryFilter';
 import { StatusFilter } from './filters/StatusFilter';
 import { UnitFilter } from './filters/UnitFilter';
 import { PriceRangeFilter } from './filters/PriceRangeFilter';
-import type { Category } from '@/core/entities/category';
-import type { ProductStatus, UnitOfMeasure } from '@/core/entities/product';
+import type { Category } from '@/core/category/entities/category';
+import type { ProductStatus, UnitOfMeasure } from '@/core/product/entities/product';
 
 export interface ProductFiltersState {
   search: string;

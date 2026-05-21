@@ -1,6 +1,6 @@
 'use client';
 
-import type { Product } from '@/core/entities/product';
+import type { Product } from '@/core/product/entities/product';
 import { AdjustmentToolbar } from './AdjustmentToolbar';
 import { AdjustmentLineRow } from './AdjustmentLineRow';
 

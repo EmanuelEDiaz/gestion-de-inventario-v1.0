@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "@/presentation/shared/lib/utils"
+import { cn } from '@/presentation/shared/lib/utils'
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "secondary" | "destructive" | "outline"

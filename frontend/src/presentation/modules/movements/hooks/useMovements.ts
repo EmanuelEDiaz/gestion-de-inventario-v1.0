@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { InventoryMovement, MovementFilter } from '@/core/entities/inventory-movement';
-import { movementRepository } from '@/infrastructure/repositories/MovementRepository';
+import { InventoryMovement, MovementFilter } from '@/core/movement/entities/inventory-movement';
+import { movementRepository } from '@/infrastructure/repositories/movement/MovementRepository';
 import {
   GetAllMovementsUseCase,
   GetMovementByIdUseCase,
   GetMovementsByWarehouseProductUseCase,
   GetMovementsByDocumentUseCase,
   CountMovementsUseCase
-} from '@/core/use-cases/movement';
+} from '@/core/movement/use-cases';
 
 interface UseMovementsState {
   movements: InventoryMovement[];

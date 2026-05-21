@@ -1,5 +1,5 @@
 import { Image as ImageIcon } from 'lucide-react';
-import type { Product } from '@/core/entities/product';
+import type { Product } from '@/core/product/entities/product';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface ProductImageCellProps {

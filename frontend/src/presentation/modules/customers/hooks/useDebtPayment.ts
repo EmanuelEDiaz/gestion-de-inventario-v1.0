@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { customerDebtApi } from '@/infrastructure/api/customer-debt-api';
-import type { RegisterDebtPaymentData } from '@/core/entities/debt-payment';
+import type { RegisterDebtPaymentData } from '@/core/customer/entities/debt-payment';
 
 export function useDebtPayment(customerId: string, _debtId?: string) {
   const qc = useQueryClient();

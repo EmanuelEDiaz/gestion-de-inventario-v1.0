@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import type { CustomerDebt } from '@/core/entities/customer-debt';
+import type { CustomerDebt } from '@/core/customer/entities/customer-debt';
 import { useDebtDetail } from '../hooks/useDebtDetail';
 import { useUpdateDebt, useCancelDebt } from '../hooks/useUpdateDebt';
 import { useDebtPayment } from '@/presentation/modules/customers/hooks/useDebtPayment';
 import { DebtPaymentForm } from '@/presentation/modules/customers/components/DebtPaymentForm';
 import { DebtUpdateForm } from './DebtUpdateForm';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { Button } from '@/presentation/shared/components/ui/Button';
 
 interface DebtDetailPanelProps {

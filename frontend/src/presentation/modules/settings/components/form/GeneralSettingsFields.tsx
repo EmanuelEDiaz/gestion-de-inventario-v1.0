@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { AppSettings, CostMethod, UpdateSettingsInput } from '@/core/entities/app-settings';
-import { COST_METHOD_LABELS } from '@/core/entities/app-settings';
+import type { AppSettings, CostMethod, UpdateSettingsInput } from '@/core/settings/entities/app-settings';
+import { COST_METHOD_LABELS } from '@/core/settings/entities/app-settings';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { SystemSettingsFields } from './SystemSettingsFields';

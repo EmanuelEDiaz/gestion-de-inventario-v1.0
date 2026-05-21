@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Notification, CreateNotificationRequest, SendMessageRequest, UserDirectoryEntry } from '@/core/entities/notification';
+import type { Notification, CreateNotificationRequest, SendMessageRequest, UserDirectoryEntry } from '@/core/notification/entities/notification';
 
 const BASE = '/api/v1/notifications';
 

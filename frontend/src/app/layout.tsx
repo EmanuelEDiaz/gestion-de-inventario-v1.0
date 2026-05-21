@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-import { ServiceWorkerRegistration } from "@/presentation/shared/components/ServiceWorkerRegistration";
-import { Toaster } from "@/presentation/shared/components/ui";
-import { Providers } from "@/presentation/shared/components/Providers";
+import { ServiceWorkerRegistration } from '@/presentation/shared/components/layout/ServiceWorkerRegistration';
+import { Toaster } from '@/presentation/shared/components/ui';
+import { Providers } from '@/presentation/shared/components/layout/Providers';
 
 export const metadata: Metadata = {
   title: "Gestión de Inventario",

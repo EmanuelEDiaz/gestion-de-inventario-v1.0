@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import type { CreateTransferRequest } from '@/core/entities/transfer';
-import type { Warehouse } from '@/core/entities/warehouse';
-import type { Product } from '@/core/entities/product';
-import { useReferenceData } from '@/presentation/shared/hooks/useReferenceData';
+import type { CreateTransferRequest } from '@/core/transfer/entities/transfer';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import type { Product } from '@/core/product/entities/product';
+import { useReferenceData } from '@/presentation/shared/hooks/api/useReferenceData';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
-import { Textarea } from '@/presentation/shared/components/Textarea';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import { Textarea } from '@/presentation/shared/components/form/Textarea';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 import { Trash2, Plus } from 'lucide-react';
 
 interface TransferLineInput {

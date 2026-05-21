@@ -5,7 +5,7 @@ import { useImportController } from '../hooks/useImportController';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Badge } from '@/presentation/shared/components/ui/badge';
-import { IMPORT_STATUS_LABELS, IMPORT_STATUS_COLORS } from '@/core/entities/import-job';
+import { IMPORT_STATUS_LABELS, IMPORT_STATUS_COLORS } from '@/core/import/entities/import-job';
 import { Upload, FileText } from 'lucide-react';
 
 export function ImportView() {

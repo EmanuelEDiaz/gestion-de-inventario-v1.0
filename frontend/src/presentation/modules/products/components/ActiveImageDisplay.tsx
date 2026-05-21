@@ -1,6 +1,6 @@
 'use client';
 
-import type { ProductImage } from '@/core/entities/product-image';
+import type { ProductImage } from '@/core/product/entities/product-image';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Star, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';

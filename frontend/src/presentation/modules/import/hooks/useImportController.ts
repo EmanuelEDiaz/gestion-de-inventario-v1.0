@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { importRepository } from '@/infrastructure/repositories/ImportRepository';
+import { importRepository } from '@/infrastructure/repositories/import/ImportRepository';
 import { toast } from 'sonner';
 
 export function useImportController() {

@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePosCart } from './usePosCart';
 
-vi.mock('@/infrastructure/repositories/SaleRepository', () => ({
+vi.mock('@/infrastructure/repositories/sale/SaleRepository', () => ({
   saleRepository: {},
 }));
 
-vi.mock('@/core/use-cases/sale', () => ({
+vi.mock('@/core/sale/use-cases', () => ({
   CreateSaleUseCase: class {
     execute = vi.fn().mockResolvedValue({ id: 'sale-1', saleNumber: 'V-001' });
   },

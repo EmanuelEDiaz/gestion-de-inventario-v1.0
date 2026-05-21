@@ -1,7 +1,7 @@
 'use client';
 
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import type { UnitOfMeasure } from '@/core/entities/product';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import type { UnitOfMeasure } from '@/core/product/entities/product';
 
 const UNIT_OPTIONS: { value: UnitOfMeasure; label: string }[] = [
   { value: 'UNIT', label: 'Unidad' },

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { saleRepository } from '@/infrastructure/repositories/SaleRepository';
-import { CreateSaleUseCase } from '@/core/use-cases/sale';
-import type { PaymentMode } from '@/core/entities/sale';
-import type { Customer } from '@/core/entities/customer';
+import { saleRepository } from '@/infrastructure/repositories/sale/SaleRepository';
+import { CreateSaleUseCase } from '@/core/sale/use-cases';
+import type { PaymentMode } from '@/core/sale/entities/sale';
+import type { Customer } from '@/core/customer/entities/customer';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 export interface CartLine {

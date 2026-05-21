@@ -15,7 +15,7 @@ import {
   UpdateNotificationPreferencesRequest,
   UpdateNotificationScheduleRequest,
   ApiError,
-} from '@/core/entities/notification';
+} from '@/core/notification/entities/notification';
 
 const BASE_URL = '/api/v1/notifications';
 

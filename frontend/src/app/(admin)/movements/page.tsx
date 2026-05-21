@@ -3,8 +3,8 @@
 import { useMovements } from '@/presentation/modules/movements';
 import { MovementTable } from '@/presentation/modules/movements';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 
 export default function MovementsPage() {
   const { movements, isLoading, error } = useMovements();

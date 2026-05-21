@@ -4,10 +4,10 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Product, ProductFilters } from '@/core/entities/product';
-import type { PaginatedResponse } from '@/core/interfaces/IProductRepository';
-import { GetProductsUseCase } from '@/core/use-cases/product/GetProductsUseCase';
-import { productRepository } from '@/infrastructure/repositories/ProductRepository';
+import type { Product, ProductFilters } from '@/core/product/entities/product';
+import type { PaginatedResponse } from '@/core/product/ports/IProductRepository';
+import { GetProductsUseCase } from '@/core/product/use-cases/GetProductsUseCase';
+import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 
 interface UseProductsControllerState {
   products: Product[];

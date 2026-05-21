@@ -7,9 +7,9 @@
 
 import Link from 'next/link';
 import { Button } from '@/presentation/shared/components/ui';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
 import { ProductsInfiniteList } from '../components/ProductsInfiniteList';
-import { DEFAULT_UI_PREFS } from '@/core/entities/app-settings';
+import { DEFAULT_UI_PREFS } from '@/core/settings/entities/app-settings';
 
 const DEFAULT_MAX_PAGES = DEFAULT_UI_PREFS.maxProductPages;
 

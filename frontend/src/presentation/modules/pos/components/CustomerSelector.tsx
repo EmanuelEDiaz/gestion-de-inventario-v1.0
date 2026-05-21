@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { Customer } from '@/core/entities/customer';
-import { CustomerRepository } from '@/infrastructure/repositories/CustomerRepository';
+import type { Customer } from '@/core/customer/entities/customer';
+import { CustomerRepository } from '@/infrastructure/repositories/customer/CustomerRepository';
 import { Search, X } from 'lucide-react';
 
 interface CustomerSelectorProps {

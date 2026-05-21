@@ -2,7 +2,7 @@
  * CategoryListItem - Single category item in list
  */
 
-import type { Category } from '@/core/entities/category';
+import type { Category } from '@/core/category/entities/category';
 
 interface CategoryListItemProps {
   category: Category;

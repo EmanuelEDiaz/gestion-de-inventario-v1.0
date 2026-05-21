@@ -1,10 +1,10 @@
 'use client';
 
 import { CheckCircle2, PackageCheck, XCircle } from 'lucide-react';
-import { Purchase, getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/entities/purchase';
+import { Purchase, getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/purchase/entities/purchase';
 import { formatCurrency, formatDateShort } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column } from '@/presentation/shared/components/GenericTable';
-import { useStatusActions } from '@/presentation/shared/hooks/useStatusActions';
+import { GenericTable, type Column } from '@/presentation/shared/components/data-display/GenericTable';
+import { useStatusActions } from '@/presentation/shared/hooks/ui/useStatusActions';
 
 interface PurchaseTableProps {
   purchases: Purchase[];

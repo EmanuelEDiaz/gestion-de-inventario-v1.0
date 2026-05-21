@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useDebts } from '../hooks/useDebts';
 import { DebtRow } from '../components/DebtRow';
 import { DebtDetailPanel } from '../components/DebtDetailPanel';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { EmptyState } from '@/presentation/shared/components/EmptyState';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import type { DebtStatus } from '@/core/entities/customer-debt';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import type { DebtStatus } from '@/core/customer/entities/customer-debt';
 
 const STATUS_OPTIONS: { value: DebtStatus | ''; label: string }[] = [
   { value: '', label: 'Todos los estados' },

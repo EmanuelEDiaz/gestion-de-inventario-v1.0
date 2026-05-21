@@ -1,6 +1,6 @@
 'use client';
 
-import type { Role } from '@/core/entities/user';
+import type { Role } from '@/core/user/entities/user';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';

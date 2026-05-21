@@ -4,9 +4,9 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import type { CreateWarehouseData } from '@/core/entities/warehouse';
-import { CreateWarehouseUseCase } from '@/core/use-cases/warehouse/CreateWarehouseUseCase';
-import { warehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
+import type { CreateWarehouseData } from '@/core/warehouse/entities/warehouse';
+import { CreateWarehouseUseCase } from '@/core/warehouse/use-cases/CreateWarehouseUseCase';
+import { warehouseRepository } from '@/infrastructure/repositories/warehouse/WarehouseRepository';
 
 interface FormState {
   isLoading: boolean;

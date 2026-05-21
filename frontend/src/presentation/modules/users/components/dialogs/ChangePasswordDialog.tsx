@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Close } from '@material-symbols-svg/react';
 import { Button, Input } from '@/presentation/shared/components/ui';
-import type { User } from '@/core/entities/user';
+import type { User } from '@/core/user/entities/user';
 
 interface Props {
   open: boolean;

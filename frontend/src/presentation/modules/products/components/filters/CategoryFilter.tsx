@@ -1,7 +1,7 @@
 'use client';
 
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import type { Category } from '@/core/entities/category';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import type { Category } from '@/core/category/entities/category';
 
 interface CategoryFilterProps {
   categories: Category[];

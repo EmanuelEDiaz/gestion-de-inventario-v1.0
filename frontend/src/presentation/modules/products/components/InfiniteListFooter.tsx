@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 
 interface InfiniteListFooterProps {
   hasNextPage: boolean;

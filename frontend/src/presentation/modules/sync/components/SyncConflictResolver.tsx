@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { SyncIncident } from '@/core/entities/sync-incident';
+import type { SyncIncident } from '@/core/settings/entities/sync-incident';
 import { useResolveSyncIncident } from '../hooks/useResolveSyncIncident';
 
 interface Props {

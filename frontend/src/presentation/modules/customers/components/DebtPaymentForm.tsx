@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import { Textarea } from '@/presentation/shared/components/Textarea';
-import type { RegisterDebtPaymentData } from '@/core/entities/debt-payment';
-import type { DebtPaymentMethod } from '@/core/entities/customer-debt';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import { Textarea } from '@/presentation/shared/components/form/Textarea';
+import type { RegisterDebtPaymentData } from '@/core/customer/entities/debt-payment';
+import type { DebtPaymentMethod } from '@/core/customer/entities/customer-debt';
 
 const METHODS: { value: DebtPaymentMethod; label: string }[] = [
   { value: 'CASH', label: 'Efectivo' },

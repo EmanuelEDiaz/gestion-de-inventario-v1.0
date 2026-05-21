@@ -1,6 +1,6 @@
 'use client';
 
-import type { Product } from '@/core/entities/product';
+import type { Product } from '@/core/product/entities/product';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Plus } from 'lucide-react';
 import { SaleItemRow } from './SaleItemRow';

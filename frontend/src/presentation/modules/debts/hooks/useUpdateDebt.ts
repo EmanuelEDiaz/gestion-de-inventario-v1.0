@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CustomerDebtRepository } from '@/infrastructure/repositories/CustomerDebtRepository';
-import type { UpdateDebtData } from '@/core/entities/customer-debt';
+import { CustomerDebtRepository } from '@/infrastructure/repositories/customer/CustomerDebtRepository';
+import type { UpdateDebtData } from '@/core/customer/entities/customer-debt';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 const repo = new CustomerDebtRepository();

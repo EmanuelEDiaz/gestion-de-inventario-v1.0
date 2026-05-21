@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { NotificationRepository } from '@/infrastructure/repositories/NotificationRepository';
+import { NotificationRepository } from '@/infrastructure/repositories/notification/NotificationRepository';
 
 const repo = new NotificationRepository();
 

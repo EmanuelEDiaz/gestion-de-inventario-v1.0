@@ -5,13 +5,13 @@ import { toast } from '@/presentation/shared/components/ui/toast';
 import { useExchangeRatesController } from '../hooks/useExchangeRatesController';
 import { ExchangeRateFormFields } from '../components/form/ExchangeRateFormFields';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { GenericTable } from '@/presentation/shared/components/GenericTable';
-import type { Column } from '@/presentation/shared/components/GenericTable';
-import { RATE_TYPE_LABELS } from '@/core/entities/exchange-rate';
-import type { ExchangeRate } from '@/core/entities/exchange-rate';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Column } from '@/presentation/shared/components/data-display/GenericTable';
+import { RATE_TYPE_LABELS } from '@/core/exchange-rate/entities/exchange-rate';
+import type { ExchangeRate } from '@/core/exchange-rate/entities/exchange-rate';
 
 const COLUMNS: Column<ExchangeRate>[] = [
   { key: 'baseCode', label: 'Par', render: (_, r) => <span className="font-mono font-medium" title="Par de monedas">{r.baseCode}/{r.quoteCode}</span> },

@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { Pencil, Power } from 'lucide-react';
 import { Button } from '@/presentation/shared/components/ui';
-import { PageHeader } from '@/presentation/shared/components/PageHeader';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
-import { LoadingOverlay } from '@/presentation/shared/components/LoadingSpinner';
-import { GenericTable } from '@/presentation/shared/components/GenericTable';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
+import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
+import { LoadingOverlay } from '@/presentation/shared/components/form/LoadingSpinner';
+import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { useWarehousesController } from '../hooks/useWarehousesController';
-import type { Warehouse } from '@/core/entities/warehouse';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
 import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Warehouse>[] = [

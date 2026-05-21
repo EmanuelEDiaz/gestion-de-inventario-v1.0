@@ -1,7 +1,7 @@
 'use client';
 
-import type { CustomerDebt } from '@/core/entities/customer-debt';
-import { DEBT_STATUS_LABELS, DEBT_STATUS_COLORS } from '@/core/entities/customer-debt';
+import type { CustomerDebt } from '@/core/customer/entities/customer-debt';
+import { DEBT_STATUS_LABELS, DEBT_STATUS_COLORS } from '@/core/customer/entities/customer-debt';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 

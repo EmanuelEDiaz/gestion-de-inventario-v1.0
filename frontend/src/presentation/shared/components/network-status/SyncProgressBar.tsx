@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckCircle2, CloudOff } from 'lucide-react';
-import type { BackendStatus } from '@/presentation/shared/hooks/useNetworkHealth';
+import type { BackendStatus } from '@/presentation/shared/hooks/storage/useNetworkHealth';
 
 interface SyncProgressBarProps {
   pendingCount: number;

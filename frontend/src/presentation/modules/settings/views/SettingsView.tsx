@@ -3,8 +3,8 @@
 import { useSettingsController } from '../hooks/useSettingsController';
 import { SettingsFormFields } from '../components/form/SettingsFormFields';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
-import { AlertMessage } from '@/presentation/shared/components/AlertMessage';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
+import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 
 export function SettingsView() {
   const { settings, isLoading, error, update, isUpdating } = useSettingsController();

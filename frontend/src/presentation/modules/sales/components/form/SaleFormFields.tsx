@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { CreateSaleInput } from '@/core/entities/sale';
-import { useReferenceData } from '@/presentation/shared/hooks/useReferenceData';
+import type { CreateSaleInput } from '@/core/sale/entities/sale';
+import { useReferenceData } from '@/presentation/shared/hooks/api/useReferenceData';
 import { SaleCustomerSelector } from './SaleCustomerSelector';
 import { SaleLinesSection } from './SaleLinesSection';
 import { SaleSummary } from './SaleSummary';

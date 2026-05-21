@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Supplier, CreateSupplierData, UpdateSupplierData } from '@/core/entities/supplier';
-import { SupplierRepository } from '@/infrastructure/repositories/SupplierRepository';
-import { GetSuppliersUseCase, CreateSupplierUseCase, UpdateSupplierUseCase, ActivateSupplierUseCase, DeactivateSupplierUseCase, DeleteSupplierUseCase } from '@/core/use-cases/supplier';
+import type { Supplier, CreateSupplierData, UpdateSupplierData } from '@/core/supplier/entities/supplier';
+import { SupplierRepository } from '@/infrastructure/repositories/supplier/SupplierRepository';
+import { GetSuppliersUseCase, CreateSupplierUseCase, UpdateSupplierUseCase, ActivateSupplierUseCase, DeactivateSupplierUseCase, DeleteSupplierUseCase } from '@/core/supplier/use-cases';
 
 // Singletons
 const repo = new SupplierRepository();

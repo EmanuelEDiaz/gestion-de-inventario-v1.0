@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supplierSocialLinkApi } from '@/infrastructure/api/supplier-social-link-api';
-import type { AddSupplierSocialLinkData } from '@/core/entities/supplier-social-link';
+import type { AddSupplierSocialLinkData } from '@/core/supplier/entities/supplier-social-link';
 
 const linkKey = (supplierId: string) => ['supplier-social-links', supplierId];
 

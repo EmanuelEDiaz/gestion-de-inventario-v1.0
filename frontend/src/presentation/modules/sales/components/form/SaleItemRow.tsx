@@ -1,7 +1,7 @@
 'use client';
 
-import type { Product } from '@/core/entities/product';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import type { Product } from '@/core/product/entities/product';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Trash2 } from 'lucide-react';
 

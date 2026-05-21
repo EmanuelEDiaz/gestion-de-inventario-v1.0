@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { ReturnType as ReturnDocType, CreateReturnData } from '@/core/entities/return';
-import type { Warehouse } from '@/core/entities/warehouse';
-import type { Product } from '@/core/entities/product';
-import { GetWarehousesUseCase } from '@/core/use-cases/warehouse/GetWarehousesUseCase';
-import { GetProductsUseCase } from '@/core/use-cases/product/GetProductsUseCase';
-import { WarehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
-import { ProductRepository } from '@/infrastructure/repositories/ProductRepository';
+import type { ReturnType as ReturnDocType, CreateReturnData } from '@/core/return/entities/return';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import type { Product } from '@/core/product/entities/product';
+import { GetWarehousesUseCase } from '@/core/warehouse/use-cases/GetWarehousesUseCase';
+import { GetProductsUseCase } from '@/core/product/use-cases/GetProductsUseCase';
+import { WarehouseRepository } from '@/infrastructure/repositories/warehouse/WarehouseRepository';
+import { ProductRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { ReturnFormBasicFields } from './ReturnFormBasicFields';
 import { ReturnFormItems } from './ReturnFormItems';
 import { ReturnFormActions } from './ReturnFormActions';

@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { CheckCircle2, PackageCheck, XCircle } from 'lucide-react';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
-import type { Purchase, PurchaseStatus } from '@/core/entities/purchase';
-import { getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/entities/purchase';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Purchase, PurchaseStatus } from '@/core/purchase/entities/purchase';
+import { getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/purchase/entities/purchase';
 
 const COLS: Column<Purchase>[] = [
   { key: 'purchaseNumber', label: 'Número', render: (_, r) => <span className="font-mono font-medium" title="Número de compra">{r.purchaseNumber}</span> },

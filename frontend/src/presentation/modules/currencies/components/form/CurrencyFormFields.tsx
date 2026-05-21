@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { CreateCurrencyInput } from '@/core/entities/currency';
+import type { CreateCurrencyInput } from '@/core/currency/entities/currency';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 

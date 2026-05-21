@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { StockBalance, StockFilter } from '@/core/entities/stock-balance';
-import { stockRepository } from '@/infrastructure/repositories/StockRepository';
+import { StockBalance, StockFilter } from '@/core/stock/entities/stock-balance';
+import { stockRepository } from '@/infrastructure/repositories/stock/StockRepository';
 import {
   GetAllStockBalancesUseCase,
   GetStockByWarehouseUseCase,
   GetStockByProductUseCase,
   GetStockBalanceUseCase,
   GetLowStockAlertsUseCase
-} from '@/core/use-cases/stock';
+} from '@/core/stock/use-cases';
 
 interface UseStockState {
   balances: StockBalance[];

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supplierCatalogProductApi } from '@/infrastructure/api/supplier-catalog-product-api';
-import type { AddSupplierCatalogProductData } from '@/core/entities/supplier-catalog-product';
+import type { AddSupplierCatalogProductData } from '@/core/supplier/entities/supplier-catalog-product';
 
 const catalogKey = (supplierId: string) => ['supplier-catalog', supplierId];
 

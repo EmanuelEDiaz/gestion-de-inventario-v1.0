@@ -2,10 +2,10 @@
 
 import { useMemo } from 'react';
 import { CheckCircle2, Truck, PackageCheck, XCircle, Trash2 } from 'lucide-react';
-import type { Transfer } from '@/core/entities/transfer';
-import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_COLORS } from '@/core/entities/transfer';
+import type { Transfer } from '@/core/transfer/entities/transfer';
+import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_COLORS } from '@/core/transfer/entities/transfer';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/GenericTable';
+import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 

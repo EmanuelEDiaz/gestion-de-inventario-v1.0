@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
-import { LoadingSpinner } from '@/presentation/shared/components/LoadingSpinner';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 
 interface ImagePreviewProps {
   src: string;

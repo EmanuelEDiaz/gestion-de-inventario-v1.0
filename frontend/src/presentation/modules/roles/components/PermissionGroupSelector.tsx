@@ -1,6 +1,6 @@
 'use client';
 
-import type { Permission } from '@/core/entities/user';
+import type { Permission } from '@/core/user/entities/user';
 
 interface Props {
   allPermissions: Permission[];

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
-import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from '@/core/entities/supplier-social-link';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from '@/core/supplier/entities/supplier-social-link';
 
 const PLATFORMS: SocialPlatform[] = [
   'WHATSAPP', 'TELEGRAM', 'INSTAGRAM', 'FACEBOOK', 'TIKTOK', 'WEBSITE', 'OTHER',

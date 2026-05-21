@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { reportRepository } from '@/infrastructure/repositories/ReportRepository';
-import type { SalesReportFilter, InventoryReportFilter } from '@/core/interfaces/IReportRepository';
+import { reportRepository } from '@/infrastructure/repositories/report/ReportRepository';
+import type { SalesReportFilter, InventoryReportFilter } from '@/core/report/ports/IReportRepository';
 
 export function useReportsController(salesFilter?: SalesReportFilter, inventoryFilter?: InventoryReportFilter) {
   const salesReport = useQuery({

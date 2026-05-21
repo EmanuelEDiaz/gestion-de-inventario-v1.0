@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { CheckCircle2, Truck, XCircle } from 'lucide-react';
-import type { Column, TableAction } from '@/presentation/shared/components/GenericTable';
-import type { Sale, SaleStatus } from '@/core/entities/sale';
-import { getSaleStatusLabel, getSaleStatusColor } from '@/core/entities/sale';
+import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
+import type { Sale, SaleStatus } from '@/core/sale/entities/sale';
+import { getSaleStatusLabel, getSaleStatusColor } from '@/core/sale/entities/sale';
 
 const COLS: Column<Sale>[] = [
   { key: 'saleNumber', label: 'Número', render: (_, r) => <span className="font-mono font-medium" title="Número de venta">{r.saleNumber}</span> },

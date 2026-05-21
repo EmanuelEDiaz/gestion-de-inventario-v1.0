@@ -1,6 +1,6 @@
 'use client';
 
-import type { Category } from '@/core/entities/category';
+import type { Category } from '@/core/category/entities/category';
 import type { ProductFiltersState } from './ProductFiltersPanel';
 import { ProductSearchBar } from './filters/ProductSearchBar';
 import { ProductFiltersPanel } from './ProductFiltersPanel';

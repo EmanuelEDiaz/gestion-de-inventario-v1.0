@@ -1,33 +1,31 @@
-// Notification-specific hooks
 export {
   useSystemNotifications,
   SYSTEM_NOTIFICATIONS_PAGE_SIZE,
   type UseSystemNotificationsReturn,
-} from './useSystemNotifications';
+} from './api/useSystemNotifications';
 
 export {
   useUserNotifications,
   USER_NOTIFICATIONS_PAGE_SIZE,
   type UseUserNotificationsReturn,
-} from './useUserNotifications';
+} from './api/useUserNotifications';
 
 export {
   useNotificationPreferences,
   type UseNotificationPreferencesReturn,
-} from './useNotificationPreferences';
+} from './api/useNotificationPreferences';
 
 export {
   useNotificationToasts,
-} from './useNotificationToasts';
+} from './api/useNotificationToasts';
 
-// Re-export existing hooks for convenience
-export { useAuthStore } from './useAuthStore';
-export { useCacheProgress } from './useCacheProgress';
-export { useDebounce } from './useDebounce';
-export { useNetworkHealth } from './useNetworkHealth';
-export { useSidebarSections } from './useSidebarSections';
-export { useSort } from './useSort';
-export { useSyncStatus } from './useSyncStatus';
-export { useStatusActions } from './useStatusActions';
-export type { StatusActionDef } from './useStatusActions';
-export { useReferenceData } from './useReferenceData';
+export { useAuthStore } from './storage/useAuthStore';
+export { useCacheProgress } from './storage/useCacheProgress';
+export { useDebounce } from './ui/useDebounce';
+export { useNetworkHealth } from './storage/useNetworkHealth';
+export { useSidebarSections } from './ui/useSidebarSections';
+export { useSort } from './ui/useSort';
+export { useSyncStatus } from './storage/useSyncStatus';
+export { useStatusActions } from './ui/useStatusActions';
+export type { StatusActionDef } from './ui/useStatusActions';
+export { useReferenceData } from './api/useReferenceData';

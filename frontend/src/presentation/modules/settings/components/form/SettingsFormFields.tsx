@@ -1,6 +1,6 @@
 'use client';
 
-import type { AppSettings, UpdateSettingsInput } from '@/core/entities/app-settings';
+import type { AppSettings, UpdateSettingsInput } from '@/core/settings/entities/app-settings';
 import { GeneralSettingsFields } from './GeneralSettingsFields';
 import { NotificationSettingsFields } from './NotificationSettingsFields';
 

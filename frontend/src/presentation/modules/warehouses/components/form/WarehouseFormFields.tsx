@@ -3,8 +3,8 @@
  */
 
 import { Input } from '@/presentation/shared/components/ui';
-import { FormField } from '@/presentation/shared/components/FormField';
-import { Textarea } from '@/presentation/shared/components/Textarea';
+import { FormField } from '@/presentation/shared/components/form/FormField';
+import { Textarea } from '@/presentation/shared/components/form/Textarea';
 
 export interface WarehouseFormData {
   code: string;

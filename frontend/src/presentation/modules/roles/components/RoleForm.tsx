@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Role, CreateRoleData, UpdateRoleData } from '@/core/entities/user';
+import type { Role, CreateRoleData, UpdateRoleData } from '@/core/user/entities/user';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { PermissionGroupSelector } from './PermissionGroupSelector';

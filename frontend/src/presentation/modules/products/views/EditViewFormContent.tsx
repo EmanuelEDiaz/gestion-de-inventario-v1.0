@@ -3,7 +3,7 @@
 import { Card } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui';
 import { ProductFormFields, type ProductFormData } from '../components/form/ProductFormFields';
-import type { Category } from '@/core/entities/category';
+import type { Category } from '@/core/category/entities/category';
 
 interface EditViewFormContentProps {
   formData: ProductFormData;

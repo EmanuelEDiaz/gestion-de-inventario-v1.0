@@ -1,6 +1,6 @@
 'use client';
 
-import { type Purchase, getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/entities/purchase';
+import { type Purchase, getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/purchase/entities/purchase';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 
 interface PurchaseDetailHeaderProps {

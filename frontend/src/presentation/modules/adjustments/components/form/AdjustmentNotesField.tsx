@@ -1,6 +1,6 @@
 'use client';
 
-import { Textarea } from '@/presentation/shared/components/Textarea';
+import { Textarea } from '@/presentation/shared/components/form/Textarea';
 
 interface AdjustmentNotesFieldProps {
   value: string;

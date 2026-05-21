@@ -1,7 +1,7 @@
 'use client';
 
-import type { Adjustment } from '@/core/entities/adjustment';
-import { ADJUSTMENT_STATUS_LABELS, ADJUSTMENT_STATUS_COLORS, ADJUSTMENT_TYPE_LABELS } from '@/core/entities/adjustment';
+import type { Adjustment } from '@/core/adjustment/entities/adjustment';
+import { ADJUSTMENT_STATUS_LABELS, ADJUSTMENT_STATUS_COLORS, ADJUSTMENT_TYPE_LABELS } from '@/core/adjustment/entities/adjustment';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { TableCell, TableRow } from '@/presentation/shared/components/ui/table';

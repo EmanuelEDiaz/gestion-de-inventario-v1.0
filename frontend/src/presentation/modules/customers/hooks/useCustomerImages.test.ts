@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCustomerImages } from './useCustomerImages';
-import type { CustomerImage } from '@/core/entities/customer-image';
+import type { CustomerImage } from '@/core/customer/entities/customer-image';
 
 const mockImage: CustomerImage = {
   id: 'img-1',

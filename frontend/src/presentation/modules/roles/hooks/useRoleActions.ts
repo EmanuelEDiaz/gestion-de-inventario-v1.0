@@ -1,8 +1,8 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { roleRepository } from '@/infrastructure/repositories/RoleRepository';
-import type { CreateRoleData, UpdateRoleData } from '@/core/entities/user';
+import { roleRepository } from '@/infrastructure/repositories/user/RoleRepository';
+import type { CreateRoleData, UpdateRoleData } from '@/core/user/entities/user';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 export function useRoleActions() {

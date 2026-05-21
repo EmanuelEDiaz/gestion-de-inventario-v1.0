@@ -3,10 +3,10 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Warehouse } from '@/core/entities/warehouse';
-import { GetWarehousesUseCase } from '@/core/use-cases/warehouse/GetWarehousesUseCase';
-import { ToggleWarehouseStatusUseCase } from '@/core/use-cases/warehouse/ToggleWarehouseStatusUseCase';
-import { warehouseRepository } from '@/infrastructure/repositories/WarehouseRepository';
+import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import { GetWarehousesUseCase } from '@/core/warehouse/use-cases/GetWarehousesUseCase';
+import { ToggleWarehouseStatusUseCase } from '@/core/warehouse/use-cases/ToggleWarehouseStatusUseCase';
+import { warehouseRepository } from '@/infrastructure/repositories/warehouse/WarehouseRepository';
 
 interface UseWarehousesControllerState {
   warehouses: Warehouse[];

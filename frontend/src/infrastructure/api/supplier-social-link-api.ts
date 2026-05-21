@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { SupplierSocialLink, AddSupplierSocialLinkData } from '@/core/entities/supplier-social-link';
+import type { SupplierSocialLink, AddSupplierSocialLinkData } from '@/core/supplier/entities/supplier-social-link';
 
 const base = (supplierId: string) => `/api/v1/suppliers/${supplierId}/social-links`;
 

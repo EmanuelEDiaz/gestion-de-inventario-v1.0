@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { NotificationRepository } from '@/infrastructure/repositories/NotificationRepository';
+import { NotificationRepository } from '@/infrastructure/repositories/notification/NotificationRepository';
 import { toast } from '@/presentation/shared/components/ui/toast';
-import type { SendMessageRequest } from '@/core/entities/notification';
+import type { SendMessageRequest } from '@/core/notification/entities/notification';
 
 const repo = new NotificationRepository();
 

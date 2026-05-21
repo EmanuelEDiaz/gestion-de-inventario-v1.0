@@ -1,8 +1,8 @@
 'use client';
 
-import type { ExchangeRate } from '@/core/entities/exchange-rate';
+import type { ExchangeRate } from '@/core/exchange-rate/entities/exchange-rate';
 import { ExchangeRateRow } from './ExchangeRateRow';
-import { EmptyState } from '@/presentation/shared/components/EmptyState';
+import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 
 interface ExchangeRateTableProps {
   rates: ExchangeRate[];

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 interface MessageRecipientSelectorProps {
   targetUserId: string;

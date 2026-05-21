@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useQuery } from '@tanstack/react-query';
 import { useCustomerDebts } from './useCustomerDebts';
-import type { CustomerDebt } from '@/core/entities/customer-debt';
+import type { CustomerDebt } from '@/core/customer/entities/customer-debt';
 
 const mockDebt: CustomerDebt = {
   id: 'debt-1',

@@ -1,10 +1,10 @@
 'use client';
 
 import { CheckCircle2, Truck, XCircle } from 'lucide-react';
-import { Sale, getSaleStatusLabel, getSaleStatusColor } from '@/core/entities/sale';
+import { Sale, getSaleStatusLabel, getSaleStatusColor } from '@/core/sale/entities/sale';
 import { formatCurrency, formatDateShort } from '@/presentation/shared/lib/utils';
-import { GenericTable, type Column } from '@/presentation/shared/components/GenericTable';
-import { useStatusActions } from '@/presentation/shared/hooks/useStatusActions';
+import { GenericTable, type Column } from '@/presentation/shared/components/data-display/GenericTable';
+import { useStatusActions } from '@/presentation/shared/hooks/ui/useStatusActions';
 
 interface SaleTableProps {
   sales: Sale[];

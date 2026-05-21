@@ -2,8 +2,8 @@
 
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { productRepository } from '@/infrastructure/repositories/ProductRepository';
-import type { Product } from '@/core/entities/product';
+import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
+import type { Product } from '@/core/product/entities/product';
 
 interface UseProductDeleteOptions {
   onDeleteSuccess?: () => void;

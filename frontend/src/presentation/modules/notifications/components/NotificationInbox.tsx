@@ -5,7 +5,7 @@ import { DoneAll, Delete } from '@material-symbols-svg/react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useNotificationActions } from '../hooks/useNotificationActions';
 import { NotificationItem } from './NotificationItem';
-import { SkeletonList } from '@/presentation/shared/components/Skeleton';
+import { SkeletonList } from '@/presentation/shared/components/data-display/Skeleton';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 
 interface Props {

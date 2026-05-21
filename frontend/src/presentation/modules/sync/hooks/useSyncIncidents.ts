@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import type { SyncIncidentStatus } from '@/core/entities/sync-incident';
-import { SyncIncidentRepository } from '@/infrastructure/repositories/SyncIncidentRepository';
+import type { SyncIncidentStatus } from '@/core/settings/entities/sync-incident';
+import { SyncIncidentRepository } from '@/infrastructure/repositories/settings/SyncIncidentRepository';
 
 const repo = new SyncIncidentRepository();
 

@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useExportController } from '../hooks/useExportController';
-import type { ExportFormat } from '@/core/interfaces/IExportRepository';
+import type { ExportFormat } from '@/core/export/ports/IExportRepository';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 import { Download } from 'lucide-react';
 
 const FORMATS: { value: ExportFormat; label: string }[] = [

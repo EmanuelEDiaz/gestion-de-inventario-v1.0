@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Customer, CreateCustomerData, UpdateCustomerData } from '@/core/entities/customer';
-import { CustomerRepository } from '@/infrastructure/repositories/CustomerRepository';
-import { GetCustomersUseCase, CreateCustomerUseCase, UpdateCustomerUseCase, ActivateCustomerUseCase, DeactivateCustomerUseCase, DeleteCustomerUseCase } from '@/core/use-cases/customer';
+import type { Customer, CreateCustomerData, UpdateCustomerData } from '@/core/customer/entities/customer';
+import { CustomerRepository } from '@/infrastructure/repositories/customer/CustomerRepository';
+import { GetCustomersUseCase, CreateCustomerUseCase, UpdateCustomerUseCase, ActivateCustomerUseCase, DeactivateCustomerUseCase, DeleteCustomerUseCase } from '@/core/customer/use-cases';
 
 // Singletons
 const repo = new CustomerRepository();

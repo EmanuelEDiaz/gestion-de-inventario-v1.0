@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Transfer, CreateTransferRequest } from '@/core/entities/transfer';
-import { TransferRepository } from '@/infrastructure/repositories/TransferRepository';
+import type { Transfer, CreateTransferRequest } from '@/core/transfer/entities/transfer';
+import { TransferRepository } from '@/infrastructure/repositories/transfer/TransferRepository';
 import { 
   GetTransfersUseCase, 
   CreateTransferUseCase,
@@ -11,7 +11,7 @@ import {
   CompleteTransferUseCase,
   CancelTransferUseCase,
   DeleteTransferUseCase 
-} from '@/core/use-cases/transfer';
+} from '@/core/transfer/use-cases';
 
 // Singletons (patterns skill: evita recreación en cada render)
 const repo = new TransferRepository();

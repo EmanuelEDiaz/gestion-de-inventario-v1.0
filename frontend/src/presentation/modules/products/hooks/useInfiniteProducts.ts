@@ -1,7 +1,7 @@
 'use client';
 
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { productRepository } from '@/infrastructure/repositories/ProductRepository';
+import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_MAX_PAGES = 20;

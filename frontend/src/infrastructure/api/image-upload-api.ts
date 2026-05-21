@@ -1,7 +1,7 @@
 import { apiClient } from './client';
-import type { CustomerImage } from '@/core/entities/customer-image';
-import type { SupplierImage } from '@/core/entities/supplier-image';
-import type { ProductImage, CreateProductImageData } from '@/core/entities/product-image';
+import type { CustomerImage } from '@/core/customer/entities/customer-image';
+import type { SupplierImage } from '@/core/supplier/entities/supplier-image';
+import type { ProductImage, CreateProductImageData } from '@/core/product/entities/product-image';
 
 export const customerImageApi = {
   list(customerId: string): Promise<CustomerImage[]> {

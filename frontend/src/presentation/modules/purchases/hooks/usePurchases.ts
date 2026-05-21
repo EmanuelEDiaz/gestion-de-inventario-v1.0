@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Purchase, PurchaseFilter, CreatePurchaseInput } from '@/core/entities/purchase';
-import { purchaseRepository } from '@/infrastructure/repositories/PurchaseRepository';
+import { Purchase, PurchaseFilter, CreatePurchaseInput } from '@/core/purchase/entities/purchase';
+import { purchaseRepository } from '@/infrastructure/repositories/purchase/PurchaseRepository';
 import {
   GetAllPurchasesUseCase,
   CreatePurchaseUseCase,
@@ -10,7 +10,7 @@ import {
   ReceivePurchaseUseCase,
   CancelPurchaseUseCase,
   DeletePurchaseUseCase
-} from '@/core/use-cases/purchase';
+} from '@/core/purchase/use-cases';
 
 // Use cases singleton para evitar recreación en cada render
 const useCases = {

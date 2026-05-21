@@ -2,8 +2,8 @@
 
 import type { ProductFormData } from './ProductFormFields';
 import { Input } from '@/presentation/shared/components/ui';
-import { FormField } from '@/presentation/shared/components/FormField';
-import { ComboboxSelect } from '@/presentation/shared/components/ComboboxSelect';
+import { FormField } from '@/presentation/shared/components/form/FormField';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 
 interface ProductInventorySectionProps {
   data: ProductFormData;

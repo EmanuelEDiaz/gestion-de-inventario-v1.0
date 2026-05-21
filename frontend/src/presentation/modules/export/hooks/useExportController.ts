@@ -1,8 +1,8 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { exportRepository } from '@/infrastructure/repositories/ExportRepository';
-import type { ExportFilter } from '@/core/interfaces/IExportRepository';
+import { exportRepository } from '@/infrastructure/repositories/export/ExportRepository';
+import type { ExportFilter } from '@/core/export/ports/IExportRepository';
 import { toast } from 'sonner';
 
 function downloadBlob(blob: Blob, filename: string) {

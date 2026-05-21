@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { Adjustment, AdjustmentStatus, CreateAdjustmentData, UpdateAdjustmentData } from '@/core/entities/adjustment';
-import { AdjustmentRepository } from '@/infrastructure/repositories/AdjustmentRepository';
+import type { Adjustment, AdjustmentStatus, CreateAdjustmentData, UpdateAdjustmentData } from '@/core/adjustment/entities/adjustment';
+import { AdjustmentRepository } from '@/infrastructure/repositories/adjustment/AdjustmentRepository';
 import { 
   GetAdjustmentsUseCase, GetAdjustmentByIdUseCase,
   CreateAdjustmentUseCase, UpdateAdjustmentUseCase,
   ConfirmAdjustmentUseCase, CancelAdjustmentUseCase, DeleteAdjustmentUseCase
-} from '@/core/use-cases/adjustment';
+} from '@/core/adjustment/use-cases';
 
 // Singletons (clean-code: evita reinstancias)
 const repo = new AdjustmentRepository();

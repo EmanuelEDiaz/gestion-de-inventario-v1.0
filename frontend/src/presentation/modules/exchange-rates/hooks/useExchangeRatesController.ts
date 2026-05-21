@@ -1,12 +1,12 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { exchangeRateRepository } from '@/infrastructure/repositories/ExchangeRateRepository';
+import { exchangeRateRepository } from '@/infrastructure/repositories/exchange-rate/ExchangeRateRepository';
 import {
   GetExchangeRatesUseCase,
   CreateExchangeRateUseCase,
-} from '@/core/use-cases/exchange-rate';
-import type { CreateExchangeRateInput, ExchangeRateFilter } from '@/core/entities/exchange-rate';
+} from '@/core/exchange-rate/use-cases';
+import type { CreateExchangeRateInput, ExchangeRateFilter } from '@/core/exchange-rate/entities/exchange-rate';
 import { toast } from 'sonner';
 
 const getRates = new GetExchangeRatesUseCase(exchangeRateRepository);

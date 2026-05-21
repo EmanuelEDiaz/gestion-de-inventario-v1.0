@@ -1,6 +1,6 @@
 'use client';
 
-import type { CacheModule } from '@/presentation/shared/hooks/useCacheProgress';
+import type { CacheModule } from '@/presentation/shared/hooks/storage/useCacheProgress';
 import { Check, Loader2 } from 'lucide-react';
 
 interface CacheProgressBarProps {
