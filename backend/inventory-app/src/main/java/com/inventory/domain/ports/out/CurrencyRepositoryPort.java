@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.Currency;
+import com.inventory.domain.model.currency.Currency;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

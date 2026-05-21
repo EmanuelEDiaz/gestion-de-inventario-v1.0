@@ -1,8 +1,8 @@
 package com.inventory.adapters.persistence.mapper;
 
 import com.inventory.adapters.persistence.entity.AppSettingsEntity;
-import com.inventory.domain.model.AppSettings;
-import com.inventory.domain.model.AppSettings.CostMethod;
+import com.inventory.domain.model.settings.AppSettings;
+import com.inventory.domain.model.settings.AppSettings.CostMethod;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;

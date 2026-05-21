@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.CustomerDebt;
+import com.inventory.domain.model.customer.CustomerDebt;
 import com.inventory.domain.ports.in.CustomerDebtQueryPort;
 import com.inventory.domain.ports.out.CustomerDebtRepository;
 import org.springframework.stereotype.Service;

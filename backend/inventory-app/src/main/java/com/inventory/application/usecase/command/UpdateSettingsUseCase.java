@@ -2,8 +2,8 @@ package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.InvalidSettingsValueException;
 import com.inventory.domain.errors.SettingsVersionConflictException;
-import com.inventory.domain.model.AppSettings;
-import com.inventory.domain.model.AppSettings.CostMethod;
+import com.inventory.domain.model.settings.AppSettings;
+import com.inventory.domain.model.settings.AppSettings.CostMethod;
 import com.inventory.domain.ports.out.AppSettingsRepositoryPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

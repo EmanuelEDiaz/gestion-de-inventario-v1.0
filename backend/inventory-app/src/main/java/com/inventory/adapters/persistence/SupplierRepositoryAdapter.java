@@ -3,7 +3,7 @@ package com.inventory.adapters.persistence;
 import com.inventory.adapters.persistence.entity.SupplierEntity;
 import com.inventory.adapters.persistence.mapper.CatalogPersistenceMapper;
 import com.inventory.adapters.persistence.repository.SupplierR2dbcRepository;
-import com.inventory.domain.model.Supplier;
+import com.inventory.domain.model.supplier.Supplier;
 import com.inventory.domain.ports.out.SupplierRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

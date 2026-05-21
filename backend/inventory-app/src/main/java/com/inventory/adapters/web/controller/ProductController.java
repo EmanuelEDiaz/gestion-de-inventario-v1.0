@@ -2,8 +2,8 @@ package com.inventory.adapters.web.controller;
 
 import com.inventory.adapters.web.dto.*;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
-import com.inventory.domain.model.Category;
-import com.inventory.domain.model.Product;
+import com.inventory.domain.model.category.Category;
+import com.inventory.domain.model.product.Product;
 import com.inventory.domain.ports.in.ProductCommandPort;
 import com.inventory.domain.ports.in.ProductFilter;
 import com.inventory.domain.ports.in.ProductQueryPort;

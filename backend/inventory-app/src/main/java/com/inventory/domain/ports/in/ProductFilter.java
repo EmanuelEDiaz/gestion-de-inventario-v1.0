@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Product;
+import com.inventory.domain.model.product.Product;
 
 import java.math.BigDecimal;
 import java.util.UUID;

@@ -1,8 +1,8 @@
 package com.inventory.application.mapper;
 
 import com.inventory.application.dto.SaleDto;
-import com.inventory.domain.model.Sale;
-import com.inventory.domain.model.SaleLine;
+import com.inventory.domain.model.sale.Sale;
+import com.inventory.domain.model.sale.SaleLine;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

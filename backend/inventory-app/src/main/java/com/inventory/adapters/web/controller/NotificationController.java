@@ -4,7 +4,7 @@ import com.inventory.application.dto.*;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.application.service.NotificationPreferencesService;
 import com.inventory.application.service.NotificationSchedulesService;
-import com.inventory.domain.model.Notification;
+import com.inventory.domain.model.notification.Notification;
 import com.inventory.domain.ports.in.AdminUserQueryPort;
 import com.inventory.domain.ports.in.NotificationCommandPort;
 import com.inventory.domain.ports.in.NotificationQueryPort;

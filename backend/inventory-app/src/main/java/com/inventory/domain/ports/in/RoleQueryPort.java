@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Role;
+import com.inventory.domain.model.role.Role;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

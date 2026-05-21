@@ -1,7 +1,7 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.Return;
-import com.inventory.domain.model.ReturnLine;
+import com.inventory.domain.model.returns.Return;
+import com.inventory.domain.model.returns.ReturnLine;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

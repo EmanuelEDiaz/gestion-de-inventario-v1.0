@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.Transfer;
+import com.inventory.domain.model.transfer.Transfer;
 import com.inventory.domain.ports.in.TransferQueryPort;
 import com.inventory.domain.ports.out.TransferRepository;
 import org.springframework.stereotype.Service;

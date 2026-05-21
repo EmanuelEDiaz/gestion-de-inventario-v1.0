@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.ExchangeRate;
+import com.inventory.domain.model.currency.ExchangeRate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

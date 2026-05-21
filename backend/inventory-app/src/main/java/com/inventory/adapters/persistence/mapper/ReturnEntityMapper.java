@@ -2,8 +2,8 @@ package com.inventory.adapters.persistence.mapper;
 
 import com.inventory.adapters.persistence.entity.ReturnEntity;
 import com.inventory.adapters.persistence.entity.ReturnLineEntity;
-import com.inventory.domain.model.Return;
-import com.inventory.domain.model.ReturnLine;
+import com.inventory.domain.model.returns.Return;
+import com.inventory.domain.model.returns.ReturnLine;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence.adapter;
 
 import com.inventory.adapters.persistence.mapper.InventoryMovementEntityMapper;
 import com.inventory.adapters.persistence.repository.R2dbcMovementRepository;
-import com.inventory.domain.model.InventoryMovement;
+import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.ports.out.MovementRepository;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;

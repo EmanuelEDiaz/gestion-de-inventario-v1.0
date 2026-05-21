@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.NotificationSchedule;
+import com.inventory.domain.model.notification.NotificationSchedule;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;

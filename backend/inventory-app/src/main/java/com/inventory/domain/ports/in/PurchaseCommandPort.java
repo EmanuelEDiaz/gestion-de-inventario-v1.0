@@ -1,7 +1,7 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Purchase;
-import com.inventory.domain.model.PurchaseLine;
+import com.inventory.domain.model.purchase.Purchase;
+import com.inventory.domain.model.purchase.PurchaseLine;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;

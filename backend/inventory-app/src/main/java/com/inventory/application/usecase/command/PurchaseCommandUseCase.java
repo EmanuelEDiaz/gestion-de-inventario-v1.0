@@ -2,9 +2,9 @@ package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.InventoryMovement;
-import com.inventory.domain.model.Purchase;
-import com.inventory.domain.model.PurchaseLine;
+import com.inventory.domain.model.stock.InventoryMovement;
+import com.inventory.domain.model.purchase.Purchase;
+import com.inventory.domain.model.purchase.PurchaseLine;
 import com.inventory.domain.ports.in.PurchaseCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.PurchaseRepository;

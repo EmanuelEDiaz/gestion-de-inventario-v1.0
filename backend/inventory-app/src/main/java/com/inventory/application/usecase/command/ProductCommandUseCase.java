@@ -3,7 +3,7 @@ package com.inventory.application.usecase.command;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.Product;
+import com.inventory.domain.model.product.Product;
 import com.inventory.domain.ports.in.ProductCommandPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;

@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Notification;
+import com.inventory.domain.model.notification.Notification;
 import com.inventory.domain.shared.PageRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

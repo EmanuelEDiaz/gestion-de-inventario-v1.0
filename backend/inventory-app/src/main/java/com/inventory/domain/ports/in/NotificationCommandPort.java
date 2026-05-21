@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Notification;
+import com.inventory.domain.model.notification.Notification;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;

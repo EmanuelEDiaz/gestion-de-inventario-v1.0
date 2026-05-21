@@ -1,7 +1,7 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.Transfer;
-import com.inventory.domain.model.TransferLine;
+import com.inventory.domain.model.transfer.Transfer;
+import com.inventory.domain.model.transfer.TransferLine;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

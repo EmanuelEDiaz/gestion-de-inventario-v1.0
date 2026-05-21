@@ -1,8 +1,8 @@
 package com.inventory.application.mapper;
 
 import com.inventory.application.dto.AdjustmentDto;
-import com.inventory.domain.model.Adjustment;
-import com.inventory.domain.model.AdjustmentLine;
+import com.inventory.domain.model.adjustment.Adjustment;
+import com.inventory.domain.model.adjustment.AdjustmentLine;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

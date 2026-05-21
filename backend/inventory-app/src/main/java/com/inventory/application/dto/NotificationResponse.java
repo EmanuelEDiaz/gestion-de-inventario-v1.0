@@ -1,6 +1,6 @@
 package com.inventory.application.dto;
 
-import com.inventory.domain.model.Notification;
+import com.inventory.domain.model.notification.Notification;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

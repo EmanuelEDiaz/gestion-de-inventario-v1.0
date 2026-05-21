@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.Warehouse;
+import com.inventory.domain.model.warehouse.Warehouse;
 import com.inventory.domain.ports.in.WarehouseQueryPort;
 import com.inventory.domain.ports.out.WarehouseRepository;
 import org.springframework.stereotype.Service;

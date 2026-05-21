@@ -2,8 +2,8 @@ package com.inventory.adapters.persistence.mapper;
 
 import com.inventory.adapters.persistence.entity.PurchaseEntity;
 import com.inventory.adapters.persistence.entity.PurchaseLineEntity;
-import com.inventory.domain.model.Purchase;
-import com.inventory.domain.model.PurchaseLine;
+import com.inventory.domain.model.purchase.Purchase;
+import com.inventory.domain.model.purchase.PurchaseLine;
 import org.mapstruct.Mapper;
 
 import java.util.List;

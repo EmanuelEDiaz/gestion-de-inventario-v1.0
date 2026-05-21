@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence.adapter;
 
 import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
 import com.inventory.adapters.persistence.repository.R2dbcSupplierImageRepository;
-import com.inventory.domain.model.SupplierImage;
+import com.inventory.domain.model.supplier.SupplierImage;
 import com.inventory.domain.ports.out.SupplierImageRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

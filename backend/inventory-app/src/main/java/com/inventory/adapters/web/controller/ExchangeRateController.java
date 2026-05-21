@@ -2,7 +2,7 @@ package com.inventory.adapters.web.controller;
 
 import com.inventory.adapters.web.dto.CreateExchangeRateRequest;
 import com.inventory.adapters.web.dto.ExchangeRateResponse;
-import com.inventory.domain.model.ExchangeRate;
+import com.inventory.domain.model.currency.ExchangeRate;
 import com.inventory.domain.ports.in.ExchangeRateCommandPort;
 import com.inventory.domain.ports.in.ExchangeRateQueryPort;
 import jakarta.validation.Valid;

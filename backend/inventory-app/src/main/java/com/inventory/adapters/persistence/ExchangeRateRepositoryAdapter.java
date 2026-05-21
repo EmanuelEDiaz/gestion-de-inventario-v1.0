@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence;
 
 import com.inventory.adapters.persistence.entity.ExchangeRateEntity;
 import com.inventory.adapters.persistence.repository.ExchangeRateR2dbcRepository;
-import com.inventory.domain.model.ExchangeRate;
+import com.inventory.domain.model.currency.ExchangeRate;
 import com.inventory.domain.ports.out.ExchangeRateRepository;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;

@@ -1,8 +1,8 @@
 package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.CustomerDebt;
-import com.inventory.domain.model.DebtPayment;
+import com.inventory.domain.model.customer.CustomerDebt;
+import com.inventory.domain.model.customer.DebtPayment;
 import com.inventory.domain.ports.in.CustomerDebtCommandPort;
 import com.inventory.domain.ports.out.CustomerDebtRepository;
 import com.inventory.domain.ports.out.DebtPaymentRepository;

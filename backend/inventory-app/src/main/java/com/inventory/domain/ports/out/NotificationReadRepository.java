@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.NotificationRead;
+import com.inventory.domain.model.notification.NotificationRead;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

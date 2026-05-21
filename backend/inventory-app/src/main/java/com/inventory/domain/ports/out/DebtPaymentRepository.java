@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.DebtPayment;
+import com.inventory.domain.model.customer.DebtPayment;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

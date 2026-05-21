@@ -4,10 +4,10 @@ import com.inventory.adapters.persistence.entity.PermissionEntity;
 import com.inventory.adapters.persistence.entity.RefreshTokenEntity;
 import com.inventory.adapters.persistence.entity.RoleEntity;
 import com.inventory.adapters.persistence.entity.UserEntity;
-import com.inventory.domain.model.Permission;
-import com.inventory.domain.model.RefreshToken;
-import com.inventory.domain.model.Role;
-import com.inventory.domain.model.User;
+import com.inventory.domain.model.role.Permission;
+import com.inventory.domain.model.user.RefreshToken;
+import com.inventory.domain.model.role.Role;
+import com.inventory.domain.model.user.User;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;

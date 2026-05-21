@@ -1,7 +1,7 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Adjustment;
-import com.inventory.domain.model.AdjustmentLine;
+import com.inventory.domain.model.adjustment.Adjustment;
+import com.inventory.domain.model.adjustment.AdjustmentLine;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;

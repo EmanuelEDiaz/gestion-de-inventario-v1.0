@@ -1,7 +1,7 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.CustomerDebt;
-import com.inventory.domain.model.DebtPayment;
+import com.inventory.domain.model.customer.CustomerDebt;
+import com.inventory.domain.model.customer.DebtPayment;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;

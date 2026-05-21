@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence;
 
 import com.inventory.adapters.persistence.mapper.PersistenceMapper;
 import com.inventory.adapters.persistence.repository.RefreshTokenR2dbcRepository;
-import com.inventory.domain.model.RefreshToken;
+import com.inventory.domain.model.user.RefreshToken;
 import com.inventory.domain.ports.out.RefreshTokenRepositoryPort;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

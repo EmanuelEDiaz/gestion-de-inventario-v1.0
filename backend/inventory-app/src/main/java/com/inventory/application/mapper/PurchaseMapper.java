@@ -1,8 +1,8 @@
 package com.inventory.application.mapper;
 
 import com.inventory.application.dto.PurchaseDto;
-import com.inventory.domain.model.Purchase;
-import com.inventory.domain.model.PurchaseLine;
+import com.inventory.domain.model.purchase.Purchase;
+import com.inventory.domain.model.purchase.PurchaseLine;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

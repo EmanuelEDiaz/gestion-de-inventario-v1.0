@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.domain.model.User;
+import com.inventory.domain.model.user.User;
 import com.inventory.domain.ports.in.AdminUserCommandPort;
 import com.inventory.domain.ports.out.RoleRepositoryPort;
 import com.inventory.domain.ports.out.UserRepositoryPort;
@@ -80,7 +80,7 @@ public class AdminUserCommandUseCase implements AdminUserCommandPort {
             .then();
     }
 
-    private Mono<User> buildUpdatedUser(User existing, UpdateUserCommand command, com.inventory.domain.model.Role role) {
+    private Mono<User> buildUpdatedUser(User existing, UpdateUserCommand command, com.inventory.domain.model.role.Role role) {
         String email       = command.email()       != null ? command.email()       : existing.getEmail();
         String displayName = command.displayName() != null ? command.displayName() : existing.getDisplayName();
         boolean isActive   = command.isActive()    != null ? command.isActive()    : existing.isActive();

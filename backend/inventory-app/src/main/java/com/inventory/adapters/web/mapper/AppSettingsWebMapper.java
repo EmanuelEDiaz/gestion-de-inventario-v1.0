@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.mapper;
 
 import com.inventory.adapters.web.dto.AppSettingsResponse;
-import com.inventory.domain.model.AppSettings;
+import com.inventory.domain.model.settings.AppSettings;
 import org.springframework.stereotype.Component;
 
 /**

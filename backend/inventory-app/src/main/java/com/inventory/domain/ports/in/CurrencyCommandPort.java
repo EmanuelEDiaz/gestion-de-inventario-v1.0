@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Currency;
+import com.inventory.domain.model.currency.Currency;
 import reactor.core.publisher.Mono;
 
 public interface CurrencyCommandPort {

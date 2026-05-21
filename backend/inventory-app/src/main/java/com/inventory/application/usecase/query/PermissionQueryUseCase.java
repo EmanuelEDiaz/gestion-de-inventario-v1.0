@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.Permission;
+import com.inventory.domain.model.role.Permission;
 import com.inventory.domain.ports.in.PermissionQueryPort;
 import com.inventory.domain.ports.out.PermissionRepositoryPort;
 import org.springframework.stereotype.Service;

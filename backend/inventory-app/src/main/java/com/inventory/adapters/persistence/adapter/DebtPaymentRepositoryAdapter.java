@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence.adapter;
 
 import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
 import com.inventory.adapters.persistence.repository.R2dbcDebtPaymentRepository;
-import com.inventory.domain.model.DebtPayment;
+import com.inventory.domain.model.customer.DebtPayment;
 import com.inventory.domain.ports.out.DebtPaymentRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

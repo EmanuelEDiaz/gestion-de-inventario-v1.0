@@ -2,7 +2,7 @@ package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.errors.BadRequestException;
-import com.inventory.domain.model.CustomerImage;
+import com.inventory.domain.model.customer.CustomerImage;
 import com.inventory.domain.ports.in.CustomerImageCommandPort;
 import com.inventory.domain.ports.out.CustomerImageRepository;
 import com.inventory.application.service.ImageProcessingService;

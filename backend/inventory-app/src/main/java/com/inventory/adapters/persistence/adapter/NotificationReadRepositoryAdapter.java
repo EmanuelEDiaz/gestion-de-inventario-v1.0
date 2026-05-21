@@ -3,7 +3,7 @@ package com.inventory.adapters.persistence.adapter;
 import com.inventory.adapters.persistence.entity.NotificationReadEntity;
 import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
 import com.inventory.adapters.persistence.repository.R2dbcNotificationReadRepository;
-import com.inventory.domain.model.NotificationRead;
+import com.inventory.domain.model.notification.NotificationRead;
 import com.inventory.domain.ports.out.NotificationReadRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

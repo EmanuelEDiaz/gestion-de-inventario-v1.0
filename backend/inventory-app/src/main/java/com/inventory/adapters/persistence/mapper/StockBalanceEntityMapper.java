@@ -1,7 +1,7 @@
 package com.inventory.adapters.persistence.mapper;
 
 import com.inventory.adapters.persistence.entity.StockBalanceEntity;
-import com.inventory.domain.model.StockBalance;
+import com.inventory.domain.model.stock.StockBalance;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

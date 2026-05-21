@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence;
 
 import com.inventory.adapters.persistence.mapper.PersistenceMapper;
 import com.inventory.adapters.persistence.repository.PermissionR2dbcRepository;
-import com.inventory.domain.model.Permission;
+import com.inventory.domain.model.role.Permission;
 import com.inventory.domain.ports.out.PermissionRepositoryPort;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;

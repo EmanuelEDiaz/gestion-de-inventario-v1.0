@@ -4,7 +4,7 @@ import com.inventory.application.dto.AdjustmentDto;
 import com.inventory.application.dto.CreateAdjustmentRequest;
 import com.inventory.application.dto.UpdateAdjustmentRequest;
 import com.inventory.application.mapper.AdjustmentMapper;
-import com.inventory.domain.model.Adjustment;
+import com.inventory.domain.model.adjustment.Adjustment;
 import com.inventory.domain.ports.in.AdjustmentCommandPort;
 import com.inventory.domain.ports.in.AdjustmentQueryPort;
 import com.inventory.domain.ports.in.WarehouseQueryPort;

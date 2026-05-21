@@ -1,6 +1,6 @@
 package com.inventory.adapters.web;
 
-import com.inventory.domain.model.Notification;
+import com.inventory.domain.model.notification.Notification;
 import com.inventory.domain.ports.out.NotificationSinkPort;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;

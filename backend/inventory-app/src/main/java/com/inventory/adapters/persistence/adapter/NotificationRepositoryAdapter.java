@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence.adapter;
 
 import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
 import com.inventory.adapters.persistence.repository.R2dbcNotificationRepository;
-import com.inventory.domain.model.Notification;
+import com.inventory.domain.model.notification.Notification;
 import com.inventory.domain.ports.out.NotificationRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

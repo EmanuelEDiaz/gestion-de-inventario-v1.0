@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.Category;
+import com.inventory.domain.model.category.Category;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

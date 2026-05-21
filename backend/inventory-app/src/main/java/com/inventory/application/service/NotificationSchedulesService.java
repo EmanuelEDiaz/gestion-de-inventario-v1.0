@@ -3,7 +3,7 @@ package com.inventory.application.service;
 import com.inventory.application.dto.NotificationScheduleResponse;
 import com.inventory.application.dto.UpdateNotificationScheduleRequest;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
-import com.inventory.domain.model.NotificationSchedule;
+import com.inventory.domain.model.notification.NotificationSchedule;
 import com.inventory.domain.ports.out.NotificationSchedulesPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

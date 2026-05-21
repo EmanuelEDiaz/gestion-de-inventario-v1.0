@@ -4,7 +4,7 @@ import com.inventory.application.dto.CreateTransferRequest;
 import com.inventory.application.dto.TransferDto;
 import com.inventory.application.dto.UpdateTransferRequest;
 import com.inventory.application.mapper.TransferMapper;
-import com.inventory.domain.model.Transfer;
+import com.inventory.domain.model.transfer.Transfer;
 import com.inventory.domain.ports.in.TransferCommandPort;
 import com.inventory.domain.ports.in.TransferQueryPort;
 import com.inventory.domain.ports.in.WarehouseQueryPort;

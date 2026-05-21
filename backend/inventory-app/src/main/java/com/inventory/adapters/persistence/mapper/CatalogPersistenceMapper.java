@@ -1,7 +1,11 @@
 package com.inventory.adapters.persistence.mapper;
 
 import com.inventory.adapters.persistence.entity.*;
-import com.inventory.domain.model.*;
+import com.inventory.domain.model.product.Product;
+import com.inventory.domain.model.category.Category;
+import com.inventory.domain.model.customer.Customer;
+import com.inventory.domain.model.supplier.Supplier;
+import com.inventory.domain.model.warehouse.Warehouse;
 import org.springframework.stereotype.Component;
 
 /**

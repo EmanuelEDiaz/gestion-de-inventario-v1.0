@@ -1,7 +1,17 @@
 package com.inventory.application.mapper;
 
 import com.inventory.application.dto.*;
-import com.inventory.domain.model.*;
+import com.inventory.domain.model.customer.CustomerImage;
+import com.inventory.domain.model.customer.CustomerDebt;
+import com.inventory.domain.model.customer.DebtPayment;
+import com.inventory.domain.model.product.ProductImage;
+import com.inventory.domain.model.supplier.SupplierImage;
+import com.inventory.domain.model.supplier.SupplierSocialLink;
+import com.inventory.domain.model.supplier.SupplierCatalogProduct;
+import com.inventory.domain.model.notification.Notification;
+import com.inventory.domain.model.notification.NotificationPreference;
+import com.inventory.domain.model.notification.NotificationSchedule;
+import com.inventory.domain.model.sync.SyncIncident;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

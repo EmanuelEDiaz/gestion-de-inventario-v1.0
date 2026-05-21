@@ -2,8 +2,8 @@ package com.inventory.adapters.persistence.mapper;
 
 import com.inventory.adapters.persistence.entity.TransferEntity;
 import com.inventory.adapters.persistence.entity.TransferLineEntity;
-import com.inventory.domain.model.Transfer;
-import com.inventory.domain.model.TransferLine;
+import com.inventory.domain.model.transfer.Transfer;
+import com.inventory.domain.model.transfer.TransferLine;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -20,7 +20,7 @@ public interface TransferEntityMapper {
     @Mapping(target = "status", expression = "java(transfer.getStatus().name())")
     TransferEntity toEntity(Transfer transfer);
 
-    @Mapping(target = "status", expression = "java(com.inventory.domain.model.Transfer.TransferStatus.valueOf(entity.getStatus()))")
+    @Mapping(target = "status", expression = "java(com.inventory.domain.model.transfer.Transfer.TransferStatus.valueOf(entity.getStatus()))")
     @Mapping(target = "lines", ignore = true)
     @Mapping(target = "complete", ignore = true)
     Transfer toDomain(TransferEntity entity);

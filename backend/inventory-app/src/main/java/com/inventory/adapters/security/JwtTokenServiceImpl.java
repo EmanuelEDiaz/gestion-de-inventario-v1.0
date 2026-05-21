@@ -2,7 +2,7 @@ package com.inventory.adapters.security;
 
 import com.inventory.application.usecase.command.JwtTokenService;
 import com.inventory.domain.errors.InvalidTokenException;
-import com.inventory.domain.model.User;
+import com.inventory.domain.model.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

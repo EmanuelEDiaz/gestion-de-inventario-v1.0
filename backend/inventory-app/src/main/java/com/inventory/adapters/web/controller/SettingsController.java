@@ -5,7 +5,7 @@ import com.inventory.adapters.web.dto.AppSettingsUpdateRequest;
 import com.inventory.adapters.web.mapper.AppSettingsWebMapper;
 import com.inventory.application.usecase.command.UpdateSettingsUseCase;
 import com.inventory.application.usecase.query.SettingsQueryUseCase;
-import com.inventory.domain.model.AppSettings.CostMethod;
+import com.inventory.domain.model.settings.AppSettings.CostMethod;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

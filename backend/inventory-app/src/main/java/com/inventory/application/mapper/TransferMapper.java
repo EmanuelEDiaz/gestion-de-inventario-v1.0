@@ -1,8 +1,8 @@
 package com.inventory.application.mapper;
 
 import com.inventory.application.dto.TransferDto;
-import com.inventory.domain.model.Transfer;
-import com.inventory.domain.model.TransferLine;
+import com.inventory.domain.model.transfer.Transfer;
+import com.inventory.domain.model.transfer.TransferLine;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

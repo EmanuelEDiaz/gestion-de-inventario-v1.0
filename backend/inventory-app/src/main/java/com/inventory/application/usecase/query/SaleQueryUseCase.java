@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.Sale;
+import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.ports.in.SaleQueryPort;
 import com.inventory.domain.ports.out.SaleRepository;
 import org.springframework.stereotype.Service;

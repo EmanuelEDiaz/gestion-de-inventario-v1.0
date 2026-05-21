@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.Purchase;
+import com.inventory.domain.model.purchase.Purchase;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

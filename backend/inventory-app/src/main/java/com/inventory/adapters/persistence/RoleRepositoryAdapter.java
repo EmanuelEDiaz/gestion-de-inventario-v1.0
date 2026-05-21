@@ -4,7 +4,7 @@ import com.inventory.adapters.persistence.entity.RoleEntity;
 import com.inventory.adapters.persistence.mapper.PersistenceMapper;
 import com.inventory.adapters.persistence.repository.PermissionR2dbcRepository;
 import com.inventory.adapters.persistence.repository.RoleR2dbcRepository;
-import com.inventory.domain.model.Role;
+import com.inventory.domain.model.role.Role;
 import com.inventory.domain.ports.out.RoleRepositoryPort;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;

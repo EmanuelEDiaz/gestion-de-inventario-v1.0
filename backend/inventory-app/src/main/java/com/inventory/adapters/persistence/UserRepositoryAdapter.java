@@ -5,7 +5,7 @@ import com.inventory.adapters.persistence.mapper.PersistenceMapper;
 import com.inventory.adapters.persistence.repository.PermissionR2dbcRepository;
 import com.inventory.adapters.persistence.repository.RoleR2dbcRepository;
 import com.inventory.adapters.persistence.repository.UserR2dbcRepository;
-import com.inventory.domain.model.User;
+import com.inventory.domain.model.user.User;
 import com.inventory.domain.ports.out.UserRepositoryPort;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;

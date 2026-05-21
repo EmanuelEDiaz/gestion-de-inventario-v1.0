@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence.adapter;
 
 import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
 import com.inventory.adapters.persistence.repository.R2dbcSupplierSocialLinkRepository;
-import com.inventory.domain.model.SupplierSocialLink;
+import com.inventory.domain.model.supplier.SupplierSocialLink;
 import com.inventory.domain.ports.out.SupplierSocialLinkRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

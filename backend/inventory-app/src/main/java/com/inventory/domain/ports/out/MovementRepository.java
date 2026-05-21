@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.InventoryMovement;
+import com.inventory.domain.model.stock.InventoryMovement;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

@@ -1,7 +1,9 @@
 package com.inventory.adapters.web.mapper;
 
 import com.inventory.adapters.web.dto.*;
-import com.inventory.domain.model.*;
+import com.inventory.domain.model.product.Product;
+import com.inventory.domain.model.category.Category;
+import com.inventory.domain.model.warehouse.Warehouse;
 import org.springframework.stereotype.Component;
 
 /**

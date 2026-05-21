@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.ExchangeRate;
+import com.inventory.domain.model.currency.ExchangeRate;
 import com.inventory.domain.ports.in.ExchangeRateQueryPort;
 import com.inventory.domain.ports.out.ExchangeRateRepository;
 import org.springframework.stereotype.Service;

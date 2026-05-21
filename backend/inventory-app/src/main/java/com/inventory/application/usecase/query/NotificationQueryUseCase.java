@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.Notification;
+import com.inventory.domain.model.notification.Notification;
 import com.inventory.domain.ports.in.NotificationQueryPort;
 import com.inventory.domain.ports.out.NotificationReadRepository;
 import com.inventory.domain.ports.out.NotificationRepository;

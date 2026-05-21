@@ -2,10 +2,10 @@ package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.InventoryMovement;
-import com.inventory.domain.model.StockBalance;
-import com.inventory.domain.model.Transfer;
-import com.inventory.domain.model.TransferLine;
+import com.inventory.domain.model.stock.InventoryMovement;
+import com.inventory.domain.model.stock.StockBalance;
+import com.inventory.domain.model.transfer.Transfer;
+import com.inventory.domain.model.transfer.TransferLine;
 import com.inventory.domain.ports.in.TransferCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.StockRepository;

@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.User;
+import com.inventory.domain.model.user.User;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

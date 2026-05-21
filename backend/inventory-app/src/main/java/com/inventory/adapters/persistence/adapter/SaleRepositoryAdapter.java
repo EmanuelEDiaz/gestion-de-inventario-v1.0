@@ -5,7 +5,7 @@ import com.inventory.adapters.persistence.entity.SaleLineEntity;
 import com.inventory.adapters.persistence.mapper.SaleEntityMapper;
 import com.inventory.adapters.persistence.repository.R2dbcSaleLineRepository;
 import com.inventory.adapters.persistence.repository.R2dbcSaleRepository;
-import com.inventory.domain.model.Sale;
+import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.ports.out.SaleRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.User;
+import com.inventory.domain.model.user.User;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;

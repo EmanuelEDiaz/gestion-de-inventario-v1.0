@@ -2,7 +2,7 @@ package com.inventory.adapters.web.controller;
 
 import com.inventory.application.dto.MovementDto;
 import com.inventory.application.mapper.MovementMapper;
-import com.inventory.domain.model.InventoryMovement;
+import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.ports.in.MovementQueryPort;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;

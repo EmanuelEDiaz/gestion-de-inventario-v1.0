@@ -1,7 +1,7 @@
 package com.inventory.application.mapper;
 
 import com.inventory.application.dto.CustomerDto;
-import com.inventory.domain.model.Customer;
+import com.inventory.domain.model.customer.Customer;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 

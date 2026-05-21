@@ -2,8 +2,8 @@ package com.inventory.adapters.persistence.mapper;
 
 import com.inventory.adapters.persistence.entity.AdjustmentEntity;
 import com.inventory.adapters.persistence.entity.AdjustmentLineEntity;
-import com.inventory.domain.model.Adjustment;
-import com.inventory.domain.model.AdjustmentLine;
+import com.inventory.domain.model.adjustment.Adjustment;
+import com.inventory.domain.model.adjustment.AdjustmentLine;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

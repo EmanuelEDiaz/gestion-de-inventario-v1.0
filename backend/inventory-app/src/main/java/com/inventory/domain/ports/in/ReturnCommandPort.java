@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Return;
+import com.inventory.domain.model.returns.Return;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;

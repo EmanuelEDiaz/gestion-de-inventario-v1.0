@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.AppSettings;
+import com.inventory.domain.model.settings.AppSettings;
 import reactor.core.publisher.Mono;
 
 /**

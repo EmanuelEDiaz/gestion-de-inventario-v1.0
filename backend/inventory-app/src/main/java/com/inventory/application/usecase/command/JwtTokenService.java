@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.domain.model.User;
+import com.inventory.domain.model.user.User;
 
 /**
  * Servicio para generación y validación de tokens JWT.

@@ -3,7 +3,7 @@ package com.inventory.adapters.persistence;
 import com.inventory.adapters.persistence.entity.WarehouseEntity;
 import com.inventory.adapters.persistence.mapper.CatalogPersistenceMapper;
 import com.inventory.adapters.persistence.repository.WarehouseR2dbcRepository;
-import com.inventory.domain.model.Warehouse;
+import com.inventory.domain.model.warehouse.Warehouse;
 import com.inventory.domain.ports.out.WarehouseRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

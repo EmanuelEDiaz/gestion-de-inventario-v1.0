@@ -3,7 +3,7 @@ package com.inventory.application.usecase.command;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.Category;
+import com.inventory.domain.model.category.Category;
 import com.inventory.domain.ports.in.CategoryCommandPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import org.springframework.stereotype.Service;

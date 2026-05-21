@@ -1,7 +1,7 @@
 package com.inventory.adapters.persistence.mapper;
 
 import com.inventory.adapters.persistence.entity.InventoryMovementEntity;
-import com.inventory.domain.model.InventoryMovement;
+import com.inventory.domain.model.stock.InventoryMovement;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

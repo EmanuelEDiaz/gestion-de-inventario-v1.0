@@ -1,8 +1,8 @@
 package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.Notification;
-import com.inventory.domain.model.NotificationRead;
+import com.inventory.domain.model.notification.Notification;
+import com.inventory.domain.model.notification.NotificationRead;
 import com.inventory.domain.ports.in.NotificationCommandPort;
 import com.inventory.domain.ports.out.NotificationReadRepository;
 import com.inventory.domain.ports.out.NotificationRepository;

@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.SupplierSocialLink;
+import com.inventory.domain.model.supplier.SupplierSocialLink;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

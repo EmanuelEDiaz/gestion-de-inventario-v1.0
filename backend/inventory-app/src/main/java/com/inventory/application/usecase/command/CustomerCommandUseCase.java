@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.domain.model.Customer;
+import com.inventory.domain.model.customer.Customer;
 import com.inventory.domain.ports.in.CustomerCommandPort;
 import com.inventory.domain.ports.out.CustomerRepository;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.BadRequestException;
-import com.inventory.domain.model.Sale;
+import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.ports.in.SaleCommandPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

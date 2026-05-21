@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Adjustment;
+import com.inventory.domain.model.adjustment.Adjustment;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

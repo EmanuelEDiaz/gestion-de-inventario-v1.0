@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.Supplier;
+import com.inventory.domain.model.supplier.Supplier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

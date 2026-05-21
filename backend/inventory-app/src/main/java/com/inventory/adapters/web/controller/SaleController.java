@@ -3,7 +3,7 @@ package com.inventory.adapters.web.controller;
 import com.inventory.application.dto.CreateSaleRequest;
 import com.inventory.application.dto.SaleDto;
 import com.inventory.application.mapper.SaleMapper;
-import com.inventory.domain.model.Sale;
+import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.ports.in.SaleCommandPort;
 import com.inventory.domain.ports.in.SaleQueryPort;
 import org.springframework.http.HttpStatus;

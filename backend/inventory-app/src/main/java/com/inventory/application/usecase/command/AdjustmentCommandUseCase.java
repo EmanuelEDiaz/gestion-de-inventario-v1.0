@@ -1,8 +1,8 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.domain.model.Adjustment;
-import com.inventory.domain.model.AdjustmentLine;
-import com.inventory.domain.model.InventoryMovement;
+import com.inventory.domain.model.adjustment.Adjustment;
+import com.inventory.domain.model.adjustment.AdjustmentLine;
+import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.ports.in.AdjustmentCommandPort;
 import com.inventory.domain.ports.out.AdjustmentRepository;
 import com.inventory.domain.ports.out.StockRepository;

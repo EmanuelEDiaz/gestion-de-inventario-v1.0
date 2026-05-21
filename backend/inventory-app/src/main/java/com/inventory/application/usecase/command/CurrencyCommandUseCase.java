@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.command;
 
-import com.inventory.domain.model.Currency;
+import com.inventory.domain.model.currency.Currency;
 import com.inventory.domain.ports.in.CurrencyCommandPort;
 import com.inventory.domain.ports.out.CurrencyRepositoryPort;
 import org.springframework.stereotype.Service;

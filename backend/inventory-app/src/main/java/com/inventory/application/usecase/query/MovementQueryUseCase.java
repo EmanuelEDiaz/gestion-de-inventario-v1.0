@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.InventoryMovement;
+import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.ports.in.MovementQueryPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import org.springframework.stereotype.Service;

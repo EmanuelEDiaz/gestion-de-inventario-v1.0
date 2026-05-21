@@ -3,7 +3,7 @@ package com.inventory.adapters.web.controller;
 import com.inventory.adapters.web.dto.CreateCurrencyRequest;
 import com.inventory.adapters.web.dto.CurrencyResponse;
 import com.inventory.adapters.web.dto.UpdateCurrencyRequest;
-import com.inventory.domain.model.Currency;
+import com.inventory.domain.model.currency.Currency;
 import com.inventory.domain.ports.in.CurrencyCommandPort;
 import com.inventory.domain.ports.in.CurrencyQueryPort;
 import jakarta.validation.Valid;

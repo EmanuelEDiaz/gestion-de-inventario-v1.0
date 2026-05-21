@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.User;
+import com.inventory.domain.model.user.User;
 import com.inventory.domain.ports.in.AdminUserQueryPort;
 import com.inventory.domain.ports.out.UserRepositoryPort;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,7 @@
 package com.inventory.application.mapper;
 
 import com.inventory.application.dto.MovementDto;
-import com.inventory.domain.model.InventoryMovement;
+import com.inventory.domain.model.stock.InventoryMovement;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

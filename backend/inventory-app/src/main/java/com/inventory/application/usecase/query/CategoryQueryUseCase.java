@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.Category;
+import com.inventory.domain.model.category.Category;
 import com.inventory.domain.ports.in.CategoryQueryPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import org.springframework.stereotype.Service;

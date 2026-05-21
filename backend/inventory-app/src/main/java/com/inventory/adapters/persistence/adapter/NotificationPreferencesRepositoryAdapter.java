@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence.adapter;
 
 import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
 import com.inventory.adapters.persistence.repository.NotificationPreferencesR2dbcRepository;
-import com.inventory.domain.model.NotificationPreference;
+import com.inventory.domain.model.notification.NotificationPreference;
 import com.inventory.domain.ports.out.NotificationPreferencesPort;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;

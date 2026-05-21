@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query;
 
-import com.inventory.domain.model.Adjustment;
+import com.inventory.domain.model.adjustment.Adjustment;
 import com.inventory.domain.ports.in.AdjustmentQueryPort;
 import com.inventory.domain.ports.out.AdjustmentRepository;
 import org.springframework.stereotype.Service;

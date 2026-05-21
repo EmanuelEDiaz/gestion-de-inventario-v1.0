@@ -1,6 +1,6 @@
 package com.inventory.domain.ports.in;
 
-import com.inventory.domain.model.SyncIncident;
+import com.inventory.domain.model.sync.SyncIncident;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;

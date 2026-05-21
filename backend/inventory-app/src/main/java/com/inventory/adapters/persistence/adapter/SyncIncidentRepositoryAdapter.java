@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence.adapter;
 
 import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
 import com.inventory.adapters.persistence.repository.R2dbcSyncIncidentRepository;
-import com.inventory.domain.model.SyncIncident;
+import com.inventory.domain.model.sync.SyncIncident;
 import com.inventory.domain.ports.out.SyncIncidentRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

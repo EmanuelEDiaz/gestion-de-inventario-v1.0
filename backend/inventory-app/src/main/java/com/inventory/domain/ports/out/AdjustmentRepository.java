@@ -1,7 +1,7 @@
 package com.inventory.domain.ports.out;
 
-import com.inventory.domain.model.Adjustment;
-import com.inventory.domain.model.AdjustmentLine;
+import com.inventory.domain.model.adjustment.Adjustment;
+import com.inventory.domain.model.adjustment.AdjustmentLine;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

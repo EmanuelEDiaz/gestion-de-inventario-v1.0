@@ -4,7 +4,7 @@ import com.inventory.application.dto.CreateReturnRequest;
 import com.inventory.application.dto.ReturnDto;
 import com.inventory.application.dto.UpdateReturnRequest;
 import com.inventory.application.mapper.ReturnMapper;
-import com.inventory.domain.model.Return;
+import com.inventory.domain.model.returns.Return;
 import com.inventory.domain.ports.in.ReturnCommandPort;
 import com.inventory.domain.ports.in.ReturnQueryPort;
 import com.inventory.domain.ports.in.WarehouseQueryPort;

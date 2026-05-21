@@ -2,7 +2,7 @@ package com.inventory.adapters.persistence;
 
 import com.inventory.adapters.persistence.entity.CurrencyEntity;
 import com.inventory.adapters.persistence.repository.CurrencyR2dbcRepository;
-import com.inventory.domain.model.Currency;
+import com.inventory.domain.model.currency.Currency;
 import com.inventory.domain.ports.out.CurrencyRepositoryPort;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
