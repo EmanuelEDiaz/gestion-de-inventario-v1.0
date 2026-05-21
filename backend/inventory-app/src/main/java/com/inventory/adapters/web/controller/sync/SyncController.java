@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.controller.sync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.inventory.adapters.persistence.repository.R2dbcSyncLogRepository;
+import com.inventory.adapters.persistence.adapter.repository.R2dbcSyncLogRepository;
 import com.inventory.application.sync.dto.SyncEntryDto;
 import com.inventory.application.sync.dto.SyncPullResponseDto;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -134,7 +134,7 @@ public class SupplementaryApplicationMapper {
     }
 
     public NotificationPreferencesResponse toNotificationPreferencesResponse(
-        com.inventory.adapters.persistence.entity.NotificationPreferencesEntity entity
+        com.inventory.adapters.persistence.adapter.entity.NotificationPreferencesEntity entity
     ) {
         return new NotificationPreferencesResponse(
             entity.getId(),
@@ -180,7 +180,7 @@ public class SupplementaryApplicationMapper {
     }
 
     public NotificationScheduleResponse toNotificationScheduleResponse(
-        com.inventory.adapters.persistence.entity.NotificationSchedulesEntity entity
+        com.inventory.adapters.persistence.adapter.entity.NotificationSchedulesEntity entity
     ) {
         java.util.List<Integer> quietDays = entity.getQuietDaysList() != null
             ? java.util.Arrays.asList(entity.getQuietDaysList())

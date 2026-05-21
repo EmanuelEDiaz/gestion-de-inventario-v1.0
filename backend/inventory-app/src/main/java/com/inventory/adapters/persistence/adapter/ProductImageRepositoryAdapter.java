@@ -1,7 +1,7 @@
 package com.inventory.adapters.persistence.adapter;
 
-import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
-import com.inventory.adapters.persistence.repository.R2dbcProductImageRepository;
+import com.inventory.adapters.persistence.adapter.mapper.SupplementaryPersistenceMapper;
+import com.inventory.adapters.persistence.adapter.repository.R2dbcProductImageRepository;
 import com.inventory.domain.model.product.ProductImage;
 import com.inventory.domain.ports.out.ProductImageRepository;
 import org.springframework.stereotype.Repository;

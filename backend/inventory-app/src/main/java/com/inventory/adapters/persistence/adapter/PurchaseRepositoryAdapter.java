@@ -1,10 +1,10 @@
 package com.inventory.adapters.persistence.adapter;
 
-import com.inventory.adapters.persistence.entity.PurchaseEntity;
-import com.inventory.adapters.persistence.entity.PurchaseLineEntity;
-import com.inventory.adapters.persistence.mapper.PurchaseEntityMapper;
-import com.inventory.adapters.persistence.repository.R2dbcPurchaseLineRepository;
-import com.inventory.adapters.persistence.repository.R2dbcPurchaseRepository;
+import com.inventory.adapters.persistence.adapter.entity.PurchaseEntity;
+import com.inventory.adapters.persistence.adapter.entity.PurchaseLineEntity;
+import com.inventory.adapters.persistence.adapter.mapper.PurchaseEntityMapper;
+import com.inventory.adapters.persistence.adapter.repository.R2dbcPurchaseLineRepository;
+import com.inventory.adapters.persistence.adapter.repository.R2dbcPurchaseRepository;
 import com.inventory.domain.model.purchase.Purchase;
 import com.inventory.domain.model.purchase.PurchaseLine;
 import com.inventory.domain.ports.out.PurchaseRepository;

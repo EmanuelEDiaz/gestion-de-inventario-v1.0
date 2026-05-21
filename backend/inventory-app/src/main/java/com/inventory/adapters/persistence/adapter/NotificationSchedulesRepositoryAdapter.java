@@ -1,7 +1,7 @@
 package com.inventory.adapters.persistence.adapter;
 
-import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
-import com.inventory.adapters.persistence.repository.NotificationSchedulesR2dbcRepository;
+import com.inventory.adapters.persistence.adapter.mapper.SupplementaryPersistenceMapper;
+import com.inventory.adapters.persistence.adapter.repository.NotificationSchedulesR2dbcRepository;
 import com.inventory.domain.model.notification.NotificationSchedule;
 import com.inventory.domain.ports.out.NotificationSchedulesPort;
 import org.springframework.stereotype.Repository;

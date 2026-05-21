@@ -1,8 +1,8 @@
 package com.inventory.adapters.persistence.adapter;
 
-import com.inventory.adapters.persistence.entity.StockBalanceEntity;
-import com.inventory.adapters.persistence.mapper.StockBalanceEntityMapper;
-import com.inventory.adapters.persistence.repository.R2dbcStockBalanceRepository;
+import com.inventory.adapters.persistence.adapter.entity.StockBalanceEntity;
+import com.inventory.adapters.persistence.adapter.mapper.StockBalanceEntityMapper;
+import com.inventory.adapters.persistence.adapter.repository.R2dbcStockBalanceRepository;
 import com.inventory.domain.model.stock.StockBalance;
 import com.inventory.domain.ports.out.StockRepository;
 import org.springframework.stereotype.Component;

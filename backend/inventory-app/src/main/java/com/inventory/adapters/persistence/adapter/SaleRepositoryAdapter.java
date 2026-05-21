@@ -1,10 +1,10 @@
 package com.inventory.adapters.persistence.adapter;
 
-import com.inventory.adapters.persistence.entity.SaleEntity;
-import com.inventory.adapters.persistence.entity.SaleLineEntity;
-import com.inventory.adapters.persistence.mapper.SaleEntityMapper;
-import com.inventory.adapters.persistence.repository.R2dbcSaleLineRepository;
-import com.inventory.adapters.persistence.repository.R2dbcSaleRepository;
+import com.inventory.adapters.persistence.adapter.entity.SaleEntity;
+import com.inventory.adapters.persistence.adapter.entity.SaleLineEntity;
+import com.inventory.adapters.persistence.adapter.mapper.SaleEntityMapper;
+import com.inventory.adapters.persistence.adapter.repository.R2dbcSaleLineRepository;
+import com.inventory.adapters.persistence.adapter.repository.R2dbcSaleRepository;
 import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.ports.out.SaleRepository;
 import org.springframework.stereotype.Repository;

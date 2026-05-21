@@ -1,8 +1,8 @@
 package com.inventory.adapters.persistence.adapter;
 
-import com.inventory.adapters.persistence.entity.CustomerDebtEntity;
-import com.inventory.adapters.persistence.mapper.SupplementaryPersistenceMapper;
-import com.inventory.adapters.persistence.repository.R2dbcCustomerDebtRepository;
+import com.inventory.adapters.persistence.adapter.entity.CustomerDebtEntity;
+import com.inventory.adapters.persistence.adapter.mapper.SupplementaryPersistenceMapper;
+import com.inventory.adapters.persistence.adapter.repository.R2dbcCustomerDebtRepository;
 import com.inventory.domain.model.customer.CustomerDebt;
 import com.inventory.domain.ports.out.CustomerDebtRepository;
 import org.springframework.stereotype.Repository;

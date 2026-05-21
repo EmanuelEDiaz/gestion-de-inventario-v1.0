@@ -7,6 +7,6 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
  * Configuración de R2DBC y repositorios.
  */
 @Configuration
-@EnableR2dbcRepositories(basePackages = "com.inventory.adapters.persistence.repository")
+@EnableR2dbcRepositories(basePackages = "com.inventory.adapters.persistence.adapter.repository")
 public class R2dbcConfig {
 }
