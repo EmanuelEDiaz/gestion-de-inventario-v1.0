@@ -1,5 +1,6 @@
 package com.inventory.application.usecase.command;
 
+import com.inventory.application.usecase.command.sale.SaleCommandUseCase;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.stock.InventoryMovement;

@@ -44,7 +44,7 @@
 | **13** | ✅ Completado | 10 | `chore(frontend): reorganize core/, infrastructure/, shared/ by subdomain` |
 | **14** | ✅ Completado | — | `feat(frontend): add Zod validators, generic Dialog, update Select with label/error` (incluye cleanup persistence) |
 | **15** | ✅ Completado | 12 | ↑ mismo commit |
-| **16** | ❌ Pendiente | 5 | — |
+| **16** | ✅ Completado | 9 (6 moved + 3 import fixes) | `fix(backend): fix test package declarations after F12 domain reorg` |
 | **17** | ❌ Pendiente | 1 | — |
 | **18** | ❌ Pendiente | 11 | — |
 
@@ -407,19 +407,23 @@
 
 ---
 
-## Fase 16: Backend — Reparar Tests Rotos por F12 (5 archivos)
+## Fase 16: Backend — Reparar Tests Rotos por F12 (9 archivos)
 
-> **Objetivo:** Los tests `ProductCommandUseCaseTest`, `SaleCommandUseCaseTest`, `PurchaseTest` y `ProductControllerTest` quedaron con imports rotos tras la reorganización de F12 (carpetas por subdominio). Hay que actualizar sus imports y verificar que compilen.
+> **Objetivo:** Tests con imports rotos tras F12. Se identificaron 6 domain model tests en package flat y 3 tests de use cases/controllers con imports obsoletos.
 
 | # | Archivo | Acción |
 |---|---------|--------|
-| 16.1 | `src/test/java/com/inventory/application/usecase/command/ProductCommandUseCaseTest.java` | Actualizar import de `ProductCommandUseCase` a nuevo package post-F12 |
-| 16.2 | `src/test/java/com/inventory/application/usecase/command/SaleCommandUseCaseTest.java` | Actualizar import de `SaleCommandUseCase` a nuevo package post-F12 |
-| 16.3 | `src/test/java/com/inventory/domain/model/PurchaseTest.java` | Actualizar import de `PurchaseLine` a nuevo package post-F12 |
-| 16.4 | `src/test/java/com/inventory/adapters/web/controller/ProductControllerTest.java` | Actualizar import de `ProductController` a nuevo package post-F12 |
-| 16.5 | `mvn test` | Verificar que todos los tests compilen y pasen. Si hay más imports rotos, corregirlos igualmente. |
+| 16.1 | `src/test/java/com/inventory/domain/model/PurchaseTest.java` | Mover a `model/purchase/`, cambiar package |
+| 16.2 | `src/test/java/com/inventory/domain/model/ProductTest.java` | Mover a `model/product/`, cambiar package |
+| 16.3 | `src/test/java/com/inventory/domain/model/CategoryTest.java` | Mover a `model/category/`, cambiar package |
+| 16.4 | `src/test/java/com/inventory/domain/model/StockBalanceTest.java` | Mover a `model/stock/`, cambiar package |
+| 16.5 | `src/test/java/com/inventory/domain/model/SaleTest.java` | Mover a `model/sale/`, cambiar package |
+| 16.6 | `src/test/java/com/inventory/domain/model/NotificationTest.java` | Mover a `model/notification/`, cambiar package |
+| 16.7 | `src/test/java/com/inventory/application/usecase/command/ProductCommandUseCaseTest.java` | Agregar import `command.product.ProductCommandUseCase` |
+| 16.8 | `src/test/java/com/inventory/application/usecase/command/SaleCommandUseCaseTest.java` | Agregar import `command.sale.SaleCommandUseCase` |
+| 16.9 | `src/test/java/com/inventory/adapters/web/controller/ProductControllerTest.java` | Agregar import `controller.product.ProductController` |
 
-✅ **Check:** `mvn test` verde (0 compilation errors, 0 test failures)
+✅ **Check:** `mvn test` — 0 compilation errors (6 runtime failures pre-existentes: 2 ArchUnit, 2 Sale logic, 1 NPE mock, 1 bootstrap scan)
 
 ---
 

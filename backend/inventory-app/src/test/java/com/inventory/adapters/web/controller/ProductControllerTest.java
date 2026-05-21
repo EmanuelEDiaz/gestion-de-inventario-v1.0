@@ -1,5 +1,6 @@
 package com.inventory.adapters.web.controller;
 
+import com.inventory.adapters.web.controller.product.ProductController;
 import com.inventory.adapters.web.dto.product.ProductResponse;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
 import com.inventory.domain.model.product.Product;

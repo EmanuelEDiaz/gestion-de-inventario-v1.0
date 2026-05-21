@@ -1,4 +1,4 @@
-package com.inventory.domain.model;
+package com.inventory.domain.model.sale;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

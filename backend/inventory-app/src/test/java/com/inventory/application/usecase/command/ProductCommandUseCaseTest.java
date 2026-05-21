@@ -5,6 +5,7 @@ import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.category.Category;
 import com.inventory.domain.model.product.Product;
+import com.inventory.application.usecase.command.product.ProductCommandUseCase;
 import com.inventory.domain.ports.in.product.ProductCommandPort.CreateProductCommand;
 import com.inventory.domain.ports.in.product.ProductCommandPort.UpdateProductCommand;
 import com.inventory.domain.ports.out.CategoryRepository;
