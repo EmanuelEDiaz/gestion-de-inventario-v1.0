@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.transfer;
 
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.transfer.Transfer;

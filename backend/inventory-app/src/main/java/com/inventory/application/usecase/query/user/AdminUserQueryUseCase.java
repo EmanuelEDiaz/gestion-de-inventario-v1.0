@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.user;
 
 import com.inventory.domain.model.user.User;
 import com.inventory.domain.ports.in.user.AdminUserQueryPort;

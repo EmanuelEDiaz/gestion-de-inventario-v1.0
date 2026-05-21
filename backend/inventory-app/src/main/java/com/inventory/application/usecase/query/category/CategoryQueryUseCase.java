@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.category;
 
 import com.inventory.domain.model.category.Category;
 import com.inventory.domain.ports.in.category.CategoryQueryPort;

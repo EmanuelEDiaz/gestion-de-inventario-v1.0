@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.product;
 
 import com.inventory.domain.model.product.Product;
 import com.inventory.domain.ports.in.product.ProductFilter;

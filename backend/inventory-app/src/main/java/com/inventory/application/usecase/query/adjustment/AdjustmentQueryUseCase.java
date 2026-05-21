@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.adjustment;
 
 import com.inventory.domain.model.adjustment.Adjustment;
 import com.inventory.domain.ports.in.adjustment.AdjustmentQueryPort;

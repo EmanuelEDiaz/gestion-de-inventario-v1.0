@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.supplier;
 
 import com.inventory.domain.model.supplier.Supplier;
 import com.inventory.domain.ports.in.supplier.SupplierQueryPort;

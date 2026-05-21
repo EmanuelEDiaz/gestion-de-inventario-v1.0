@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.warehouse;
 
 import com.inventory.domain.model.warehouse.Warehouse;
 import com.inventory.domain.ports.in.warehouse.WarehouseQueryPort;

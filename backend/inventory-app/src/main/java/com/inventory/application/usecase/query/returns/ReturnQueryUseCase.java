@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.returns;
 
 import com.inventory.domain.model.returns.Return;
 import com.inventory.domain.ports.in.returns.ReturnQueryPort;

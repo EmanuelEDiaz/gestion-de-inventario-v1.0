@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.settings;
 
 import com.inventory.domain.model.settings.AppSettings;
 import com.inventory.domain.ports.out.AppSettingsRepositoryPort;

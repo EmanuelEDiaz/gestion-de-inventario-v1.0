@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.role;
 
 import com.inventory.domain.model.role.Role;
 import com.inventory.domain.ports.in.role.RoleQueryPort;

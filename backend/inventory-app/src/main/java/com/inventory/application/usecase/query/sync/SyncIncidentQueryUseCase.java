@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.sync;
 
 import com.inventory.domain.model.sync.SyncIncident;
 import com.inventory.domain.ports.in.sync.SyncIncidentQueryPort;

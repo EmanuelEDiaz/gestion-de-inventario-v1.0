@@ -1,4 +1,4 @@
-package com.inventory.application.usecase.query;
+package com.inventory.application.usecase.query.stock;
 
 import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.ports.in.stock.MovementQueryPort;
