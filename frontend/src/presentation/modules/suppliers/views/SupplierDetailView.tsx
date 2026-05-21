@@ -7,13 +7,11 @@ import { SupplierImageCarousel } from '../components/SupplierImageCarousel';
 import { SupplierSocialLinks } from '../components/SupplierSocialLinks';
 import { SupplierCatalogProducts } from '../components/SupplierCatalogProducts';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
-import { Badge } from '@/presentation/shared/components/ui/badge';
-import { statusBadge } from '@/presentation/shared/lib/colors';
-import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
-import { formatDateShort } from '@/presentation/shared/lib/utils';
-import { ArrowLeft } from 'lucide-react';
+import { SupplierInfoCard } from './SupplierInfoCard';
+import { SupplierContactList } from './SupplierContactList';
+import { SupplierCatalogSummary } from './SupplierCatalogSummary';
 
 type Tab = 'info' | 'images' | 'social' | 'catalog';
 
@@ -45,17 +43,7 @@ export function SupplierDetailView({ supplierId, onBack }: SupplierDetailViewPro
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        {onBack && (
-          <Button size="sm" variant="ghost" onClick={onBack} title="Volver al listado de proveedores">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        )}
-        <h1 className="text-xl font-semibold">{supplier.name}</h1>
-        <Badge className={statusBadge(supplier.active)}>
-          {supplier.active ? 'Activo' : 'Inactivo'}
-        </Badge>
-      </div>
+      <SupplierInfoCard supplier={supplier} onBack={onBack} />
 
       <div className="flex gap-0 border-b overflow-x-auto">
         {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
@@ -76,26 +64,14 @@ export function SupplierDetailView({ supplierId, onBack }: SupplierDetailViewPro
 
       <Card>
         <CardContent className="pt-4">
-          {tab === 'info' && (
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <div><dt className="text-gray-500">Código</dt><dd className="font-medium">{supplier.code || 'N/A'}</dd></div>
-              <div><dt className="text-gray-500">Contacto</dt><dd>{supplier.contactName || 'N/A'}</dd></div>
-              <div><dt className="text-gray-500">Teléfono</dt><dd>{supplier.phone || 'N/A'}</dd></div>
-              <div><dt className="text-gray-500">Email</dt><dd>{supplier.email || 'N/A'}</dd></div>
-              <div><dt className="text-gray-500">Sitio web</dt><dd>{supplier.website || 'N/A'}</dd></div>
-              <div><dt className="text-gray-500">Dirección</dt><dd>{supplier.address || 'N/A'}</dd></div>
-              <div><dt className="text-gray-500">Registrado</dt><dd>{formatDateShort(supplier.createdAt)}</dd></div>
-              {supplier.notes && (
-                <div className="col-span-2">
-                  <dt className="text-gray-500">Notas</dt>
-                  <dd className="mt-0.5">{supplier.notes}</dd>
-                </div>
-              )}
-            </dl>
-          )}
+          {tab === 'info' && <SupplierContactList supplier={supplier} />}
           {tab === 'images' && <SupplierImageCarousel supplierId={supplierId} />}
           {tab === 'social' && <SupplierSocialLinks supplierId={supplierId} />}
-          {tab === 'catalog' && <SupplierCatalogProducts supplierId={supplierId} />}
+          {tab === 'catalog' && (
+            <SupplierCatalogSummary>
+              <SupplierCatalogProducts supplierId={supplierId} />
+            </SupplierCatalogSummary>
+          )}
         </CardContent>
       </Card>
     </div>

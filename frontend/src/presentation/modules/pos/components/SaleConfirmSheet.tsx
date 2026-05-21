@@ -2,9 +2,10 @@
 
 import type { PaymentMode } from '@/core/sale/entities/sale';
 import type { CartLine } from '../hooks/usePosCart';
-import { Button } from '@/presentation/shared/components/ui/Button';
-import { formatCurrency } from '@/presentation/shared/lib/utils';
 import { ShoppingCart, X } from 'lucide-react';
+import { SaleSummaryPanel } from './SaleSummaryPanel';
+import { SaleConfirmActions } from './SaleConfirmActions';
+import { SaleReceiptPreview } from './SaleReceiptPreview';
 
 interface SaleConfirmSheetProps {
   open: boolean;
@@ -18,12 +19,6 @@ interface SaleConfirmSheetProps {
   onConfirm: () => void;
   onClose: () => void;
 }
-
-const MODE_LABEL: Record<PaymentMode, string> = {
-  IMMEDIATE: 'Cobrar ahora',
-  CREDIT: 'Fiado (Crédito)',
-  RESERVE: 'Reserva',
-};
 
 export function SaleConfirmSheet({
   open,
@@ -65,49 +60,9 @@ export function SaleConfirmSheet({
             <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
-
-        <div className="px-5 py-3 space-y-1 max-h-52 overflow-y-auto">
-          {lines.map((l) => (
-            <div key={l.productId} className="flex justify-between text-sm">
-              <span className="truncate text-gray-700" title={l.productName}>
-                {l.productName} × {l.quantity}
-              </span>
-              <span className="ml-2 font-medium shrink-0">
-                {formatCurrency(l.quantity * l.unitPrice * (1 - l.discount / 100), currencyCode)}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="px-5 py-3 border-t flex justify-between items-center">
-          <span className="text-sm text-gray-500">Modo</span>
-          <span className="text-sm font-medium">{MODE_LABEL[paymentMode]}</span>
-        </div>
-
-        {isFiar && customerName && (
-          <div className="px-5 pb-1 flex justify-between items-center">
-            <span className="text-sm text-gray-500">Cliente</span>
-            <span className="text-sm font-medium text-blue-700">{customerName}</span>
-          </div>
-        )}
-
-        <div className="px-5 pb-3 flex justify-between items-center">
-          <span className="text-base font-semibold">Total</span>
-          <span className="text-lg font-bold text-gray-900">
-            {formatCurrency(total, currencyCode)}
-          </span>
-        </div>
-
-        <div className="px-5 pb-5">
-          <Button
-            className="w-full"
-            onClick={onConfirm}
-            disabled={confirmDisabled}
-            title={confirmDisabled && isFiar ? 'Debes seleccionar un cliente para usar Fiado o Reserva' : 'Confirmar venta'}
-          >
-            {isSubmitting ? 'Procesando...' : confirmLabel}
-          </Button>
-        </div>
+        <SaleSummaryPanel lines={lines} currencyCode={currencyCode} />
+        <SaleReceiptPreview paymentMode={paymentMode} total={total} customerName={customerName} currencyCode={currencyCode} />
+        <SaleConfirmActions onConfirm={onConfirm} confirmDisabled={confirmDisabled} isSubmitting={isSubmitting} confirmLabel={confirmLabel} isFiar={isFiar} />
       </div>
     </div>
   );

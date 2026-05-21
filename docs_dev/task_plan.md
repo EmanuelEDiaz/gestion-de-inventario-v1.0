@@ -45,8 +45,8 @@
 | **14** | ✅ Completado | — | `feat(frontend): add Zod validators, generic Dialog, update Select with label/error` (incluye cleanup persistence) |
 | **15** | ✅ Completado | 12 | ↑ mismo commit |
 | **16** | ✅ Completado | 9 (6 moved + 3 import fixes) | `fix(backend): fix test package declarations after F12 domain reorg` |
-| **17** | ❌ Pendiente | 1 | — |
-| **18** | ❌ Pendiente | 11 | — |
+| **17** | ✅ Completado | ya existía | — (pre-existente en 486c383) |
+| **18** | ✅ Completado | 11 (11 parents + 18 subcomponents + 1 SidebarIcons) | `refactor(frontend): split remaining 11 components >100 lines into subcomponents` |
 
 ---
 
@@ -427,37 +427,33 @@
 
 ---
 
-## Fase 17: Backend — GlobalErrorHandler (1 archivo)
+## Fase 17: Backend — GlobalErrorHandler (ya existente)
 
-> **Objetivo:** Completar F11.10 que quedó sin implementar. Crear `GlobalErrorHandler.java` con formato `application/problem+json` para manejo centralizado de errores.
+> **Objetivo:** Verificar que `GlobalErrorHandler` ya fue implementado. Resultado: `GlobalExceptionHandler.java` (255 líneas) + `ProblemDetail.java` (37 líneas) ya existen en `adapters/web/controller/` y `adapters/web/dto/`, con soporte completo `application/problem+json` para todas las DomainExceptions.
 
-| # | Archivo | Acción |
-|---|---------|--------|
-| 17.1 | `adapters/web/GlobalErrorHandler.java` | **Crear** `@ControllerAdvice` o `ErrorWebExceptionHandler` que atrape `DomainException` y devuelva `application/problem+json` con: `type`, `title`, `status`, `detail`, `instance`. Usar mismo patrón que las DomainExceptions existentes. |
-
-✅ **Check:** `rg 'extends DomainException'` muestra 20+ clases. `mvn compile` exitoso.
+✅ **Check:** `GlobalExceptionHandler.java` existe con 19 DomainExceptions mapeadas. `mvn compile` exitoso.
 
 ---
 
 ## Fase 18: Frontend — Dividir 11 Componentes >100 Líneas Restantes (11 archivos)
 
-> **Objetivo:** Dividir los 11 componentes que aún superan 100 líneas (excluyendo tooltip.tsx y table.tsx de shadcn/ui que son deliberadamente largos).
+> **Objetivo:** Dividir los 11 componentes que aún superan 100 líneas. Completado: 11 parents reducidos a ≤100, 18 subcomponentes creados, 1 SidebarIcons.tsx extraído.
 
-| # | Archivo (líneas) | Acción |
-|---|------------------|--------|
-| 18.1 | `PosView.tsx` (202) | Extraer: `PosHeader`, `PosProductGrid`, `PosCartPanel`, `PosPaymentSection` |
-| 18.2 | `Sidebar.tsx` (125) | Extraer: `SidebarNavItem`, `SidebarUserInfo`, `SidebarCollapseButton` |
-| 18.3 | `SupplierFormFields.tsx` (121) | Extraer: `SupplierBasicInfo`, `SupplierContactFields`, `SupplierAddressFields` |
-| 18.4 | `TransferFormFields.tsx` (117) | Extraer: `TransferOriginFields`, `TransferDestinationFields`, `TransferProductList` |
-| 18.5 | `ExchangeRateFormFields.tsx` (116) | Extraer: `RateSourceFields`, `RateValueFields`, `RateDateFields` |
-| 18.6 | `SaleConfirmSheet.tsx` (114) | Extraer: `SaleSummaryPanel`, `SaleConfirmActions`, `SaleReceiptPreview` |
-| 18.7 | `DebtDetailPanel.tsx` (114) | Extraer: `DebtInfoHeader`, `DebtPaymentHistory`, `DebtActions` |
-| 18.8 | `ProductDetailView.tsx` (110) | Extraer: `ProductInfoSection`, `ProductStatsSection`, `ProductHistorySection` |
-| 18.9 | `CustomerSelector.tsx` (106) | Extraer: `CustomerSearchInput`, `CustomerResultList`, `CustomerSelectedBadge` |
-| 18.10 | `NotificationInbox.tsx` (104) | Extraer: `InboxFilterBar`, `InboxMessageList`, `InboxEmptyState` |
-| 18.11 | `SupplierDetailView.tsx` (103) | Extraer: `SupplierInfoCard`, `SupplierContactList`, `SupplierCatalogSummary` |
+| # | Archivo → líneas final | Subcomponentes creados |
+|---|------------------------|----------------------|
+| 18.1 | `PosView.tsx` (202→81) | `PosHeader`, `PosProductGrid`, `PosCartPanel`, `PosPaymentSection` |
+| 18.2 | `Sidebar.tsx` (125→59) | `SidebarCollapseButton` (ya existía) + `SidebarIcons.tsx` extraído |
+| 18.3 | `SupplierFormFields.tsx` (121→79) | `SupplierBasicInfo`, `SupplierContactFields`, `SupplierAddressFields` |
+| 18.4 | `TransferFormFields.tsx` (117→71) | `TransferOriginFields`, `TransferDestinationFields`, `TransferProductList` |
+| 18.5 | `ExchangeRateFormFields.tsx` (116→49) | `RateSourceFields`, `RateValueFields`, `RateDateFields` |
+| 18.6 | `SaleConfirmSheet.tsx` (114→69) | `SaleSummaryPanel`, `SaleConfirmActions`, `SaleReceiptPreview` |
+| 18.7 | `DebtDetailPanel.tsx` (114→82) | `DebtInfoHeader`, `DebtActions`, `DebtPaymentHistory` |
+| 18.8 | `ProductDetailView.tsx` (110→72) | `ProductInfoSection`, `ProductStatsSection`, `ProductHistorySection` |
+| 18.9 | `CustomerSelector.tsx` (106→70) | `CustomerSearchInput`, `CustomerResultList`, `CustomerSelectedBadge` |
+| 18.10 | `NotificationInbox.tsx` (104→85) | `InboxFilterBar`, `InboxMessageList`, `InboxEmptyState` |
+| 18.11 | `SupplierDetailView.tsx` (103→79) | `SupplierInfoCard`, `SupplierContactList`, `SupplierCatalogSummary` |
 
-✅ **Check:** `find . -name "*.tsx" -exec wc -l {} \; | awk '$1 > 100'` debe dar 0 (o solo tooltip.tsx y table.tsx de shadcn)
+✅ **Check:** `find . -name "*.tsx" -exec wc -l {} \; | awk '$1 > 100 && $2 !~ /tooltip\.tsx|table\.tsx/'` → 0 resultados
 
 ---
 
@@ -553,8 +549,8 @@ chore: reorganizar estructura de carpetas (<10 archivos por directorio)
 - ✅ Backend ya tiene DomainException base implementada (18 específicas + 1 abstracta)
 - ✅ Frontend usa correctamente TanStack Query y Zustand
 - ✅ La regla de negocio `formatCurrency` ya existe en `shared/lib/utils.ts`
-- ❌ **Pendiente F16**: 5 tests con imports rotos desde F12
-- ❌ **Pendiente F17**: `ErrorWebExceptionHandler` global en backend
-- ❌ **Pendiente F18**: 11 componentes >100 líneas no divididos
-- ❌ 2 services en backend rompen arquitectura hexagonal (resuelto parcialmente en F10)
+- ✅ **F16**: 6 domain model tests movidos a subdominios + 3 imports arreglados
+- ✅ **F17**: `GlobalExceptionHandler` + `ProblemDetail` ya existían implementados
+- ✅ **F18**: 11 componentes >100 líneas divididos en 18 subcomponentes
+- ❌ 6 pre-existing test failures (2 ArchUnit, 2 SaleCommandUseCaseTest, 1 ProductCommandUseCaseTest, 1 ProductControllerTest) — no causados por este plan
 - ⚠️ Correr `graphify update .` después de cada commit para mantener el grafo sincronizado.

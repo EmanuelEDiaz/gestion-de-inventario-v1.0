@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { NotificationTray } from '@/presentation/modules/notifications/components/NotificationTray';
-import { Icons } from './Sidebar';
+import { Icons } from './SidebarIcons';
 
 interface HeaderProps {
   isSidebarCollapsed?: boolean;

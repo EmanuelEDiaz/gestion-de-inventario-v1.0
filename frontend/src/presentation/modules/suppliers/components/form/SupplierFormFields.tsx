@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import type { CreateSupplierData } from '@/core/supplier/entities/supplier';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/form/Textarea';
+import { SupplierBasicInfo } from './SupplierBasicInfo';
+import { SupplierContactFields } from './SupplierContactFields';
+import { SupplierAddressFields } from './SupplierAddressFields';
 
 interface SupplierFormFieldsProps {
   onSubmit: (data: CreateSupplierData) => void;
@@ -37,68 +39,24 @@ export function SupplierFormFields({ onSubmit, isSubmitting, onCancel }: Supplie
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label htmlFor="name" className="text-sm font-medium">Nombre *</label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Proveedor S.A."
-            required
-            title="Nombre del proveedor"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="code" className="text-sm font-medium">Código</label>
-          <Input
-            id="code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="PROV-001"
-            title="Código de referencia del proveedor"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="contactName" className="text-sm font-medium">Contacto</label>
-          <Input
-            id="contactName"
-            value={contactName}
-            onChange={(e) => setContactName(e.target.value)}
-            placeholder="Juan Pérez"
-            title="Persona de contacto"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="phone" className="text-sm font-medium">Teléfono</label>
-          <Input
-            id="phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+53 5555 5555"
-            title="Número de teléfono"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-medium">Email</label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="proveedor@empresa.com"
-            title="Correo electrónico"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="address" className="text-sm font-medium">Dirección</label>
-          <Input
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Calle 23 #456"
-            title="Dirección del proveedor"
-          />
-        </div>
+        <SupplierBasicInfo
+          name={name}
+          email={email}
+          phone={phone}
+          onNameChange={setName}
+          onEmailChange={setEmail}
+          onPhoneChange={setPhone}
+        />
+        <SupplierContactFields
+          contactName={contactName}
+          code={code}
+          onContactNameChange={setContactName}
+          onCodeChange={setCode}
+        />
+        <SupplierAddressFields
+          address={address}
+          onAddressChange={setAddress}
+        />
       </div>
       <div className="space-y-1">
         <label htmlFor="notes" className="text-sm font-medium">Notas</label>

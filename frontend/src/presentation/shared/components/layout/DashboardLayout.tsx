@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Sidebar, Icons } from './Sidebar';
+import { Sidebar } from './Sidebar';
+import { Icons } from './SidebarIcons';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardMain } from './DashboardMain';
 import { NetworkStatusWidget } from '../data-display/NetworkStatusWidget';
