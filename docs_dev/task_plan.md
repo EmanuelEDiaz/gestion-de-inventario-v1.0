@@ -1,7 +1,7 @@
 # Plan de Reestructuración del Proyecto - Gestión de Inventario
 
 > Created: 2026-05-17 | Auditoría completa con 3 agentes paralelos + graphify
-> ⚠️ **Plan completado al 100% — Todas las secciones ejecutadas**
+> v2: 2026-05-21 | Verificación post-ejecución revela **3 issues pendientes** (Fases 16-18)
 
 ---
 
@@ -44,6 +44,9 @@
 | **13** | ✅ Completado | 10 | `chore(frontend): reorganize core/, infrastructure/, shared/ by subdomain` |
 | **14** | ✅ Completado | — | `feat(frontend): add Zod validators, generic Dialog, update Select with label/error` (incluye cleanup persistence) |
 | **15** | ✅ Completado | 12 | ↑ mismo commit |
+| **16** | ❌ Pendiente | 5 | — |
+| **17** | ❌ Pendiente | 1 | — |
+| **18** | ❌ Pendiente | 11 | — |
 
 ---
 
@@ -83,6 +86,14 @@
 | M8 | Sin `<Dialog>` genérico reutilizable | Frontend shared/ui |
 | M9 | Sin `ErrorWebExceptionHandler` global en backend | Backend |
 | M10 | Estructura inconsistente en `adapters/persistence/adapter/` vs raíz | Backend |
+
+### 🔴 Post-verificación (issues detectados en auditoría v2 2026-05-21)
+
+| # | Problema | Impacto | Ubicación |
+|---|----------|---------|-----------|
+| P1 | **5 tests rotos** — imports no actualizados tras F12 (reorg backend) | `mvn test` falla, sin confianza en refactors | `ProductCommandUseCaseTest`, `SaleCommandUseCaseTest`, `PurchaseTest`, `ProductControllerTest` |
+| P2 | **GlobalErrorHandler nunca creado** — F11.10 quedó sin implementar | Sin manejo global de errores `problem+json` | `adapters/web/GlobalErrorHandler.java` |
+| P3 | **13 componentes >100 líneas** residuales (11 reales, 2 son shadcn/ui) | Límite de legibilidad no alcanzado | `PosView`, `SupplierFormFields`, `TransferFormFields`, `ExchangeRateFormFields`, `SaleConfirmSheet`, `DebtDetailPanel`, `ProductDetailView`, `CustomerSelector`, `NotificationInbox`, `SupplierDetailView`, `Sidebar` (tooltip.tsx y table.tsx son shadcn, se excluyen) |
 
 ---
 
@@ -396,7 +407,55 @@
 
 ---
 
-## Comandos de Verificación (post-ejecución)
+## Fase 16: Backend — Reparar Tests Rotos por F12 (5 archivos)
+
+> **Objetivo:** Los tests `ProductCommandUseCaseTest`, `SaleCommandUseCaseTest`, `PurchaseTest` y `ProductControllerTest` quedaron con imports rotos tras la reorganización de F12 (carpetas por subdominio). Hay que actualizar sus imports y verificar que compilen.
+
+| # | Archivo | Acción |
+|---|---------|--------|
+| 16.1 | `src/test/java/com/inventory/application/usecase/command/ProductCommandUseCaseTest.java` | Actualizar import de `ProductCommandUseCase` a nuevo package post-F12 |
+| 16.2 | `src/test/java/com/inventory/application/usecase/command/SaleCommandUseCaseTest.java` | Actualizar import de `SaleCommandUseCase` a nuevo package post-F12 |
+| 16.3 | `src/test/java/com/inventory/domain/model/PurchaseTest.java` | Actualizar import de `PurchaseLine` a nuevo package post-F12 |
+| 16.4 | `src/test/java/com/inventory/adapters/web/controller/ProductControllerTest.java` | Actualizar import de `ProductController` a nuevo package post-F12 |
+| 16.5 | `mvn test` | Verificar que todos los tests compilen y pasen. Si hay más imports rotos, corregirlos igualmente. |
+
+✅ **Check:** `mvn test` verde (0 compilation errors, 0 test failures)
+
+---
+
+## Fase 17: Backend — GlobalErrorHandler (1 archivo)
+
+> **Objetivo:** Completar F11.10 que quedó sin implementar. Crear `GlobalErrorHandler.java` con formato `application/problem+json` para manejo centralizado de errores.
+
+| # | Archivo | Acción |
+|---|---------|--------|
+| 17.1 | `adapters/web/GlobalErrorHandler.java` | **Crear** `@ControllerAdvice` o `ErrorWebExceptionHandler` que atrape `DomainException` y devuelva `application/problem+json` con: `type`, `title`, `status`, `detail`, `instance`. Usar mismo patrón que las DomainExceptions existentes. |
+
+✅ **Check:** `rg 'extends DomainException'` muestra 20+ clases. `mvn compile` exitoso.
+
+---
+
+## Fase 18: Frontend — Dividir 11 Componentes >100 Líneas Restantes (11 archivos)
+
+> **Objetivo:** Dividir los 11 componentes que aún superan 100 líneas (excluyendo tooltip.tsx y table.tsx de shadcn/ui que son deliberadamente largos).
+
+| # | Archivo (líneas) | Acción |
+|---|------------------|--------|
+| 18.1 | `PosView.tsx` (202) | Extraer: `PosHeader`, `PosProductGrid`, `PosCartPanel`, `PosPaymentSection` |
+| 18.2 | `Sidebar.tsx` (125) | Extraer: `SidebarNavItem`, `SidebarUserInfo`, `SidebarCollapseButton` |
+| 18.3 | `SupplierFormFields.tsx` (121) | Extraer: `SupplierBasicInfo`, `SupplierContactFields`, `SupplierAddressFields` |
+| 18.4 | `TransferFormFields.tsx` (117) | Extraer: `TransferOriginFields`, `TransferDestinationFields`, `TransferProductList` |
+| 18.5 | `ExchangeRateFormFields.tsx` (116) | Extraer: `RateSourceFields`, `RateValueFields`, `RateDateFields` |
+| 18.6 | `SaleConfirmSheet.tsx` (114) | Extraer: `SaleSummaryPanel`, `SaleConfirmActions`, `SaleReceiptPreview` |
+| 18.7 | `DebtDetailPanel.tsx` (114) | Extraer: `DebtInfoHeader`, `DebtPaymentHistory`, `DebtActions` |
+| 18.8 | `ProductDetailView.tsx` (110) | Extraer: `ProductInfoSection`, `ProductStatsSection`, `ProductHistorySection` |
+| 18.9 | `CustomerSelector.tsx` (106) | Extraer: `CustomerSearchInput`, `CustomerResultList`, `CustomerSelectedBadge` |
+| 18.10 | `NotificationInbox.tsx` (104) | Extraer: `InboxFilterBar`, `InboxMessageList`, `InboxEmptyState` |
+| 18.11 | `SupplierDetailView.tsx` (103) | Extraer: `SupplierInfoCard`, `SupplierContactList`, `SupplierCatalogSummary` |
+
+✅ **Check:** `find . -name "*.tsx" -exec wc -l {} \; | awk '$1 > 100'` debe dar 0 (o solo tooltip.tsx y table.tsx de shadcn)
+
+---
 
 ```bash
 # Frontend - Componentes grandes
@@ -425,6 +484,16 @@ find frontend/src -maxdepth 3 -type d | while read d; do
   count=$(find "$d" -maxdepth 1 -type f \( -name "*.ts" -o -name "*.tsx" \) 2>/dev/null | wc -l)
   [ "$count" -gt 10 ] && echo "$count $d"
 done
+
+# Fase 16 — Backend tests
+cd backend/inventory-app && mvn test 2>&1 | tail -15
+
+# Fase 17 — GlobalErrorHandler
+cd backend/inventory-app && ls adapters/web/GlobalErrorHandler.java 2>/dev/null || echo "MISSING"
+cd backend/inventory-app && rg "extends DomainException" --include "*.java" | wc -l
+
+# Fase 18 — Componentes restantes >100 líneas
+cd frontend/src && find . -name "*.tsx" -exec wc -l {} \; | awk '$1 > 100 && $2 !~ /tooltip\.tsx|table\.tsx/' | sort -rn
 ```
 
 ---
@@ -477,11 +546,11 @@ chore: reorganizar estructura de carpetas (<10 archivos por directorio)
 
 ## Notas
 
-- ✅ Backend ya tiene DomainException base implementada
+- ✅ Backend ya tiene DomainException base implementada (18 específicas + 1 abstracta)
 - ✅ Frontend usa correctamente TanStack Query y Zustand
 - ✅ La regla de negocio `formatCurrency` ya existe en `shared/lib/utils.ts`
-- ❌ NO hay un `ErrorWebExceptionHandler` global en backend
-- ❌ NO hay schema de validación compartido (Zod)
-- ❌ 2 services en backend rompen arquitectura hexagonal
-- ⚠️ Los cambios de estructura de carpetas (Fases 12-14) requieren actualizar imports en muchos archivos. Hacerlos al final para minimizar conflictos.
-- ⚠️ Correr `graphify update .` después del plan completo para mantener el grafo sincronizado.
+- ❌ **Pendiente F16**: 5 tests con imports rotos desde F12
+- ❌ **Pendiente F17**: `ErrorWebExceptionHandler` global en backend
+- ❌ **Pendiente F18**: 11 componentes >100 líneas no divididos
+- ❌ 2 services en backend rompen arquitectura hexagonal (resuelto parcialmente en F10)
+- ⚠️ Correr `graphify update .` después de cada commit para mantener el grafo sincronizado.
