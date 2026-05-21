@@ -1,4 +1,4 @@
-package com.inventory.adapters.web.dto;
+package com.inventory.adapters.web.dto.category;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

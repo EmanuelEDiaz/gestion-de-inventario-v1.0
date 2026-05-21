@@ -1,8 +1,8 @@
 package com.inventory.adapters.web.controller.currency;
 
-import com.inventory.adapters.web.dto.CreateCurrencyRequest;
-import com.inventory.adapters.web.dto.CurrencyResponse;
-import com.inventory.adapters.web.dto.UpdateCurrencyRequest;
+import com.inventory.adapters.web.dto.currency.CreateCurrencyRequest;
+import com.inventory.adapters.web.dto.currency.CurrencyResponse;
+import com.inventory.adapters.web.dto.currency.UpdateCurrencyRequest;
 import com.inventory.domain.model.currency.Currency;
 import com.inventory.domain.ports.in.currency.CurrencyCommandPort;
 import com.inventory.domain.ports.in.currency.CurrencyQueryPort;

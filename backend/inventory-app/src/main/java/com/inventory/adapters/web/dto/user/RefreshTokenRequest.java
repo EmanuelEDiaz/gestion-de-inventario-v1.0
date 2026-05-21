@@ -1,4 +1,4 @@
-package com.inventory.adapters.web.dto;
+package com.inventory.adapters.web.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
 

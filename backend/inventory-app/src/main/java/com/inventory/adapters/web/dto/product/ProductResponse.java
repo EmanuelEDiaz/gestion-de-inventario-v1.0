@@ -1,4 +1,4 @@
-package com.inventory.adapters.web.dto;
+package com.inventory.adapters.web.dto.product;
 
 import java.math.BigDecimal;
 import java.time.Instant;

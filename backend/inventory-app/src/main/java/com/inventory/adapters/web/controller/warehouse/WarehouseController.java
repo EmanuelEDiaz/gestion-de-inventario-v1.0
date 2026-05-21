@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller.warehouse;
 
-import com.inventory.adapters.web.dto.*;
+import com.inventory.adapters.web.dto.warehouse.*;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
 import com.inventory.domain.ports.in.warehouse.WarehouseCommandPort;
 import com.inventory.domain.ports.in.warehouse.WarehouseQueryPort;

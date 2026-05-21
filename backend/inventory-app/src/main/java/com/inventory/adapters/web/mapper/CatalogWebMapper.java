@@ -1,6 +1,11 @@
 package com.inventory.adapters.web.mapper;
 
-import com.inventory.adapters.web.dto.*;
+import com.inventory.adapters.web.dto.category.CategoryResponse;
+import com.inventory.adapters.web.dto.product.CreateProductRequest;
+import com.inventory.adapters.web.dto.product.ProductResponse;
+import com.inventory.adapters.web.dto.product.UpdateProductRequest;
+import com.inventory.adapters.web.dto.warehouse.CreateWarehouseRequest;
+import com.inventory.adapters.web.dto.warehouse.WarehouseResponse;
 import com.inventory.domain.model.product.Product;
 import com.inventory.domain.model.category.Category;
 import com.inventory.domain.model.warehouse.Warehouse;

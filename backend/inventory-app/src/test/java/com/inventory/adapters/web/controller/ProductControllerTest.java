@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.adapters.web.dto.ProductResponse;
+import com.inventory.adapters.web.dto.product.ProductResponse;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
 import com.inventory.domain.model.product.Product;
 import com.inventory.domain.ports.in.product.ProductCommandPort;

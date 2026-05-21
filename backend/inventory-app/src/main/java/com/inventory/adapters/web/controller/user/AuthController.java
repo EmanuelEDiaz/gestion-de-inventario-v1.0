@@ -1,8 +1,8 @@
 package com.inventory.adapters.web.controller.user;
 
-import com.inventory.adapters.web.dto.AuthResponse;
-import com.inventory.adapters.web.dto.LoginRequest;
-import com.inventory.adapters.web.dto.RefreshTokenRequest;
+import com.inventory.adapters.web.dto.user.AuthResponse;
+import com.inventory.adapters.web.dto.user.LoginRequest;
+import com.inventory.adapters.web.dto.user.RefreshTokenRequest;
 import com.inventory.adapters.web.mapper.WebMapper;
 import com.inventory.application.user.dto.LoginCommand;
 import com.inventory.application.user.dto.RefreshTokenCommand;

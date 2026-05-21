@@ -1,4 +1,4 @@
-package com.inventory.adapters.web.dto;
+package com.inventory.adapters.web.dto.role;
 
 import jakarta.validation.constraints.Size;
 

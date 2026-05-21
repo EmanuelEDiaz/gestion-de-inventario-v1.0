@@ -1,11 +1,11 @@
 package com.inventory.adapters.web.controller.user;
 
-import com.inventory.adapters.web.dto.ChangePasswordRequest;
-import com.inventory.adapters.web.dto.CreateUserRequest;
-import com.inventory.adapters.web.dto.PermissionResponse;
-import com.inventory.adapters.web.dto.RoleResponse;
-import com.inventory.adapters.web.dto.UpdateUserRequest;
-import com.inventory.adapters.web.dto.UserResponse;
+import com.inventory.adapters.web.dto.user.ChangePasswordRequest;
+import com.inventory.adapters.web.dto.user.CreateUserRequest;
+import com.inventory.adapters.web.dto.role.PermissionResponse;
+import com.inventory.adapters.web.dto.role.RoleResponse;
+import com.inventory.adapters.web.dto.user.UpdateUserRequest;
+import com.inventory.adapters.web.dto.user.UserResponse;
 import com.inventory.domain.model.role.Role;
 import com.inventory.domain.model.user.User;
 import com.inventory.domain.ports.in.user.AdminUserCommandPort;

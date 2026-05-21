@@ -1,4 +1,4 @@
-package com.inventory.adapters.web.dto;
+package com.inventory.adapters.web.dto.category;
 
 import java.time.Instant;
 import java.util.UUID;

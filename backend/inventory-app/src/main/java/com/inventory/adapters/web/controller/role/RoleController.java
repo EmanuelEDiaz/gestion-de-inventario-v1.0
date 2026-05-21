@@ -1,9 +1,9 @@
 package com.inventory.adapters.web.controller.role;
 
-import com.inventory.adapters.web.dto.CreateRoleRequest;
-import com.inventory.adapters.web.dto.PermissionResponse;
-import com.inventory.adapters.web.dto.RoleResponse;
-import com.inventory.adapters.web.dto.UpdateRoleRequest;
+import com.inventory.adapters.web.dto.role.CreateRoleRequest;
+import com.inventory.adapters.web.dto.role.PermissionResponse;
+import com.inventory.adapters.web.dto.role.RoleResponse;
+import com.inventory.adapters.web.dto.role.UpdateRoleRequest;
 import com.inventory.domain.model.role.Permission;
 import com.inventory.domain.model.role.Role;
 import com.inventory.domain.ports.in.role.RoleCommandPort;

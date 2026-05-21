@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.controller.currency;
 
-import com.inventory.adapters.web.dto.CreateExchangeRateRequest;
-import com.inventory.adapters.web.dto.ExchangeRateResponse;
+import com.inventory.adapters.web.dto.currency.CreateExchangeRateRequest;
+import com.inventory.adapters.web.dto.currency.ExchangeRateResponse;
 import com.inventory.domain.model.currency.ExchangeRate;
 import com.inventory.domain.ports.in.currency.ExchangeRateCommandPort;
 import com.inventory.domain.ports.in.currency.ExchangeRateQueryPort;

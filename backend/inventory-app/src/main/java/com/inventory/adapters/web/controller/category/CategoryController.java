@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller.category;
 
-import com.inventory.adapters.web.dto.*;
+import com.inventory.adapters.web.dto.category.*;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
 import com.inventory.domain.ports.in.category.CategoryCommandPort;
 import com.inventory.domain.ports.in.category.CategoryQueryPort;

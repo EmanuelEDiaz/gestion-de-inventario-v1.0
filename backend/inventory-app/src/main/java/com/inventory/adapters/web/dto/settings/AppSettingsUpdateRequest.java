@@ -1,4 +1,4 @@
-package com.inventory.adapters.web.dto;
+package com.inventory.adapters.web.dto.settings;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Pattern;

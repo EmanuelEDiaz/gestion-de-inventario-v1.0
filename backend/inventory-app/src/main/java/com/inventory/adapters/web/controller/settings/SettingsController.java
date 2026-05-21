@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.controller.settings;
 
-import com.inventory.adapters.web.dto.AppSettingsResponse;
-import com.inventory.adapters.web.dto.AppSettingsUpdateRequest;
+import com.inventory.adapters.web.dto.settings.AppSettingsResponse;
+import com.inventory.adapters.web.dto.settings.AppSettingsUpdateRequest;
 import com.inventory.adapters.web.mapper.AppSettingsWebMapper;
 import com.inventory.application.usecase.command.settings.UpdateSettingsUseCase;
 import com.inventory.application.usecase.query.settings.SettingsQueryUseCase;

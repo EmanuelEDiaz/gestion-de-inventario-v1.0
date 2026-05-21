@@ -1,5 +1,6 @@
-package com.inventory.adapters.web.dto;
+package com.inventory.adapters.web.dto.user;
 
+import com.inventory.adapters.web.dto.role.RoleResponse;
 import java.time.Instant;
 import java.util.UUID;
 

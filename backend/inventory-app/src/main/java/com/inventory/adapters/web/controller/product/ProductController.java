@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller.product;
 
-import com.inventory.adapters.web.dto.*;
+import com.inventory.adapters.web.dto.product.*;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
 import com.inventory.domain.model.category.Category;
 import com.inventory.domain.model.product.Product;
