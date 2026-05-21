@@ -2,7 +2,7 @@ package com.inventory.application.usecase.command;
 
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.sync.SyncIncident;
-import com.inventory.domain.ports.in.SyncIncidentCommandPort;
+import com.inventory.domain.ports.in.sync.SyncIncidentCommandPort;
 import com.inventory.domain.ports.out.SyncIncidentRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

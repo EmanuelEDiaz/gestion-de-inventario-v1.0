@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.sync.SyncIncident;
-import com.inventory.domain.ports.in.SyncIncidentQueryPort;
+import com.inventory.domain.ports.in.sync.SyncIncidentQueryPort;
 import com.inventory.domain.ports.out.SyncIncidentRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

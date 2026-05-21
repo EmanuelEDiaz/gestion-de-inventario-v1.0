@@ -2,7 +2,7 @@ package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.product.Product;
 import com.inventory.domain.model.sale.Sale;
-import com.inventory.domain.ports.in.DashboardQueryPort;
+import com.inventory.domain.ports.in.stock.DashboardQueryPort;
 import com.inventory.domain.ports.out.CustomerRepository;
 import com.inventory.domain.ports.out.ProductRepository;
 import com.inventory.domain.ports.out.PurchaseRepository;

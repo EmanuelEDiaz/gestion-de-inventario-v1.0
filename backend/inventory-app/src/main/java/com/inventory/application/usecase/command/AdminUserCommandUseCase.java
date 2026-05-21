@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.command;
 
 import com.inventory.domain.model.user.User;
-import com.inventory.domain.ports.in.AdminUserCommandPort;
+import com.inventory.domain.ports.in.user.AdminUserCommandPort;
 import com.inventory.domain.ports.out.RoleRepositoryPort;
 import com.inventory.domain.ports.out.UserRepositoryPort;
 import org.springframework.security.crypto.password.PasswordEncoder;

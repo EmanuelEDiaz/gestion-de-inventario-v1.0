@@ -4,7 +4,7 @@ import com.inventory.adapters.persistence.entity.ProductEntity;
 import com.inventory.adapters.persistence.mapper.CatalogPersistenceMapper;
 import com.inventory.adapters.persistence.repository.ProductR2dbcRepository;
 import com.inventory.domain.model.product.Product;
-import com.inventory.domain.ports.in.ProductFilter;
+import com.inventory.domain.ports.in.product.ProductFilter;
 import com.inventory.domain.ports.out.ProductRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;

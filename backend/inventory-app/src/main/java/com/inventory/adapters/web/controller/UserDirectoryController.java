@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.controller;
 
 import com.inventory.adapters.web.dto.UserDirectoryEntry;
-import com.inventory.domain.ports.in.AdminUserQueryPort;
+import com.inventory.domain.ports.in.user.AdminUserQueryPort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

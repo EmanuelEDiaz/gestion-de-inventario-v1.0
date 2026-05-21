@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.command;
 
 import com.inventory.domain.model.supplier.Supplier;
-import com.inventory.domain.ports.in.SupplierCommandPort;
+import com.inventory.domain.ports.in.supplier.SupplierCommandPort;
 import com.inventory.domain.ports.out.SupplierRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

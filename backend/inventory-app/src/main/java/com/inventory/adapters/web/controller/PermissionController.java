@@ -1,7 +1,7 @@
 package com.inventory.adapters.web.controller;
 
 import com.inventory.adapters.web.dto.PermissionResponse;
-import com.inventory.domain.ports.in.PermissionQueryPort;
+import com.inventory.domain.ports.in.role.PermissionQueryPort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;

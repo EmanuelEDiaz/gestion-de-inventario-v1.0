@@ -2,7 +2,7 @@ package com.inventory.adapters.web.controller;
 
 import com.inventory.application.product.dto.ProductImageDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
-import com.inventory.domain.ports.in.ProductImageCommandPort;
+import com.inventory.domain.ports.in.product.ProductImageCommandPort;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

@@ -4,7 +4,7 @@ import com.inventory.application.supplier.dto.AddSocialLinkRequest;
 import com.inventory.application.supplier.dto.SupplierSocialLinkDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.model.supplier.SupplierSocialLink;
-import com.inventory.domain.ports.in.SupplierSocialLinkCommandPort;
+import com.inventory.domain.ports.in.supplier.SupplierSocialLinkCommandPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -3,7 +3,7 @@ package com.inventory.application.usecase.command;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.product.ProductImage;
-import com.inventory.domain.ports.in.ProductImageCommandPort;
+import com.inventory.domain.ports.in.product.ProductImageCommandPort;
 import com.inventory.domain.ports.out.ProductImageRepository;
 import com.inventory.domain.ports.out.ProductRepository;
 import com.inventory.application.service.ImageProcessingService;

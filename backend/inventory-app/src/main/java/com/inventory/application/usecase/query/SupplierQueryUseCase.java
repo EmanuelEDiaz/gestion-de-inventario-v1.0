@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.supplier.Supplier;
-import com.inventory.domain.ports.in.SupplierQueryPort;
+import com.inventory.domain.ports.in.supplier.SupplierQueryPort;
 import com.inventory.domain.ports.out.SupplierRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

@@ -3,7 +3,7 @@ package com.inventory.application.usecase.command;
 import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.model.returns.Return;
 import com.inventory.domain.model.returns.ReturnLine;
-import com.inventory.domain.ports.in.ReturnCommandPort;
+import com.inventory.domain.ports.in.returns.ReturnCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.ReturnRepository;
 import com.inventory.domain.ports.out.StockRepository;

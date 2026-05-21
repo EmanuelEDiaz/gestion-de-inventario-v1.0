@@ -2,7 +2,7 @@ package com.inventory.adapters.web.controller;
 
 import com.inventory.application.customer.dto.CustomerImageDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
-import com.inventory.domain.ports.in.CustomerImageCommandPort;
+import com.inventory.domain.ports.in.customer.CustomerImageCommandPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;

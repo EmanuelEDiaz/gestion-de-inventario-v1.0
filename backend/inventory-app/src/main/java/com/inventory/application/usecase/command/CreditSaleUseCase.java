@@ -3,7 +3,7 @@ package com.inventory.application.usecase.command;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.model.customer.CustomerDebt;
 import com.inventory.domain.model.sale.Sale;
-import com.inventory.domain.ports.in.SaleCommandPort;
+import com.inventory.domain.ports.in.sale.SaleCommandPort;
 import com.inventory.domain.ports.out.CustomerDebtRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

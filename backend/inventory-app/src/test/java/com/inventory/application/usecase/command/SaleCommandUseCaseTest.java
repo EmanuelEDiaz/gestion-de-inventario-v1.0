@@ -6,7 +6,7 @@ import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.model.sale.SaleLine;
 import com.inventory.domain.model.stock.StockBalance;
-import com.inventory.domain.ports.in.SaleCommandPort;
+import com.inventory.domain.ports.in.sale.SaleCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.SaleRepository;
 import com.inventory.domain.ports.out.StockRepository;

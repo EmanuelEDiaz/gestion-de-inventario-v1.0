@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.command;
 
 import com.inventory.domain.model.role.Role;
-import com.inventory.domain.ports.in.RoleCommandPort;
+import com.inventory.domain.ports.in.role.RoleCommandPort;
 import com.inventory.domain.ports.out.PermissionRepositoryPort;
 import com.inventory.domain.ports.out.RoleRepositoryPort;
 import org.springframework.stereotype.Service;

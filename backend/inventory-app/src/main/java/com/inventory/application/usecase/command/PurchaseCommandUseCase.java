@@ -5,7 +5,7 @@ import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.model.purchase.Purchase;
 import com.inventory.domain.model.purchase.PurchaseLine;
-import com.inventory.domain.ports.in.PurchaseCommandPort;
+import com.inventory.domain.ports.in.purchase.PurchaseCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.PurchaseRepository;
 import com.inventory.domain.ports.out.StockRepository;

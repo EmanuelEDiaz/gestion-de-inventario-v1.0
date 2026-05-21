@@ -1,7 +1,7 @@
 package com.inventory.domain.ports.out;
 
 import com.inventory.domain.model.product.Product;
-import com.inventory.domain.ports.in.ProductFilter;
+import com.inventory.domain.ports.in.product.ProductFilter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

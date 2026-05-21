@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.role.Role;
-import com.inventory.domain.ports.in.RoleQueryPort;
+import com.inventory.domain.ports.in.role.RoleQueryPort;
 import com.inventory.domain.ports.out.RoleRepositoryPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

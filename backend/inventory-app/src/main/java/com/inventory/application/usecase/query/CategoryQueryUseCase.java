@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.category.Category;
-import com.inventory.domain.ports.in.CategoryQueryPort;
+import com.inventory.domain.ports.in.category.CategoryQueryPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

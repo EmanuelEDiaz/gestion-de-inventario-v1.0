@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.stock.StockBalance;
-import com.inventory.domain.ports.in.StockQueryPort;
+import com.inventory.domain.ports.in.stock.StockQueryPort;
 import com.inventory.domain.ports.out.StockRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

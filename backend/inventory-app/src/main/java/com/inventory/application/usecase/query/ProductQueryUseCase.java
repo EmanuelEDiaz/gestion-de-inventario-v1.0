@@ -1,8 +1,8 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.product.Product;
-import com.inventory.domain.ports.in.ProductFilter;
-import com.inventory.domain.ports.in.ProductQueryPort;
+import com.inventory.domain.ports.in.product.ProductFilter;
+import com.inventory.domain.ports.in.product.ProductQueryPort;
 import com.inventory.domain.ports.out.ProductRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

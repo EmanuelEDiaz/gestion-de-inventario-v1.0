@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller;
 
-import com.inventory.domain.ports.in.DashboardQueryPort;
+import com.inventory.domain.ports.in.stock.DashboardQueryPort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

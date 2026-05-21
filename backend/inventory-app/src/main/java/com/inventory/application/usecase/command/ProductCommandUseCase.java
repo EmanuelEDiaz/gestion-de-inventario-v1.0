@@ -4,7 +4,7 @@ import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.product.Product;
-import com.inventory.domain.ports.in.ProductCommandPort;
+import com.inventory.domain.ports.in.product.ProductCommandPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;
 import org.springframework.stereotype.Service;

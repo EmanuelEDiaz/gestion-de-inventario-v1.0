@@ -3,7 +3,7 @@ package com.inventory.application.usecase.command;
 import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.warehouse.Warehouse;
-import com.inventory.domain.ports.in.WarehouseCommandPort;
+import com.inventory.domain.ports.in.warehouse.WarehouseCommandPort;
 import com.inventory.domain.ports.out.WarehouseRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

@@ -1,7 +1,7 @@
 package com.inventory.application.usecase.query;
 
 import com.inventory.domain.model.returns.Return;
-import com.inventory.domain.ports.in.ReturnQueryPort;
+import com.inventory.domain.ports.in.returns.ReturnQueryPort;
 import com.inventory.domain.ports.out.ReturnRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

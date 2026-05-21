@@ -2,8 +2,8 @@ package com.inventory.adapters.web.controller;
 
 import com.inventory.adapters.web.dto.*;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
-import com.inventory.domain.ports.in.CategoryCommandPort;
-import com.inventory.domain.ports.in.CategoryQueryPort;
+import com.inventory.domain.ports.in.category.CategoryCommandPort;
+import com.inventory.domain.ports.in.category.CategoryQueryPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
