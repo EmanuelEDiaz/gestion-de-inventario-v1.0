@@ -18,6 +18,7 @@ const COLUMNS: Column<Category>[] = [
     label: 'Nombre',
     render: (_, row) => (
       <span style={{ paddingLeft: `${row.level * 1.25}rem` }} title={`Ruta: ${row.path}`}>
+        {row.level > 0 && <span className="text-gray-400 mr-1">└─</span>}
         {row.name}
       </span>
     ),
