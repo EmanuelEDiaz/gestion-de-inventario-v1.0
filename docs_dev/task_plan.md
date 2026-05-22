@@ -1,16 +1,80 @@
-# Plan de Rendimiento — PC se congela al abrir la app
+# Plan: Checkbox + Batch Delete en Tablas (Revisado)
 
-> Created: 2026-05-22 v3 | Investigación con 4 agentes paralelos + 3 skills
-> Refinado: 2026-05-22 | Validación contra código + docs + 95 archivos de iconos
+> Created: 2026-05-22 v2 | Refinado tras auditoría de código real
 
 ## Reglas de Ejecución
 
-- **Una fase a la vez**: ejecutar → **verificar que funciona** → commitear → marcar ✅ en tabla → **preguntar al usuario si continuar**.
-- **Verificación obligatoria por fase**: antes del commit, correr `pnpm build --webpack` (frontend) + `mvn test -q` (backend) si la fase toca backend/frontend respectivamente.
-- **Commit por fase**: cada fase completada y verificada → commit con mensaje descriptivo siguiendo el formato de commits anteriores.
-- **Máx 3 sub-agentes en paralelo por tarea** para acelerar sin saturar recursos.
-- **Tabla de progreso**: marcar fase como ✅ al completar; actualizar hash de commit en la columna `Commit`.
-- **Pausa post-fase**: al terminar cada fase, preguntar al usuario "¿Continuar con la siguiente fase?" antes de proceder.
+- **Una fase a la vez**: ejecutar → verificar → preguntar al usuario si continuar
+- **Verificación obligatoria**: `pnpm build` (frontend) + `mvn test -q` (backend)
+- **UI**: Español (labels, tooltips, errores). **Código**: Inglés
+- **Mobile-first**: Touch targets ≥44px, barra de selección responsive
+- **Sin `any`** sin justificación explícita
+
+---
+
+## Auditoría Previa — Lo que realmente existe
+
+| Aspecto | Estado |
+|---------|--------|
+| **GenericTable** props `selectable` + `onDeleteSelected` | ✅ Ya existen |
+| **useTableSelection** hook | ✅ Ya existe |
+| **Floating action bar** ("N seleccionado(s)" + "Eliminar" + "Cancelar") | ✅ Ya existe |
+| **Vistas con selectable activado** | 3/12: Categories, Customers, Suppliers |
+| **Backend batch DELETE endpoint** | ❌ No existe |
+| **Frontend batch delete** | ❌ Usa `Promise.all(ids.map(delete))` — N requests |
+| **ReactiveCrudRepository.deleteAllById** | ✅ Ya disponible en Spring Data R2DBC |
+
+## Clasificación de Entidades (basada en código real)
+
+| Entidad | Tiene hard delete? | Batch DELETE? | Complejidad |
+|---------|-------------------|---------------|-------------|
+| Category | ✅ Sí, con validación de productos asociados | ✅ | **Con validación** |
+| Customer | ✅ Sí, sin validación | ✅ | Simple |
+| Supplier | ✅ Sí, sin validación | ✅ | Simple |
+| Product | ✅ Sí, con existencia check | ✅ | **Con validación** |
+| Purchase | ✅ Sí, solo DRAFT | ✅ | **Con validación** |
+| Sale | ✅ Sí, `canDelete()` del dominio | ✅ | **Con validación** |
+| Transfer | ✅ Sí, `canDelete()` del dominio + cascade lines | ✅ | **Con validación** |
+| Return | ✅ Sí, `canDelete()` + cascade lines | ✅ | **Con validación** |
+| Adjustment | ✅ Sí, `canDelete()` + cascade lines | ✅ | **Con validación** |
+| User | ❌ Soft (deactivate) | ❌ → Batch deactivate | Alternativo |
+| Role | ❌ Soft (deactivate, system protegidos) | ❌ → Batch deactivate | Alternativo |
+| Warehouse | ❌ Soft (deactivate) | ❌ → Batch deactivate | Alternativo |
+
+---
+
+## Arquitectura (respetando hexagonal)
+
+### Backend — 5 capas por entidad
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Controller: @DeleteMapping("/batch")                     │
+│    → llama a commandPort.deleteAll(ids)                     │
+├─────────────────────────────────────────────────────────────┤
+│ 2. Command Port (in): deleteAll(List<UUID> ids)             │
+├─────────────────────────────────────────────────────────────┤
+│ 3. Use Case: implementa deleteAll con validaciones          │
+│    Simple: repository.deleteAllById(ids)                    │
+│    Con validación: verifica cada ID antes de borrar         │
+├─────────────────────────────────────────────────────────────┤
+│ 4. Domain Repository Port (out): deleteAllById(List<UUID>)  │
+├─────────────────────────────────────────────────────────────┤
+│ 5. Persistence Adapter: r2dbcRepository.deleteAllById(ids)  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Frontend — 3 capas por entidad
+
+```
+┌──────────────────────────────────────────┐
+│ 1. Repository Interface: deleteAll(ids)   │
+├──────────────────────────────────────────┤
+│ 2. Repository Impl: apiClient.delete()    │
+├──────────────────────────────────────────┤
+│ 3. View: reemplazar Promise.all → repo   │
+└──────────────────────────────────────────┘
+```
 
 ---
 
@@ -18,361 +82,347 @@
 
 | Fase | Estado | Commit |
 |------|--------|--------|
-| **P1** — Límites de memoria + fix kill -9 | ✅ Completado | `5951ac4` |
-| **P2** — SW no recarga en dev | ✅ Completado | `f76dbbf` |
-| **P3** — Fix config contradictoria | ✅ Completado | e36f048 |
-| **P4** — Reducir polling + unificar SSE | ✅ Completado | `5c7da2b` |
-| **P5** — Estabilizar query keys | ✅ Completado | `9de41ad` |
-| **P6** — Config backend liviana | ✅ Completado | a9a333b |
-| **P7** — Unificar iconos (@material-symbols-svg) | ✅ Completado | `0388fe7` |
-| **P8** — Limpiar caches | ✅ Completado | — |
-| **P9** — Arreglos Docker | ✅ Completado | — |
+| **B0** — Auditoría y clasificación de entidades | ✅ Hecho | — |
+| **B1** — Patrón canónico backend (definición) | ⏳ Pendiente | — |
+| **B2** — Aplicar patrón backend (9 entidades) | ⏳ Pendiente | — |
+| **F0** — GenericTable: bulkActions + responsive | ⏳ Pendiente | — |
+| **F1** — Patrón canónico frontend (definición) | ⏳ Pendiente | — |
+| **F2** — Aplicar patrón frontend (9 entidades + 3 soft) | ⏳ Pendiente | — |
+| **R1** — Verificación responsive mobile | ⏳ Pendiente | — |
 
 ---
 
-## Resumen Ejecutivo
+## Fase B1 — Patrón Canónico Backend
 
-**Sistema actual:** 7.5 GB RAM total, **5.4 GB usados** antes de arrancar (72%), solo **156 MB libres**.
+> Documentado UNA vez. Aplicado a 9 entidades en B2.
 
-| Componente | RAM estimada al arrancar |
-|------------|--------------------------|
-| Línea base (OS + opencode + Firefox + Docker) | ~5.4 GB |
-| JVM Spring Boot (sin `-Xmx`, heap por defecto ~1.8 GB) | +1.8 GB |
-| Node.js webpack dev server (sin `--max-old-space-size`) | +1.5 GB |
-| Terminales GUI (konsole/gnome-terminal × 2) | +200 MB |
-| `@material-symbols-svg` 343 MB / 7732 iconos compilados | +343 MB |
-| PostgreSQL Docker (ya corriendo) | +200 MB |
-| **Total estimado** | **~9.4 GB** |
+### 1. Domain Repository Port (`domain/ports/out/*Repository.java`)
 
-**Déficit: ~1.9 GB → swap masivo → kernel bloquea I/O → mouse congelado.**
+Agregar:
+```java
+Mono<Void> deleteAllById(List<UUID> ids);
+```
 
----
+### 2. Inbound Command Port (`domain/ports/in/*/*CommandPort.java`)
 
-## Problemas Identificados
+Agregar:
+```java
+Mono<Void> deleteAll(List<UUID> ids);
+```
 
-### 🔴 CRÍTICO — Causan el freeze directamente
+### 3. Persistence Adapter (`adapters/persistence/adapter/*RepositoryAdapter.java`)
 
-| # | Problema | Impacto | Ubicación | Tiempo fix |
-|---|----------|---------|-----------|------------|
-| C1 | **JVM sin `-Xmx`** → heap por defecto = 25% RAM (~1.8 GB) | +2 GB RAM, swap inmediato | `start-backend.sh:120` | 2 min |
-| C2 | **Node.js sin `NODE_OPTIONS`** → V8 crece sin límite | +1.5 GB RAM | `start-dev.sh:187` | 1 min |
-| C3 | **SW `activate` → `client.navigate(client.url)` recarga TODAS las tabs** | Cascada de recargas multiplica todo | `public/sw.js:47-68` | 5 min |
-| C4 | **`scripts` usan `kill -9`** violando AGENTS.md | Matar procesos forzado puede corromper estado | `start-backend.sh:94`, `start-dev.sh:175` | 2 min |
+```java
+@Override
+public Mono<Void> deleteAllById(List<UUID> ids) {
+    if (ids.isEmpty()) return Mono.empty();
+    return r2dbcRepository.deleteAllById(ids);
+}
+```
 
-### 🟠 ALTO — Amplifican el freeze
+### 4. Use Case — Dos variantes
 
-| # | Problema | Impacto | Ubicación | Tiempo fix |
-|---|----------|---------|-----------|------------|
-| A1 | **`useNetworkHealth`** polling cada **5s** con timeout **4s** → conexiones colgadas se acumulan si backend tarda | +12 conexiones/min colgadas, agotan connection pool | `useNetworkHealth.ts:10-12,44` | 5 min |
-| A2 | **Dual EventSource/SSE** a `/stream` y `/sse` → auto-reconnect loop si fallan | Conexiones HTTP duplicadas, saturan Netty | `notifications.api.ts:305`, `useNotificationStream.ts:15` | 10 min |
-| A3 | **`useInfiniteProducts`: query key usa `options` (objeto)** → TanStack Query v5 maneja hash estructural, pero es frágil si cambia versión o hay funciones en params | Riesgo potencial de loop en futuras versiones | `useInfiniteProducts.ts:37` | 5 min |
-| A4 | **`next.config.ts` tiene bloque `turbopack: { root: __dirname }`** que CONFLICTA con `--webpack` flag. No causa freeze pero es configuración muerta/contradictoria | Config duplicada, posible error en build | `next.config.ts:5-7` | 2 min |
-| A5 | **`next.config.ts` referencia directorio `node_modules/next/dist/docs/` que NO existe** | Documentación obsoleta, dificulta debugging | `frontend/AGENTS.md` | 2 min |
-| A6 | **R2DBC pool `max-size: 20`** y `initial-size: 5` | 20 conexiones DB en dev local = RAM innecesaria | `application.yml:18-19` | 1 min |
-| A7 | **DEBUG logging** en todo `com.inventory` | Logs 10× más pesados, I/O + CPU extra | `application.yml:61-63` | 1 min |
-| A8 | **`lucide-react` + `@material-symbols-svg` AMBAS cargadas** → 2 bibliotecas de iconos, 98 archivos importan lucide, bundle duplicado | +150 KB bundle, node_modules inflado | 95 archivos `.tsx/.ts` + `package.json:27` | 45 min |
+**Variante Simple** (Customer, Supplier):
+```java
+@Override
+public Mono<Void> deleteAll(List<UUID> ids) {
+    if (ids.isEmpty()) return Mono.empty();
+    return repository.deleteAllById(ids);
+}
+```
 
-### 🟡 MEDIO — Contribuyen a presión general
+**Variante con validación** (Category, Product, Purchase, Sale, Transfer, Return, Adjustment):
+- Verificar cada ID antes de borrar
+- Si alguna falla validación → `Mono.error` (atómicamente, no borra ninguna)
 
-| # | Problema | Impacto | Ubicación |
-|---|----------|---------|-----------|
-| M1 | Terminales GUI (konsole, kitty, gnome-terminal...) spawn en `start-dev.sh` | +50–200 MB c/u, 2 terminales = +100–400 MB | `start-dev.sh:73-89` |
-| M2 | `.next/cache` = **789 MB** → disco I/O intenso en cada cambio | HMR lento, disco saturado | `.next/cache/` |
-| M3 | `docker-compose.yml` sin `.env` → falla + crash loops de containers | Docker restart loop | `docker-compose.yml` |
-| M4 | `mvnw` (Maven wrapper) no existe → Docker build falla | No se puede construir con Docker | `backend/Dockerfile:10` |
-| M5 | Sin `max-lifetime` ni `max-acquire-time` en pool R2DBC | Conexiones hold perpetuas bajo carga | `application.yml:18-19` |
+```java
+@Override
+public Mono<Void> deleteAll(List<UUID> ids) {
+    if (ids.isEmpty()) return Mono.empty();
+    return Flux.fromIterable(ids)
+        .flatMap(this::validateCanDelete)  // cada entidad implementa su validación
+        .then(repository.deleteAllById(ids));
+}
+```
 
----
+### 5. Controller (`adapters/web/controller/*/*Controller.java`)
 
-## Fase P1: Límites de Memoria + Fix kill -9 (5 archivos, ~10 min)
+```java
+@DeleteMapping("/batch")
+public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
+    return commandPort.deleteAll(ids);
+}
+```
 
-> **Objetivo:** Evitar que JVM y Node.js consuman toda la RAM del sistema. Reemplazar `kill -9` por `kill` sin flag (AGENTS.md).
+### Detalle de validaciones por entidad
 
-| # | Archivo | Acción |
-|---|---------|--------|
-| P1.1 | `start-backend.sh` (línea 120) | Agregar `-Dspring-boot.run.jvmArguments="-Xmx512m -Xms256m"` a `mvn spring-boot:run` |
-| P1.2 | `start-dev.sh` (línea 187) | Cambiar `pnpm dev` por `NODE_OPTIONS="--max-old-space-size=1024" pnpm dev` |
-| P1.3 | `start-dev.sh` (línea 73-89) | Reemplazar terminales GUI por background processes con logs a archivo (`&> logs/backend.log &`) |
-| P1.4 | `start-backend.sh` (línea 94) y `start-dev.sh` (línea 175) | Reemplazar `kill -9` por `kill` (sin flag) para cumplir AGENTS.md |
-| P1.5 | `backend/Dockerfile` (línea 30) | `JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=50"` (bajar de 75%) |
-| P1.6 | `docker-compose.yml` | Agregar `deploy.resources.limits.memory: 512M` a backend y frontend services |
-
-✅ **Check:** `ps aux | grep java` muestra `-Xmx512m`. `ps aux | grep node` muestra `--max-old-space-size=1024`. `rg 'kill -9' start-*.sh` = 0 resultados.
-
----
-
-## Fase P2: Fix SW Activate en Dev (1 archivo, ~5 min)
-
-> **Objetivo:** Evitar que SW recargue todas las tabs al activarse en localhost
-
-| # | Archivo | Acción |
-|---|---------|--------|
-| P2.1 | `public/sw.js` (línea 52-62) | Envolver `client.navigate(client.url)` con `if (self.location.hostname !== 'localhost')` |
-
-✅ **Check:** En localhost, SW se desregistra sin recargar la página.
+| Entidad | Validación previa | Comportamiento |
+|---------|------------------|----------------|
+| Category | `categoryRepository.countProducts(id)` > 0 → error | Atómico: si alguna falla, no borra ninguna |
+| Product | `productRepository.existsById(id)` → false → error | Atómico |
+| Purchase | `status != DRAFT` → error | Atómico |
+| Sale | `!sale.canDelete()` → error | Atómico |
+| Transfer | `!transfer.canDelete()` → error | Atómico |
+| Return | `!ret.canDelete()` → error, cascade lines | Atómico |
+| Adjustment | `!adj.canDelete()` → error, cascade lines | Atómico |
+| Customer | Sin validación | Directo |
+| Supplier | Sin validación | Directo |
 
 ---
 
-## Fase P3: Fix Config Contradictoria (2 archivos, ~5 min)
+## Fase B2 — Aplicar Patrón Backend (1 ejecución)
 
-> **Objetivo:** Eliminar configuración turbopack que conflictúa con `--webpack`. No se migra a Turbopack porque `next-pwa` es plugin webpack y rompería.
+> Ejecutar como un solo batch. NO fase por entidad.
 
-| # | Archivo | Acción |
-|---|---------|--------|
-| P3.1 | `next.config.ts` (línea 5-7) | **Eliminar bloque** `turbopack: { root: __dirname }` — es configuración muerta que conflictúa con `--webpack` |
-| P3.2 | `frontend/AGENTS.md` | Reemplazar referencia a `node_modules/next/dist/docs/` (no existe) por documentación correcta o eliminar |
+| Archivos a modificar | Cantidad |
+|---------------------|----------|
+| Domain repository ports | 9 (add `deleteAllById`) |
+| Command ports | 7 (add `deleteAll`; Purchase, Return no revisados) |
+| Persistence adapters | 9 (impl `deleteAllById`) |
+| Use cases | 9 (impl `deleteAll` con o sin validación) |
+| Controllers | 9 (add `@DeleteMapping("/batch")`) |
+| **Total** | **~43 archivos** |
 
-✅ **Check:** `rg 'turbopack' frontend/next.config.ts` = 0. `pnpm dev --webpack` sigue funcionando.
+### Checklist por entidad
 
----
+- [ ] `CategoryRepository.java` — add `deleteAllById`
+- [ ] `CategoryCommandPort.java` — add `deleteAll`
+- [ ] `CategoryRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `CategoryCommandUseCase.java` — impl `deleteAll` con validación
+- [ ] `CategoryController.java` — add endpoint
+- [ ] `CustomerRepository.java` — add `deleteAllById`
+- [ ] `CustomerCommandPort.java` — add `deleteAll`
+- [ ] `CustomerRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `CustomerCommandUseCase.java` — impl `deleteAll` simple
+- [ ] `CustomerController.java` — add endpoint
+- [ ] `SupplierRepository.java` — add `deleteAllById`
+- [ ] `SupplierCommandPort.java` — add `deleteAll`
+- [ ] `SupplierRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `SupplierCommandUseCase.java` — impl `deleteAll` simple
+- [ ] `SupplierController.java` — add endpoint
+- [ ] `ProductRepository.java` — add `deleteAllById`
+- [ ] `ProductCommandPort.java` — add `deleteAll`
+- [ ] `ProductRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `ProductCommandUseCase.java` — impl `deleteAll` con validación
+- [ ] `ProductController.java` — add endpoint
+- [ ] `PurchaseRepository.java` — add `deleteAllById` (nota: método se llama `delete`, no `deleteById`)
+- [ ] PurchaseCommandPort — add `deleteAll`
+- [ ] `PurchaseRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `PurchaseCommandUseCase.java` — impl `deleteAll` con validación DRAFT
+- [ ] `PurchaseController.java` — add endpoint
+- [ ] `SaleRepository.java` — add `deleteAllById`
+- [ ] `SaleCommandPort.java` — add `deleteAll`
+- [ ] `SaleRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `SaleCommandUseCase.java` — impl `deleteAll` con validación
+- [ ] `SaleController.java` — add endpoint
+- [ ] `TransferRepository.java` — add `deleteAllById`
+- [ ] `TransferCommandPort.java` — add `deleteAll`
+- [ ] `TransferRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `TransferCommandUseCase.java` — impl `deleteAll` con validación + cascade
+- [ ] `TransferController.java` — add endpoint
+- [ ] `ReturnRepository.java` — add `deleteAllById`
+- [ ] ReturnCommandPort — add `deleteAll`
+- [ ] `ReturnRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `ReturnCommandUseCase.java` — impl `deleteAll` con validación + cascade
+- [ ] `ReturnController.java` — add endpoint
+- [ ] `AdjustmentRepository.java` — add `deleteAllById`
+- [ ] AdjustmentCommandPort — add `deleteAll`
+- [ ] `AdjustmentRepositoryAdapter.java` — impl `deleteAllById`
+- [ ] `AdjustmentCommandUseCase.java` — impl `deleteAll` con validación + cascade
+- [ ] `AdjustmentController.java` — add endpoint
 
-## Fase P4: Reducir Polling + Unificar SSE (4 archivos, ~15 min)
+### Consideraciones especiales (leer antes de ejecutar)
 
-> **Objetivo:** Eliminar conexiones colgadas por health check agresivo y SSE duplicado. No se toca polling de notificaciones (es solo fallback SSE, no polling real).
-
-| # | Archivo | Acción |
-|---|---------|--------|
-| P4.1 | `useNetworkHealth.ts:10-11` | Subir `PING_INTERVAL_OFFLINE` a `30_000` (de 5s) y `PING_INTERVAL_ONLINE` a `60_000` (de 15s). Reducir `PING_TIMEOUT` a `2_000` (de 4s) |
-| P4.2 | `useNetworkHealth.ts` | Agregar backoff exponencial: pausar polling tras 3 errores consecutivos, reanudar tras 1 éxito |
-| P4.3 | `notifications.api.ts:305` vs `useNotificationStream.ts:15` | **Unificar a UN solo endpoint SSE**. Elegir `/api/v1/notifications/stream` (el del hook directo) y eliminar `/sse` de `notifications.api.ts`. O viceversa — verificar cuál existe en backend |
-| P4.4 | `useNotificationsShared.ts:58` | Reemplazar `filters` raw por parámetros serializados en `infiniteKey` (defensivo, mismo approach que P5) |
-
-✅ **Check:** Network tab muestra ≤1 SSE conexión activa. Health check sin conexiones colgadas cuando backend no responde.
-
----
-
-## Fase P5: Estabilizar Query Keys (2 archivos, ~5 min)
-
-> **Objetivo:** Fix defensivo de query keys que usan objetos. TanStack Query v5 maneja hash estructural, pero es frágil si cambia versión o hay funciones/clases en params.
-
-| # | Archivo | Acción |
-|---|---------|--------|
-| P5.1 | `useInfiniteProducts.ts:37` | Cambiar `queryKey: ['products', 'infinite', options]` por `queryKey: ['products', 'infinite', search, categoryId, status, maxPages]` (desestructurar params planos) |
-| P5.2 | `useNotificationsShared.ts:58` | Reemplazar `filters` en infiniteKey por props planas serializables |
-
-✅ **Check:** Query keys en React Query DevTools muestran valores planos, no `[Object]`.
-
----
-
-## Fase P6: Config Backend para Dev Liviano (3 archivos, ~5 min)
-
-> **Objetivo:** Reducir consumo de RAM y CPU del backend en desarrollo local.
-
-| # | Archivo | Acción |
-|---|---------|--------|
-| P6.1 | `application.yml` | Cambiar pool: `initial-size: 1`, `max-size: 5` (de 5/20). Agregar `max-lifetime: 30m`, `max-acquire-time: 5s`, `max-create-connection-time: 5s` |
-| P6.2 | `application.yml:61-63` | Cambiar `com.inventory: INFO` (de DEBUG) para desarrollo |
-| P6.3 | `pom.xml:124-129` | Verificar que `spring-boot-devtools` tiene `<optional>true</optional>` (ya debería) |
-
-✅ **Check:** Backend arranca con 1 conexión DB. Logs sin debug.
-
----
-
-## Fase P7: Unificar Iconos — Eliminar lucide-react, Usar Solo @material-symbols-svg (96 archivos, ~45 min)
-
-> **Objetivo:** Eliminar dependencia duplicada `lucide-react`. Migrar sus **55 iconos únicos** (en 95 archivos, 185 usos) a `@material-symbols-svg/react`. Esto reduce bundle y node_modules.
-
-### Mapa de equivalencias
-
-| lucide-react (55 iconos) | material-symbols-svg | Usos |
-|--------------------------|---------------------|------|
-| `AlertCircle` | `<SvgIcon icon="error" />` | 2 |
-| `AlertTriangle` | `<SvgIcon icon="warning" />` | 3 |
-| `ArrowLeft` | `<SvgIcon icon="arrow-back" />` | 4 |
-| `ArrowRight` | `<SvgIcon icon="arrow-forward" />` | 2 |
-| `Ban` | `<SvgIcon icon="block" />` | 2 |
-| `Bell` | `<SvgIcon icon="notifications" />` | 4 |
-| `Check` | `<SvgIcon icon="check" />` | 3 |
-| `CheckCheck` | `<SvgIcon icon="done-all" />` | 1 |
-| `CheckCircle` | `<SvgIcon icon="check-circle" />` | 11 |
-| `CheckCircle2` | `<SvgIcon icon="verified" />` | 11 |
-| `ChevronDown` | `<SvgIcon icon="expand-more" />` | 4 |
-| `ChevronLeft` | `<SvgIcon icon="chevron-left" />` | 2 |
-| `ChevronRight` | `<SvgIcon icon="chevron-right" />` | 2 |
-| `ChevronUp` | `<SvgIcon icon="expand-less" />` | 2 |
-| `CircleOff` | `<SvgIcon icon="radio-button-unchecked" />` | 4 |
-| `Clock` | `<SvgIcon icon="schedule" />` | 1 |
-| `CloudOff` | `<SvgIcon icon="cloud-off" />` | 1 |
-| `Copy` | `<SvgIcon icon="content-copy" />` | 1 |
-| `CreditCard` | `<SvgIcon icon="credit-card" />` | 1 |
-| `Download` | `<SvgIcon icon="download" />` | 1 |
-| `ExternalLink` | `<SvgIcon icon="open-in-new" />` | 1 |
-| `Eye` | `<SvgIcon icon="visibility" />` | 4 |
-| `EyeOff` | `<SvgIcon icon="visibility-off" />` | 2 |
-| `FileText` | `<SvgIcon icon="description" />` | 1 |
-| `Filter` | `<SvgIcon icon="filter-list" />` | 1 |
-| `Image` (as ImageIcon) | `<SvgIcon icon="image" />` | 4 |
-| `ImagePlus` | `<SvgIcon icon="add-photo-alternate" />` | 2 |
-| `KeyRound` | `<SvgIcon icon="vpn-key" />` | 2 |
-| `Loader2` | `<SvgIcon icon="sync" />` o CSS spinner | 1 |
-| `Package` | `<SvgIcon icon="inventory" />` | 1 |
-| `PackageCheck` | `<SvgIcon icon="checklist" />` | 4 |
-| `Pencil` | `<SvgIcon icon="edit" />` | 5 |
-| `Plus` | `<SvgIcon icon="add" />` | 18 |
-| `Power` | `<SvgIcon icon="power-settings-new" />` | 4 |
-| `RefreshCw` | `<SvgIcon icon="refresh" />` | 2 |
-| `Save` | `<SvgIcon icon="save" />` | 1 |
-| `Search` | `<SvgIcon icon="search" />` | 3 |
-| `Send` | `<SvgIcon icon="send" />` | 1 |
-| `Settings` | `<SvgIcon icon="settings" />` | 1 |
-| `ShoppingCart` | `<SvgIcon icon="shopping-cart" />` | 2 |
-| `Signal` | `<SvgIcon icon="signal-cellular-alt" />` | 1 |
-| `Sparkles` | ✋ **No hay equivalente en v0.6.0**. Crear SVG inline o usar `auto-awesome` con fallback | 2 |
-| `Star` | `<SvgIcon icon="star" />` | 4 |
-| `ToggleLeft` | `<SvgIcon icon="toggle-off" />` | 1 |
-| `Trash2` | `<SvgIcon icon="delete" />` | 22 |
-| `TrendingUp` | `<SvgIcon icon="trending-up" />` | 1 |
-| `Truck` | `<SvgIcon icon="local-shipping" />` | 5 |
-| `Upload` | `<SvgIcon icon="upload" />` | 1 |
-| `Users` | `<SvgIcon icon="group" />` | 2 |
-| `Warehouse` | `<SvgIcon icon="warehouse" />` | 1 |
-| `Wifi` | `<SvgIcon icon="wifi" />` | 1 |
-| `WifiOff` | `<SvgIcon icon="wifi-off" />` | 2 |
-| `X` | `<SvgIcon icon="close" />` | 5 |
-| `XCircle` | `<SvgIcon icon="cancel" />` | 11 |
-| `LucideIcon` (type) | Crear type alias `type SvgIcon = typeof SvgIcon` | 3 |
-
-### Pasos de ejecución
-
-| # | Acción | Archivos afectados |
-|---|--------|-------------------|
-| P7.1 | Crear archivo `presentation/shared/components/ui/icon-mapping.ts` con wrapper que unifica `@material-symbols-svg` como `SvgIcon` + exportar `type SvgIcon` para reemplazar `LucideIcon` | 1 archivo nuevo |
-| P7.2 | Migrar 95 archivos: `import { X } from 'lucide-react'` → `import { SvgIcon } from '@/presentation/shared/components/ui/icon-mapping'` y reemplazar `<X className="..." />` por `<SvgIcon icon="close" />` | 95 archivos |
-| P7.3 | Manejar caso especial `Sparkles` (2 usos): crear SVG inline o mapear a icono similar disponible | 2 archivos |
-| P7.4 | Reemplazar `type LucideIcon` por `type SvgIcon` en los 3 archivos que usan el tipo | 3 archivos |
-| P7.5 | Eliminar `lucide-react` de `package.json` y ejecutar `pnpm install` | `package.json` |
-| P7.6 | Verificar build: `pnpm build --webpack` | 1 comando |
-
-✅ **Check:** `rg "from 'lucide-react'" frontend/src/` = 0 resultados (ningún archivo importa lucide-react). `pnpm build --webpack` exitoso.
+1. **PurchaseRepository** — `delete(UUID id)` en lugar de `deleteById(UUID id)`. Agregar `deleteAllById` como método nuevo.
+2. **Return, Adjustment, Transfer** — cascade explícito de líneas. `deleteAllById` debe replicar la lógica de borrar líneas hijas primero. `Flux.fromIterable(ids).flatMapSequential(this::deleteWithLines)`.
+3. **Sale** — `sale.canDelete()` delega al modelo de dominio. La validación batch debe cargar cada Sale y llamar `canDelete()`.
+4. **No tocar User, Role, Warehouse** — no tienen hard delete.
 
 ---
 
-## Fase P8: Limpiar Cachés (3 comandos, ~2 min)
+## Fase F0 — GenericTable: bulkActions + responsive
 
-> **Objetivo:** Recuperar espacio en disco y eliminar caches corruptos
+### F0.1 — Tipos `BulkAction`
 
-| # | Comando | Acción |
-|---|---------|--------|
-| P8.1 | `rm -rf frontend/.next/cache` | Eliminar 789 MB de cache webpack |
-| P8.2 | `pnpm store prune` | Limpiar store de pnpm |
-| P8.3 | `mvn clean` en backend | Limpiar target/ |
+En `GenericTable.tsx` o types existente:
+```typescript
+interface BulkAction<T> {
+  label: string;
+  variant?: 'default' | 'destructive' | 'outline';
+  icon?: React.ComponentType<{ className?: string }>;
+  onClick: (ids: string[]) => void | Promise<void>;
+  disabled?: (selectedIds: string[]) => boolean;
+}
+```
 
-✅ **Check:** `du -sh frontend/.next/cache` = 0.
+### F0.2 — Props `bulkActions` + `onSelectionChange`
+
+```typescript
+interface GenericTableProps<T> {
+  // ... existentes
+  selectable?: boolean;
+  onDeleteSelected?: (ids: string[]) => void;
+  bulkActions?: BulkAction<T>[];
+  onSelectionChange?: (ids: string[]) => void;
+}
+```
+
+### F0.3 — Renderizar bulk actions en la barra
+
+La barra actual solo tiene "Eliminar seleccionados" + "Cancelar". Con `bulkActions`:
+```
+[Ícono] N seleccionado(s)    [BulkAction 1] [BulkAction 2] [Eliminar] [Cancelar]
+```
+
+### F0.4 — Responsive
+
+```
+Mobile ( <640px ):  flex-col gap-2, botones w-full, touch min-h-[44px]
+Desktop (>=640px ): flex-row, botones w-auto, inline
+```
 
 ---
 
-## Fase P9: Arreglos Docker (2 archivos, ~5 min)
+## Fase F1 — Patrón Canónico Frontend
 
-> **Objetivo:** Docker debe poder construir y correr sin errores que causen crash loops
+### 1. Repository Interface (`core/*/ports/I*Repository.ts`)
 
-| # | Archivo | Acción |
-|---|---------|--------|
-| P9.1 | `backend/Dockerfile:10` | Reemplazar `./mvnw` por `mvn` (no existe wrapper) |
-| P9.2 | Crear `.env` a partir de `.env.example` o en `start-dev.sh` | |
+Agregar:
+```typescript
+deleteAll(ids: string[]): Promise<void>;
+```
 
-✅ **Check:** `docker compose build` exitoso.
+### 2. Repository Impl (`infrastructure/repositories/*/*Repository.ts`)
+
+```typescript
+async deleteAll(ids: string[]): Promise<void> {
+  await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+}
+```
+
+### 3. View — Reemplazar `Promise.all`
+
+**Antes:**
+```typescript
+await Promise.all(ids.map((id) => repository.delete(id)));
+```
+
+**Después:**
+```typescript
+await repository.deleteAll(ids);
+```
+
+---
+
+## Fase F2 — Aplicar Patrón Frontend
+
+### Vistas que ya tienen selectable (solo migrar a batch):
+
+| Vista | Archivo | Acción |
+|-------|---------|--------|
+| CategoriesView | `modules/categories/views/CategoriesView.tsx` | Swap impl + add `deleteAll` a repo |
+| CustomersListView | `modules/customers/views/CustomersListView.tsx` | Swap impl + add `deleteAll` a repo |
+| SuppliersListView | `modules/suppliers/views/SuppliersListView.tsx` | Swap impl + add `deleteAll` a repo |
+
+### Vistas sin selectable (agregar desde cero):
+
+| Vista | Archivo(s) | Acción |
+|-------|-----------|--------|
+| Products | `ProductRepository.ts`, `ProductTable.tsx` + contenedor | Add `deleteAll` a repo + add selectable a tabla |
+| Purchases | `PurchaseRepository.ts`, `PurchaseTable.tsx` | Add `deleteAll` + selectable (solo DRAFT) |
+| Sales | `SaleRepository.ts`, `SaleTable.tsx` | Add `deleteAll` + selectable |
+| Transfers | `TransferRepository.ts`, `TransferTable.tsx` | Add `deleteAll` + selectable |
+| Returns | `ReturnRepository.ts`, `ReturnTable.tsx` | Add `deleteAll` + selectable |
+| Adjustments | `AdjustmentRepository.ts`, vista | Add `deleteAll` + selectable |
+
+### Entidades soft-delete (bulkActions en lugar de delete):
+
+| Vista | Archivo(s) | Acción |
+|-------|-----------|--------|
+| Users | `UserRepository.ts`, `UsersView.tsx` | Add `bulkActions` con "Activar"/"Desactivar" |
+| Roles | `RoleRepository.ts`, `RolesView.tsx` | Add `bulkActions` — excluir system roles |
+| Warehouses | `WarehouseRepository.ts`, `WarehousesListView.tsx` | Add `bulkActions` con "Activar"/"Desactivar" |
 
 ---
 
 ## Verificación Post-Fix
 
 ```bash
-# 1. Límites de memoria
-ps aux | grep -E "(java|node)" | grep -Eo "\-Xmx[0-9]+m|\-\-max-old-space-size=[0-9]+"
+# 1. Backend: batch endpoints existen (9 entidades hard-delete)
+rg '@DeleteMapping.*batch' backend/inventory-app/src/main/java/com/inventory/adapters/web/controller/ -l | wc -l
+# Expected: 9
 
-# 2. Sin kill -9
-rg 'kill -9' start-*.sh
+# 2. Frontend: deleteAll en repositorios
+rg 'deleteAll' frontend/src/infrastructure/repositories/ -l | wc -l
+# Expected: 9+
 
-# 3. SW no recarga en localhost
-rg 'client\.navigate' public/sw.js | grep localhost
+# 3. Frontend: selectable en tablas
+rg 'selectable' frontend/src/presentation/modules/*/views/ -l | wc -l
+# Expected: 9+ (Categories, Customers, Suppliers + nuevas)
 
-# 4. Sin turbopack config
-rg 'turbopack' frontend/next.config.ts
+# 4. Build frontend
+cd frontend && pnpm build 2>&1 | tail -5
 
-# 5. Health check interval reducido
-rg 'PING_INTERVAL_OFFLINE|PING_INTERVAL_ONLINE' frontend/src/presentation/shared/hooks/storage/useNetworkHealth.ts
-
-# 6. Pool reducido
-rg 'max-size:|initial-size:' backend/inventory-app/src/main/resources/application.yml
-
-# 7. Sin lucide-react imports
-rg "from 'lucide-react'" frontend/src/ | wc -l
-
-# 8. Build frontend
-cd frontend && pnpm build --webpack 2>&1 | tail -5
-
-# 9. Backend compile + test
+# 5. Backend compile + test
 cd backend/inventory-app && mvn compile -q && mvn test -q 2>&1 | tail -3
 
-# 10. Frontend tests
+# 6. Frontend tests
 cd frontend && pnpm test:run 2>&1 | tail -5
 
-# 11. Cache limpio
-du -sh frontend/.next/cache 2>/dev/null || echo "cache eliminado"
+# 7. Sin any type sin justificación
+rg '\bany\b' frontend/src/presentation/shared/components/data-display/GenericTable.tsx | grep -v 'unknown' | grep -v '//'
 ```
 
 ---
 
 ## Prioridad de Ejecución
 
-| Orden | Fase | Tiempo | Dependencias | Impacto |
-|-------|------|--------|-------------|---------|
-| 1 | **P1** — Límites de memoria + fix kill -9 | 10 min | Ninguna | 🔴 +3.5 GB libres |
-| 2 | **P2** — SW no recarga en dev | 5 min | Ninguna | 🔴 Evita cascada de recargas |
-| 3 | **P4** — Reducir polling + unificar SSE | 15 min | Ninguna | 🟠 Elimina connection storms |
-| 4 | **P6** — Config backend liviana | 5 min | Ninguna | 🟡 -200 MB + menos CPU |
-| 5 | **P3** — Fix config contradictoria | 5 min | Ninguna | 🟢 Codigo muerto limpiado |
-| 6 | **P5** — Estabilizar query keys | 5 min | Ninguna | 🟢 Defensivo |
-| 7 | **P7** — Unificar iconos (solo @material-symbols-svg) | 45 min | Ninguna | 🟡 Elimina bundle duplicado |
-| 8 | **P8** — Limpiar caches | 2 min | Ninguna | 🟡 +1 GB disco |
-| 9 | **P9** — Arreglos Docker | 5 min | Ninguna | 🟢 Docker funcional |
+| Orden | Fase | Tiempo | Dependencias |
+|-------|------|--------|-------------|
+| 1 | **B1** — Patrón backend (documentación) | 5 min | Ninguna |
+| 2 | **B2** — Aplicar backend (43 archivos) | ~30 min | B1 |
+| 3 | **F0** — GenericTable bulkActions + responsive | ~15 min | Ninguna |
+| 4 | **F1** — Patrón frontend (documentación) | 5 min | F0 |
+| 5 | **F2** — Aplicar frontend (~30 archivos) | ~30 min | B2 + F0 + F1 |
+| 6 | **R1** — Verificación mobile | ~10 min | F0 |
+
+**Total estimado:** ~95 min (~1.5 horas)
 
 ---
 
 ## Commits Recomendados
 
 ```
-P1-P2: fix(perf): memory limits, SW dev guard, remove kill -9
+B1-B2: feat(backend): add batch DELETE endpoints for 9 entities
 
-- Agrega -Xmx512m a JVM en start-backend.sh
-- Agrega --max-old-space-size=1024 a Node.js en start-dev.sh
-- Reemplaza terminales GUI por background processes
-- Reemplaza kill -9 por kill (AGENTS.md compliance)
-- Bloquea client.navigate() en SW si hostname=localhost
+- Agrega deleteAllById a domain repository ports + persistence adapters
+- Agrega deleteAll a command ports + use cases
+- Excluye User, Role, Warehouse (solo soft-delete)
+- Category/Product/Purchase/Sale/Transfer/Return/Adjustment
+  con validación atómica previa al borrado
+- Customer/Supplier sin validación (directo)
 
-P3-P6: fix(perf): remove dead config, reduce polling, stabilize queries, dev config
+F0: feat(frontend): add bulkActions and onSelectionChange to GenericTable
 
-- Elimina bloque turbopack conflictivo de next.config.ts
-- Fix AGENTS.md ref a directorio inexistente
-- Sube health check interval: offline 5s→30s, online 15s→60s
-- Agrega backoff exponencial a useNetworkHealth
-- Unifica SSE endpoints (/stream, elimina /sse)
-- Serializa query keys planas en useInfiniteProducts
-- Reduce pool R2DBC 20→5, agrega timeouts
-- Cambia DEBUG→INFO en application.yml
+- Nueva prop BulkAction<T> para acciones personalizadas
+- onSelectionChange callback
+- Barra de selección responsive (flex-col mobile, flex-row desktop)
+- Touch targets ≥44px
 
-P7: refactor(icons): remove lucide-react, use only @material-symbols-svg
+F1-F2: feat(frontend): enable batch delete in all views
 
-- Migra 55 iconos (185 usos) de lucide-react a material-symbols-svg
-- Crea wrapper SvgIcon unificado
-- Elimina lucide-react de package.json
-- 95 archivos migrados
-
-P8-P9: chore: clean caches, fix Docker build
-
-- Elimina .next/cache (789 MB)
-- pnpm store prune
-- Fix mvnw missing en Dockerfile
-- Crea .env para docker-compose
+- deleteAll() en repositorios (9 entidades)
+- selectable + onDeleteSelected en vistas sin él
+- bulkActions para soft-delete (Users, Roles, Warehouses)
+- Reemplaza Promise.all por request único DELETE /batch
 ```
 
 ---
 
 ## Notas
 
-- 🟢 **P1 es el fix que evita el freeze inmediato.** Hacer primero.
-- 🟡 **P2-P9 son optimizaciones** progresivas.
-- ⚠️ **P4 requiere verificar cuál endpoint SSE existe en backend** (`/stream` vs `/sse`) antes de unificar.
-- ⚠️ **P7 es la fase más riesgosa** (95 archivos, 55 iconos). Si un icono no tiene equivalente exacto, crear SVG inline en vez de forzar un mapeo incorrecto.
-- ⚠️ **Sparkles** (en `ProductCreateView.tsx` y `EditViewHeader.tsx`) no existe en `@material-symbols-svg/react@0.6.0`. Usar SVG inline simple o icono `auto-awesome` con fallback.
-- ⚠️ **`LucideIcon` type** se usa en 3 archivos para tipar props que reciben iconos. Reemplazar por un type wrapper propio.
+- ⚠️ **PurchaseRepository** tiene firma `delete(UUID id)` no `deleteById(UUID id)`. Agregar `deleteAllById(List<UUID>)` como método nuevo en el port y adapter.
+- ⚠️ **Return/Adjustment** requieren cascade explícito de líneas antes de borrar el padre. `deleteAllById` debe manejar esto.
+- ⚠️ **Sale/Transfer** delegan validación al modelo de dominio (`canDelete()`). El batch delete debe cargar cada entidad y validar individualmente.
+- ⚠️ **No incluir**: Exchange Rates, Stock Balance, Movements (solo lectura), ni sub-resources (images, social links).
+- ✅ **Categories, Customers, Suppliers** ya tienen selectable. Solo migrar de `Promise.all` a `deleteAll`.
