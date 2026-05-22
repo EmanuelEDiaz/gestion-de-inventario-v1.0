@@ -184,7 +184,7 @@ backend_pid=$!
 write_ok "Backend iniciado (PID: $backend_pid)"
 
 write_step "Iniciando Frontend (Next.js :3000)..."
-FRONTEND_CMD="echo '=== FRONTEND (Next.js) ===' && pnpm approve-builds sharp unrs-resolver && NODE_OPTIONS=\"--max-old-space-size=1536\" pnpm dev"
+FRONTEND_CMD="echo '=== FRONTEND (Next.js) ===' && pnpm approve-builds sharp unrs-resolver && NODE_OPTIONS=\"--max-old-space-size=1024\" pnpm dev"
 open_terminal "FRONTEND - Next.js" "$FRONTEND_DIR" "$FRONTEND_CMD" "frontend" &
 frontend_pid=$!
 write_ok "Frontend iniciado (PID: $frontend_pid)"
