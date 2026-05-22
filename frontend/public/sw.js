@@ -55,15 +55,17 @@ if (IS_LOCALHOST) {
           includeUncontrolled: true,
         });
 
-        await Promise.all(
-          clients.map((client) => {
-            if ('navigate' in client) {
-              return client.navigate(client.url);
-            }
+        if (self.location.hostname !== 'localhost') {
+          await Promise.all(
+            clients.map((client) => {
+              if ('navigate' in client) {
+                return client.navigate(client.url);
+              }
 
-            return Promise.resolve(undefined);
-          })
-        );
+              return Promise.resolve(undefined);
+            })
+          );
+        }
       })()
     );
   });

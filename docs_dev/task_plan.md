@@ -18,7 +18,7 @@
 
 | Fase | Estado | Commit |
 |------|--------|--------|
-| **P1** — Límites de memoria + fix kill -9 | ⏳ Pendiente | — |
+| **P1** — Límites de memoria + fix kill -9 | ✅ Completado | `5951ac4` |
 | **P2** — SW no recarga en dev | ⏳ Pendiente | — |
 | **P3** — Fix config contradictoria | ⏳ Pendiente | — |
 | **P4** — Reducir polling + unificar SSE | ⏳ Pendiente | — |
