@@ -24,8 +24,8 @@
 | **P4** — Reducir polling + unificar SSE | ✅ Completado | `5c7da2b` |
 | **P5** — Estabilizar query keys | ✅ Completado | `9de41ad` |
 | **P6** — Config backend liviana | ✅ Completado | a9a333b |
-| **P7** — Unificar iconos (@material-symbols-svg) | ⏳ Pendiente | — |
-| **P8** — Limpiar caches | ⏳ Pendiente | — |
+| **P7** — Unificar iconos (@material-symbols-svg) | ✅ Completado | `0388fe7` |
+| **P8** — Limpiar caches | ✅ Completado | — |
 | **P9** — Arreglos Docker | ⏳ Pendiente | — |
 
 ---
