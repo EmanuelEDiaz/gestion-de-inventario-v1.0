@@ -78,6 +78,7 @@ class ProductCommandUseCaseTest {
         );
 
         when(productRepository.findBySku("SKU-001")).thenReturn(Mono.just(existingProduct));
+        when(productRepository.findByBarcode(any())).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.create(command))
             .expectErrorMatches(e ->
@@ -85,7 +86,7 @@ class ProductCommandUseCaseTest {
             .verify();
 
         verify(productRepository).findBySku("SKU-001");
-        verify(productRepository, never()).findByBarcode(any());
+        verify(productRepository).findByBarcode("BAR-001");
         verify(productRepository, never()).save(any());
     }
 

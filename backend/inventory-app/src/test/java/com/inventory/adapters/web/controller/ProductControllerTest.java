@@ -11,8 +11,10 @@ import com.inventory.domain.ports.out.CategoryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -27,7 +29,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.csrf;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockUser;
 
-@WebFluxTest(ProductController.class)
+@SpringBootTest(classes = com.inventory.bootstrap.InventoryApplication.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureWebTestClient
 @Import(GlobalExceptionHandler.class)
 @DisplayName("ProductController")
 class ProductControllerTest {
@@ -127,6 +130,7 @@ class ProductControllerTest {
             .mutateWith(mockUser())
             .mutateWith(csrf())
             .post().uri("/api/v1/products")
+            .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("""
                 {
                     "name": "Test Product",
@@ -147,6 +151,7 @@ class ProductControllerTest {
             .mutateWith(mockUser())
             .mutateWith(csrf())
             .post().uri("/api/v1/products")
+            .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("""
                 {
                     "sku": "SKU-001",
@@ -171,6 +176,7 @@ class ProductControllerTest {
             .mutateWith(mockUser())
             .mutateWith(csrf())
             .put().uri("/api/v1/products/{id}", productId)
+            .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("""
                 {
                     "name": "Updated Product",
