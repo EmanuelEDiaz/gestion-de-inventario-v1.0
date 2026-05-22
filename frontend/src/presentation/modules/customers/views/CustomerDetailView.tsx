@@ -73,7 +73,7 @@ export function CustomerDetailView({ customerId, onBack }: CustomerDetailViewPro
       </div>
 
       <Card>
-        <CardContent className="pt-4">
+        <CardContent>
           {tab === 'info' && (
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div><dt className="text-gray-500">Código</dt><dd className="font-medium">{customer.code || 'N/A'}</dd></div>

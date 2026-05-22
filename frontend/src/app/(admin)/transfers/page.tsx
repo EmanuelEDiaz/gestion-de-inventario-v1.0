@@ -12,7 +12,7 @@ export default function TransfersPage() {
     return (
       <div className="p-6">
         <Card className="border-destructive">
-          <CardContent className="pt-6">
+          <CardContent>
             <p className="text-destructive">Error: {error}</p>
             <Button variant="outline" onClick={refresh} className="mt-4">
               Reintentar

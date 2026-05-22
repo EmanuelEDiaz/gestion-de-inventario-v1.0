@@ -63,7 +63,7 @@ export function SupplierDetailView({ supplierId, onBack }: SupplierDetailViewPro
       </div>
 
       <Card>
-        <CardContent className="pt-4">
+        <CardContent>
           {tab === 'info' && <SupplierContactList supplier={supplier} />}
           {tab === 'images' && <SupplierImageCarousel supplierId={supplierId} />}
           {tab === 'social' && <SupplierSocialLinks supplierId={supplierId} />}

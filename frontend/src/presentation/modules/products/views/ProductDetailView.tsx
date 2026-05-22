@@ -59,7 +59,7 @@ export function ProductDetailView({ productId, onBack }: ProductDetailViewProps)
       </div>
 
       <Card className="border-0 bg-white/85 backdrop-blur-sm shadow-xl">
-        <CardContent className="pt-4">
+        <CardContent>
           {tab === 'info' && <ProductStatsSection product={product} />}
           {tab === 'images' && (
             <ProductHistorySection>
