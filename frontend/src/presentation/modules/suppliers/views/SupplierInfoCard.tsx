@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@/presentation/shared/components/ui/icon-mapping';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { statusBadge } from '@/presentation/shared/lib/colors';
 import { Button } from '@/presentation/shared/components/ui/Button';

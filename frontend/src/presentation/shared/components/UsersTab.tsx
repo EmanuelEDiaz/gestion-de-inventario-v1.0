@@ -3,7 +3,7 @@
 import React from 'react';
 import { Notification } from '@/core/notification/entities/notification';
 import { NotificationItem } from './data-display/NotificationItem';
-import { Users } from 'lucide-react';
+import { Users } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface UsersTabProps {
   notifications: Notification[];

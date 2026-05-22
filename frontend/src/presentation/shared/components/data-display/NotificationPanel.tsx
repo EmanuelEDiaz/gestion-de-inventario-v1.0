@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell } from '@/presentation/shared/components/ui/icon-mapping';
 import { NotificationBadge } from './NotificationBadge';
 import { NotificationFilter } from '../feedback/NotificationFilter';
 import { NotificationList } from './NotificationList';

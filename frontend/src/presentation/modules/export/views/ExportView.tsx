@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
-import { Download } from 'lucide-react';
+import { Download } from '@/presentation/shared/components/ui/icon-mapping';
 
 const FORMATS: { value: ExportFormat; label: string }[] = [
   { value: 'csv', label: 'CSV' },

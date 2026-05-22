@@ -1,7 +1,7 @@
 'use client';
 
 import type { CacheModule } from '@/presentation/shared/hooks/storage/useCacheProgress';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface CacheProgressBarProps {
   modules: CacheModule[];

@@ -2,7 +2,7 @@
 
 import type { Transfer } from '@/core/transfer/entities/transfer';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { CheckCircle, Truck, XCircle, Trash2 } from 'lucide-react';
+import { CheckCircle, Truck, XCircle, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface TransferActionsProps {
   status: Transfer['status'];

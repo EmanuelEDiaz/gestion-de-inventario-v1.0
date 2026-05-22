@@ -3,7 +3,7 @@
 import type { CustomerDebt } from '@/core/customer/entities/customer-debt';
 import { DEBT_STATUS_LABELS, DEBT_STATUS_COLORS } from '@/core/customer/entities/customer-debt';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface DebtRowProps {
   debt: CustomerDebt;

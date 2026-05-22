@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Trash2, Check } from 'lucide-react';
+import { Trash2, Check } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface NotificationActionsProps {
   read: boolean;

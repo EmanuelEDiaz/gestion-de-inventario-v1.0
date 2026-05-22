@@ -4,7 +4,7 @@ import type { ProductImage } from '@/core/product/entities/product-image';
 import { ImageThumbnail } from './ImageThumbnail';
 import { ImageUploadButton } from './ImageUploadButton';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface ImageThumbnailsBarProps {
   images: ProductImage[];

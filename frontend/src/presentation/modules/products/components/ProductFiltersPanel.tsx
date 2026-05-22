@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, X } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { CategoryFilter } from './filters/CategoryFilter';

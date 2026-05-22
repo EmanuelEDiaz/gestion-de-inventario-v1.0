@@ -5,7 +5,7 @@ import { Badge } from '@/presentation/shared/components/ui/badge';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
-import { Pencil, Ban } from 'lucide-react';
+import { Pencil, Ban } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface Props {
   role: Role;

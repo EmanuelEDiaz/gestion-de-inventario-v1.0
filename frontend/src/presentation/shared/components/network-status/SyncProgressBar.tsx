@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, CloudOff } from 'lucide-react';
+import { CheckCircle2, CloudOff } from '@/presentation/shared/components/ui/icon-mapping';
 import type { BackendStatus } from '@/presentation/shared/hooks/storage/useNetworkHealth';
 
 interface SyncProgressBarProps {

@@ -1,8 +1,8 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { LucideIcon } from 'lucide-react';
-import { Trash2 } from 'lucide-react';
+import { SvgIcon } from '@/presentation/shared/components/ui/icon-mapping';
+import { Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { cn } from '@/presentation/shared/lib/utils';
 import { Table } from '../ui/table';
 import { Button } from '../ui/Button';
@@ -19,7 +19,7 @@ export interface Column<T> {
 }
 
 export interface TableAction<T> {
-  icon: LucideIcon;
+  icon: SvgIcon;
   title?: string;
   onClick?: (row: T) => void;
   href?: (row: T) => string;

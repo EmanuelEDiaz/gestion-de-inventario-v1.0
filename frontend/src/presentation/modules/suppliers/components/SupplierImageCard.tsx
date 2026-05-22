@@ -1,6 +1,6 @@
 'use client';
 
-import { Star, Trash2 } from 'lucide-react';
+import { Star, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface SupplierImageCardImage {

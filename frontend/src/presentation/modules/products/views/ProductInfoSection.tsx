@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Pencil, Sparkles } from 'lucide-react';
+import { ArrowLeft, Pencil, Sparkles } from '@/presentation/shared/components/ui/icon-mapping';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { Button } from '@/presentation/shared/components/ui/Button';
 

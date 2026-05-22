@@ -1,6 +1,6 @@
 'use client';
 
-import { Wifi, WifiOff, RefreshCw, Signal } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Signal } from '@/presentation/shared/components/ui/icon-mapping';
 import type { BackendStatus } from '@/presentation/shared/hooks/storage/useNetworkHealth';
 import type { SyncStatus } from '@/presentation/shared/hooks/storage/useSyncStatus';
 

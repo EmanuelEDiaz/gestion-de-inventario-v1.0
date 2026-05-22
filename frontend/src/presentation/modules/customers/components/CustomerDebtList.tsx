@@ -11,7 +11,7 @@ import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpi
 import { DEBT_STATUS_LABELS, DEBT_STATUS_COLORS } from '@/core/customer/entities/customer-debt';
 import type { RegisterDebtPaymentData } from '@/core/customer/entities/debt-payment';
 import { toast } from '@/presentation/shared/components/ui/toast';
-import { CreditCard } from 'lucide-react';
+import { CreditCard } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface CustomerDebtListProps {
   customerId: string;

@@ -2,7 +2,7 @@
 
 import type { Supplier } from '@/core/supplier/entities/supplier';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface SupplierActionsProps {
   id: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Power } from 'lucide-react';
+import { Power } from '@/presentation/shared/components/ui/icon-mapping';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { useCurrenciesController } from '../hooks/useCurrenciesController';
 import { CurrencyFormFields } from '../components/form/CurrencyFormFields';

@@ -5,7 +5,7 @@ import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_COLORS } from '@/core/transfer/
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { TableCell, TableRow } from '@/presentation/shared/components/ui/table';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@/presentation/shared/components/ui/icon-mapping';
 import { TransferActions } from './TransferActions';
 
 interface TransferRowProps {

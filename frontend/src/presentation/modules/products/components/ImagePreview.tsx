@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { X } from '@/presentation/shared/components/ui/icon-mapping';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 
 interface ImagePreviewProps {

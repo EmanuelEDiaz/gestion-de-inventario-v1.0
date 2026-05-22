@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Product } from '@/core/product/entities/product';
 import { StatusBadge } from '@/presentation/shared/components/data-display/StatusBadge';
 import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/data-display/GenericTable';

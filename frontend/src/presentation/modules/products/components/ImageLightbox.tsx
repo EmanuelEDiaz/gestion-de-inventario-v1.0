@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from '@/presentation/shared/components/ui/icon-mapping';
 import type { ProductImage } from '@/core/product/entities/product-image';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 

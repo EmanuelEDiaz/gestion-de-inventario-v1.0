@@ -2,7 +2,7 @@
 
 import { useUnreadCount } from '../hooks/useNotifications';
 import Link from 'next/link';
-import { Bell } from 'lucide-react';
+import { Bell } from '@/presentation/shared/components/ui/icon-mapping';
 
 export function NotificationBadge() {
   const { data: count = 0 } = useUnreadCount();

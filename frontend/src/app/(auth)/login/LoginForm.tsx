@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Input, Button } from '@/presentation/shared/components/ui';
-import { WifiOff } from 'lucide-react';
+import { WifiOff } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface LoginFormProps {
   isLoading: boolean;

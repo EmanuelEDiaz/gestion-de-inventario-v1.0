@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { ArrowLeft, Save, Clock } from 'lucide-react';
+import { ArrowLeft, Save, Clock } from '@/presentation/shared/components/ui/icon-mapping';
 import { useNotificationPreferences } from '@/presentation/shared/hooks';
 import { PreferenceToggle } from './PreferenceToggle';
 import { PreferenceSection } from './PreferenceSection';

@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Star, Trash2 } from 'lucide-react';
+import { Star, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface CustomerImageCardImage {

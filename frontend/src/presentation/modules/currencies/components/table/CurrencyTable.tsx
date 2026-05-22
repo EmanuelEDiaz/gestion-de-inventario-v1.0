@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Power } from 'lucide-react';
+import { Power } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Currency } from '@/core/currency/entities/currency';
 import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { Badge } from '@/presentation/shared/components/ui/badge';

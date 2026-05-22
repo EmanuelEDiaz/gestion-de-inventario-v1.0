@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles } from 'lucide-react';
+import { Sparkles } from '@/presentation/shared/components/ui/icon-mapping';
 
 export function EditViewHeader() {
   return (

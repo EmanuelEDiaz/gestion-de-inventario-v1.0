@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { CheckCircle, CircleOff, Trash2 } from 'lucide-react';
+import { CheckCircle, CircleOff, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import Link from 'next/link';
 import type { Supplier } from '@/core/supplier/entities/supplier';
 import { formatDateShort } from '@/presentation/shared/lib/utils';

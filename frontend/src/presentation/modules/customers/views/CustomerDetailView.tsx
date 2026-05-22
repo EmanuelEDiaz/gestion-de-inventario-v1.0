@@ -12,7 +12,7 @@ import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@/presentation/shared/components/ui/icon-mapping';
 
 type Tab = 'info' | 'images' | 'debts';
 

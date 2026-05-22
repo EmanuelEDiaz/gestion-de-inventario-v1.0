@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CheckCircle2, Truck, XCircle } from 'lucide-react';
+import { CheckCircle2, Truck, XCircle } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Sale, SaleStatus } from '@/core/sale/entities/sale';
 import { getSaleStatusLabel, getSaleStatusColor } from '@/core/sale/entities/sale';

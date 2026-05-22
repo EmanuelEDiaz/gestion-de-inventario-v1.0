@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CheckCircle, CircleOff, Trash2 } from 'lucide-react';
+import { CheckCircle, CircleOff, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { useCustomers } from '../hooks/useCustomers';
 import { CustomerFormFields } from '../components/form/CustomerFormFields';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Pencil, KeyRound, ToggleLeft } from 'lucide-react';
+import { Pencil, KeyRound, ToggleLeft } from '@/presentation/shared/components/ui/icon-mapping';
 import type { User } from '@/core/user/entities/user';
 import { GenericTable, type Column, type TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { Badge } from '@/presentation/shared/components/ui/badge';

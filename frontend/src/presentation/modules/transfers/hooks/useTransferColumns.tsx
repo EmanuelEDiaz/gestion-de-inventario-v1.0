@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CheckCircle2, PackageCheck, Send, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, PackageCheck, Send, Trash2, XCircle } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Transfer } from '@/core/transfer/entities/transfer';
 import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_COLORS } from '@/core/transfer/entities/transfer';

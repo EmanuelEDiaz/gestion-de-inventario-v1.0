@@ -2,7 +2,7 @@
 
 import type { ProductImage } from '@/core/product/entities/product-image';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
-import { Star, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, Trash2, ChevronLeft, ChevronRight } from '@/presentation/shared/components/ui/icon-mapping';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
 interface ActiveImageDisplayProps {

@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { Card } from '@/presentation/shared/components/ui/card';

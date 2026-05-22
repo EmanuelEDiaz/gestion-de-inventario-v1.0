@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from '@/presentation/shared/components/ui/icon-mapping';
 import { cn } from '@/presentation/shared/lib/utils';
 
 interface ComboboxButtonOption {

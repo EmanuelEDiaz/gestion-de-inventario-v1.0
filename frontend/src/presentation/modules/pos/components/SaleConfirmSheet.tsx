@@ -2,7 +2,7 @@
 
 import type { PaymentMode } from '@/core/sale/entities/sale';
 import type { CartLine } from '../hooks/usePosCart';
-import { ShoppingCart, X } from 'lucide-react';
+import { ShoppingCart, X } from '@/presentation/shared/components/ui/icon-mapping';
 import { SaleSummaryPanel } from './SaleSummaryPanel';
 import { SaleConfirmActions } from './SaleConfirmActions';
 import { SaleReceiptPreview } from './SaleReceiptPreview';

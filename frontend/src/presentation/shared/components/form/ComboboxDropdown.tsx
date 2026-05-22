@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { Search, Check } from 'lucide-react';
+import { Search, Check } from '@/presentation/shared/components/ui/icon-mapping';
 import { cn } from '@/presentation/shared/lib/utils';
 
 interface ComboboxDropdownOption {

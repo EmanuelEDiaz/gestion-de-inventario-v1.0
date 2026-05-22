@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { KeyRound, Pencil, Power } from 'lucide-react';
+import { KeyRound, Pencil, Power } from '@/presentation/shared/components/ui/icon-mapping';
 import type { User } from '@/core/user/entities/user';
 import { useUsersController } from '../hooks/useUsersController';
 import { UserFormFields } from '../components/form/UserFormFields';

@@ -3,7 +3,7 @@
 import { useTransfers, TransferTable } from '@/presentation/modules/transfers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw } from '@/presentation/shared/components/ui/icon-mapping';
 
 export default function TransfersPage() {
   const { transfers, loading, error, refresh, confirm, ship, complete, cancel, remove } = useTransfers();

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Settings, CheckCheck } from 'lucide-react';
+import { Settings, CheckCheck } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface NotificationFilterProps {
   totalUnreadCount: number;

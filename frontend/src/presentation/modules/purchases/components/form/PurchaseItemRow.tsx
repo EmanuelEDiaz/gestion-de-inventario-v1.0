@@ -3,7 +3,7 @@
 import type { Product } from '@/core/product/entities/product';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
-import { Trash2 } from 'lucide-react';
+import { Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 
 export interface PurchaseLineInput {
   productId: string;

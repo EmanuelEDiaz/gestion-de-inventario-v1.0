@@ -1,6 +1,6 @@
 'use client';
 
-import { ImagePlus } from 'lucide-react';
+import { ImagePlus } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface CreateImageEmptyStateProps {
   inputId: string;

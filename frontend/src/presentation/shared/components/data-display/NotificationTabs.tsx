@@ -4,7 +4,7 @@ import React from 'react';
 import { Notification } from '@/core/notification/entities/notification';
 import { SystemTab } from '../SystemTab';
 import { UsersTab } from '../UsersTab';
-import { AlertCircle, Users } from 'lucide-react';
+import { AlertCircle, Users } from '@/presentation/shared/components/ui/icon-mapping';
 
 export type TabType = 'sistema' | 'usuarios';
 

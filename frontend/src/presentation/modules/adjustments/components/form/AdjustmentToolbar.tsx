@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface AdjustmentToolbarProps {
   onAddLine: () => void;

@@ -2,7 +2,7 @@
 
 import type { Product } from '@/core/product/entities/product';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/presentation/shared/components/ui/icon-mapping';
 import { SaleItemRow } from './SaleItemRow';
 
 interface SaleLineInput {

@@ -7,7 +7,7 @@ import { useCacheProgress } from '@/presentation/shared/hooks/storage/useCachePr
 import { NetworkIcon, getStatusColor, getStatusLabel } from '../network-status/NetworkIcon';
 import { CacheProgressBar } from '../network-status/CacheProgressBar';
 import { SyncProgressBar } from '../network-status/SyncProgressBar';
-import { X } from 'lucide-react';
+import { X } from '@/presentation/shared/components/ui/icon-mapping';
 
 export function NetworkStatusWidget() {
   const [isExpanded, setIsExpanded] = useState(false);

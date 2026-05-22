@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CheckCircle2, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, Trash2, XCircle } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Return } from '@/core/return/entities/return';
 import { RETURN_STATUS_LABELS, RETURN_STATUS_COLORS, RETURN_TYPE_LABELS } from '@/core/return/entities/return';

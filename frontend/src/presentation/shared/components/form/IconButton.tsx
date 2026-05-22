@@ -2,12 +2,12 @@
 
 import { forwardRef, memo } from 'react';
 import Link from 'next/link';
-import { LucideIcon } from 'lucide-react';
+import { SvgIcon } from '@/presentation/shared/components/ui/icon-mapping';
 import { cn } from '@/presentation/shared/lib/utils';
 import { Tooltip } from '../ui/tooltip';
 
 interface IconButtonProps {
-  icon: LucideIcon;
+  icon: SvgIcon;
   title?: string;
   onClick?: () => void;
   href?: string;
@@ -34,7 +34,7 @@ const IconButtonContent = memo(function IconButtonContent({
   size = 'md',
   className,
 }: {
-  icon: LucideIcon;
+  icon: SvgIcon;
   variant?: 'ghost' | 'outline' | 'danger';
   size?: 'sm' | 'md';
   className?: string;

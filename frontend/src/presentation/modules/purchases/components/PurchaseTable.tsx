@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, PackageCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, PackageCheck, XCircle } from '@/presentation/shared/components/ui/icon-mapping';
 import { Purchase, getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/purchase/entities/purchase';
 import { formatCurrency, formatDateShort } from '@/presentation/shared/lib/utils';
 import { GenericTable, type Column } from '@/presentation/shared/components/data-display/GenericTable';

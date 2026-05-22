@@ -2,7 +2,7 @@
 
 import type { Customer } from '@/core/customer/entities/customer';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface CustomerActionsProps {
   id: string;

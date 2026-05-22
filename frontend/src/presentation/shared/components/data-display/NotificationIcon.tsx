@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell } from 'lucide-react';
+import { Bell } from '@/presentation/shared/components/ui/icon-mapping';
 import { getCategoryLabel, getPriorityColor } from '@/core/notification/entities/notification';
 import type { Notification } from '@/core/notification/entities/notification';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check } from '@/presentation/shared/components/ui/icon-mapping';
 import { cn } from '@/presentation/shared/lib/utils';
 import { TOAST_ICONS, TOAST_COLORS, type ToastVariant } from './ToastIcons';
 

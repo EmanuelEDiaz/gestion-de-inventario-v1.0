@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';

@@ -1,8 +1,8 @@
-import type { LucideIcon } from 'lucide-react';
+import type { SvgIcon } from '@/presentation/shared/components/ui/icon-mapping';
 import type { TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 
 export interface StatusActionDef<T> {
-  icon: LucideIcon;
+  icon: SvgIcon;
   label: string;
   onClick?: (row: T) => void;
 }

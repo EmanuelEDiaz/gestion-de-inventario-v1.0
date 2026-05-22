@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { Plus } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface ImageUploadButtonProps {
   onClick: () => void;

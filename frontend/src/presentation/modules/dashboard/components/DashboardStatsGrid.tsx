@@ -1,6 +1,6 @@
 'use client';
 
-import { Package, Warehouse, Users, Truck, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Package, Warehouse, Users, Truck, AlertTriangle, TrendingUp } from '@/presentation/shared/components/ui/icon-mapping';
 import type { DashboardStats } from '@/core/dashboard/entities/dashboard';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
 

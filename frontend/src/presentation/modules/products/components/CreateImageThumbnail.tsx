@@ -1,6 +1,6 @@
 'use client';
 
-import { Star, Trash2 } from 'lucide-react';
+import { Star, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface CreateImageThumbnailProps {
   src: string;

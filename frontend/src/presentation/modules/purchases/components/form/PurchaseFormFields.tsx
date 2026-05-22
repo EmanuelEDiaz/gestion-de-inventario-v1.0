@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { CreatePurchaseInput } from '@/core/purchase/entities/purchase';
 import { useReferenceData } from '@/presentation/shared/hooks/api/useReferenceData';
 import { Button } from '@/presentation/shared/components/ui/Button';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/presentation/shared/components/ui/icon-mapping';
 import { PurchaseSupplierSelector } from './PurchaseSupplierSelector';
 import { PurchaseItemRow, type PurchaseLineInput } from './PurchaseItemRow';
 import { PurchaseSummary } from './PurchaseSummary';

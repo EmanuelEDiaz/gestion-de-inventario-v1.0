@@ -22,7 +22,7 @@
 | **P2** — SW no recarga en dev | ✅ Completado | `f76dbbf` |
 | **P3** — Fix config contradictoria | ✅ Completado | e36f048 |
 | **P4** — Reducir polling + unificar SSE | ✅ Completado | `5c7da2b` |
-| **P5** — Estabilizar query keys | ⏳ Pendiente | — |
+| **P5** — Estabilizar query keys | ✅ Completado | `9de41ad` |
 | **P6** — Config backend liviana | ✅ Completado | a9a333b |
 | **P7** — Unificar iconos (@material-symbols-svg) | ⏳ Pendiente | — |
 | **P8** — Limpiar caches | ⏳ Pendiente | — |

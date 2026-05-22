@@ -1,6 +1,6 @@
 'use client';
 
-import { ShoppingCart, Trash2 } from 'lucide-react';
+import { ShoppingCart, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
 

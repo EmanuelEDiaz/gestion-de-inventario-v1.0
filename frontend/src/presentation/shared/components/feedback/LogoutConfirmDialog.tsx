@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface LogoutConfirmDialogProps {
   isOpen: boolean;

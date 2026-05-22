@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CheckCircle2, PackageCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, PackageCheck, XCircle } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Purchase, PurchaseStatus } from '@/core/purchase/entities/purchase';
 import { getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/purchase/entities/purchase';

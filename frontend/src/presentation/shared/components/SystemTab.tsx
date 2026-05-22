@@ -3,7 +3,7 @@
 import React from 'react';
 import { Notification } from '@/core/notification/entities/notification';
 import { NotificationItem } from './data-display/NotificationItem';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface SystemTabProps {
   notifications: Notification[];

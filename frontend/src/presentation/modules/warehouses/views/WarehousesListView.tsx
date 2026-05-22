@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { Pencil, Power } from 'lucide-react';
+import { Pencil, Power } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';

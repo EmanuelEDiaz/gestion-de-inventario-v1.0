@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Ban, Pencil } from 'lucide-react';
+import { Ban, Pencil } from '@/presentation/shared/components/ui/icon-mapping';
 import { useRoles } from '../hooks/useRoles';
 import { useRoleActions } from '../hooks/useRoleActions';
 import { RoleForm } from '../components/RoleForm';

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { PaymentMode } from '@/core/sale/entities/sale';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface FiarButtonProps {
   paymentMode: PaymentMode;

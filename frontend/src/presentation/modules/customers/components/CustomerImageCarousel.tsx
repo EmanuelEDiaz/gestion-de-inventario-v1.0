@@ -6,7 +6,7 @@ import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 import { toast } from '@/presentation/shared/components/ui/toast';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/presentation/shared/components/ui/icon-mapping';
 import { CustomerImageUpload } from './CustomerImageUpload';
 import { CustomerImageCard } from './CustomerImageCard';
 

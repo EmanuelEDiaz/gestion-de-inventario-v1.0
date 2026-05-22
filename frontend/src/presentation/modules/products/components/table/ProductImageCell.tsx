@@ -1,4 +1,4 @@
-import { Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Product } from '@/core/product/entities/product';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 

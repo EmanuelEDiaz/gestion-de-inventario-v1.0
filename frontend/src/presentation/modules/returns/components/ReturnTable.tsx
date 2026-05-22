@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Return } from '@/core/return/entities/return';
 import { RETURN_STATUS_LABELS, RETURN_STATUS_COLORS, RETURN_TYPE_LABELS } from '@/core/return/entities/return';
 import { formatDateShort, formatCurrency } from '@/presentation/shared/lib/utils';

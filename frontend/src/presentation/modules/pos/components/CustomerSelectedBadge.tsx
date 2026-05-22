@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface CustomerSelectedBadgeProps {
   name: string;

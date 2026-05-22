@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { ImagePlus } from 'lucide-react';
+import { ImagePlus } from '@/presentation/shared/components/ui/icon-mapping';
 
 const INPUT_ID = 'create-product-images';
 

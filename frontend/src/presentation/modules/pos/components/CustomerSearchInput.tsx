@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Search } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface CustomerSearchInputProps {
   value: string;
