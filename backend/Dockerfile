@@ -27,5 +27,5 @@ COPY --from=builder --chown=app:app /build/target/*.jar app.jar
 USER app
 EXPOSE 8080
 
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=50"
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

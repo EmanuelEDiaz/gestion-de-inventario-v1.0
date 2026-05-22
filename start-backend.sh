@@ -91,7 +91,7 @@ if test_port 8080; then
     pid_8080=$(lsof -ti :8080 2>/dev/null | head -1 || true)
     if [ -n "$pid_8080" ]; then
         write_warn "Puerto 8080 ocupado (PID $pid_8080). Liberando..."
-        kill -9 "$pid_8080" 2>/dev/null || true
+        kill "$pid_8080" 2>/dev/null || true
         sleep 2
     fi
 fi
@@ -117,4 +117,4 @@ echo
         -Dflyway.url=jdbc:postgresql://localhost:5432/inventory \
         -Dflyway.user=postgres \
         -Dflyway.password=postgres 2>&1 | grep -E "(repair|Repair|ERROR|WARN)" || true && \
-    mvn spring-boot:run -Dmaven.test.skip=true)
+    mvn spring-boot:run -Dmaven.test.skip=true -Dspring-boot.run.jvmArguments="-Xmx512m -Xms256m")

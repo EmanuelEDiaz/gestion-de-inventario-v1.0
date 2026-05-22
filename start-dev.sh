@@ -70,23 +70,9 @@ open_terminal() {
     chmod +x "$script_file"
     TERMINAL_SCRIPTS+=("$script_file")
 
-    if command -v konsole &>/dev/null; then
-        konsole --separate --noclose --title "$title" -e "$script_file" &
-        terminal_pid=$!
-    elif command -v kitty &>/dev/null; then
-        kitty --hold --title "$title" -e "$script_file" &
-        terminal_pid=$!
-    elif command -v gnome-terminal &>/dev/null; then
-        gnome-terminal --title="$title" -- "$script_file" &
-        terminal_pid=$!
-    elif command -v xfce4-terminal &>/dev/null; then
-        xfce4-terminal --title="$title" -e "$script_file" &
-        terminal_pid=$!
-    else
-        write_warn "Sin emulador GUI. '$title' ejecutandose en background (log: ${title// /_}.log)"
-        zsh "$script_file" >"$ROOT/${title// /_}.log" 2>&1 &
-        terminal_pid=$!
-    fi
+    write_warn "'$title' ejecutandose en background (log: ${title// /_}.log)"
+    zsh "$script_file" >"$ROOT/${title// /_}.log" 2>&1 &
+    terminal_pid=$!
 
     echo "$terminal_pid"
 }
@@ -172,7 +158,7 @@ for port in 8080 3000; do
         pid_port=$(lsof -ti :"$port" 2>/dev/null | head -1 || true)
         if [ -n "$pid_port" ]; then
             write_warn "Puerto $port ocupado (PID $pid_port). Liberando..."
-            kill -9 "$pid_port" 2>/dev/null || true
+            kill "$pid_port" 2>/dev/null || true
             sleep 2
         fi
     fi
@@ -184,7 +170,7 @@ backend_pid=$!
 write_ok "Backend iniciado (PID: $backend_pid)"
 
 write_step "Iniciando Frontend (Next.js :3000)..."
-FRONTEND_CMD="echo '=== FRONTEND (Next.js) ===' && pnpm approve-builds sharp unrs-resolver && pnpm dev"
+FRONTEND_CMD="echo '=== FRONTEND (Next.js) ===' && pnpm approve-builds sharp unrs-resolver && NODE_OPTIONS=\"--max-old-space-size=1024\" pnpm dev"
 open_terminal "FRONTEND - Next.js" "$FRONTEND_DIR" "$FRONTEND_CMD" "frontend" &
 frontend_pid=$!
 write_ok "Frontend iniciado (PID: $frontend_pid)"
@@ -222,7 +208,7 @@ echo
 cleanup() {
     echo
     echo -e "${YL}>> Cerrando ventanas...${NC}"
-    kill -9 "$backend_pid" "$frontend_pid" 2>/dev/null || true
+    kill "$backend_pid" "$frontend_pid" 2>/dev/null || true
     exit 0
 }
 trap cleanup INT TERM
