@@ -7,59 +7,104 @@ export type BackendStatus = 'connected' | 'disconnected' | 'checking';
 
 const LOCAL_HEALTH_URL = `${API_BASE_URL}/actuator/health`;
 
-const PING_INTERVAL_ONLINE = 15_000;
-const PING_INTERVAL_OFFLINE = 5_000;
-const PING_TIMEOUT = 4_000;
+const PING_INTERVAL_ONLINE = 60_000;
+const PING_INTERVAL_OFFLINE = 30_000;
+const PING_TIMEOUT = 2_000;
+
+const MAX_CONSECUTIVE_ERRORS = 3;
+const BACKOFF_MULTIPLIER = 4;
 
 export function useNetworkHealth() {
   const [backendStatus, setBackendStatus] = useState<BackendStatus>('checking');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
+  const errorsRef = useRef(0);
 
-  const checkHealth = useCallback(async (): Promise<boolean> => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+  const startPolling = useCallback((interval: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    try {
-      await fetch(LOCAL_HEALTH_URL, {
+      fetch(LOCAL_HEALTH_URL, {
         method: 'GET',
         cache: 'no-store',
         signal: AbortSignal.any([
           controller.signal,
           AbortSignal.timeout(PING_TIMEOUT),
         ]),
-      });
-      if (mountedRef.current) setBackendStatus('connected');
-      return true;
-    } catch {
-      if (mountedRef.current) setBackendStatus('disconnected');
-      return false;
-    }
+      })
+        .then(() => {
+          if (!mountedRef.current) return;
+          setBackendStatus('connected');
+          errorsRef.current = 0;
+        })
+        .catch(() => {
+          if (!mountedRef.current) return;
+          setBackendStatus('disconnected');
+          errorsRef.current += 1;
+        });
+    }, interval);
   }, []);
 
-  const startPolling = useCallback((interval: number) => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(checkHealth, interval);
-  }, [checkHealth]);
+  const scheduleNext = useCallback((wasOnline: boolean) => {
+    let base: number;
+    if (!wasOnline) {
+      base = PING_INTERVAL_OFFLINE;
+    } else {
+      base = PING_INTERVAL_ONLINE;
+    }
+
+    if (errorsRef.current >= MAX_CONSECUTIVE_ERRORS) {
+      base *= BACKOFF_MULTIPLIER;
+    }
+
+    startPolling(base);
+  }, [startPolling]);
 
   useEffect(() => {
     mountedRef.current = true;
 
-    checkHealth().then((ok) => {
-      startPolling(ok ? PING_INTERVAL_ONLINE : PING_INTERVAL_OFFLINE);
-    });
+    const doCheck = () => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      fetch(LOCAL_HEALTH_URL, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(PING_TIMEOUT),
+        ]),
+      })
+        .then(() => {
+          if (!mountedRef.current) return;
+          setBackendStatus('connected');
+          errorsRef.current = 0;
+        })
+        .catch(() => {
+          if (!mountedRef.current) return;
+          setBackendStatus('disconnected');
+          errorsRef.current += 1;
+        });
+    };
 
     const onOnline = () => {
-      checkHealth().then((ok) => {
-        startPolling(ok ? PING_INTERVAL_ONLINE : PING_INTERVAL_OFFLINE);
-      });
+      doCheck();
+      scheduleNext(true);
     };
+
     const onOffline = () => {
       setBackendStatus('disconnected');
-      startPolling(PING_INTERVAL_OFFLINE);
+      errorsRef.current += 1;
+      scheduleNext(false);
     };
+
+    doCheck();
+    scheduleNext(true);
 
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
@@ -71,9 +116,9 @@ export function useNetworkHealth() {
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
     };
-  }, [checkHealth, startPolling]);
+  }, [scheduleNext]);
 
-  return { backendStatus, checkHealth };
+  return { backendStatus, checkHealth: () => fetch(LOCAL_HEALTH_URL, { method: 'GET', cache: 'no-store', signal: AbortSignal.timeout(PING_TIMEOUT) }).then(() => true).catch(() => false) };
 }
 
 /** One-shot check (no hook, for login page pre-submit) */

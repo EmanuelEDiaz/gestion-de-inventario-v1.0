@@ -55,7 +55,8 @@ export function useNotificationList(
 
   const { queryKeyPrefix, fetcher, pageSize, sseFilter } = config;
   const typeKey = ['notifications', queryKeyPrefix] as const;
-  const infiniteKey = [...typeKey, 'infinite', filters];
+  const filtersSerialized = JSON.stringify(filters, Object.keys(filters).sort());
+  const infiniteKey = [...typeKey, 'infinite', filtersSerialized];
 
   const query = useInfiniteQuery({
     queryKey: infiniteKey,

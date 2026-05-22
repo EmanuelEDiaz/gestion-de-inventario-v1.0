@@ -289,7 +289,7 @@ export async function createNotification(
 
 /**
  * Server-Sent Events: Conectar para stream de notificaciones en tiempo real
- * GET /api/v1/notifications/sse
+ * GET /api/v1/notifications/stream
  */
 export function subscribeToNotifications(
   token?: string,
@@ -297,7 +297,7 @@ export function subscribeToNotifications(
   onError?: (error: Error) => void
 ): EventSource | null {
   try {
-    const url = new URL(`${window.location.origin}${BASE_URL}/sse`);
+    const url = new URL(`${window.location.origin}${BASE_URL}/stream`);
     if (token) {
       url.searchParams.set('token', token);
     }

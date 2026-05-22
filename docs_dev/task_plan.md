@@ -19,7 +19,7 @@
 | Fase | Estado | Commit |
 |------|--------|--------|
 | **P1** — Límites de memoria + fix kill -9 | ✅ Completado | `5951ac4` |
-| **P2** — SW no recarga en dev | ⏳ Pendiente | — |
+| **P2** — SW no recarga en dev | ✅ Completado | `f76dbbf` |
 | **P3** — Fix config contradictoria | ⏳ Pendiente | — |
 | **P4** — Reducir polling + unificar SSE | ⏳ Pendiente | — |
 | **P5** — Estabilizar query keys | ⏳ Pendiente | — |
