@@ -32,7 +32,6 @@ export function useNotificationStream(options: UseNotificationStreamOptions): vo
     if (!enableSSE || eventSourceRef.current) return;
 
     const unsubscribe = subscribeToNotifications(
-      undefined,
       (notification: INotification) => {
         if (sseFilterRef.current && !sseFilterRef.current(notification)) return;
 

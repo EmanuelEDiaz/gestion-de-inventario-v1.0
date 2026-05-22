@@ -1,12 +1,5 @@
- /**
- * Notifications API Client
- * 
- * Funciones para comunicarse con el backend WebFlux
- * GET /api/v1/notifications/* endpoints
- * PUT /api/v1/notifications/* endpoints
- */
-
-import {
+import { apiClient } from './client';
+import type {
   Notification,
   NotificationListResponse,
   NotificationPreferences,
@@ -14,301 +7,90 @@ import {
   CreateNotificationRequest,
   UpdateNotificationPreferencesRequest,
   UpdateNotificationScheduleRequest,
-  ApiError,
 } from '@/core/notification/entities/notification';
 
-const BASE_URL = '/api/v1/notifications';
+const BASE = '/api/v1/notifications';
 
-/**
- * Crea un ApiError con la estructura correcta del cliente
- */
-function createApiError(status: number, message: string): ApiError {
-  return {
-    type: 'about:blank',
-    title: 'API Error',
-    status,
-    detail: message,
-  };
-}
-
-/**
- * GET /api/v1/notifications/system
- * Obtener notificaciones del sistema (SYSTEM source)
- */
 export async function getSystemNotifications(
   page: number = 0,
-  size: number = 10,
-  token?: string
+  size: number = 10
 ): Promise<NotificationListResponse> {
-  const url = new URL(`${window.location.origin}${BASE_URL}/system`);
-  url.searchParams.set('page', page.toString());
-  url.searchParams.set('size', size.toString());
-
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
+  const { data } = await apiClient.get<NotificationListResponse>(`${BASE}/system`, {
+    params: { page, size },
   });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to fetch system notifications: ${response.statusText}`);
-  }
-
-  return response.json();
+  return data;
 }
 
-/**
- * GET /api/v1/notifications/users
- * Obtener notificaciones de otros usuarios (USER source)
- */
 export async function getUserNotifications(
   page: number = 0,
-  size: number = 10,
-  token?: string
+  size: number = 10
 ): Promise<NotificationListResponse> {
-  const url = new URL(`${window.location.origin}${BASE_URL}/users`);
-  url.searchParams.set('page', page.toString());
-  url.searchParams.set('size', size.toString());
-
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
+  const { data } = await apiClient.get<NotificationListResponse>(`${BASE}/users`, {
+    params: { page, size },
   });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to fetch user notifications: ${response.statusText}`);
-  }
-
-  return response.json();
+  return data;
 }
 
-/**
- * GET /api/v1/notifications/preferences
- * Obtener preferencias del usuario (con defaults si no existen)
- */
-export async function getNotificationPreferences(
-  token?: string
-): Promise<NotificationPreferences> {
-  const response = await fetch(`${BASE_URL}/preferences`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to fetch notification preferences: ${response.statusText}`);
-  }
-
-  return response.json() as Promise<NotificationPreferences>;
+export async function getNotificationPreferences(): Promise<NotificationPreferences> {
+  const { data } = await apiClient.get<NotificationPreferences>(`${BASE}/preferences`);
+  return data;
 }
 
-/**
- * PUT /api/v1/notifications/preferences
- * Actualizar preferencias del usuario (partial update)
- */
 export async function updateNotificationPreferences(
-  preferences: UpdateNotificationPreferencesRequest,
-  token?: string
+  preferences: UpdateNotificationPreferencesRequest
 ): Promise<NotificationPreferences> {
-  const response = await fetch(`${BASE_URL}/preferences`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(preferences),
-  });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to update notification preferences: ${response.statusText}`);
-  }
-
-  return response.json();
+  const { data } = await apiClient.put<NotificationPreferences>(`${BASE}/preferences`, preferences);
+  return data;
 }
 
-/**
- * GET /api/v1/notifications/schedules
- * Obtener horarios silenciosos del usuario (con defaults si no existen)
- */
-export async function getNotificationSchedule(
-  token?: string
-): Promise<NotificationSchedule> {
-  const response = await fetch(`${BASE_URL}/schedules`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to fetch notification schedule: ${response.statusText}`);
-  }
-
-  return response.json();
+export async function getNotificationSchedule(): Promise<NotificationSchedule> {
+  const { data } = await apiClient.get<NotificationSchedule>(`${BASE}/schedules`);
+  return data;
 }
 
-/**
- * PUT /api/v1/notifications/schedules
- * Actualizar horarios silenciosos del usuario (partial update)
- */
 export async function updateNotificationSchedule(
-  schedule: UpdateNotificationScheduleRequest,
-  token?: string
+  schedule: UpdateNotificationScheduleRequest
 ): Promise<NotificationSchedule> {
-  const response = await fetch(`${BASE_URL}/schedules`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(schedule),
-  });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to update notification schedule: ${response.statusText}`);
-  }
-
-  return response.json();
+  const { data } = await apiClient.put<NotificationSchedule>(`${BASE}/schedules`, schedule);
+  return data;
 }
 
-/**
- * POST /api/v1/notifications/{id}/read
- * Marcar notificación como leída
- */
-export async function markNotificationAsRead(
-  notificationId: string,
-  token?: string
-): Promise<void> {
-  const response = await fetch(`${BASE_URL}/${notificationId}/read`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to mark notification as read: ${response.statusText}`);
-  }
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  await apiClient.post(`${BASE}/${notificationId}/read`);
 }
 
-/**
- * POST /api/v1/notifications/read-all
- * Marcar todas las notificaciones como leídas
- */
-export async function markAllNotificationsAsRead(
-  token?: string
-): Promise<void> {
-  const response = await fetch(`${BASE_URL}/read-all`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to mark all notifications as read: ${response.statusText}`);
-  }
+export async function markAllNotificationsAsRead(): Promise<void> {
+  await apiClient.post(`${BASE}/read-all`);
 }
 
-/**
- * DELETE /api/v1/notifications/{id}
- * Eliminar notificación
- */
-export async function deleteNotification(
-  notificationId: string,
-  token?: string
-): Promise<void> {
-  const response = await fetch(`${BASE_URL}/${notificationId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to delete notification: ${response.statusText}`);
-  }
+export async function deleteNotification(notificationId: string): Promise<void> {
+  await apiClient.delete(`${BASE}/${notificationId}`);
 }
 
-/**
- * GET /api/v1/notifications/unread-count
- * Obtener conteo de notificaciones no leídas
- */
-export async function getUnreadNotificationCount(
-  token?: string
-): Promise<number> {
-  const response = await fetch(`${BASE_URL}/unread-count`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
-
-if (!response.ok) {
-    throw createApiError(response.status, `Failed to fetch unread count: ${response.statusText}`);
-  }
-
-  return response.json();
+export async function getUnreadNotificationCount(): Promise<number> {
+  const { data } = await apiClient.get<number>(`${BASE}/unread-count`);
+  return data;
 }
 
-/**
- * POST /api/v1/notifications
- * Crear nueva notificación (solo ADMIN/MANAGER)
- */
 export async function createNotification(
-  notification: CreateNotificationRequest,
-  token?: string
+  notification: CreateNotificationRequest
 ): Promise<Notification> {
-  const response = await fetch(BASE_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(notification),
-  });
-
-  if (!response.ok) {
-    throw createApiError(response.status, `Failed to create notification: ${response.statusText}`);
-  }
-
-  return response.json();
+  const { data } = await apiClient.post<Notification>(BASE, notification);
+  return data;
 }
 
-/**
- * Server-Sent Events: Conectar para stream de notificaciones en tiempo real
- * GET /api/v1/notifications/stream
- */
 export function subscribeToNotifications(
-  token?: string,
   onNotification?: (notification: Notification) => void,
   onError?: (error: Error) => void
 ): EventSource | null {
   try {
-    const url = new URL(`${window.location.origin}${BASE_URL}/stream`);
-    if (token) {
-      url.searchParams.set('token', token);
-    }
-
-    const eventSource = new EventSource(url.toString());
+    const eventSource = new EventSource(`${BASE}/stream`);
 
     eventSource.addEventListener('notification', (event: MessageEvent) => {
       try {
         const notification = JSON.parse(event.data) as Notification;
         onNotification?.(notification);
-      } catch (error) {
+      } catch {
         onError?.(new Error('Failed to parse notification event'));
       }
     });
@@ -318,23 +100,15 @@ export function subscribeToNotifications(
     });
 
     return eventSource;
-  } catch (error) {
+  } catch {
     onError?.(new Error('Failed to establish SSE connection'));
     return null;
   }
 }
 
-/**
- * Cerrar conexión SSE
- */
 export function unsubscribeFromNotifications(eventSource: EventSource | null): void {
-  if (eventSource) {
-    eventSource.close();
-  }
+  eventSource?.close();
 }
 
-/**
- * Aliases para compatibilidad con código existente
- */
 export const listSystemNotifications = getSystemNotifications;
 export const listUserNotifications = getUserNotifications;
