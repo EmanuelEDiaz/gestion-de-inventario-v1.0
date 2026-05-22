@@ -63,6 +63,7 @@ export {
   ArrowForward as ArrowRight,
   Block as Ban,
   Cancel as XCircle,
+  Check,
   CheckCircle,
   Checklist as PackageCheck,
   ChevronLeft,
