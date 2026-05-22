@@ -23,7 +23,7 @@
 | **P3** — Fix config contradictoria | ⏳ Pendiente | — |
 | **P4** — Reducir polling + unificar SSE | ✅ Completado | `5c7da2b` |
 | **P5** — Estabilizar query keys | ⏳ Pendiente | — |
-| **P6** — Config backend liviana | ⏳ Pendiente | — |
+| **P6** — Config backend liviana | ✅ Completado | a9a333b |
 | **P7** — Unificar iconos (@material-symbols-svg) | ⏳ Pendiente | — |
 | **P8** — Limpiar caches | ⏳ Pendiente | — |
 | **P9** — Arreglos Docker | ⏳ Pendiente | — |
