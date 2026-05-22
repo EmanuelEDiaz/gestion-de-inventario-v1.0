@@ -70,9 +70,23 @@ open_terminal() {
     chmod +x "$script_file"
     TERMINAL_SCRIPTS+=("$script_file")
 
-    write_warn "'$title' ejecutandose en background (log: ${title// /_}.log)"
-    zsh "$script_file" >"$ROOT/${title// /_}.log" 2>&1 &
-    terminal_pid=$!
+    if command -v konsole &>/dev/null; then
+        konsole --separate --noclose --title "$title" -e "$script_file" &
+        terminal_pid=$!
+    elif command -v kitty &>/dev/null; then
+        kitty --hold --title "$title" -e "$script_file" &
+        terminal_pid=$!
+    elif command -v gnome-terminal &>/dev/null; then
+        gnome-terminal --title="$title" -- "$script_file" &
+        terminal_pid=$!
+    elif command -v xfce4-terminal &>/dev/null; then
+        xfce4-terminal --title="$title" -e "$script_file" &
+        terminal_pid=$!
+    else
+        write_warn "Sin emulador GUI. '$title' ejecutandose en background (log: ${title// /_}.log)"
+        zsh "$script_file" >"$ROOT/${title// /_}.log" 2>&1 &
+        terminal_pid=$!
+    fi
 
     echo "$terminal_pid"
 }
