@@ -26,7 +26,7 @@
 | **P6** — Config backend liviana | ✅ Completado | a9a333b |
 | **P7** — Unificar iconos (@material-symbols-svg) | ✅ Completado | `0388fe7` |
 | **P8** — Limpiar caches | ✅ Completado | — |
-| **P9** — Arreglos Docker | ⏳ Pendiente | — |
+| **P9** — Arreglos Docker | ✅ Completado | — |
 
 ---
 
