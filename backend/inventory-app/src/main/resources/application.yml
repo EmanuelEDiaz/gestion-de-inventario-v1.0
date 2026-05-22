@@ -15,9 +15,12 @@ spring:
     username: postgres
     password: postgres
     pool:
-      initial-size: 5
-      max-size: 20
+      initial-size: 1
+      max-size: 5
       max-idle-time: 30m
+      max-lifetime: 30m
+      max-acquire-time: 5s
+      max-create-connection-time: 5s
 
   # Flyway (JDBC para migraciones) - Local PostgreSQL
   flyway:
@@ -58,7 +61,7 @@ app:
 # Logging
 logging:
   level:
-    com.inventory: DEBUG
+    com.inventory: INFO
     org.springframework.r2dbc: INFO
     io.r2dbc.postgresql: INFO
 
@@ -99,7 +102,7 @@ spring:
 
 logging:
   level:
-    com.inventory: DEBUG
+    com.inventory: INFO
 
 ---
 # Profile: test

@@ -21,7 +21,7 @@
 | **P1** — Límites de memoria + fix kill -9 | ✅ Completado | `5951ac4` |
 | **P2** — SW no recarga en dev | ✅ Completado | `f76dbbf` |
 | **P3** — Fix config contradictoria | ⏳ Pendiente | — |
-| **P4** — Reducir polling + unificar SSE | ⏳ Pendiente | — |
+| **P4** — Reducir polling + unificar SSE | ✅ Completado | `5c7da2b` |
 | **P5** — Estabilizar query keys | ⏳ Pendiente | — |
 | **P6** — Config backend liviana | ⏳ Pendiente | — |
 | **P7** — Unificar iconos (@material-symbols-svg) | ⏳ Pendiente | — |
