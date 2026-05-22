@@ -34,7 +34,7 @@ export function useInfiniteProducts(options: UseInfiniteProductsOptions = {}) {
   } = options;
 
   return useInfiniteQuery({
-    queryKey: ['products', 'infinite', options],
+    queryKey: ['products', 'infinite', search, categoryId, status, maxPages],
     queryFn: ({ pageParam }) => 
       productRepository.getAllWithCursor(pageParam, DEFAULT_PAGE_SIZE, {
         search,

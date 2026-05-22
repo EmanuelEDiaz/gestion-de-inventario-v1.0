@@ -5,12 +5,12 @@
 
 ## Reglas de Ejecución
 
-- **Una fase a la vez**: ejecutar, verificar, commitear, marcar completada, preguntar al usuario si sigue.
-- **Commit por fase**: cada fase completada → commit con mensaje descriptivo.
-- **Verificación obligatoria**: después de cada fase correr `pnpm build` + `mvn test` (si aplica) antes de commitear.
-- **Máx 3 sub-agentes por tarea** para acelerar sin saturar.
-- **Progreso**: marcar fase como ✅ en la tabla de abajo al completar.
-- **Pausa post-fase**: al terminar una fase, preguntar al usuario si continuar.
+- **Una fase a la vez**: ejecutar → **verificar que funciona** → commitear → marcar ✅ en tabla → **preguntar al usuario si continuar**.
+- **Verificación obligatoria por fase**: antes del commit, correr `pnpm build --webpack` (frontend) + `mvn test -q` (backend) si la fase toca backend/frontend respectivamente.
+- **Commit por fase**: cada fase completada y verificada → commit con mensaje descriptivo siguiendo el formato de commits anteriores.
+- **Máx 3 sub-agentes en paralelo por tarea** para acelerar sin saturar recursos.
+- **Tabla de progreso**: marcar fase como ✅ al completar; actualizar hash de commit en la columna `Commit`.
+- **Pausa post-fase**: al terminar cada fase, preguntar al usuario "¿Continuar con la siguiente fase?" antes de proceder.
 
 ---
 
@@ -20,7 +20,7 @@
 |------|--------|--------|
 | **P1** — Límites de memoria + fix kill -9 | ✅ Completado | `5951ac4` |
 | **P2** — SW no recarga en dev | ✅ Completado | `f76dbbf` |
-| **P3** — Fix config contradictoria | ⏳ Pendiente | — |
+| **P3** — Fix config contradictoria | ✅ Completado | e36f048 |
 | **P4** — Reducir polling + unificar SSE | ✅ Completado | `5c7da2b` |
 | **P5** — Estabilizar query keys | ⏳ Pendiente | — |
 | **P6** — Config backend liviana | ✅ Completado | a9a333b |
