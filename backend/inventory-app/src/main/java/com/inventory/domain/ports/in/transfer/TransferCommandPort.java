@@ -21,6 +21,7 @@ public interface TransferCommandPort {
     Mono<Transfer> complete(UUID id, LocalDate receivedDate);
     Mono<Transfer> cancel(UUID id);
     Mono<Void> delete(UUID id);
+    Mono<Void> deleteAll(List<UUID> ids);
 
     record CreateTransferCommand(
         UUID fromWarehouseId,

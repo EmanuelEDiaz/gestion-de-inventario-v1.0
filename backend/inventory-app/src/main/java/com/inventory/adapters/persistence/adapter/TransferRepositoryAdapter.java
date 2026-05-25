@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -100,6 +101,15 @@ public class TransferRepositoryAdapter implements TransferRepository {
     public Mono<Void> deleteById(UUID id) {
         return lineRepo.deleteByTransferId(id)
                 .then(transferRepo.deleteById(id));
+    }
+
+    @Override
+    public Mono<Void> deleteAllById(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+                .flatMap(id -> lineRepo.deleteByTransferId(id)
+                        .then(transferRepo.deleteById(id)))
+                .then();
     }
 
     @Override

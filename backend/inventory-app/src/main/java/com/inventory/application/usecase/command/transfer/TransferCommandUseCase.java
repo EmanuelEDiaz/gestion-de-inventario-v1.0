@@ -154,6 +154,21 @@ public class TransferCommandUseCase implements TransferCommandPort {
                 });
     }
 
+    @Override
+    @Transactional
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+                .flatMap(id -> findById(id)
+                        .flatMap(transfer -> {
+                            if (!transfer.canDelete()) {
+                                return Mono.error(new BadRequestException("Cannot delete: " + transfer.getStatus()));
+                            }
+                            return Mono.just(id);
+                        }))
+                .then(transferRepository.deleteAllById(ids));
+    }
+
     // Métodos auxiliares (clean-code: máx 20 líneas, single responsibility)
 
     private List<TransferLine> buildLines(List<CreateTransferCommand.LineItem> items) {

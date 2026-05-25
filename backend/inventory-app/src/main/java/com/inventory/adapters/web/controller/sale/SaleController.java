@@ -116,6 +116,12 @@ public class SaleController {
             .map(saleMapper::toDto);
     }
 
+    @DeleteMapping("/batch")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
+        return saleCommandPort.deleteAll(ids);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> delete(@PathVariable UUID id) {

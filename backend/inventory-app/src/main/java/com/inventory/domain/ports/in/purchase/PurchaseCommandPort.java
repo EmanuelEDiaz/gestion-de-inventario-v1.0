@@ -44,6 +44,8 @@ public interface PurchaseCommandPort {
      */
     Mono<Void> delete(UUID purchaseId);
 
+    Mono<Void> deleteAll(List<UUID> ids);
+
     record CreatePurchaseCommand(
         UUID warehouseId,
         UUID supplierId,

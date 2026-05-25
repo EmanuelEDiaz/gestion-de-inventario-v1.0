@@ -6,6 +6,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,6 +24,7 @@ public interface TransferRepository {
     Flux<Transfer> findByTransferDateBetween(LocalDate from, LocalDate to);
     Mono<Boolean> existsByTransferNumber(String transferNumber);
     Mono<Void> deleteById(UUID id);
+    Mono<Void> deleteAllById(List<UUID> ids);
     Flux<TransferLine> findLinesByTransferId(UUID transferId);
     Flux<TransferLine> saveLines(UUID transferId, Iterable<TransferLine> lines);
     Mono<Void> deleteLinesByTransferId(UUID transferId);

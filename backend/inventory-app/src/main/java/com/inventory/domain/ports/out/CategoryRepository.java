@@ -4,6 +4,7 @@ import com.inventory.domain.model.category.Category;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -30,6 +31,8 @@ public interface CategoryRepository {
     Mono<Boolean> existsByNameAndParentId(String name, UUID parentId);
     
     Mono<Void> deleteById(UUID id);
+    
+    Mono<Void> deleteAllById(List<UUID> ids);
     
     Mono<Long> countProducts(UUID categoryId);
 }

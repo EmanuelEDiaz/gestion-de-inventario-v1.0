@@ -6,6 +6,7 @@ import com.inventory.domain.ports.out.SupplierRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -66,6 +67,12 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
     @Override
     public Mono<Void> delete(UUID id) {
         return supplierRepository.deleteById(id);
+    }
+    
+    @Override
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return supplierRepository.deleteAllById(ids);
     }
     
     @Override

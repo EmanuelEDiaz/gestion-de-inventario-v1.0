@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -79,6 +80,20 @@ public class ReturnCommandUseCase implements ReturnCommandPort {
                     return returnRepository.deleteLinesByReturnId(returnId)
                             .then(returnRepository.deleteById(returnId));
                 });
+    }
+
+    @Override
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+                .flatMap(id -> returnRepository.findById(id)
+                        .flatMap(ret -> {
+                            if (!ret.canDelete()) {
+                                return Mono.error(new IllegalStateException("Cannot delete confirmed return"));
+                            }
+                            return Mono.just(id);
+                        }))
+                .then(returnRepository.deleteAllById(ids));
     }
 
     private Return buildReturn(String number, CreateReturnCommand cmd) {

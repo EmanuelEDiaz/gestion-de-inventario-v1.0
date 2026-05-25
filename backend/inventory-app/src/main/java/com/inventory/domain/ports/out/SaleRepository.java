@@ -5,6 +5,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 public interface SaleRepository {
@@ -17,5 +18,6 @@ public interface SaleRepository {
     Flux<Sale> findByDateRange(LocalDate from, LocalDate to);
     Mono<Sale> save(Sale sale);
     Mono<Void> deleteById(UUID id);
+    Mono<Void> deleteAllById(List<UUID> ids);
     Mono<String> generateSaleNumber();
 }

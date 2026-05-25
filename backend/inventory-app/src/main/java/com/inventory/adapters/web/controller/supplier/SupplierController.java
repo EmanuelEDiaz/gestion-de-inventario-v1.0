@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -103,6 +104,13 @@ public class SupplierController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public Mono<SupplierDto> deactivate(@PathVariable UUID id) {
         return commandPort.deactivate(id).map(mapper::toDto);
+    }
+
+    @DeleteMapping("/batch")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
+        return commandPort.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")

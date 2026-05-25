@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -87,7 +88,15 @@ public class AdjustmentRepositoryAdapter implements AdjustmentRepository {
 
     @Override
     public Mono<Void> deleteById(UUID id) {
-        return adjustmentRepo.deleteById(id);
+        return deleteLinesByAdjustmentId(id).then(adjustmentRepo.deleteById(id));
+    }
+
+    @Override
+    public Mono<Void> deleteAllById(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+                .flatMap(id -> deleteLinesByAdjustmentId(id).then(adjustmentRepo.deleteById(id)))
+                .then();
     }
 
     @Override

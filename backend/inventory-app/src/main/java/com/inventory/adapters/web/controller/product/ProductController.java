@@ -175,6 +175,11 @@ public class ProductController {
             .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/batch")
+    public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
+        return productCommand.deleteAll(ids);
+    }
+
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Void>> delete(@PathVariable UUID id) {
         return productCommand.delete(id)

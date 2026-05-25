@@ -189,4 +189,21 @@ public class SaleCommandUseCase implements SaleCommandPort {
                 return saleRepository.deleteById(saleId);
             });
     }
+
+    @Override
+    @Transactional
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+            .flatMap(id -> saleRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Sale not found")))
+                .flatMap(sale -> {
+                    if (!sale.canDelete()) {
+                        return Mono.error(new BadRequestException(
+                            "Cannot delete sale with status: " + sale.status()));
+                    }
+                    return Mono.just(id);
+                }))
+            .then(saleRepository.deleteAllById(ids));
+    }
 }

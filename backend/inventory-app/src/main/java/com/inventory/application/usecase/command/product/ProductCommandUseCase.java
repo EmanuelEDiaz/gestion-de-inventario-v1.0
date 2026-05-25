@@ -8,9 +8,11 @@ import com.inventory.domain.ports.in.product.ProductCommandPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -104,6 +106,17 @@ public class ProductCommandUseCase implements ProductCommandPort {
             .flatMap(exists -> exists 
                 ? productRepository.deleteById(id)
                 : Mono.error(new NotFoundException("Producto", id.toString())));
+    }
+
+    @Override
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+            .flatMap(id -> productRepository.existsById(id)
+                .flatMap(exists -> exists
+                    ? Mono.just(id)
+                    : Mono.error(new NotFoundException("Producto", id.toString()))))
+            .then(productRepository.deleteAllById(ids));
     }
 
     private Mono<Void> validateUniqueConstraints(String sku, String barcode, UUID excludeId) {

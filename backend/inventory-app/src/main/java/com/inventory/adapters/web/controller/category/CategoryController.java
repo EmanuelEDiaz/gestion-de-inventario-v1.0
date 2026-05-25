@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -93,6 +94,11 @@ public class CategoryController {
         return categoryCommand.update(id, command)
             .map(updated -> ResponseEntity.ok(mapper.toResponse(updated)))
             .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/batch")
+    public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
+        return categoryCommand.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")

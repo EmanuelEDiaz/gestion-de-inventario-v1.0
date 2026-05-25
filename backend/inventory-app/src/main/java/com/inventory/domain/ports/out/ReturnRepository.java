@@ -6,6 +6,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -21,6 +22,7 @@ public interface ReturnRepository {
     Flux<Return> findByStatus(Return.ReturnStatus status);
     Flux<Return> findByReturnDateBetween(LocalDate from, LocalDate to);
     Mono<Void> deleteById(UUID id);
+    Mono<Void> deleteAllById(List<UUID> ids);
     Mono<String> generateReturnNumber(Return.ReturnType type);
 
     // Líneas

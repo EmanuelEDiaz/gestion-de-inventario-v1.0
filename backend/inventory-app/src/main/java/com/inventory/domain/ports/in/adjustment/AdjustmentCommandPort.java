@@ -19,6 +19,7 @@ public interface AdjustmentCommandPort {
     Mono<Adjustment> confirm(UUID adjustmentId);
     Mono<Adjustment> cancel(UUID adjustmentId);
     Mono<Void> delete(UUID adjustmentId);
+    Mono<Void> deleteAll(List<UUID> ids);
 
     record CreateAdjustmentCommand(
         UUID warehouseId,

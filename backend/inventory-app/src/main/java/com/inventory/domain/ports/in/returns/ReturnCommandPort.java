@@ -17,6 +17,7 @@ public interface ReturnCommandPort {
     Mono<Return> confirm(UUID returnId);
     Mono<Return> cancel(UUID returnId);
     Mono<Void> delete(UUID returnId);
+    Mono<Void> deleteAll(List<UUID> ids);
 
     record CreateReturnCommand(
         Return.ReturnType type,

@@ -3,6 +3,7 @@ package com.inventory.domain.ports.in.supplier;
 import com.inventory.domain.model.supplier.Supplier;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -12,6 +13,7 @@ public interface SupplierCommandPort {
     Mono<Supplier> create(CreateCommand command);
     Mono<Supplier> update(UUID id, UpdateCommand command);
     Mono<Void> delete(UUID id);
+    Mono<Void> deleteAll(List<UUID> ids);
     Mono<Supplier> activate(UUID id);
     Mono<Supplier> deactivate(UUID id);
 

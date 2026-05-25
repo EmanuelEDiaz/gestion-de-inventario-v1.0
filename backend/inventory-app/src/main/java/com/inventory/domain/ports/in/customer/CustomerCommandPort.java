@@ -3,6 +3,7 @@ package com.inventory.domain.ports.in.customer;
 import com.inventory.domain.model.customer.Customer;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -12,6 +13,7 @@ public interface CustomerCommandPort {
     Mono<Customer> create(CreateCommand command);
     Mono<Customer> update(UUID id, UpdateCommand command);
     Mono<Void> delete(UUID id);
+    Mono<Void> deleteAll(List<UUID> ids);
     Mono<Customer> activate(UUID id);
     Mono<Customer> deactivate(UUID id);
 

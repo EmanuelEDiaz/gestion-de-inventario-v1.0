@@ -5,6 +5,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -29,6 +30,8 @@ public interface PurchaseRepository {
     Mono<Purchase> save(Purchase purchase);
 
     Mono<Void> delete(UUID id);
+
+    Mono<Void> deleteAllById(List<UUID> ids);
 
     Mono<Long> count();
 

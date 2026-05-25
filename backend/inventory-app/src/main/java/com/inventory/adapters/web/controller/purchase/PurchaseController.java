@@ -14,6 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -100,6 +101,12 @@ public class PurchaseController {
     @PostMapping("/{id}/cancel")
     public Mono<PurchaseDto> cancel(@PathVariable UUID id) {
         return commandPort.cancel(id).map(mapper::toDto);
+    }
+
+    @DeleteMapping("/batch")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
+        return commandPort.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")

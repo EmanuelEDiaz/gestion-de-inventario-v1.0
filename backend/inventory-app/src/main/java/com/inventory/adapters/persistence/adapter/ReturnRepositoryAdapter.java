@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -81,7 +82,15 @@ public class ReturnRepositoryAdapter implements ReturnRepository {
 
     @Override
     public Mono<Void> deleteById(UUID id) {
-        return returnRepo.deleteById(id);
+        return deleteLinesByReturnId(id).then(returnRepo.deleteById(id));
+    }
+
+    @Override
+    public Mono<Void> deleteAllById(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+                .flatMap(id -> deleteLinesByReturnId(id).then(returnRepo.deleteById(id)))
+                .then();
     }
 
     @Override

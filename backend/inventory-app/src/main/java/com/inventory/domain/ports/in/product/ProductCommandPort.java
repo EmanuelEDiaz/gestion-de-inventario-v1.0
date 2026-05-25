@@ -4,6 +4,7 @@ import com.inventory.domain.model.product.Product;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -36,6 +37,8 @@ public interface ProductCommandPort {
      * Elimina permanentemente un producto.
      */
     Mono<Void> delete(UUID id);
+
+    Mono<Void> deleteAll(List<UUID> ids);
 
     // ===== Command Records =====
 

@@ -186,4 +186,20 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                     return purchaseRepository.delete(purchaseId);
                 });
     }
+
+    @Override
+    @Transactional
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+                .flatMap(id -> purchaseRepository.findById(id)
+                        .switchIfEmpty(Mono.error(new NotFoundException("Purchase not found: " + id)))
+                        .flatMap(purchase -> {
+                            if (purchase.getStatus() != Purchase.PurchaseStatus.DRAFT) {
+                                return Mono.error(new BadRequestException("Can only delete purchases in DRAFT status"));
+                            }
+                            return Mono.just(id);
+                        }))
+                .then(purchaseRepository.deleteAllById(ids));
+    }
 }

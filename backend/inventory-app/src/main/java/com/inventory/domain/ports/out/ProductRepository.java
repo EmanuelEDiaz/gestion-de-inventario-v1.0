@@ -5,6 +5,7 @@ import com.inventory.domain.ports.in.product.ProductFilter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -71,4 +72,6 @@ public interface ProductRepository {
     Mono<Boolean> existsById(UUID id);
     
     Mono<Void> deleteById(UUID id);
+
+    Mono<Void> deleteAllById(List<UUID> ids);
 }

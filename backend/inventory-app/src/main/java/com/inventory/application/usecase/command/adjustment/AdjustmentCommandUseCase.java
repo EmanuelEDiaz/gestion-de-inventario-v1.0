@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -83,6 +84,20 @@ public class AdjustmentCommandUseCase implements AdjustmentCommandPort {
                     return adjustmentRepository.deleteLinesByAdjustmentId(adjustmentId)
                             .then(adjustmentRepository.deleteById(adjustmentId));
                 });
+    }
+
+    @Override
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+                .flatMap(id -> adjustmentRepository.findById(id)
+                        .flatMap(adjustment -> {
+                            if (!adjustment.canDelete()) {
+                                return Mono.error(new IllegalStateException("Cannot delete confirmed adjustment"));
+                            }
+                            return Mono.just(id);
+                        }))
+                .then(adjustmentRepository.deleteAllById(ids));
     }
 
     private Adjustment buildAdjustment(String number, CreateAdjustmentCommand cmd) {

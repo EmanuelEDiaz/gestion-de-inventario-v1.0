@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -94,6 +95,15 @@ public class PurchaseRepositoryAdapter implements PurchaseRepository {
     public Mono<Void> delete(UUID id) {
         return lineRepo.deleteByPurchaseId(id)
                 .then(purchaseRepo.deleteById(id));
+    }
+
+    @Override
+    public Mono<Void> deleteAllById(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+                .flatMap(id -> lineRepo.deleteByPurchaseId(id))
+                .thenMany(purchaseRepo.deleteAllById(ids))
+                .then();
     }
 
     @Override

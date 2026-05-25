@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -87,6 +88,12 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
     @Override
     public Mono<Void> deleteById(UUID id) {
         return r2dbcRepository.deleteById(id);
+    }
+
+    @Override
+    public Mono<Void> deleteAllById(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return r2dbcRepository.deleteAllById(ids);
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.inventory.domain.ports.out.CustomerRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -64,6 +65,12 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
     @Override
     public Mono<Void> delete(UUID id) {
         return customerRepository.deleteById(id);
+    }
+    
+    @Override
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return customerRepository.deleteAllById(ids);
     }
     
     @Override

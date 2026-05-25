@@ -4,6 +4,7 @@ import com.inventory.domain.model.supplier.Supplier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -30,4 +31,6 @@ public interface SupplierRepository {
     Mono<Boolean> existsByName(String name);
     
     Mono<Void> deleteById(UUID id);
+    
+    Mono<Void> deleteAllById(List<UUID> ids);
 }

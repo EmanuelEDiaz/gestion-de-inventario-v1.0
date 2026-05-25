@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -97,6 +98,15 @@ public class SaleRepositoryAdapter implements SaleRepository {
     public Mono<Void> deleteById(UUID id) {
         return lineRepository.deleteBySaleId(id)
             .then(saleRepository.deleteById(id));
+    }
+
+    @Override
+    public Mono<Void> deleteAllById(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+            .flatMap(id -> lineRepository.deleteBySaleId(id))
+            .thenMany(saleRepository.deleteAllById(ids))
+            .then();
     }
 
     @Override

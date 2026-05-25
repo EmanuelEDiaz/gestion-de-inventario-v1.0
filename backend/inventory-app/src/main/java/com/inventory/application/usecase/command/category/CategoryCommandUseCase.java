@@ -7,8 +7,10 @@ import com.inventory.domain.model.category.Category;
 import com.inventory.domain.ports.in.category.CategoryCommandPort;
 import com.inventory.domain.ports.out.CategoryRepository;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -83,6 +85,19 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
                 .flatMap(count -> count > 0
                     ? Mono.error(new ConflictException("No se puede eliminar una categoría con productos asociados"))
                     : categoryRepository.deleteById(id)));
+    }
+
+    @Override
+    public Mono<Void> deleteAll(List<UUID> ids) {
+        if (ids.isEmpty()) return Mono.empty();
+        return Flux.fromIterable(ids)
+            .flatMap(id -> categoryRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Categoría", id.toString())))
+                .flatMap(category -> categoryRepository.countProducts(id)
+                    .flatMap(count -> count > 0
+                        ? Mono.error(new ConflictException("No se puede eliminar una categoría con productos asociados: " + id))
+                        : Mono.just(id))))
+            .then(categoryRepository.deleteAllById(ids));
     }
 
     private Mono<Void> validateUniqueName(String name, UUID parentId) {
