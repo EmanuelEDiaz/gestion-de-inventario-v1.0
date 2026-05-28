@@ -85,8 +85,8 @@
 | **B0** — Auditoría y clasificación de entidades | ✅ Hecho | — |
 | **B1** — Patrón canónico backend (definición) | ✅ Hecho | `b086313` |
 | **B2** — Aplicar patrón backend (9 entidades) | ✅ Hecho | `b086313` |
-| **F0** — GenericTable: bulkActions + responsive | ✅ Hecho | (pendiente) |
-| **F1** — Patrón canónico frontend (definición) | ⏳ Pendiente | — |
+| **F0** — GenericTable: bulkActions + responsive | ✅ Hecho | `2fb7125` |
+| **F1** — Patrón canónico frontend (definición) | ✅ Hecho | `2fb7125` |
 | **F2** — Aplicar patrón frontend (9 entidades + 3 soft) | ⏳ Pendiente | — |
 | **R1** — Verificación responsive mobile | ⏳ Pendiente | — |
 
@@ -285,32 +285,71 @@ Desktop (>=640px ): flex-row, botones w-auto, inline
 
 ## Fase F1 — Patrón Canónico Frontend
 
+> Verificado contra código real. Patrón correcto. Aplicado a 9 entidades + 3 soft-delete en F2.
+
 ### 1. Repository Interface (`core/*/ports/I*Repository.ts`)
 
-Agregar:
+Agregar en las 9 interfaces (Products, Categories, Customers, Suppliers, Purchases, Sales, Transfers, Returns, Adjustments):
 ```typescript
 deleteAll(ids: string[]): Promise<void>;
 ```
+Soft-delete (Users, Roles, Warehouses) → **NO** agregar `deleteAll` (no tienen endpoint batch DELETE).
 
 ### 2. Repository Impl (`infrastructure/repositories/*/*Repository.ts`)
 
+Agregar en los 9 repos:
 ```typescript
 async deleteAll(ids: string[]): Promise<void> {
   await apiClient.delete(`${this.basePath}/batch`, { data: ids });
 }
 ```
+Nota: `axios.delete(url, { data: ids })` envía body en DELETE (válido con Axios, el backend Spring lee `@RequestBody List<UUID>`).
 
 ### 3. View — Reemplazar `Promise.all`
 
-**Antes:**
+Buscar el patrón `Promise.all(ids.map(...))` en las vistas y hooks:
+
+**Antes** (actual en Customers, Suppliers, Categories):
 ```typescript
 await Promise.all(ids.map((id) => repository.delete(id)));
 ```
 
-**Después:**
+**Después**:
 ```typescript
 await repository.deleteAll(ids);
 ```
+
+### 4. Archivos específicos a modificar en F2
+
+| Capa | Ruta | Acción |
+|------|------|--------|
+| Interface | `core/product/ports/IProductRepository.ts` | +`deleteAll` |
+| Interface | `core/category/ports/ICategoryRepository.ts` | +`deleteAll` |
+| Interface | `core/customer/ports/ICustomerRepository.ts` | +`deleteAll` |
+| Interface | `core/supplier/ports/ISupplierRepository.ts` | +`deleteAll` |
+| Interface | `core/purchase/ports/IPurchaseRepository.ts` | +`deleteAll` (si existe) |
+| Interface | `core/sale/ports/ISaleRepository.ts` | +`deleteAll` (si existe) |
+| Interface | `core/transfer/ports/ITransferRepository.ts` | +`deleteAll` (si existe) |
+| Interface | `core/return/ports/IReturnRepository.ts` | +`deleteAll` (si existe) |
+| Interface | `core/adjustment/ports/IAdjustmentRepository.ts` | +`deleteAll` (si existe) |
+| Impl | `infrastructure/repositories/product/ProductRepository.ts` | +`deleteAll` |
+| Impl | `infrastructure/repositories/category/CategoryRepository.ts` | +`deleteAll` |
+| Impl | `infrastructure/repositories/customer/CustomerRepository.ts` | +`deleteAll` |
+| Impl | `infrastructure/repositories/supplier/SupplierRepository.ts` | +`deleteAll` |
+| Impl | `infrastructure/repositories/purchase/PurchaseRepository.ts` | +`deleteAll` |
+| Impl | `infrastructure/repositories/sale/SaleRepository.ts` | +`deleteAll` |
+| Impl | `infrastructure/repositories/transfer/TransferRepository.ts` | +`deleteAll` |
+| Impl | `infrastructure/repositories/return/ReturnRepository.ts` | +`deleteAll` |
+| Impl | `infrastructure/repositories/adjustment/AdjustmentRepository.ts` | +`deleteAll` |
+| View/Hook | `modules/categories/views/CategoriesView.tsx` + `useCategoriesController.ts` | Swap → `deleteAll` |
+| View | `modules/customers/views/CustomersListView.tsx` | Swap → `deleteAll` |
+| View | `modules/suppliers/views/SuppliersListView.tsx` | Swap → `deleteAll` |
+| View | Product view (donde esté `ProductTable.tsx`) | +`selectable` + `onDeleteSelected` |
+| View | `modules/purchases/views/PurchasesView.tsx` (o similar) | +`selectable` |
+| View | `modules/sales/views/SalesView.tsx` (o similar) | +`selectable` |
+| View | Transfer view | +`selectable` |
+| View | Return view | +`selectable` |
+| View | Adjustment view | +`selectable` |
 
 ---
 
