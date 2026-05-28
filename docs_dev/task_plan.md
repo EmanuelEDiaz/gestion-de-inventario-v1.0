@@ -87,7 +87,7 @@
 | **B2** — Aplicar patrón backend (9 entidades) | ✅ Hecho | `b086313` |
 | **F0** — GenericTable: bulkActions + responsive | ✅ Hecho | `2fb7125` |
 | **F1** — Patrón canónico frontend (definición) | ✅ Hecho | `2fb7125` |
-| **F2** — Aplicar patrón frontend (9 entidades + 3 soft) | ⏳ Pendiente | — |
+| **F2** — Aplicar patrón frontend (9 entidades) | ✅ Hecho | (pendiente) |
 | **R1** — Verificación responsive mobile | ⏳ Pendiente | — |
 
 ---

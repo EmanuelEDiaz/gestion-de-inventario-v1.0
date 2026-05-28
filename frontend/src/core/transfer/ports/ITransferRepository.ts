@@ -18,4 +18,5 @@ export interface ITransferRepository {
   complete(id: string, receivedDate?: string): Promise<Transfer>;
   cancel(id: string): Promise<Transfer>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
 }

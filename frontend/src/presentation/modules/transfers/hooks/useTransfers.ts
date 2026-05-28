@@ -83,8 +83,13 @@ export function useTransfers() {
     setTransfers(prev => prev.filter(t => t.id !== id));
   };
 
+  const deleteMany = async (ids: string[]) => {
+    await repo.deleteAll(ids);
+    setTransfers(prev => prev.filter(t => !ids.includes(t.id)));
+  };
+
   return { 
     transfers, loading, error, 
-    refresh: load, create, confirm, ship, complete, cancel, remove 
+    refresh: load, create, confirm, ship, complete, cancel, remove, deleteMany 
   };
 }

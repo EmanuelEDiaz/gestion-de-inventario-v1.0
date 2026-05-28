@@ -12,7 +12,7 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 
 export function TransfersListView() {
-  const { transfers, loading, error, create, confirm, ship, complete, cancel, remove } = useTransfers();
+  const { transfers, loading, error, create, confirm, ship, complete, cancel, remove, deleteMany } = useTransfers();
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const { columns, actions } = useTransferColumns({ onConfirm: confirm, onShip: ship, onComplete: complete, onCancel: cancel, onDelete: remove });
@@ -36,7 +36,9 @@ export function TransfersListView() {
           isSubmitting={isCreating} onCancel={() => setShowForm(false)}
         />
       )}
-      <GenericTable data={transfers} columns={columns} actions={actions} emptyMessage="No hay transferencias registradas" />
+      <GenericTable data={transfers} columns={columns} actions={actions}
+        selectable onDeleteSelected={deleteMany}
+        emptyMessage="No hay transferencias registradas" />
     </div>
   );
 }

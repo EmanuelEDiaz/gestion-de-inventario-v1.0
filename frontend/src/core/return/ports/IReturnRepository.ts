@@ -14,4 +14,5 @@ export interface IReturnRepository {
   confirm(id: string): Promise<Return>;
   cancel(id: string): Promise<Return>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
 }

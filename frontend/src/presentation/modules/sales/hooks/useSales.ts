@@ -106,7 +106,16 @@ export function useSales(initialFilter?: SaleFilter) {
     }
   }, []);
 
+  const deleteMany = useCallback(async (ids: string[]) => {
+    try {
+      await saleRepository.deleteAll(ids);
+      setState(p => ({ ...p, sales: p.sales.filter(x => !ids.includes(x.id)) }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error eliminando ventas');
+    }
+  }, []);
+
   useEffect(() => { fetchAll(initialFilter); }, []);
 
-  return { ...state, fetchAll, create, confirm, deliver, cancel, deleteSale, clearError: () => setState(p => ({ ...p, error: null })) };
+  return { ...state, fetchAll, create, confirm, deliver, cancel, deleteSale, deleteMany, clearError: () => setState(p => ({ ...p, error: null })) };
 }

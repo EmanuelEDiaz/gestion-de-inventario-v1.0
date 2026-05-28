@@ -12,7 +12,7 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 
 export function AdjustmentsListView() {
-  const { adjustments, loading, error, create, confirm, cancel, remove } = useAdjustments();
+  const { adjustments, loading, error, create, confirm, cancel, remove, deleteMany } = useAdjustments();
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const { columns, actions } = useAdjustmentColumns({ onConfirm: confirm, onCancel: cancel, onDelete: remove });
@@ -36,7 +36,9 @@ export function AdjustmentsListView() {
           isSubmitting={isCreating} onCancel={() => setShowForm(false)}
         />
       )}
-      <GenericTable data={adjustments} columns={columns} actions={actions} emptyMessage="No hay ajustes registrados" />
+      <GenericTable data={adjustments} columns={columns} actions={actions}
+        selectable onDeleteSelected={deleteMany}
+        emptyMessage="No hay ajustes registrados" />
     </div>
   );
 }

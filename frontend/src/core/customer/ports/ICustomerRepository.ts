@@ -11,4 +11,5 @@ export interface ICustomerRepository {
   activate(id: string): Promise<Customer>;
   deactivate(id: string): Promise<Customer>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
 }

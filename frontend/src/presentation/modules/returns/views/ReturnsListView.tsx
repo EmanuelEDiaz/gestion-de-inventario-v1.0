@@ -12,7 +12,7 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 
 export function ReturnsListView() {
-  const { returns, loading, error, create, confirm, cancel, remove } = useReturns();
+  const { returns, loading, error, create, confirm, cancel, remove, deleteMany } = useReturns();
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const { columns, actions } = useReturnColumns({ onConfirm: confirm, onCancel: cancel, onDelete: remove });
@@ -36,7 +36,9 @@ export function ReturnsListView() {
           isSubmitting={isCreating} onCancel={() => setShowForm(false)}
         />
       )}
-      <GenericTable data={returns} columns={columns} actions={actions} emptyMessage="No hay devoluciones registradas" />
+      <GenericTable data={returns} columns={columns} actions={actions}
+        selectable onDeleteSelected={deleteMany}
+        emptyMessage="No hay devoluciones registradas" />
     </div>
   );
 }

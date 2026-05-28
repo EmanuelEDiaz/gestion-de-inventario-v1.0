@@ -10,4 +10,5 @@ export interface ICategoryRepository {
   create(data: CreateCategoryData): Promise<Category>;
   update(id: string, data: UpdateCategoryData): Promise<Category>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
 }

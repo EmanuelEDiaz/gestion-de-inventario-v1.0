@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useInfiniteProducts } from '../hooks/useInfiniteProducts';
 import { useCategories } from '../hooks/useCategories';
 import { ProductTable } from './table/ProductTable';
+import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
@@ -41,6 +43,15 @@ export function ProductsInfiniteList({ maxPages = 20 }: ProductsInfiniteListProp
   const handleSearch = useCallback((search: string) => setFilters((prev) => ({ ...prev, search })), []);
   const handleFiltersChange = useCallback((newFilters: ProductFiltersState) => setFilters(newFilters), []);
   const handleDeleteSuccess = useCallback(() => refetch(), [refetch]);
+  const handleDeleteSelected = useCallback(async (ids: string[]) => {
+    if (!confirm(`¿Eliminar ${ids.length} producto(s)?`)) return;
+    try {
+      await productRepository.deleteAll(ids);
+      refetch();
+    } catch {
+      toast.error('Error al eliminar productos');
+    }
+  }, [refetch]);
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -65,7 +76,7 @@ export function ProductsInfiniteList({ maxPages = 20 }: ProductsInfiniteListProp
         <EmptyState message="No hay productos registrados con los filtros aplicados" />
       ) : (
         <>
-          <ProductTable products={products} sortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} onDeleteSuccess={handleDeleteSuccess} />
+          <ProductTable products={products} sortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} onDeleteSuccess={handleDeleteSuccess} onDeleteSelected={handleDeleteSelected} />
           <InfiniteListFooter hasNextPage={hasNextPage} isFetchingNextPage={isFetchingNextPage} onLoadMore={() => fetchNextPage()} productsLength={products.length} />
         </>
       )}

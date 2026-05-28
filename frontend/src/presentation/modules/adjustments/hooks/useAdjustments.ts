@@ -68,5 +68,10 @@ export function useAdjustments() {
     setAdjustments(prev => prev.filter(a => a.id !== id));
   }, []);
 
-  return { adjustments, loading, error, fetchAll, create, update, confirm, cancel, remove };
+  const deleteMany = useCallback(async (ids: string[]) => {
+    await repo.deleteAll(ids);
+    setAdjustments(prev => prev.filter(a => !ids.includes(a.id)));
+  }, []);
+
+  return { adjustments, loading, error, fetchAll, create, update, confirm, cancel, remove, deleteMany };
 }

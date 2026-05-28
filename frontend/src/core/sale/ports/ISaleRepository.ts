@@ -9,4 +9,5 @@ export interface ISaleRepository {
   deliver(id: string): Promise<Sale>;
   cancel(id: string): Promise<Sale>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
 }

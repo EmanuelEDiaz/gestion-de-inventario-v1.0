@@ -12,7 +12,7 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 
 export function SalesListView() {
-  const { sales, isLoading, error, create, confirm, deliver, cancel } = useSales();
+  const { sales, isLoading, error, create, confirm, deliver, cancel, deleteMany } = useSales();
   const [showForm, setShowForm] = useState(false);
   const { columns, actions } = useSaleColumns({ onConfirm: confirm, onDeliver: deliver, onCancel: cancel });
 
@@ -33,7 +33,9 @@ export function SalesListView() {
           isSubmitting={false} onCancel={() => setShowForm(false)}
         />
       )}
-      <GenericTable data={sales} columns={columns} actions={actions} emptyMessage="No hay ventas registradas" />
+      <GenericTable data={sales} columns={columns} actions={actions}
+        selectable onDeleteSelected={deleteMany}
+        emptyMessage="No hay ventas registradas" />
     </div>
   );
 }

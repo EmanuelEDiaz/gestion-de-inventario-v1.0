@@ -75,4 +75,8 @@ export class TransferRepository implements ITransferRepository {
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${id}`);
   }
+
+  async deleteAll(ids: string[]): Promise<void> {
+    await apiClient.delete(`${this.baseUrl}/batch`, { data: ids });
+  }
 }

@@ -12,7 +12,7 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 
 export function PurchasesListView() {
-  const { purchases, isLoading, error, create, confirm, receive, cancel } = usePurchases();
+  const { purchases, isLoading, error, create, confirm, receive, cancel, deleteMany } = usePurchases();
   const [showForm, setShowForm] = useState(false);
   const { columns, actions } = usePurchaseColumns({ onConfirm: confirm, onReceive: receive, onCancel: cancel });
 
@@ -33,7 +33,9 @@ export function PurchasesListView() {
           isSubmitting={false} onCancel={() => setShowForm(false)}
         />
       )}
-      <GenericTable data={purchases} columns={columns} actions={actions} emptyMessage="No hay compras registradas" />
+      <GenericTable data={purchases} columns={columns} actions={actions}
+        selectable onDeleteSelected={deleteMany}
+        emptyMessage="No hay compras registradas" />
     </div>
   );
 }

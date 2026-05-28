@@ -25,6 +25,7 @@ export interface IProductRepository {
   create(data: CreateProductData): Promise<Product>;
   update(id: string, data: UpdateProductData): Promise<Product>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
   archive(id: string): Promise<Product>;
   activate(id: string): Promise<Product>;
 }

@@ -12,6 +12,8 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Customer } from '@/core/customer/entities/customer';
+import { CustomerRepository } from '@/infrastructure/repositories/customer/CustomerRepository';
+const customerRepository = new CustomerRepository();
 import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Customer>[] = [
@@ -32,7 +34,7 @@ const COLUMNS: Column<Customer>[] = [
 ];
 
 export function CustomersListView() {
-  const { customers, loading, error, create, activate, deactivate, remove } = useCustomers();
+  const { customers, loading, error, create, activate, deactivate, remove, fetchAll } = useCustomers();
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -44,7 +46,8 @@ export function CustomersListView() {
 
   const handleDeleteMany = async (ids: string[]) => {
     if (!confirm(`¿Eliminar ${ids.length} cliente(s)?`)) return;
-    await Promise.all(ids.map(remove));
+    await customerRepository.deleteAll(ids);
+    fetchAll();
   };
 
   if (loading) return <LoadingSpinner />;

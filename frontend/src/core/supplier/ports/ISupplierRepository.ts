@@ -11,4 +11,5 @@ export interface ISupplierRepository {
   activate(id: string): Promise<Supplier>;
   deactivate(id: string): Promise<Supplier>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
 }

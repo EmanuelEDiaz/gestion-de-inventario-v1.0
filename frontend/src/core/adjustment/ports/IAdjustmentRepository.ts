@@ -13,4 +13,5 @@ export interface IAdjustmentRepository {
   confirm(id: string): Promise<Adjustment>;
   cancel(id: string): Promise<Adjustment>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
 }

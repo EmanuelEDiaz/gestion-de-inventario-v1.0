@@ -34,6 +34,10 @@ export class CategoryRepository implements ICategoryRepository {
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${this.basePath}/${id}`);
   }
+
+  async deleteAll(ids: string[]): Promise<void> {
+    await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+  }
 }
 
 export const categoryRepository = new CategoryRepository();

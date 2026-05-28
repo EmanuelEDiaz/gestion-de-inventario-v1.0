@@ -106,7 +106,16 @@ export function usePurchases(initialFilter?: PurchaseFilter) {
     }
   }, []);
 
+  const deleteMany = useCallback(async (ids: string[]) => {
+    try {
+      await purchaseRepository.deleteAll(ids);
+      setState(p => ({ ...p, purchases: p.purchases.filter(x => !ids.includes(x.id)) }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error eliminando compras');
+    }
+  }, []);
+
   useEffect(() => { fetchAll(initialFilter); }, []);
 
-  return { ...state, fetchAll, create, confirm, receive, cancel, deletePurchase, clearError: () => setState(p => ({ ...p, error: null })) };
+  return { ...state, fetchAll, create, confirm, receive, cancel, deletePurchase, deleteMany, clearError: () => setState(p => ({ ...p, error: null })) };
 }

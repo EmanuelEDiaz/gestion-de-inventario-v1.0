@@ -55,6 +55,10 @@ export class PurchaseRepository implements IPurchaseRepository {
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${this.basePath}/${id}`);
   }
+
+  async deleteAll(ids: string[]): Promise<void> {
+    await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+  }
 }
 
 export const purchaseRepository = new PurchaseRepository();

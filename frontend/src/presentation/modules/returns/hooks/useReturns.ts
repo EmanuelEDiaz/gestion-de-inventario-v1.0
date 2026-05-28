@@ -66,5 +66,10 @@ export function useReturns() {
     setReturns(prev => prev.filter(r => r.id !== id));
   }, []);
 
-  return { returns, loading, error, fetchAll, create, update, confirm, cancel, remove };
+  const deleteMany = useCallback(async (ids: string[]) => {
+    await repo.deleteAll(ids);
+    setReturns(prev => prev.filter(r => !ids.includes(r.id)));
+  }, []);
+
+  return { returns, loading, error, fetchAll, create, update, confirm, cancel, remove, deleteMany };
 }

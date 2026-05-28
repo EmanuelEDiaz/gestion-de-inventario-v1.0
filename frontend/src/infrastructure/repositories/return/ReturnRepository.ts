@@ -60,4 +60,8 @@ export class ReturnRepository implements IReturnRepository {
   async delete(id: string): Promise<void> {
     await apiClient.delete(`${this.basePath}/${id}`);
   }
+
+  async deleteAll(ids: string[]): Promise<void> {
+    await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+  }
 }

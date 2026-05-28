@@ -91,6 +91,10 @@ export class ProductRepository implements IProductRepository {
     await apiClient.delete(`${this.basePath}/${id}`);
   }
 
+  async deleteAll(ids: string[]): Promise<void> {
+    await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+  }
+
   async archive(id: string): Promise<Product> {
     const response = await apiClient.post<Product>(`${this.basePath}/${id}/archive`);
     return response.data;

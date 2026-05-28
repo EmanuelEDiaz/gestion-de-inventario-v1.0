@@ -94,7 +94,7 @@ export function useCategoriesController() {
   const deleteManyCategories = useCallback(async (ids: string[]) => {
     if (!confirm(`¿Eliminar ${ids.length} categoría(s) seleccionadas?`)) return;
     try {
-      await Promise.all(ids.map((id) => deleteCategoryUseCase.execute(id)));
+      await categoryRepository.deleteAll(ids);
       await queryClient.invalidateQueries({ queryKey: ['categories'] });
       fetchCategories();
     } catch {

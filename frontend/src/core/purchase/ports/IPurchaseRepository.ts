@@ -12,4 +12,5 @@ export interface IPurchaseRepository {
   receive(id: string, receivedDate?: string): Promise<Purchase>;
   cancel(id: string): Promise<Purchase>;
   delete(id: string): Promise<void>;
+  deleteAll(ids: string[]): Promise<void>;
 }

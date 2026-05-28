@@ -12,6 +12,8 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Supplier } from '@/core/supplier/entities/supplier';
+import { SupplierRepository } from '@/infrastructure/repositories/supplier/SupplierRepository';
+const supplierRepository = new SupplierRepository();
 import { statusBadge } from '@/presentation/shared/lib/colors';
 
 const COLUMNS: Column<Supplier>[] = [
@@ -32,7 +34,7 @@ const COLUMNS: Column<Supplier>[] = [
 ];
 
 export function SuppliersListView() {
-  const { suppliers, loading, error, create, activate, deactivate, remove } = useSuppliers();
+  const { suppliers, loading, error, create, activate, deactivate, remove, fetchAll } = useSuppliers();
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -44,7 +46,8 @@ export function SuppliersListView() {
 
   const handleDeleteMany = async (ids: string[]) => {
     if (!confirm(`¿Eliminar ${ids.length} proveedor(es)?`)) return;
-    await Promise.all(ids.map(remove));
+    await supplierRepository.deleteAll(ids);
+    fetchAll();
   };
 
   if (loading) return <LoadingSpinner />;

@@ -9,6 +9,7 @@ import { GenericTable, type Column, type TableAction } from '@/presentation/shar
 import { ImagePreview } from '../ImagePreview';
 import { ProductImageCell } from './ProductImageCell';
 import { useProductDelete } from './useProductDelete';
+import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 
 interface ProductTableProps {
   products: Product[];
@@ -16,9 +17,10 @@ interface ProductTableProps {
   sortDirection?: 'asc' | 'desc';
   onSort?: (key: string) => void;
   onDeleteSuccess?: () => void;
+  onDeleteSelected?: (ids: string[]) => void;
 }
 
-export function ProductTable({ products, sortKey, sortDirection, onSort, onDeleteSuccess }: ProductTableProps) {
+export function ProductTable({ products, sortKey, sortDirection, onSort, onDeleteSuccess, onDeleteSelected }: ProductTableProps) {
   const router = useRouter();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const { handleDelete } = useProductDelete({ onDeleteSuccess });
@@ -65,7 +67,8 @@ export function ProductTable({ products, sortKey, sortDirection, onSort, onDelet
     <>
       <GenericTable data={products} columns={columns} actions={actions}
         onSort={onSort} sortKey={sortKey} sortDirection={sortDirection}
-        emptyMessage="No hay productos registrados" onRowClick={handleRowClick} />
+        emptyMessage="No hay productos registrados" onRowClick={handleRowClick}
+        selectable={!!onDeleteSelected} onDeleteSelected={onDeleteSelected} />
       {previewImage && (
         <ImagePreview src={previewImage} alt="Vista previa"
           isOpen={!!previewImage} onClose={() => setPreviewImage(null)} />
