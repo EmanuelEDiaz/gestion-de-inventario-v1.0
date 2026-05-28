@@ -1,8 +1,10 @@
 'use client';
 
+import type { Customer } from '@/core/customer/entities/customer';
+
 interface CustomerResultListProps {
-  results: Array<{ id: string; name: string; code?: string | null }>;
-  onSelect: (customer: { id: string; name: string; code?: string | null }) => void;
+  results: Customer[];
+  onSelect: (customer: Customer) => void;
 }
 
 export function CustomerResultList({ results, onSelect }: CustomerResultListProps) {

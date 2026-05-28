@@ -6,7 +6,7 @@ import { getMediaUrl } from '@/presentation/shared/lib/utils';
 interface SupplierImageCardImage {
   id: string;
   filePath: string;
-  originalFilename?: string;
+  originalFilename?: string | null;
   isPrimary: boolean;
 }
 

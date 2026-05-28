@@ -31,7 +31,7 @@ const COLUMNS: Column<Sale>[] = [
 ];
 
 export function SaleTable({ sales, onRowClick, onConfirm, onDeliver, onCancel }: SaleTableProps) {
-  const actions = useStatusActions([
+  const actions = useStatusActions<Sale>([
     { icon: CheckCircle2, label: 'Confirmar', onClick: onConfirm ? (r) => onConfirm(r) : undefined },
     { icon: Truck, label: 'Entregar', onClick: onDeliver ? (r) => onDeliver(r) : undefined },
     { icon: XCircle, label: 'Cancelar', onClick: onCancel ? (r) => onCancel(r) : undefined },

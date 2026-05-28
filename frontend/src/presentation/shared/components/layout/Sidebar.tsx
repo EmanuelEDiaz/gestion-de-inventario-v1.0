@@ -1,6 +1,6 @@
 'use client';
 
-import type { NavSection } from '../hooks/ui/useSidebarSections';
+import type { NavSection } from '@/presentation/shared/hooks/ui/useSidebarSections';
 import { cn } from '@/presentation/shared/lib/utils';
 import { SidebarSection } from './SidebarSection';
 import { SidebarCollapseButton } from './SidebarCollapseButton';

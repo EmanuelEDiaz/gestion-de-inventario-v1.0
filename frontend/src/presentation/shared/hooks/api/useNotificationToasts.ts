@@ -1,6 +1,6 @@
 import { UseSystemNotificationsReturn } from './useSystemNotifications';
 import { UseUserNotificationsReturn } from './useUserNotifications';
-import { useToastManager } from './useToastManager';
+import { useToastManager } from '../ui/useToastManager';
 
 export function useNotificationToasts(
   systemNotifications?: UseSystemNotificationsReturn,

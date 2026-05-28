@@ -31,7 +31,7 @@ const COLUMNS: Column<Purchase>[] = [
 ];
 
 export function PurchaseTable({ purchases, onRowClick, onConfirm, onReceive, onCancel }: PurchaseTableProps) {
-  const actions = useStatusActions([
+  const actions = useStatusActions<Purchase>([
     { icon: CheckCircle2, label: 'Confirmar', onClick: onConfirm ? (r) => onConfirm(r) : undefined },
     { icon: PackageCheck, label: 'Recibir', onClick: onReceive ? (r) => onReceive(r) : undefined },
     { icon: XCircle, label: 'Cancelar', onClick: onCancel ? (r) => onCancel(r) : undefined },

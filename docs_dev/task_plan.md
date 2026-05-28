@@ -83,9 +83,9 @@
 | Fase | Estado | Commit |
 |------|--------|--------|
 | **B0** — Auditoría y clasificación de entidades | ✅ Hecho | — |
-| **B1** — Patrón canónico backend (definición) | ⏳ Pendiente | — |
-| **B2** — Aplicar patrón backend (9 entidades) | ⏳ Pendiente | — |
-| **F0** — GenericTable: bulkActions + responsive | ⏳ Pendiente | — |
+| **B1** — Patrón canónico backend (definición) | ✅ Hecho | `b086313` |
+| **B2** — Aplicar patrón backend (9 entidades) | ✅ Hecho | `b086313` |
+| **F0** — GenericTable: bulkActions + responsive | ✅ Hecho | (pendiente) |
 | **F1** — Patrón canónico frontend (definición) | ⏳ Pendiente | — |
 | **F2** — Aplicar patrón frontend (9 entidades + 3 soft) | ⏳ Pendiente | — |
 | **R1** — Verificación responsive mobile | ⏳ Pendiente | — |

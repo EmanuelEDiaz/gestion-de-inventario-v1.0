@@ -5,17 +5,19 @@ import { FiarButton } from '../components/FiarButton';
 import { CustomerSelector } from '../components/CustomerSelector';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import type { PaymentMode } from '@/core/sale/entities/sale';
+import type { Customer } from '@/core/customer/entities/customer';
 
 interface PosHeaderProps {
   warehouses: Warehouse[];
   warehouseId: string;
   onWarehouseChange: (id: string) => void;
-  paymentMode: string;
+  paymentMode: PaymentMode;
   customerName?: string;
   hasCustomer: boolean;
-  onPaymentModeChange: (mode: string) => void;
-  customer: unknown;
-  onCustomerChange: (customer: unknown) => void;
+  onPaymentModeChange: (mode: PaymentMode) => void;
+  customer: Customer | null;
+  onCustomerChange: (customer: Customer | null) => void;
   productSearch: string;
   onProductSearchChange: (value: string) => void;
 }

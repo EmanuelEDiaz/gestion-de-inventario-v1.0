@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { SvgIcon } from '@/presentation/shared/components/ui/icon-mapping';
 import { Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { cn } from '@/presentation/shared/lib/utils';
@@ -26,6 +26,14 @@ export interface TableAction<T> {
   hidden?: (row: T) => boolean;
 }
 
+export interface BulkAction<T> {
+  label: string;
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost';
+  icon?: React.ComponentType<{ className?: string }>;
+  onClick: (ids: string[]) => void | Promise<void>;
+  disabled?: (selectedIds: Set<string>) => boolean;
+}
+
 export interface GenericTableProps<T> {
   data: T[];
   columns: Column<T>[];
@@ -38,16 +46,22 @@ export interface GenericTableProps<T> {
   onRowClick?: (row: T) => void;
   selectable?: boolean;
   onDeleteSelected?: (ids: string[]) => void;
+  bulkActions?: BulkAction<T>[];
+  onSelectionChange?: (ids: string[]) => void;
 }
 
 export function GenericTable<T extends { id: string }>({
   data, columns, actions = [], onSort, sortKey, sortDirection,
   emptyMessage = 'No hay datos para mostrar', className, onRowClick,
-  selectable = false, onDeleteSelected,
+  selectable = false, onDeleteSelected, bulkActions, onSelectionChange,
 }: GenericTableProps<T>) {
   const allIds = data.map((r) => r.id);
   const { selectedIds, toggleOne, toggleAll, clearSelection, isAllSelected, isIndeterminate } =
     useTableSelection(allIds);
+
+  useEffect(() => {
+    onSelectionChange?.([...selectedIds]);
+  }, [selectedIds, onSelectionChange]);
 
   if (data.length === 0) {
     return (
@@ -60,21 +74,37 @@ export function GenericTable<T extends { id: string }>({
   return (
     <div className={cn('relative w-full space-y-2', className)}>
       {selectable && selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-muted bg-muted/30 px-4 py-2">
+        <div className="flex flex-col gap-2 rounded-lg border border-muted bg-muted/30 p-3 sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:py-2">
           <span className="text-sm text-muted-foreground" title="Cantidad de filas seleccionadas">
             {selectedIds.size} seleccionado(s)
           </span>
-          {onDeleteSelected && (
-            <Button variant="destructive" size="sm"
-              onClick={() => { onDeleteSelected([...selectedIds]); clearSelection(); }}
-              title="Eliminar los elementos seleccionados">
-              <Trash2 className="mr-1 h-3.5 w-3.5" />
-              Eliminar seleccionados
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+            {bulkActions?.map((action, i) => (
+              <Button key={i}
+                variant={action.variant ?? 'default'} size="sm"
+                onClick={() => { action.onClick([...selectedIds]); clearSelection(); }}
+                disabled={action.disabled?.(selectedIds)}
+                className="w-full min-h-[44px] sm:w-auto sm:min-h-0"
+                title={action.label}>
+                {action.icon && <action.icon className="mr-1 h-4 w-4" />}
+                {action.label}
+              </Button>
+            ))}
+            {onDeleteSelected && (
+              <Button variant="destructive" size="sm"
+                onClick={() => { onDeleteSelected([...selectedIds]); clearSelection(); }}
+                className="w-full min-h-[44px] sm:w-auto sm:min-h-0"
+                title="Eliminar los elementos seleccionados">
+                <Trash2 className="mr-1 h-4 w-4" />
+                Eliminar
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={clearSelection}
+              className="w-full min-h-[44px] sm:w-auto sm:min-h-0"
+              title="Cancelar selección">
+              Cancelar
             </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={clearSelection} title="Cancelar selección">
-            Cancelar
-          </Button>
+          </div>
         </div>
       )}
       <div className="relative w-full overflow-x-auto rounded-xl bg-card shadow-sm">

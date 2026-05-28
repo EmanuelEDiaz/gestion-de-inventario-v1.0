@@ -1,15 +1,12 @@
 'use client';
 
+import type { NavSection } from '@/presentation/shared/hooks/ui/useSidebarSections';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { cn } from '@/presentation/shared/lib/utils';
 
 interface DashboardHeaderProps {
-  navigationSections: {
-    id: string;
-    label: string;
-    items: { label: string; href: string; icon: React.ReactNode }[];
-  }[];
+  navigationSections: NavSection[];
   isCollapsed: boolean;
   isMobileOpen: boolean;
   openSections: Record<string, boolean>;

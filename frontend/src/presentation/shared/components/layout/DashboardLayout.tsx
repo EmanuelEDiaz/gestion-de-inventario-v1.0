@@ -20,6 +20,7 @@ interface DashboardLayoutProps {
 
 const navigationSections = NAVIGATION_CONFIG.map((section) => ({
   ...section,
+  label: section.title,
   items: section.items.map(({ iconKey, ...rest }) => ({
     ...rest,
     icon: Icons[iconKey as keyof typeof Icons] ?? Icons.dashboard,

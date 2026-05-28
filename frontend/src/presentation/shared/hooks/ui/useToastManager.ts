@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { UseSystemNotificationsReturn } from './useSystemNotifications';
-import { UseUserNotificationsReturn } from './useUserNotifications';
+import { UseSystemNotificationsReturn } from '../api/useSystemNotifications';
+import { UseUserNotificationsReturn } from '../api/useUserNotifications';
 import { ToastContent } from '@/presentation/shared/components/ui/toast';
 import { INotification, NotificationPriority } from '@/core/notification/entities/notification';
-import { getToastVariant, getCategoryDescription } from './notification-toast-helpers';
+import { getToastVariant, getCategoryDescription } from '../api/notification-toast-helpers';
 
 function showToast(notification: INotification): void {
   const variant = getToastVariant(notification);

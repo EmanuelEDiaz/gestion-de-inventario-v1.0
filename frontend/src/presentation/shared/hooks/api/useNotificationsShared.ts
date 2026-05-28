@@ -53,6 +53,7 @@ export function useNotificationList(
     staleTime = 5000, enableBackgroundSync = true,
   } = options;
 
+  const queryClient = useQueryClient();
   const { queryKeyPrefix, fetcher, pageSize, sseFilter } = config;
   const typeKey = ['notifications', queryKeyPrefix] as const;
   const filtersSerialized = JSON.stringify(filters, Object.keys(filters).sort());
