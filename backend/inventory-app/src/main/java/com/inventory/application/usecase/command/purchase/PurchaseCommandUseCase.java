@@ -1,11 +1,14 @@
 package com.inventory.application.usecase.command.purchase;
 
+import com.inventory.application.shared.AuditSerializer;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.NotFoundException;
+import com.inventory.domain.model.audit.AuditLog;
 import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.model.purchase.Purchase;
 import com.inventory.domain.model.purchase.PurchaseLine;
 import com.inventory.domain.ports.in.purchase.PurchaseCommandPort;
+import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.PurchaseRepository;
 import com.inventory.domain.ports.out.StockRepository;
@@ -26,19 +29,25 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
     private final PurchaseRepository purchaseRepository;
     private final StockRepository stockRepository;
     private final MovementRepository movementRepository;
+    private final AuditLogRepository auditLogRepository;
+    private final AuditSerializer auditSerializer;
 
     public PurchaseCommandUseCase(
             PurchaseRepository purchaseRepository,
             StockRepository stockRepository,
-            MovementRepository movementRepository) {
+            MovementRepository movementRepository,
+            AuditLogRepository auditLogRepository,
+            AuditSerializer auditSerializer) {
         this.purchaseRepository = purchaseRepository;
         this.stockRepository = stockRepository;
         this.movementRepository = movementRepository;
+        this.auditLogRepository = auditLogRepository;
+        this.auditSerializer = auditSerializer;
     }
 
     @Override
     @Transactional
-    public Mono<Purchase> create(CreatePurchaseCommand command) {
+    public Mono<Purchase> create(CreatePurchaseCommand command, UUID userId) {
         return purchaseRepository.generateNextNumber()
                 .flatMap(purchaseNumber -> {
                     List<PurchaseLine> lines = new ArrayList<>();
@@ -51,31 +60,44 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                             purchaseNumber,
                             command.warehouseId(),
                             command.supplierId(),
-                            command.createdBy(),
+                            command.createdBy() != null ? command.createdBy() : userId,
                             lines
                     );
                     
                     return purchaseRepository.save(purchase);
+                })
+                .flatMap(saved -> {
+                    AuditLog log = AuditLog.create(
+                            userId, "PURCHASE", saved.getId(), "CREATE",
+                            null, auditSerializer.toJsonTruncated(saved), null);
+                    return auditLogRepository.save(log).thenReturn(saved);
                 });
     }
 
     @Override
     @Transactional
-    public Mono<Purchase> confirm(UUID purchaseId) {
+    public Mono<Purchase> confirm(UUID purchaseId, UUID userId) {
         return purchaseRepository.findById(purchaseId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Purchase not found: " + purchaseId)))
                 .flatMap(purchase -> {
                     if (!purchase.canConfirm()) {
                         return Mono.error(new BadRequestException("Cannot confirm purchase in status: " + purchase.getStatus()));
                     }
+                    String beforeData = auditSerializer.toJsonTruncated(purchase);
                     Purchase confirmed = purchase.confirm();
-                    return purchaseRepository.save(confirmed);
+                    return purchaseRepository.save(confirmed)
+                            .flatMap(saved -> {
+                                AuditLog log = AuditLog.create(
+                                        userId, "PURCHASE", saved.getId(), "CONFIRM",
+                                        beforeData, auditSerializer.toJsonTruncated(saved), null);
+                                return auditLogRepository.save(log).thenReturn(saved);
+                            });
                 });
     }
 
     @Override
     @Transactional
-    public Mono<Purchase> receive(UUID purchaseId, LocalDate receivedDate) {
+    public Mono<Purchase> receive(UUID purchaseId, LocalDate receivedDate, UUID userId) {
         return purchaseRepository.findById(purchaseId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Purchase not found: " + purchaseId)))
                 .flatMap(purchase -> {
@@ -83,13 +105,20 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                         return Mono.error(new BadRequestException("Cannot receive purchase in status: " + purchase.getStatus()));
                     }
                     
-                    // Actualizar stock y crear movimientos para cada línea
+                    String beforeData = auditSerializer.toJsonTruncated(purchase);
+                    
                     return Flux.fromIterable(purchase.getLines())
                             .flatMap(line -> updateStockForLine(purchase, line))
                             .then(Mono.defer(() -> {
                                 Purchase received = purchase.receive(receivedDate != null ? receivedDate : LocalDate.now());
                                 return purchaseRepository.save(received);
-                            }));
+                            }))
+                            .flatMap(saved -> {
+                                AuditLog log = AuditLog.create(
+                                        userId, "PURCHASE", saved.getId(), "RECEIVE",
+                                        beforeData, auditSerializer.toJsonTruncated(saved), null);
+                                return auditLogRepository.save(log).thenReturn(saved);
+                            });
                 });
     }
 
@@ -117,27 +146,36 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
 
     @Override
     @Transactional
-    public Mono<Purchase> cancel(UUID purchaseId) {
+    public Mono<Purchase> cancel(UUID purchaseId, UUID userId) {
         return purchaseRepository.findById(purchaseId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Purchase not found: " + purchaseId)))
                 .flatMap(purchase -> {
                     if (!purchase.canCancel()) {
                         return Mono.error(new BadRequestException("Cannot cancel purchase in status: " + purchase.getStatus()));
                     }
+                    String beforeData = auditSerializer.toJsonTruncated(purchase);
                     Purchase cancelled = purchase.cancel();
-                    return purchaseRepository.save(cancelled);
+                    return purchaseRepository.save(cancelled)
+                            .flatMap(saved -> {
+                                AuditLog log = AuditLog.create(
+                                        userId, "PURCHASE", saved.getId(), "CANCEL",
+                                        beforeData, auditSerializer.toJsonTruncated(saved), null);
+                                return auditLogRepository.save(log).thenReturn(saved);
+                            });
                 });
     }
 
     @Override
     @Transactional
-    public Mono<Purchase> update(UUID purchaseId, UpdatePurchaseCommand command) {
+    public Mono<Purchase> update(UUID purchaseId, UpdatePurchaseCommand command, UUID userId) {
         return purchaseRepository.findById(purchaseId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Purchase not found: " + purchaseId)))
                 .flatMap(purchase -> {
                     if (purchase.getStatus() != Purchase.PurchaseStatus.DRAFT) {
                         return Mono.error(new BadRequestException("Can only update purchases in DRAFT status"));
                     }
+                    
+                    String beforeData = auditSerializer.toJsonTruncated(purchase);
                     
                     List<PurchaseLine> lines = new ArrayList<>();
                     int sortOrder = 0;
@@ -170,26 +208,39 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                             lines
                     );
                     
-                    return purchaseRepository.save(updated);
+                    return purchaseRepository.save(updated)
+                            .flatMap(saved -> {
+                                AuditLog log = AuditLog.create(
+                                        userId, "PURCHASE", saved.getId(), "UPDATE",
+                                        beforeData, auditSerializer.toJsonTruncated(saved), null);
+                                return auditLogRepository.save(log).thenReturn(saved);
+                            });
                 });
     }
 
     @Override
     @Transactional
-    public Mono<Void> delete(UUID purchaseId) {
+    public Mono<Void> delete(UUID purchaseId, UUID userId) {
         return purchaseRepository.findById(purchaseId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Purchase not found: " + purchaseId)))
                 .flatMap(purchase -> {
                     if (purchase.getStatus() != Purchase.PurchaseStatus.DRAFT) {
                         return Mono.error(new BadRequestException("Can only delete purchases in DRAFT status"));
                     }
-                    return purchaseRepository.delete(purchaseId);
+                    String beforeData = auditSerializer.toJsonTruncated(purchase);
+                    return purchaseRepository.delete(purchaseId)
+                            .then(Mono.defer(() -> {
+                                AuditLog log = AuditLog.create(
+                                        userId, "PURCHASE", purchaseId, "DELETE",
+                                        beforeData, null, null);
+                                return auditLogRepository.save(log);
+                            }));
                 });
     }
 
     @Override
     @Transactional
-    public Mono<Void> deleteAll(List<UUID> ids) {
+    public Mono<Void> deleteAll(List<UUID> ids, UUID userId) {
         if (ids.isEmpty()) return Mono.empty();
         return Flux.fromIterable(ids)
                 .flatMap(id -> purchaseRepository.findById(id)
@@ -198,8 +249,20 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                             if (purchase.getStatus() != Purchase.PurchaseStatus.DRAFT) {
                                 return Mono.error(new BadRequestException("Can only delete purchases in DRAFT status"));
                             }
-                            return Mono.just(id);
+                            String beforeData = auditSerializer.toJsonTruncated(purchase);
+                            return Mono.just(new AuditEntry(id, beforeData));
                         }))
-                .then(purchaseRepository.deleteAllById(ids));
+                .collectList()
+                .flatMap(auditEntries -> purchaseRepository.deleteAllById(ids)
+                        .thenMany(Flux.fromIterable(auditEntries))
+                        .flatMap(entry -> {
+                            AuditLog log = AuditLog.create(
+                                    userId, "PURCHASE", entry.id(), "DELETE",
+                                    entry.beforeData(), null, null);
+                            return auditLogRepository.save(log);
+                        })
+                        .then());
     }
+
+    private record AuditEntry(UUID id, String beforeData) {}
 }

@@ -8,6 +8,8 @@ import com.inventory.domain.ports.out.CategoryRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -71,13 +73,15 @@ public class CategoryController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<CategoryResponse>> create(@Valid @RequestBody CreateCategoryRequest request) {
+    public Mono<ResponseEntity<CategoryResponse>> create(
+            @Valid @RequestBody CreateCategoryRequest request,
+            @AuthenticationPrincipal UserDetails user) {
         var command = new CategoryCommandPort.CreateCategoryCommand(
             request.name(),
             request.parentId(),
             request.sortOrder() != null ? request.sortOrder() : 0
         );
-        return categoryCommand.create(command)
+        return categoryCommand.create(command, extractUserId(user))
             .map(saved -> ResponseEntity.status(HttpStatus.CREATED)
                 .body(mapper.toResponse(saved)));
     }
@@ -85,13 +89,14 @@ public class CategoryController {
     @PutMapping("/{id}")
     public Mono<ResponseEntity<CategoryResponse>> update(
             @PathVariable UUID id,
-            @Valid @RequestBody CreateCategoryRequest request) {
+            @Valid @RequestBody CreateCategoryRequest request,
+            @AuthenticationPrincipal UserDetails user) {
         var command = new CategoryCommandPort.UpdateCategoryCommand(
             request.name(),
             request.parentId(),
             request.sortOrder() != null ? request.sortOrder() : 0
         );
-        return categoryCommand.update(id, command)
+        return categoryCommand.update(id, command, extractUserId(user))
             .map(updated -> ResponseEntity.ok(mapper.toResponse(updated)))
             .defaultIfEmpty(ResponseEntity.notFound().build());
     }
@@ -102,8 +107,10 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> delete(@PathVariable UUID id) {
-        return categoryCommand.delete(id)
+    public Mono<ResponseEntity<Void>> delete(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails user) {
+        return categoryCommand.delete(id, extractUserId(user))
             .then(Mono.just(ResponseEntity.noContent().<Void>build()))
             .defaultIfEmpty(ResponseEntity.notFound().build());
     }
@@ -117,6 +124,15 @@ public class CategoryController {
                     .map(saved -> ResponseEntity.ok(mapper.toResponse(saved)));
             })
             .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    private UUID extractUserId(UserDetails user) {
+        if (user == null) return null;
+        try {
+            return UUID.fromString(user.getUsername());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     @PostMapping("/{id}/activate")

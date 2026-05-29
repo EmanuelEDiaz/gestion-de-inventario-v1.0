@@ -11,11 +11,11 @@ import java.util.UUID;
  */
 public interface CategoryCommandPort {
 
-    Mono<Category> create(CreateCategoryCommand command);
+    Mono<Category> create(CreateCategoryCommand command, UUID userId);
 
-    Mono<Category> update(UUID id, UpdateCategoryCommand command);
+    Mono<Category> update(UUID id, UpdateCategoryCommand command, UUID userId);
 
-    Mono<Void> delete(UUID id);
+    Mono<Void> delete(UUID id, UUID userId);
 
     Mono<Void> deleteAll(List<UUID> ids);
 

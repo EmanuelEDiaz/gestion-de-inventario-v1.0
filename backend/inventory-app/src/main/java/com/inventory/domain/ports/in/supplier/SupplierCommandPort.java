@@ -10,12 +10,12 @@ import java.util.UUID;
  * Puerto de entrada para comandos de proveedores.
  */
 public interface SupplierCommandPort {
-    Mono<Supplier> create(CreateCommand command);
-    Mono<Supplier> update(UUID id, UpdateCommand command);
-    Mono<Void> delete(UUID id);
+    Mono<Supplier> create(CreateCommand command, UUID userId);
+    Mono<Supplier> update(UUID id, UpdateCommand command, UUID userId);
+    Mono<Void> delete(UUID id, UUID userId);
     Mono<Void> deleteAll(List<UUID> ids);
-    Mono<Supplier> activate(UUID id);
-    Mono<Supplier> deactivate(UUID id);
+    Mono<Supplier> activate(UUID id, UUID userId);
+    Mono<Supplier> deactivate(UUID id, UUID userId);
 
     record CreateCommand(
         String code,

@@ -16,27 +16,27 @@ public interface ProductCommandPort {
     /**
      * Crea un nuevo producto.
      */
-    Mono<Product> create(CreateProductCommand command);
+    Mono<Product> create(UUID userId, CreateProductCommand command);
 
     /**
      * Actualiza un producto existente.
      */
-    Mono<Product> update(UUID id, UpdateProductCommand command);
+    Mono<Product> update(UUID id, UUID userId, UpdateProductCommand command);
 
     /**
      * Archiva un producto (soft delete).
      */
-    Mono<Product> archive(UUID id);
+    Mono<Product> archive(UUID id, UUID userId);
 
     /**
      * Activa un producto archivado.
      */
-    Mono<Product> activate(UUID id);
+    Mono<Product> activate(UUID id, UUID userId);
 
     /**
      * Elimina permanentemente un producto.
      */
-    Mono<Void> delete(UUID id);
+    Mono<Void> delete(UUID id, UUID userId);
 
     Mono<Void> deleteAll(List<UUID> ids);
 

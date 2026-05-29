@@ -13,7 +13,7 @@ public interface SaleCommandPort {
     Mono<Sale> confirm(UUID saleId);
     Mono<Sale> deliver(UUID saleId);
     Mono<Sale> cancel(UUID saleId);
-    Mono<Void> delete(UUID saleId);
+    Mono<Void> delete(UUID id);
     Mono<Void> deleteAll(List<UUID> ids);
 
     record CreateCommand(

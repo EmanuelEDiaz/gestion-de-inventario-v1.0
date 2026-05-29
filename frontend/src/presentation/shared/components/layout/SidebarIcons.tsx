@@ -1,5 +1,6 @@
 import {
   Dashboard, DashboardFill,
+  History,
   Inventory2, Inventory2Fill,
   Storefront, StorefrontFill,
   LocalShipping, LocalShippingFill,
@@ -48,6 +49,7 @@ export const Icons = {
   exchangeRate: <CurrencyExchange {...iconProps} />,
   importData: <UploadFile {...iconProps} />,
   exportData: <Download {...iconProps} />,
+  auditLog: <History {...iconProps} />,
 };
 
 export const sectionIcons: Record<string, { closed: React.ReactNode; open: React.ReactNode }> = {

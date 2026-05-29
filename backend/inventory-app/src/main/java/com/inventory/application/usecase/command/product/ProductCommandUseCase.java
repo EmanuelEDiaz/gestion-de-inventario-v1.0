@@ -1,10 +1,13 @@
 package com.inventory.application.usecase.command.product;
 
+import com.inventory.application.shared.AuditSerializer;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
+import com.inventory.domain.model.audit.AuditLog;
 import com.inventory.domain.model.product.Product;
 import com.inventory.domain.ports.in.product.ProductCommandPort;
+import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -23,14 +26,19 @@ public class ProductCommandUseCase implements ProductCommandPort {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final AuditLogRepository auditLogRepository;
+    private final AuditSerializer auditSerializer;
 
-    public ProductCommandUseCase(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductCommandUseCase(ProductRepository productRepository, CategoryRepository categoryRepository,
+                                  AuditLogRepository auditLogRepository, AuditSerializer auditSerializer) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.auditLogRepository = auditLogRepository;
+        this.auditSerializer = auditSerializer;
     }
 
     @Override
-    public Mono<Product> create(CreateProductCommand command) {
+    public Mono<Product> create(UUID userId, CreateProductCommand command) {
         return validateUniqueConstraints(command.sku(), command.barcode(), null)
             .then(validateCategory(command.categoryId()))
             .then(Mono.defer(() -> {
@@ -55,17 +63,21 @@ public class ProductCommandUseCase implements ProductCommandPort {
                     null
                 );
                 return productRepository.save(product);
-            }));
+            }))
+            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
+                userId, "Product", saved.getId(), "CREATE",
+                null, auditSerializer.toJsonTruncated(saved), null))
+                .thenReturn(saved));
     }
 
     @Override
-    public Mono<Product> update(UUID id, UpdateProductCommand command) {
+    public Mono<Product> update(UUID id, UUID userId, UpdateProductCommand command) {
         return productRepository.findById(id)
             .switchIfEmpty(Mono.error(new NotFoundException("Producto", id.toString())))
             .flatMap(existing -> validateUniqueConstraints(command.sku(), command.barcode(), id)
                 .then(validateCategoryIfPresent(command.categoryId()))
                 .thenReturn(existing))
-            .map(existing -> {
+            .flatMap(existing -> {
                 Product updated = existing
                     .updateBasicInfo(command.name(), command.description(), command.sku(), command.barcode())
                     .updatePricing(command.standardCost(), command.salePrice(), command.taxRate());
@@ -79,33 +91,47 @@ public class ProductCommandUseCase implements ProductCommandPort {
                 if (command.reorderPoint() != null) {
                     updated = updated.setReorderPoint(command.reorderPoint());
                 }
-                return updated;
-            })
-            .flatMap(productRepository::save);
+                Product finalUpdated = updated;
+                return productRepository.save(finalUpdated)
+                    .flatMap(saved -> auditLogRepository.save(AuditLog.create(
+                        userId, "Product", saved.getId(), "UPDATE",
+                        auditSerializer.toJsonTruncated(existing), auditSerializer.toJsonTruncated(saved), null))
+                        .thenReturn(saved));
+            });
     }
 
     @Override
-    public Mono<Product> archive(UUID id) {
+    public Mono<Product> archive(UUID id, UUID userId) {
         return productRepository.findById(id)
             .switchIfEmpty(Mono.error(new NotFoundException("Producto", id.toString())))
             .map(Product::archive)
-            .flatMap(productRepository::save);
+            .flatMap(productRepository::save)
+            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
+                userId, "Product", saved.getId(), "ARCHIVE",
+                null, auditSerializer.toJsonTruncated(saved), null))
+                .thenReturn(saved));
     }
 
     @Override
-    public Mono<Product> activate(UUID id) {
+    public Mono<Product> activate(UUID id, UUID userId) {
         return productRepository.findById(id)
             .switchIfEmpty(Mono.error(new NotFoundException("Producto", id.toString())))
             .map(Product::activate)
-            .flatMap(productRepository::save);
+            .flatMap(productRepository::save)
+            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
+                userId, "Product", saved.getId(), "ACTIVATE",
+                null, auditSerializer.toJsonTruncated(saved), null))
+                .thenReturn(saved));
     }
 
     @Override
-    public Mono<Void> delete(UUID id) {
-        return productRepository.existsById(id)
-            .flatMap(exists -> exists 
-                ? productRepository.deleteById(id)
-                : Mono.error(new NotFoundException("Producto", id.toString())));
+    public Mono<Void> delete(UUID id, UUID userId) {
+        return productRepository.findById(id)
+            .switchIfEmpty(Mono.error(new NotFoundException("Producto", id.toString())))
+            .flatMap(existing -> auditLogRepository.save(AuditLog.create(
+                userId, "Product", existing.getId(), "DELETE",
+                auditSerializer.toJsonTruncated(existing), null, null))
+                .then(productRepository.deleteById(id)));
     }
 
     @Override

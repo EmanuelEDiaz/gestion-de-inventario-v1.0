@@ -16,35 +16,19 @@ public interface PurchaseCommandPort {
     /**
      * Crea una nueva compra en estado DRAFT.
      */
-    Mono<Purchase> create(CreatePurchaseCommand command);
+    Mono<Purchase> create(CreatePurchaseCommand command, UUID userId);
 
-    /**
-     * Confirma una compra (DRAFT → CONFIRMED).
-     */
-    Mono<Purchase> confirm(UUID purchaseId);
+    Mono<Purchase> confirm(UUID purchaseId, UUID userId);
 
-    /**
-     * Recibe productos de una compra y actualiza stock.
-     * (CONFIRMED → RECEIVED)
-     */
-    Mono<Purchase> receive(UUID purchaseId, LocalDate receivedDate);
+    Mono<Purchase> receive(UUID purchaseId, LocalDate receivedDate, UUID userId);
 
-    /**
-     * Cancela una compra.
-     */
-    Mono<Purchase> cancel(UUID purchaseId);
+    Mono<Purchase> cancel(UUID purchaseId, UUID userId);
 
-    /**
-     * Actualiza una compra en DRAFT.
-     */
-    Mono<Purchase> update(UUID purchaseId, UpdatePurchaseCommand command);
+    Mono<Purchase> update(UUID purchaseId, UpdatePurchaseCommand command, UUID userId);
 
-    /**
-     * Elimina una compra en DRAFT.
-     */
-    Mono<Void> delete(UUID purchaseId);
+    Mono<Void> delete(UUID purchaseId, UUID userId);
 
-    Mono<Void> deleteAll(List<UUID> ids);
+    Mono<Void> deleteAll(List<UUID> ids, UUID userId);
 
     record CreatePurchaseCommand(
         UUID warehouseId,

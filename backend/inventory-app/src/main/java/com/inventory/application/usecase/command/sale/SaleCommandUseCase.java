@@ -1,12 +1,15 @@
 package com.inventory.application.usecase.command.sale;
 
+import com.inventory.application.shared.AuditSerializer;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.NotFoundException;
+import com.inventory.domain.model.audit.AuditLog;
 import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.model.sale.SaleLine;
 import com.inventory.domain.model.stock.StockBalance;
 import com.inventory.domain.ports.in.sale.SaleCommandPort;
+import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.SaleRepository;
 import com.inventory.domain.ports.out.StockRepository;
@@ -26,15 +29,20 @@ public class SaleCommandUseCase implements SaleCommandPort {
     private final SaleRepository saleRepository;
     private final StockRepository stockRepository;
     private final MovementRepository movementRepository;
-
+    private final AuditLogRepository auditLogRepository;
+    private final AuditSerializer auditSerializer;
     public SaleCommandUseCase(
         SaleRepository saleRepository,
         StockRepository stockRepository,
-        MovementRepository movementRepository
+        MovementRepository movementRepository,
+        AuditLogRepository auditLogRepository,
+        AuditSerializer auditSerializer
     ) {
         this.saleRepository = saleRepository;
         this.stockRepository = stockRepository;
         this.movementRepository = movementRepository;
+        this.auditLogRepository = auditLogRepository;
+        this.auditSerializer = auditSerializer;
     }
 
     @Override
@@ -72,7 +80,11 @@ public class SaleCommandUseCase implements SaleCommandPort {
                     command.paymentMode()
                 );
 
-                return saleRepository.save(sale);
+                return saleRepository.save(sale)
+                    .flatMap(saved -> auditLogRepository.save(AuditLog.create(
+                        createdBy, "SALE", saved.id(), "CREATE",
+                        null, auditSerializer.toJsonTruncated(saved), null))
+                        .thenReturn(saved));
             });
     }
 
@@ -156,14 +168,13 @@ public class SaleCommandUseCase implements SaleCommandPort {
             .switchIfEmpty(Mono.error(new NotFoundException("Sale not found")))
             .flatMap(sale -> {
                 Sale cancelled = sale.cancel();
-                
-                // If was confirmed, release reserved stock
+
                 if (sale.status() == Sale.SaleStatus.CONFIRMED) {
                     return Flux.fromIterable(sale.lines())
                         .flatMap(line -> releaseReservedStock(sale.warehouseId(), line))
                         .then(saleRepository.save(cancelled));
                 }
-                
+
                 return saleRepository.save(cancelled);
             });
     }

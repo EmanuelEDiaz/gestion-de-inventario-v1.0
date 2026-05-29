@@ -70,6 +70,8 @@ public class PurchaseController {
             @RequestBody CreatePurchaseRequest request,
             @AuthenticationPrincipal UserDetails user) {
         
+        UUID userId = extractUserId(user);
+        
         var command = new PurchaseCommandPort.CreatePurchaseCommand(
                 request.warehouseId(),
                 request.supplierId(),
@@ -80,38 +82,48 @@ public class PurchaseController {
                         .map(l -> new PurchaseCommandPort.CreatePurchaseCommand.LineItem(
                                 l.productId(), l.quantity(), l.unitCost()))
                         .collect(Collectors.toList()),
-                null // TODO: get user ID from authentication
+                userId
         );
         
-        return commandPort.create(command).map(mapper::toDto);
+        return commandPort.create(command, userId).map(mapper::toDto);
     }
 
     @PostMapping("/{id}/confirm")
-    public Mono<PurchaseDto> confirm(@PathVariable UUID id) {
-        return commandPort.confirm(id).map(mapper::toDto);
+    public Mono<PurchaseDto> confirm(@PathVariable UUID id, @AuthenticationPrincipal UserDetails user) {
+        return commandPort.confirm(id, extractUserId(user)).map(mapper::toDto);
     }
 
     @PostMapping("/{id}/receive")
     public Mono<PurchaseDto> receive(
             @PathVariable UUID id,
-            @RequestParam(required = false) LocalDate receivedDate) {
-        return commandPort.receive(id, receivedDate).map(mapper::toDto);
+            @RequestParam(required = false) LocalDate receivedDate,
+            @AuthenticationPrincipal UserDetails user) {
+        return commandPort.receive(id, receivedDate, extractUserId(user)).map(mapper::toDto);
     }
 
     @PostMapping("/{id}/cancel")
-    public Mono<PurchaseDto> cancel(@PathVariable UUID id) {
-        return commandPort.cancel(id).map(mapper::toDto);
+    public Mono<PurchaseDto> cancel(@PathVariable UUID id, @AuthenticationPrincipal UserDetails user) {
+        return commandPort.cancel(id, extractUserId(user)).map(mapper::toDto);
     }
 
     @DeleteMapping("/batch")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
-        return commandPort.deleteAll(ids);
+    public Mono<Void> deleteBatch(@RequestBody List<UUID> ids, @AuthenticationPrincipal UserDetails user) {
+        return commandPort.deleteAll(ids, extractUserId(user));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> delete(@PathVariable UUID id) {
-        return commandPort.delete(id);
+    public Mono<Void> delete(@PathVariable UUID id, @AuthenticationPrincipal UserDetails user) {
+        return commandPort.delete(id, extractUserId(user));
+    }
+
+    private UUID extractUserId(UserDetails user) {
+        if (user == null) return null;
+        try {
+            return UUID.fromString(user.getUsername());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

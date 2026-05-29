@@ -11,6 +11,8 @@ import com.inventory.domain.ports.out.CategoryRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -134,7 +136,9 @@ public class ProductController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<ProductResponse>> create(@Valid @RequestBody CreateProductRequest request) {
+    public Mono<ResponseEntity<ProductResponse>> create(
+            @Valid @RequestBody CreateProductRequest request,
+            @AuthenticationPrincipal UserDetails user) {
         var command = new ProductCommandPort.CreateProductCommand(
             request.name(),
             request.sku(),
@@ -147,7 +151,7 @@ public class ProductController {
             request.taxRate(),
             request.unitOfMeasure()
         );
-        return productCommand.create(command)
+        return productCommand.create(extractUserId(user), command)
             .flatMap(this::enrichWithCategory)
             .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response));
     }
@@ -155,7 +159,8 @@ public class ProductController {
     @PutMapping("/{id}")
     public Mono<ResponseEntity<ProductResponse>> update(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateProductRequest request) {
+            @Valid @RequestBody UpdateProductRequest request,
+            @AuthenticationPrincipal UserDetails user) {
         var command = new ProductCommandPort.UpdateProductCommand(
             request.name(),
             request.sku(),
@@ -169,7 +174,7 @@ public class ProductController {
             request.taxRate(),
             request.unitOfMeasure()
         );
-        return productCommand.update(id, command)
+        return productCommand.update(id, extractUserId(user), command)
             .flatMap(this::enrichWithCategory)
             .map(ResponseEntity::ok)
             .defaultIfEmpty(ResponseEntity.notFound().build());
@@ -181,23 +186,29 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> delete(@PathVariable UUID id) {
-        return productCommand.delete(id)
+    public Mono<ResponseEntity<Void>> delete(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails user) {
+        return productCommand.delete(id, extractUserId(user))
             .then(Mono.just(ResponseEntity.noContent().<Void>build()))
             .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/archive")
-    public Mono<ResponseEntity<ProductResponse>> archive(@PathVariable UUID id) {
-        return productCommand.archive(id)
+    public Mono<ResponseEntity<ProductResponse>> archive(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails user) {
+        return productCommand.archive(id, extractUserId(user))
             .flatMap(this::enrichWithCategory)
             .map(ResponseEntity::ok)
             .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/activate")
-    public Mono<ResponseEntity<ProductResponse>> activate(@PathVariable UUID id) {
-        return productCommand.activate(id)
+    public Mono<ResponseEntity<ProductResponse>> activate(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails user) {
+        return productCommand.activate(id, extractUserId(user))
             .flatMap(this::enrichWithCategory)
             .map(ResponseEntity::ok)
             .defaultIfEmpty(ResponseEntity.notFound().build());
@@ -218,5 +229,14 @@ public class ProductController {
     private Flux<ProductResponse> enrichAllWithCategory(List<Product> products) {
         return Flux.fromIterable(products)
             .flatMap(this::enrichWithCategory);
+    }
+
+    private UUID extractUserId(UserDetails user) {
+        if (user == null) return null;
+        try {
+            return UUID.fromString(user.getUsername());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

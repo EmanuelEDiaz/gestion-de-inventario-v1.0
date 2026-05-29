@@ -15,8 +15,8 @@
 
 ### Frontend (`cd frontend`, usar pnpm)
 ```bash
-pnpm dev --webpack                        # Dev server :3000 (--webpack required)
-pnpm build --webpack                      # Build producción
+pnpm dev                                 # Dev server :3000 (turbopack default)
+pnpm build                               # Build producción (turbopack)
 pnpm lint                                 # ESLint
 pnpm test:run                             # Vitest (single run)
 pnpm test                                 # Vitest (watch)
@@ -28,10 +28,10 @@ pnpm approve-builds sharp unrs-resolver   # Aprueba builds nativos (requerido)
 
 ### Backend (`cd backend/inventory-app`, Maven Wrapper)
 ```bash
-./mvnw spring-boot:run                    # Dev server :8080
-./mvnw test                               # Suite completa (JUnit 5 + ArchUnit)
-./mvnw test -Dtest=ProductControllerTest  # Clase específica
-./mvnw clean package                      # Build JAR
+mvn spring-boot:run                       # Dev server :8080
+mvn test                                  # Suite completa (JUnit 5 + ArchUnit)
+mvn test -Dtest=ProductControllerTest     # Clase específica
+mvn clean package                         # Build JAR
 ```
 
 Flyway corre migraciones automáticamente al arrancar. Default creds: `admin` / `admin123`.

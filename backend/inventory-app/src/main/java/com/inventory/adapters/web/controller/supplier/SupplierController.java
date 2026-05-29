@@ -9,6 +9,8 @@ import com.inventory.domain.ports.in.supplier.SupplierQueryPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,8 +29,8 @@ public class SupplierController {
     private final SupplierQueryPort queryPort;
     private final SupplierMapper mapper;
 
-    public SupplierController(SupplierCommandPort commandPort, 
-                              SupplierQueryPort queryPort, 
+    public SupplierController(SupplierCommandPort commandPort,
+                              SupplierQueryPort queryPort,
                               SupplierMapper mapper) {
         this.commandPort = commandPort;
         this.queryPort = queryPort;
@@ -65,7 +67,8 @@ public class SupplierController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public Mono<SupplierDto> create(@Valid @RequestBody CreateSupplierRequest request) {
+    public Mono<SupplierDto> create(@Valid @RequestBody CreateSupplierRequest request,
+                                    @AuthenticationPrincipal UserDetails user) {
         return commandPort.create(new SupplierCommandPort.CreateCommand(
             request.code(),
             request.name(),
@@ -75,13 +78,14 @@ public class SupplierController {
             request.address(),
             request.notes(),
             request.website()
-        )).map(mapper::toDto);
+        ), extractUserId(user)).map(mapper::toDto);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public Mono<SupplierDto> update(@PathVariable UUID id, 
-                                    @Valid @RequestBody UpdateSupplierRequest request) {
+    public Mono<SupplierDto> update(@PathVariable UUID id,
+                                    @Valid @RequestBody UpdateSupplierRequest request,
+                                    @AuthenticationPrincipal UserDetails user) {
         return commandPort.update(id, new SupplierCommandPort.UpdateCommand(
             request.code(),
             request.name(),
@@ -91,19 +95,21 @@ public class SupplierController {
             request.address(),
             request.notes(),
             request.website()
-        )).map(mapper::toDto);
+        ), extractUserId(user)).map(mapper::toDto);
     }
 
     @PostMapping("/{id}/activate")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public Mono<SupplierDto> activate(@PathVariable UUID id) {
-        return commandPort.activate(id).map(mapper::toDto);
+    public Mono<SupplierDto> activate(@PathVariable UUID id,
+                                      @AuthenticationPrincipal UserDetails user) {
+        return commandPort.activate(id, extractUserId(user)).map(mapper::toDto);
     }
 
     @PostMapping("/{id}/deactivate")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public Mono<SupplierDto> deactivate(@PathVariable UUID id) {
-        return commandPort.deactivate(id).map(mapper::toDto);
+    public Mono<SupplierDto> deactivate(@PathVariable UUID id,
+                                        @AuthenticationPrincipal UserDetails user) {
+        return commandPort.deactivate(id, extractUserId(user)).map(mapper::toDto);
     }
 
     @DeleteMapping("/batch")
@@ -116,7 +122,12 @@ public class SupplierController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
-    public Mono<Void> delete(@PathVariable UUID id) {
-        return commandPort.delete(id);
+    public Mono<Void> delete(@PathVariable UUID id,
+                             @AuthenticationPrincipal UserDetails user) {
+        return commandPort.delete(id, extractUserId(user));
+    }
+
+    private UUID extractUserId(UserDetails user) {
+        return UUID.fromString(user.getUsername());
     }
 }

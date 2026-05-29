@@ -29,6 +29,7 @@ export type IconKey =
   | 'importData'
   | 'exportData'
   | 'report'
+  | 'auditLog'
   | 'users'
   | 'roles'
   | 'currency'
@@ -120,11 +121,12 @@ export const NAVIGATION_CONFIG: NavSectionConfig[] = [
     description: 'Configuración general, usuarios y monedas',
     defaultOpen: false,
     items: [
-      { href: '/users',          label: 'Usuarios',        description: 'Gestiona las cuentas y niveles de acceso al sistema', iconKey: 'users'        },
-      { href: '/roles',          label: 'Roles',           description: 'Gestiona los roles y permisos del sistema',            iconKey: 'roles'        },
-      { href: '/currencies',     label: 'Monedas',         description: 'Configura las monedas que acepta el sistema',         iconKey: 'currency'     },
-      { href: '/exchange-rates', label: 'Tasas de Cambio', description: 'Define los valores de conversión entre monedas',      iconKey: 'exchangeRate' },
-      { href: '/settings',       label: 'Configuración',   description: 'Ajusta las preferencias generales del sistema',       iconKey: 'settings'     },
+      { href: '/audit-log',      label: 'Auditoría',      description: 'Consulta el registro detallado de cambios en el sistema', iconKey: 'auditLog'    },
+      { href: '/users',          label: 'Usuarios',        description: 'Gestiona las cuentas y niveles de acceso al sistema',     iconKey: 'users'        },
+      { href: '/roles',          label: 'Roles',           description: 'Gestiona los roles y permisos del sistema',                iconKey: 'roles'        },
+      { href: '/currencies',     label: 'Monedas',         description: 'Configura las monedas que acepta el sistema',             iconKey: 'currency'     },
+      { href: '/exchange-rates', label: 'Tasas de Cambio', description: 'Define los valores de conversión entre monedas',          iconKey: 'exchangeRate' },
+      { href: '/settings',       label: 'Configuración',   description: 'Ajusta las preferencias generales del sistema',           iconKey: 'settings'     },
     ],
   },
 ];

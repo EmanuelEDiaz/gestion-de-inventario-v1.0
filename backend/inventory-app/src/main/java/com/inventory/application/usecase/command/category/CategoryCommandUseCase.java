@@ -1,10 +1,13 @@
 package com.inventory.application.usecase.command.category;
 
+import com.inventory.application.shared.AuditSerializer;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
+import com.inventory.domain.model.audit.AuditLog;
 import com.inventory.domain.model.category.Category;
 import com.inventory.domain.ports.in.category.CategoryCommandPort;
+import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CategoryRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -20,15 +23,26 @@ import java.util.UUID;
 public class CategoryCommandUseCase implements CategoryCommandPort {
 
     private final CategoryRepository categoryRepository;
+    private final AuditLogRepository auditLogRepository;
+    private final AuditSerializer auditSerializer;
 
-    public CategoryCommandUseCase(CategoryRepository categoryRepository) {
+    public CategoryCommandUseCase(CategoryRepository categoryRepository,
+                                  AuditLogRepository auditLogRepository,
+                                  AuditSerializer auditSerializer) {
         this.categoryRepository = categoryRepository;
+        this.auditLogRepository = auditLogRepository;
+        this.auditSerializer = auditSerializer;
     }
 
     @Override
-    public Mono<Category> create(CreateCategoryCommand command) {
+    public Mono<Category> create(CreateCategoryCommand command, UUID userId) {
         return validateUniqueName(command.name(), command.parentId())
-            .then(createCategory(command));
+            .then(createCategory(command))
+            .flatMap(saved -> {
+                String afterData = auditSerializer.toJsonTruncated(saved);
+                AuditLog auditLog = AuditLog.create(userId, "CATEGORY", saved.getId(), "CREATE", null, afterData, null);
+                return auditLogRepository.save(auditLog).thenReturn(saved);
+            });
     }
 
     private Mono<Category> createCategory(CreateCategoryCommand command) {
@@ -45,26 +59,25 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
     }
 
     @Override
-    public Mono<Category> update(UUID id, UpdateCategoryCommand command) {
+    public Mono<Category> update(UUID id, UpdateCategoryCommand command, UUID userId) {
         return categoryRepository.findById(id)
             .switchIfEmpty(Mono.error(new NotFoundException("Categoría", id.toString())))
             .flatMap(existing -> {
                 UUID newParentId = command.parentId() != null ? command.parentId() : existing.getParentId();
                 String newName = command.name() != null ? command.name() : existing.getName();
-                
-                // Validar que no se asigne a sí misma como parent
+
                 if (command.parentId() != null && command.parentId().equals(id)) {
                     return Mono.error(new BadRequestException("Una categoría no puede ser su propia padre"));
                 }
-                
-                // Validar nombre único si cambia
+
                 Mono<Void> nameValidation = (command.name() != null && !command.name().equals(existing.getName()))
                     ? validateUniqueName(newName, newParentId)
                     : Mono.empty();
-                
+
                 return nameValidation.thenReturn(existing);
             })
-            .map(existing -> {
+            .flatMap(existing -> {
+                String beforeData = auditSerializer.toJsonTruncated(existing);
                 Category updated = existing;
                 if (command.name() != null) {
                     updated = updated.rename(command.name());
@@ -72,19 +85,30 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
                 if (command.sortOrder() > 0) {
                     updated = updated.reorder(command.sortOrder());
                 }
-                return updated;
-            })
-            .flatMap(categoryRepository::save);
+                final Category toSave = updated;
+                return categoryRepository.save(toSave)
+                    .flatMap(saved -> {
+                        String afterData = auditSerializer.toJsonTruncated(saved);
+                        AuditLog auditLog = AuditLog.create(userId, "CATEGORY", id, "UPDATE", beforeData, afterData, null);
+                        return auditLogRepository.save(auditLog).thenReturn(saved);
+                    });
+            });
     }
 
     @Override
-    public Mono<Void> delete(UUID id) {
+    public Mono<Void> delete(UUID id, UUID userId) {
         return categoryRepository.findById(id)
             .switchIfEmpty(Mono.error(new NotFoundException("Categoría", id.toString())))
             .flatMap(category -> categoryRepository.countProducts(id)
-                .flatMap(count -> count > 0
-                    ? Mono.error(new ConflictException("No se puede eliminar una categoría con productos asociados"))
-                    : categoryRepository.deleteById(id)));
+                .flatMap(count -> {
+                    if (count > 0) {
+                        return Mono.error(new ConflictException("No se puede eliminar una categoría con productos asociados"));
+                    }
+                    String beforeData = auditSerializer.toJsonTruncated(category);
+                    AuditLog auditLog = AuditLog.create(userId, "CATEGORY", id, "DELETE", beforeData, null, null);
+                    return auditLogRepository.save(auditLog)
+                        .then(categoryRepository.deleteById(id));
+                }));
     }
 
     @Override
