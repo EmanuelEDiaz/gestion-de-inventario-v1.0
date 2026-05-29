@@ -100,7 +100,7 @@
 | **A0** — Auditoría | ✅ Hecho |
 | **A1** — Backend: Audit Logs (ver + escribir) | ✅ Hecho |
 | **A2+A4** — Backend: Reports + Export (fusionadas) | ✅ Hecho |
-| **A3** — Backend: Import CSV | ⏳ Pendiente |
+| **A3** — Backend: Import CSV | ✅ Hecho |
 | **A5** — Fix POS: CREDIT/RESERVE wiring + Debts bug | ⏳ Pendiente |
 | **A6** — Frontend: Notification Preferences UI | ⏳ Pendiente |
 | **A7** — Offline: IndexedDB + SW + Sync | ⏳ Pendiente |
