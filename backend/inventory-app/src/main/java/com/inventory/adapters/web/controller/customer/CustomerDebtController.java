@@ -41,9 +41,9 @@ public class CustomerDebtController {
         @RequestParam(required = false) String status
     ) {
         if (status != null) {
-            return queryPort.listAll(CustomerDebt.DebtStatus.valueOf(status)).map(mapper::toDto);
+            return queryPort.listAll(CustomerDebt.DebtStatus.valueOf(status.toUpperCase())).map(mapper::toDto);
         }
-        return queryPort.listOverdue().map(mapper::toDto);
+        return queryPort.findAll().map(mapper::toDto);
     }
 
     @GetMapping("/overdue")

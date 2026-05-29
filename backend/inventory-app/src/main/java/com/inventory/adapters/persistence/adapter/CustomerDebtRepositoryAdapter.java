@@ -25,6 +25,11 @@ public class CustomerDebtRepositoryAdapter implements CustomerDebtRepository {
     }
 
     @Override
+    public Flux<CustomerDebt> findAll() {
+        return r2dbc.findAll().map(mapper::toDomain);
+    }
+
+    @Override
     public Mono<CustomerDebt> findById(UUID id) {
         return r2dbc.findById(id).map(mapper::toDomain);
     }

@@ -11,6 +11,8 @@ import java.util.UUID;
  */
 public interface CustomerDebtRepository {
 
+    Flux<CustomerDebt> findAll();
+
     Mono<CustomerDebt> findById(UUID id);
 
     Flux<CustomerDebt> findByCustomerId(UUID customerId);

@@ -10,6 +10,8 @@ import java.util.UUID;
 
 public interface SaleCommandPort {
     Mono<Sale> create(CreateCommand command, UUID createdBy);
+    Mono<Sale> createCredit(CreateCommand command, UUID createdBy);
+    Mono<Sale> createReserve(CreateCommand command, UUID createdBy);
     Mono<Sale> confirm(UUID saleId);
     Mono<Sale> deliver(UUID saleId);
     Mono<Sale> cancel(UUID saleId);

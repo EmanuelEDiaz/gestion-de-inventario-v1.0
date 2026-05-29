@@ -11,6 +11,8 @@ import java.util.UUID;
  */
 public interface CustomerDebtQueryPort {
 
+    Flux<CustomerDebt> findAll();
+
     Flux<CustomerDebt> listByCustomer(UUID customerId);
 
     Mono<CustomerDebt> getById(UUID debtId);

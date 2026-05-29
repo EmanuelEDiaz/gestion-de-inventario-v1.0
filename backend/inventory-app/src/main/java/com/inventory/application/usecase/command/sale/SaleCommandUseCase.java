@@ -4,12 +4,14 @@ import com.inventory.application.shared.AuditSerializer;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.audit.AuditLog;
+import com.inventory.domain.model.customer.CustomerDebt;
 import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.model.sale.SaleLine;
 import com.inventory.domain.model.stock.StockBalance;
 import com.inventory.domain.ports.in.sale.SaleCommandPort;
 import com.inventory.domain.ports.out.AuditLogRepository;
+import com.inventory.domain.ports.out.CustomerDebtRepository;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.SaleRepository;
 import com.inventory.domain.ports.out.StockRepository;
@@ -31,23 +33,81 @@ public class SaleCommandUseCase implements SaleCommandPort {
     private final MovementRepository movementRepository;
     private final AuditLogRepository auditLogRepository;
     private final AuditSerializer auditSerializer;
+    private final CustomerDebtRepository customerDebtRepository;
     public SaleCommandUseCase(
         SaleRepository saleRepository,
         StockRepository stockRepository,
         MovementRepository movementRepository,
         AuditLogRepository auditLogRepository,
-        AuditSerializer auditSerializer
+        AuditSerializer auditSerializer,
+        CustomerDebtRepository customerDebtRepository
     ) {
         this.saleRepository = saleRepository;
         this.stockRepository = stockRepository;
         this.movementRepository = movementRepository;
         this.auditLogRepository = auditLogRepository;
         this.auditSerializer = auditSerializer;
+        this.customerDebtRepository = customerDebtRepository;
     }
 
     @Override
     @Transactional
     public Mono<Sale> create(CreateCommand command, UUID createdBy) {
+        return switch (command.paymentMode()) {
+            case CREDIT -> createCredit(command, createdBy);
+            case RESERVE -> createReserve(command, createdBy);
+            default -> createImmediate(command, createdBy);
+        };
+    }
+
+    @Override
+    @Transactional
+    public Mono<Sale> createCredit(CreateCommand command, UUID createdBy) {
+        if (command.customerId() == null) {
+            return Mono.error(new BadRequestException("customerId is required for credit sales"));
+        }
+        if (command.lines() == null || command.lines().isEmpty()) {
+            return Mono.error(new BadRequestException("At least one line is required"));
+        }
+
+        return saleRepository.generateSaleNumber()
+            .flatMap(saleNumber -> createSaleDraft(saleNumber, command, createdBy, Sale.PaymentMode.CREDIT))
+            .flatMap(draft -> confirm(draft.id()))
+            .flatMap(confirmed -> deliver(confirmed.id()))
+            .flatMap(delivered -> {
+                CustomerDebt debt = CustomerDebt.create(
+                    delivered.customerId(), delivered.id(),
+                    delivered.total(), delivered.currencyCode()
+                );
+                return customerDebtRepository.save(debt)
+                    .thenReturn(delivered);
+            })
+            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
+                createdBy, "SALE", saved.id(), "CREATE",
+                null, auditSerializer.toJsonTruncated(saved), null))
+                .thenReturn(saved));
+    }
+
+    @Override
+    @Transactional
+    public Mono<Sale> createReserve(CreateCommand command, UUID createdBy) {
+        if (command.customerId() == null) {
+            return Mono.error(new BadRequestException("customerId is required for reserve sales"));
+        }
+        if (command.lines() == null || command.lines().isEmpty()) {
+            return Mono.error(new BadRequestException("At least one line is required"));
+        }
+
+        return saleRepository.generateSaleNumber()
+            .flatMap(saleNumber -> createSaleDraft(saleNumber, command, createdBy, Sale.PaymentMode.RESERVE))
+            .flatMap(draft -> confirm(draft.id()))
+            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
+                createdBy, "SALE", saved.id(), "CREATE",
+                null, auditSerializer.toJsonTruncated(saved), null))
+                .thenReturn(saved));
+    }
+
+    private Mono<Sale> createImmediate(CreateCommand command, UUID createdBy) {
         if (command.warehouseId() == null) {
             return Mono.error(new BadRequestException("Warehouse is required"));
         }
@@ -56,36 +116,39 @@ public class SaleCommandUseCase implements SaleCommandPort {
         }
 
         return saleRepository.generateSaleNumber()
-            .flatMap(saleNumber -> {
-                AtomicInteger sortOrder = new AtomicInteger(0);
-                List<SaleLine> lines = command.lines().stream()
-                    .map(line -> SaleLine.create(
-                        line.productId(),
-                        line.quantity(),
-                        line.unitPrice(),
-                        line.discount(),
-                        sortOrder.incrementAndGet()
-                    ))
-                    .toList();
+            .flatMap(saleNumber -> createSaleDraft(saleNumber, command, createdBy, Sale.PaymentMode.IMMEDIATE))
+            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
+                createdBy, "SALE", saved.id(), "CREATE",
+                null, auditSerializer.toJsonTruncated(saved), null))
+                .thenReturn(saved));
+    }
 
-                Sale sale = Sale.createDraft(
-                    saleNumber,
-                    command.warehouseId(),
-                    command.customerId(),
-                    command.currencyCode(),
-                    command.notes(),
-                    command.saleDate(),
-                    lines,
-                    createdBy,
-                    command.paymentMode()
-                );
+    private Mono<Sale> createSaleDraft(String saleNumber, CreateCommand command, UUID createdBy,
+                                        Sale.PaymentMode paymentMode) {
+        AtomicInteger sortOrder = new AtomicInteger(0);
+        List<SaleLine> lines = command.lines().stream()
+            .map(line -> SaleLine.create(
+                line.productId(),
+                line.quantity(),
+                line.unitPrice(),
+                line.discount(),
+                sortOrder.incrementAndGet()
+            ))
+            .toList();
 
-                return saleRepository.save(sale)
-                    .flatMap(saved -> auditLogRepository.save(AuditLog.create(
-                        createdBy, "SALE", saved.id(), "CREATE",
-                        null, auditSerializer.toJsonTruncated(saved), null))
-                        .thenReturn(saved));
-            });
+        Sale sale = Sale.createDraft(
+            saleNumber,
+            command.warehouseId(),
+            command.customerId(),
+            command.currencyCode(),
+            command.notes(),
+            command.saleDate(),
+            lines,
+            createdBy,
+            paymentMode
+        );
+
+        return saleRepository.save(sale);
     }
 
     @Override

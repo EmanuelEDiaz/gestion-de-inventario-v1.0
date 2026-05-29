@@ -23,6 +23,11 @@ public class CustomerDebtQueryUseCase implements CustomerDebtQueryPort {
     }
 
     @Override
+    public Flux<CustomerDebt> findAll() {
+        return customerDebtRepository.findAll();
+    }
+
+    @Override
     public Flux<CustomerDebt> listByCustomer(UUID customerId) {
         return customerDebtRepository.findByCustomerId(customerId);
     }
