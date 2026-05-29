@@ -4,21 +4,36 @@ This document guides Copilot sessions for the offline-first inventory management
 
 ## Quick Commands
 
+### Development (One-Command Startup)
+```bash
+# Automated setup: Backend + Frontend in parallel
+./start-dev.sh                    # Start both backend (:8080) and frontend (:3000)
+./stop-dev.sh                     # Stop both services
+
+# Auto-installs: Java 21, Maven, Node.js 22, pnpm
+# Requires: PostgreSQL running on :5432 (or Docker)
+```
+
 ### Frontend (Next.js 16 + React 19 + TypeScript 5)
 ```bash
 cd frontend
 
 # Development & Testing
-pnpm dev                          # Dev server @ http://localhost:3000
+pnpm dev                          # Dev server @ http://localhost:3000 (turbopack)
 pnpm build                        # Production build
 pnpm lint                         # ESLint full suite
 pnpm lint --fix                   # Auto-fix lint errors
 pnpm test                         # Watch mode (Vitest)
-pnpm test:run                     # Run tests once
+pnpm test:run                     # Run tests once (CI-safe)
 pnpm test:coverage               # Coverage report
 
 # Single test file
 pnpm vitest run src/core/entities/product.test.ts
+
+# E2E Testing (Playwright)
+node ../e2e-tests.mjs            # Run e2e tests directly
+npx playwright test               # Run tests from tests/
+npx playwright test --headed      # Watch browser while testing
 ```
 
 ### Backend (Spring Boot 3.4 + WebFlux + Java 21)
@@ -26,27 +41,41 @@ pnpm vitest run src/core/entities/product.test.ts
 cd backend/inventory-app
 
 # Running
-./mvnw spring-boot:run            # Server @ http://localhost:8080
+./mvnw spring-boot:run            # Server @ http://localhost:8080 (auto-runs Flyway migrations)
 ./mvnw clean package              # Build JAR
 
 # Testing
-./mvnw test                       # Full test suite
+./mvnw test                       # Full test suite (includes ArchUnit)
 ./mvnw test -Dtest=ProductControllerTest  # Single test class
 ./mvnw test -Dtest=ProductControllerTest#testGetProduct  # Single method
-
-# Code quality
-./mvnw checkstyle:check          # Static analysis (if configured)
-./mvnw spotbugs:check            # Bug detection (if configured)
 ```
 
 ### Docker Compose (All services)
 ```bash
-docker compose up -d              # Start all containers
+docker compose up -d              # Start: PostgreSQL → Backend → Frontend → Caddy
 docker compose down               # Stop all containers
 docker compose logs -f            # View logs (Ctrl+C to exit)
+docker compose logs backend       # View specific service logs
+
+# App URLs:
+#   API:  http://localhost:8080/api/v1
+#   App:  https://localhost (with auto-signed cert for PWA)
+```
+
+### Knowledge Graph (Graphify)
+```bash
+# For complex cross-file investigations, use graphify before grep:
+graphify query "what uses the Product entity?" --budget 2000  # BFS context
+graphify update .                  # Post-change (quick AST update)
+
+# Results in graphify-out/ with god nodes and communities
 ```
 
 ## High-Level Architecture
+
+### ⚠️ Critical: Next.js 16 Breaking Changes
+
+**Before writing any frontend code:** Read `node_modules/next/dist/docs/` first. This version has significant breaking changes in APIs, conventions, and file structure. Check deprecation notices carefully.
 
 ### Monorepo Structure
 
@@ -211,6 +240,7 @@ core (pure entities, use-cases) ← infrastructure (API clients, IndexedDB) ← 
 - **Sync cursor:** `sync_log.id` (bigserial) for pull queries
 - **Conflict resolution:** Last-write-wins with user notification
 - **Service Worker:** next-pwa handles registration; manual sync every 30s or on network change
+- **Complete offline:** PWA cached + IndexedDB for data + outbox for pending writes
 
 ### Security & Auth
 - **JWT secret:** Minimum 32 characters, stored in environment (never committed)
@@ -247,14 +277,59 @@ core (pure entities, use-cases) ← infrastructure (API clients, IndexedDB) ← 
 | File | Purpose |
 |------|---------|
 | [CLAUDE.md](../CLAUDE.md) | **Authoritative** project rules, architecture decisions, gates (Definition of Done) |
-| [AGENTS.md](../AGENTS.md) | Skills required for Copilot, tech stack summary, key commands |
+| [AGENTS.md](../AGENTS.md) | Copilot commands, tech stack summary, key rules for this project |
+| [frontend/AGENTS.md](../frontend/AGENTS.md) | Next.js 16 warnings, native build approvals, frontend-specific rules |
 | [docs/contracts/database-schema.md](../docs/contracts/database-schema.md) | ERD and table definitions |
 | [docs/contracts/endpoints.md](../docs/contracts/endpoints.md) | Full API contract (OpenAPI 3) |
+| [docs/contracts/dtos.md](../docs/contracts/dtos.md) | Request/Response DTOs with examples |
 | [docs/design/offline-strategy.md](../docs/design/offline-strategy.md) | Sync & offline implementation details |
 | [docs/adr/architecture-decisions.md](../docs/adr/architecture-decisions.md) | Architecture Decision Records |
+| [.github/mcp-config.md](./mcp-config.md) | MCP server setup for Playwright and other tools |
 | `.env.example` | Environment variables template |
 
+## Critical Project Rules
+
+### Architecture (Non-Negotiable)
+- ✅ **Clean + Hexagonal:** domain → application → adapters
+- ✅ **`domain` and `core` are pure:** NO Spring, React, HTTP, JSON, or DB-specific code
+- ✅ **Dependency flow only inward:** Adapters depend on Application/Domain, never reverse
+- ✅ **ArchUnit enforces this in CI:** Layer violations cause build failure
+
+### Runtime (100% Offline)
+- ❌ **NO CDNs:** Bootstrap, Material-UI, Google Fonts, etc. must be local
+- ❌ **NO external trackers/analytics**
+- ❌ **NO remote API calls** except to local backend (via BFF on frontend)
+- ✅ **ALL assets** in `/public` (fonts, icons, static images)
+
+### Conventions (Mandatory)
+- **UI text:** Spanish (labels, buttons, tooltips, error messages)
+- **Code:** English (variables, functions, classes, comments)
+- **Tooltips required:** Every input, button, label must have `title` in Spanish
+- **File naming frontend:** kebab-case files, PascalCase components
+- **File naming backend:** PascalCase (ProductRepository.java)
+- **No `console.log()`** in production code (frontend)
+- **No `any` type** without explicit justification (frontend TypeScript)
+- **Component size:** Max ~100 lines; split if larger
+- **Hook size:** Max ~150 lines; extract if larger
+
+### State Management (Strict Rules)
+- ✅ **TanStack Query:** For server data (products, sales, stock)
+- ✅ **Zustand:** For UI state (modals, filters, theme)
+- ❌ **NO Redux**
+- ❌ **NO React state for server data** (TanStack Query required)
+
+### Database & Migrations
+- **Tool:** Flyway (JDBC for migrations, R2DBC for runtime)
+- **Naming:** Snake_case tables/columns, ISO 8601 UTC timestamps
+- **Versioning:** V1__init.sql, V2__add_column.sql
+- **Constraints enforced at DB level:** Foreign keys, unique, check constraints
+
 ## Common Tasks
+
+### Before Making ANY Code Changes
+1. **Check CLAUDE.md** for the Definition of Done (Gates)
+2. **Check AGENTS.md** for current commands and rules
+3. **For frontend:** Read Next.js 16 breaking changes in `node_modules/next/dist/docs/`
 
 ### Adding a New Feature
 
@@ -276,48 +351,126 @@ core (pure entities, use-cases) ← infrastructure (API clients, IndexedDB) ← 
 ### Running Tests Before Commit
 
 ```bash
-# Frontend
-cd frontend && pnpm lint --fix && pnpm test:run
+# Frontend (from root or frontend/)
+pnpm lint --fix
+pnpm test:run
 
-# Backend
-cd backend/inventory-app && ./mvnw clean test
+# Backend (from backend/inventory-app/)
+./mvnw clean test
 ```
 
-### Database Migration
+### Creating a Database Migration
 
 ```bash
-# Create empty migration
+# 1. Create empty migration
 cd backend/inventory-app/src/main/resources/db/migration
-touch V{N}__description.sql  # e.g., V3__add_index_on_products.sql
+touch V{N}__description.sql  # e.g., V3__add_user_roles.sql
 
-# Edit migration SQL, then backend auto-runs on startup
+# 2. Edit migration (SQL only, Flyway handles JDBC)
+# 3. Restart backend — Flyway auto-runs on startup
+```
+
+### Debugging Offline Sync Issues
+
+Check these files in order:
+1. `frontend/src/infrastructure/storage/outbox-service.ts` — Local outbox logic
+2. `frontend/src/infrastructure/repositories/sync-repository.ts` — Push/pull logic
+3. `backend/src/main/java/com/inventory/adapters/web/controller/SyncController.java` — Server sync endpoint
+4. IndexedDB in DevTools: Application → IndexedDB → [database] → outbox
+
+### Testing Offline Functionality
+
+```bash
+# 1. Start app normally (online mode)
+pnpm dev
+
+# 2. In browser DevTools:
+#    - Network tab → Throttling: "Offline"
+#    - Or: DevTools → Network → "Work offline"
+
+# 3. Perform actions (create, update)
+
+# 4. Go back online (DevTools → Throttling: "No throttling")
+
+# 5. Verify sync in:
+#    - Browser console (should log sync events)
+#    - Network tab (should see POST to /api/v1/sync/push)
+#    - Backend logs (should log inbound sync)
 ```
 
 ### Local HTTPS Testing (Mobile)
 
 ```bash
-# Export CA certificate from Caddy
+# 1. Export CA certificate from Caddy
 docker compose exec caddy cat /data/caddy/pki/authorities/local/root.crt > caddy_ca.crt
 
-# Android: Settings → Security → Install certificate → CA certificate (select caddy_ca.crt)
-# iOS: Settings → General → VPN and Device Management → Certificates, then trust
+# 2. Install on device:
+#    Android: Settings → Security → Install certificate → CA certificate
+#    iOS: Settings → General → VPN and Device Management → Certificates, then trust
+
+# 3. Access via LAN IP:
+#    Edit infra/caddy/Caddyfile: replace 'localhost' with server IP (e.g., 192.168.1.100)
+#    Restart: docker compose restart caddy
+#    Visit: https://192.168.1.100 on mobile device
 ```
 
-## CI/CD Gates
+## CI/CD Gates (Must Pass Before Merge)
 
 - ✅ **Lint & Format:** ESLint (frontend), Checkstyle (backend)
 - ✅ **Unit & Integration Tests:** `pnpm test:run` (frontend), `./mvnw test` (backend)
-- ✅ **Architecture Rules:** ArchUnit enforces layer boundaries (backend)
+- ✅ **Architecture Rules:** ArchUnit enforces layer boundaries (backend violations = build failure)
 - ✅ **Build:** `pnpm build` (frontend), `./mvnw clean package` (backend)
 - ✅ **E2E Tests:** Playwright (if configured) tests critical user workflows
+- ✅ **Offline Tests:** E2E includes offline sync, service worker, and PWA functionality
 
-Blocking issues fail the build — no merges without passing gates.
+**Blocking issues fail the build — no merges without passing gates.**
+
+## Troubleshooting
+
+### Backend won't start
+```bash
+# Check logs
+docker compose logs backend
+
+# Common: Flyway migration error
+# Solution: Check db/migration/ SQL syntax and ensure migrations are incremental (V1, V2, V3...)
+
+# Common: Port 5432 (PostgreSQL) not available
+# Solution: docker run -d -p 5432:5432 postgres:17 or use existing DB
+```
+
+### Frontend build fails
+```bash
+# Clear cache and rebuild
+rm -rf frontend/.next node_modules/.vite
+cd frontend && pnpm install && pnpm build
+
+# Check for Next.js 16 API usage
+# Read: node_modules/next/dist/docs/
+```
+
+### Offline sync not working
+1. Check browser IndexedDB in DevTools
+2. Verify Service Worker registered: DevTools → Application → Service Workers
+3. Check browser console for sync errors
+4. Check backend logs: `docker compose logs backend | grep -i sync`
+
+### E2E tests failing
+```bash
+# Run in headed mode to watch browser
+npx playwright test --headed
+
+# Debug mode
+npx playwright test --debug
+
+# Check test file: frontend/e2e-tests.mjs
+```
 
 ## Version Requirements
 
 - Java 21 LTS (Eclipse Temurin)
 - Spring Boot 3.4+
-- Next.js 16+ (App Router)
+- Next.js 16+ (App Router) — **breaking changes, read docs**
 - Node.js 20+ LTS
 - PostgreSQL 16+
 - pnpm 9+ (not npm)
@@ -325,4 +478,5 @@ Blocking issues fail the build — no merges without passing gates.
 ---
 
 **Last updated:** May 2026  
-**For detailed rules, see:** [CLAUDE.md](../CLAUDE.md) and [AGENTS.md](../AGENTS.md)
+**For detailed rules and context:** [CLAUDE.md](../CLAUDE.md), [AGENTS.md](../AGENTS.md), [frontend/AGENTS.md](../frontend/AGENTS.md)  
+**For architecture:** See [docs/adr/architecture-decisions.md](../docs/adr/architecture-decisions.md)
