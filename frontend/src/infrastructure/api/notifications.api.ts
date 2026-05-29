@@ -1,3 +1,10 @@
+/**
+ * ⚠️ Este archivo tiene un duplicado parcial en notification-api.ts
+ * - notifications.api.ts: funciones top-level (preferencias, schedule, SSE, CRUD con paginación)
+ * - notification-api.ts: objeto namespace notificationApi (CRUD básico, send, userDirectory)
+ * Ambas tienen solapamiento en CRUD básico. No eliminar hasta consolidar imports (ver A6.2).
+ * 12+ imports activos desde hooks compartidos apuntan a este archivo.
+ */
 import { apiClient } from './client';
 import type {
   Notification,

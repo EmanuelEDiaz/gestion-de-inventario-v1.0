@@ -101,8 +101,8 @@
 | **A1** — Backend: Audit Logs (ver + escribir) | ✅ Hecho |
 | **A2+A4** — Backend: Reports + Export (fusionadas) | ✅ Hecho |
 | **A3** — Backend: Import CSV | ✅ Hecho |
-| **A5** — Fix POS: CREDIT/RESERVE wiring + Debts bug | ⏳ Pendiente |
-| **A6** — Frontend: Notification Preferences UI | ⏳ Pendiente |
+| **A5** — Fix POS: CREDIT/RESERVE wiring + Debts bug | ✅ Hecho |
+| **A6** — Frontend: Notification Preferences UI | ✅ Hecho |
 | **A7** — Offline: IndexedDB + SW + Sync | ⏳ Pendiente |
 | **A8** — Housekeeping | ⏳ Pendiente |
 | **B1** — Tooltips: Iconos + Copiar + Auditoría | ⏳ Pendiente |
