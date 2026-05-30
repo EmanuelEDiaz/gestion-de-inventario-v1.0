@@ -13,10 +13,12 @@ interface CategoryFormProps {
   categories: Category[];
   editingCategory: Category | null;
   onSubmit: (data: CreateCategoryData) => void;
+  onContinue?: (data: CreateCategoryData) => void;
   onCancel: () => void;
 }
 
-export function CategoryForm({ categories, editingCategory, onSubmit, onCancel }: CategoryFormProps) {
+export function CategoryForm({ categories, editingCategory, onSubmit, onContinue, onCancel }: CategoryFormProps) {
+  const [shouldContinue, setShouldContinue] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     parentId: '',
@@ -38,13 +40,20 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onCancel }
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      onSubmit({
+      const data = {
         name: formData.name,
         parentId: formData.parentId || undefined,
         sortOrder: parseInt(formData.sortOrder) || 0,
-      });
+      };
+      if (shouldContinue && onContinue) {
+        setFormData({ name: '', parentId: '', sortOrder: '0' });
+        setShouldContinue(false);
+        onContinue(data);
+      } else {
+        onSubmit(data);
+      }
     },
-    [formData, onSubmit]
+    [formData, onSubmit, shouldContinue, onContinue]
   );
 
   const parentOptions = useMemo(
@@ -90,6 +99,11 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onCancel }
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancelar
         </Button>
+        {!editingCategory && (
+          <Button type="submit" variant="outline" onClick={() => setShouldContinue(true)}>
+            Crear y Continuar
+          </Button>
+        )}
         <Button type="submit">
           {editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
         </Button>

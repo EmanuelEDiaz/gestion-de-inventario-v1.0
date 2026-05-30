@@ -9,6 +9,7 @@ import { EditUserDialog } from '../components/dialogs/EditUserDialog';
 import { ChangePasswordDialog } from '../components/dialogs/ChangePasswordDialog';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
+import { toast } from '@/presentation/shared/components/ui/toast';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -71,7 +72,9 @@ export function UsersView() {
         actions={!showForm && <TooltipWrapper content="Crear nuevo usuario"><Button size="sm" onClick={() => setShowForm(true)} title="Crear nuevo usuario">+ Nuevo Usuario</Button></TooltipWrapper>}
       />
       {showForm && (
-        <UserFormFields onSubmit={async (data) => { await create(data); setShowForm(false); }}
+        <UserFormFields
+          onSubmit={async (data) => { await create(data); setShowForm(false); }}
+          onContinue={async (data) => { await create(data); toast.success('Usuario creado. Puedes seguir agregando.'); }}
           isSubmitting={isCreating} onCancel={() => setShowForm(false)} />
       )}
       <GenericTable data={users} columns={COLUMNS} actions={actions} emptyMessage="No hay usuarios registrados" />

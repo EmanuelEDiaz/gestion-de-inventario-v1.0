@@ -9,21 +9,42 @@ import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 
 interface UserFormFieldsProps {
   onSubmit: (data: CreateUserData) => void;
+  onContinue?: (data: CreateUserData) => void;
   isSubmitting: boolean;
   onCancel: () => void;
 }
 
-export function UserFormFields({ onSubmit, isSubmitting, onCancel }: UserFormFieldsProps) {
+export function UserFormFields({ onSubmit, onContinue, isSubmitting, onCancel }: UserFormFieldsProps) {
   const { data: roles = [], isLoading: loadingRoles } = useRoles();
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [roleId, setRoleId] = useState('');
+  const [shouldContinue, setShouldContinue] = useState(false);
+
+  const resetForm = () => {
+    setUsername('');
+    setDisplayName('');
+    setEmail('');
+    setPassword('');
+    setRoleId('');
+  };
+
+  const getData = (): CreateUserData => ({
+    username, displayName, email: email || undefined, password, roleId,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ username, displayName, email: email || undefined, password, roleId });
+    const data = getData();
+    if (shouldContinue && onContinue) {
+      resetForm();
+      onContinue(data);
+    } else {
+      onSubmit(data);
+    }
+    setShouldContinue(false);
   };
 
   return (
@@ -71,6 +92,12 @@ export function UserFormFields({ onSubmit, isSubmitting, onCancel }: UserFormFie
         <Button type="submit" disabled={isSubmitting || !roleId}>
           {isSubmitting ? 'Creando...' : 'Crear Usuario'}
         </Button>
+        {onContinue && (
+          <Button type="submit" variant="outline" disabled={isSubmitting || !roleId}
+            onClick={() => setShouldContinue(true)}>
+            {isSubmitting ? 'Creando...' : 'Crear y Continuar'}
+          </Button>
+        )}
         <Button type="button" variant="outline" onClick={onCancel} title="Cancelar">Cancelar</Button>
       </div>
     </form>

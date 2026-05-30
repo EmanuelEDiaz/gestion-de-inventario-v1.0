@@ -8,9 +8,11 @@ interface PurchaseSummaryProps {
   onNotesChange: (v: string) => void;
   isSubmitting: boolean;
   onCancel: () => void;
+  showContinue?: boolean;
+  onContinueClick?: () => void;
 }
 
-export function PurchaseSummary({ notes, onNotesChange, isSubmitting, onCancel }: PurchaseSummaryProps) {
+export function PurchaseSummary({ notes, onNotesChange, isSubmitting, onCancel, showContinue, onContinueClick }: PurchaseSummaryProps) {
   return (
     <>
       <div className="space-y-1">
@@ -19,6 +21,11 @@ export function PurchaseSummary({ notes, onNotesChange, isSubmitting, onCancel }
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creando...' : 'Crear Compra'}</Button>
+        {showContinue && (
+          <Button type="submit" variant="outline" disabled={isSubmitting} onClick={onContinueClick}>
+            {isSubmitting ? 'Creando...' : 'Crear y Continuar'}
+          </Button>
+        )}
         <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
       </div>
     </>

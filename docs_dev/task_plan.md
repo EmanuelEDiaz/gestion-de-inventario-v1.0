@@ -119,7 +119,10 @@
 |   **B3.2** — Backend: Supplier/Customer DTOs + entities + mappers | ✅ Hecho |
 |   **B3.3** — Frontend: GeoRegion entity + port + repository + hooks | ✅ Hecho |
 |   **B3.4** — Frontend: Supplier/Customer structured address forms | ✅ Hecho |
-| **B4** — UX Formularios: Pre-llenado + Crear y Continuar | ⏳ Pendiente |
+| **B4** — UX Formularios: Pre-llenado + Crear y Continuar | ✅ Hecho |
+|   **B4.1** — Auto-select-all al focus (useAutoSelect hook + Input.autoSelect prop) | ✅ Hecho |
+|   **B4.2** — Pre-llenado inteligente (ProductCreateView ?prefillFrom=, PurchaseFormFields ?supplierId=) | ✅ Hecho |
+|   **B4.3** — Botón "Crear y Continuar" (Product, Supplier, Customer, Category, Purchase, User) | ✅ Hecho |
 | **B5** — Gráficos + Estadísticas + Métricas Dashboard | ⏳ Pendiente |
 | **B6** — Imagen de Perfil de Usuario | ⏳ Pendiente |
 | **B7** — Resolución Conflictos Offline (Outbox Collapsing) | ⏳ Pendiente |

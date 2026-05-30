@@ -67,6 +67,12 @@ export function CustomersListView() {
             catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear cliente'); }
             finally { setIsCreating(false); }
           }}
+          onContinue={async (data) => {
+            setIsCreating(true);
+            try { await create(data); toast.success('Cliente creado. Puedes seguir agregando.'); }
+            catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear cliente'); }
+            finally { setIsCreating(false); }
+          }}
           isSubmitting={isCreating} onCancel={() => setShowForm(false)}
         />
       )}

@@ -5,13 +5,27 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   label?: string;
   labelSuffix?: React.ReactNode;
   error?: string;
+  autoSelect?: boolean;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, labelSuffix, error, id, ...props }, ref) => {
+  ({ className, type, label, labelSuffix, error, id, autoSelect, onFocus, ...props }, ref) => {
+    const inputRef = React.useRef<HTMLInputElement>(null);
     const generatedId = React.useId();
     const inputId = id ?? generatedId;
+
+    React.useImperativeHandle(ref, () => inputRef.current!, []);
     
+    const handleFocus = React.useCallback(
+      (e: React.FocusEvent<HTMLInputElement>) => {
+        if (autoSelect) {
+          requestAnimationFrame(() => inputRef.current?.select());
+        }
+        onFocus?.(e);
+      },
+      [autoSelect, onFocus]
+    );
+
     return (
       <div className="space-y-1">
         {label && (
@@ -30,7 +44,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             error && 'border-red-500 focus:ring-red-500',
             className
           )}
-          ref={ref}
+          ref={inputRef}
+          onFocus={handleFocus}
           {...props}
         />
         {error && (

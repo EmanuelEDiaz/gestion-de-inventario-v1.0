@@ -12,11 +12,12 @@ import { useMunicipalities } from '@/presentation/modules/geo/hooks/useMunicipal
 
 interface SupplierFormFieldsProps {
   onSubmit: (data: CreateSupplierData) => void;
+  onContinue?: (data: CreateSupplierData) => void;
   isSubmitting: boolean;
   onCancel: () => void;
 }
 
-export function SupplierFormFields({ onSubmit, isSubmitting, onCancel }: SupplierFormFieldsProps) {
+export function SupplierFormFields({ onSubmit, onContinue, isSubmitting, onCancel }: SupplierFormFieldsProps) {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [contactName, setContactName] = useState('');
@@ -28,25 +29,49 @@ export function SupplierFormFields({ onSubmit, isSubmitting, onCancel }: Supplie
   const [locality, setLocality] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [notes, setNotes] = useState('');
+  const [shouldContinue, setShouldContinue] = useState(false);
 
   const { data: provinces } = useProvinces();
   const { data: municipalities } = useMunicipalities(province || undefined);
 
+  const resetForm = () => {
+    setName('');
+    setCode('');
+    setContactName('');
+    setPhone('');
+    setEmail('');
+    setProvince('');
+    setMunicipality('');
+    setStreet('');
+    setLocality('');
+    setZipCode('');
+    setNotes('');
+  };
+
+  const getData = (): CreateSupplierData => ({
+    name,
+    code: code || undefined,
+    contactName: contactName || undefined,
+    phone: phone || undefined,
+    email: email || undefined,
+    province: province || undefined,
+    municipality: municipality || undefined,
+    street: street || undefined,
+    locality: locality || undefined,
+    zipCode: zipCode || undefined,
+    notes: notes || undefined,
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      name,
-      code: code || undefined,
-      contactName: contactName || undefined,
-      phone: phone || undefined,
-      email: email || undefined,
-      province: province || undefined,
-      municipality: municipality || undefined,
-      street: street || undefined,
-      locality: locality || undefined,
-      zipCode: zipCode || undefined,
-      notes: notes || undefined,
-    });
+    const data = getData();
+    if (shouldContinue && onContinue) {
+      resetForm();
+      onContinue(data);
+    } else {
+      onSubmit(data);
+    }
+    setShouldContinue(false);
   };
 
   return (
@@ -95,6 +120,12 @@ export function SupplierFormFields({ onSubmit, isSubmitting, onCancel }: Supplie
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Guardando...' : 'Crear Proveedor'}
         </Button>
+        {onContinue && (
+          <Button type="submit" variant="outline" disabled={isSubmitting}
+            onClick={() => setShouldContinue(true)}>
+            {isSubmitting ? 'Guardando...' : 'Crear y Continuar'}
+          </Button>
+        )}
         <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
       </div>
     </form>

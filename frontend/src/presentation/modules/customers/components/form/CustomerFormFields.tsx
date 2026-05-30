@@ -11,11 +11,12 @@ import { useMunicipalities } from '@/presentation/modules/geo/hooks/useMunicipal
 
 interface CustomerFormFieldsProps {
   onSubmit: (data: CreateCustomerData) => void;
+  onContinue?: (data: CreateCustomerData) => void;
   isSubmitting: boolean;
   onCancel: () => void;
 }
 
-export function CustomerFormFields({ onSubmit, isSubmitting, onCancel }: CustomerFormFieldsProps) {
+export function CustomerFormFields({ onSubmit, onContinue, isSubmitting, onCancel }: CustomerFormFieldsProps) {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [contactName, setContactName] = useState('');
@@ -28,26 +29,51 @@ export function CustomerFormFields({ onSubmit, isSubmitting, onCancel }: Custome
   const [locality, setLocality] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [notes, setNotes] = useState('');
+  const [shouldContinue, setShouldContinue] = useState(false);
 
   const { data: provinces } = useProvinces();
   const { data: municipalities } = useMunicipalities(province || undefined);
 
+  const resetForm = () => {
+    setName('');
+    setCode('');
+    setContactName('');
+    setPhone('');
+    setEmail('');
+    setAddress('');
+    setProvince('');
+    setMunicipality('');
+    setStreet('');
+    setLocality('');
+    setZipCode('');
+    setNotes('');
+  };
+
+  const getData = (): CreateCustomerData => ({
+    name,
+    code: code || undefined,
+    contactName: contactName || undefined,
+    phone: phone || undefined,
+    email: email || undefined,
+    address: address || undefined,
+    province: province || undefined,
+    municipality: municipality || undefined,
+    street: street || undefined,
+    locality: locality || undefined,
+    zipCode: zipCode || undefined,
+    notes: notes || undefined,
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      name,
-      code: code || undefined,
-      contactName: contactName || undefined,
-      phone: phone || undefined,
-      email: email || undefined,
-      address: address || undefined,
-      province: province || undefined,
-      municipality: municipality || undefined,
-      street: street || undefined,
-      locality: locality || undefined,
-      zipCode: zipCode || undefined,
-      notes: notes || undefined,
-    });
+    const data = getData();
+    if (shouldContinue && onContinue) {
+      resetForm();
+      onContinue(data);
+    } else {
+      onSubmit(data);
+    }
+    setShouldContinue(false);
   };
 
   return (
@@ -120,6 +146,12 @@ export function CustomerFormFields({ onSubmit, isSubmitting, onCancel }: Custome
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Guardando...' : 'Crear Cliente'}</Button>
+        {onContinue && (
+          <Button type="submit" variant="outline" disabled={isSubmitting}
+            onClick={() => setShouldContinue(true)}>
+            {isSubmitting ? 'Guardando...' : 'Crear y Continuar'}
+          </Button>
+        )}
         <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
       </div>
     </form>

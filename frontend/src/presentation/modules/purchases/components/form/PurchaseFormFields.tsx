@@ -11,17 +11,20 @@ import { PurchaseSummary } from './PurchaseSummary';
 
 interface PurchaseFormFieldsProps {
   onSubmit: (data: CreatePurchaseInput) => void;
+  onContinue?: (data: CreatePurchaseInput) => void;
   isSubmitting: boolean;
   onCancel: () => void;
+  prefillSupplierId?: string;
 }
 
 const emptyLine = (): PurchaseLineInput => ({ productId: '', quantity: '1', unitCost: '' });
 
-export function PurchaseFormFields({ onSubmit, isSubmitting, onCancel }: PurchaseFormFieldsProps) {
+export function PurchaseFormFields({ onSubmit, onContinue, isSubmitting, onCancel, prefillSupplierId }: PurchaseFormFieldsProps) {
   const [warehouseId, setWarehouseId] = useState('');
-  const [supplierId, setSupplierId] = useState('');
+  const [supplierId, setSupplierId] = useState(prefillSupplierId || '');
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<PurchaseLineInput[]>([emptyLine()]);
+  const [shouldContinue, setShouldContinue] = useState(false);
 
   const { warehouses, products, suppliers } = useReferenceData({ withSuppliers: true });
 
@@ -31,18 +34,34 @@ export function PurchaseFormFields({ onSubmit, isSubmitting, onCancel }: Purchas
   const addLine = () => setLines((prev) => [...prev, emptyLine()]);
   const removeLine = (i: number) => { if (lines.length > 1) setLines((prev) => prev.filter((_, idx) => idx !== i)); };
 
+  const getData = (): CreatePurchaseInput => ({
+    warehouseId,
+    supplierId: supplierId || undefined,
+    notes: notes || undefined,
+    lines: lines.filter((l) => l.productId && l.unitCost).map((l) => ({
+      productId: l.productId,
+      quantity: Number(l.quantity),
+      unitCost: Number(l.unitCost),
+    })),
+  });
+
+  const resetForm = () => {
+    setWarehouseId('');
+    setSupplierId('');
+    setNotes('');
+    setLines([emptyLine()]);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      warehouseId,
-      supplierId: supplierId || undefined,
-      notes: notes || undefined,
-      lines: lines.filter((l) => l.productId && l.unitCost).map((l) => ({
-        productId: l.productId,
-        quantity: Number(l.quantity),
-        unitCost: Number(l.unitCost),
-      })),
-    });
+    const data = getData();
+    if (shouldContinue && onContinue) {
+      resetForm();
+      onContinue(data);
+    } else {
+      onSubmit(data);
+    }
+    setShouldContinue(false);
   };
 
   return (
@@ -79,6 +98,8 @@ export function PurchaseFormFields({ onSubmit, isSubmitting, onCancel }: Purchas
         onNotesChange={setNotes}
         isSubmitting={isSubmitting}
         onCancel={onCancel}
+        showContinue={!!onContinue}
+        onContinueClick={() => setShouldContinue(true)}
       />
     </form>
   );

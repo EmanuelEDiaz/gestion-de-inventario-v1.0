@@ -12,6 +12,11 @@ import { CategoryForm } from '../components/form/CategoryForm';
 import { useCategoriesController } from '../hooks/useCategoriesController';
 import type { Category } from '@/core/category/entities/category';
 import { statusBadge } from '@/presentation/shared/lib/colors';
+import { toast } from '@/presentation/shared/components/ui/toast';
+import { SaveCategoryUseCase } from '@/core/category/use-cases/SaveCategoryUseCase';
+import { categoryRepository } from '@/infrastructure/repositories/category/CategoryRepository';
+import { useQueryClient } from '@tanstack/react-query';
+const saveCategoryUC = new SaveCategoryUseCase(categoryRepository);
 
 const COLUMNS: Column<Category>[] = [
   {
@@ -37,9 +42,10 @@ const COLUMNS: Column<Category>[] = [
 ];
 
 export function CategoriesView() {
+  const queryClient = useQueryClient();
   const {
     categories, isLoading, error, showForm, editingCategory,
-    openForm, closeForm, saveCategory, deleteCategory, deleteManyCategories, clearError,
+    openForm, closeForm, saveCategory, deleteCategory, deleteManyCategories, clearError, refresh,
   } = useCategoriesController();
 
   const actions: TableAction<Category>[] = [
@@ -55,7 +61,16 @@ export function CategoriesView() {
       {error && <AlertMessage message={error} onDismiss={clearError} />}
       {showForm && (
         <CategoryForm categories={categories} editingCategory={editingCategory}
-          onSubmit={saveCategory} onCancel={closeForm} />
+          onSubmit={saveCategory}
+          onContinue={async (data) => {
+            try {
+              await saveCategoryUC.execute(data, undefined);
+              queryClient.invalidateQueries({ queryKey: ['categories'] });
+              refresh();
+              toast.success('Categoría creada. Puedes seguir agregando.');
+            } catch { toast.error('Error al crear la categoría'); }
+          }}
+          onCancel={closeForm} />
       )}
       {isLoading && <LoadingOverlay />}
       {!isLoading && (

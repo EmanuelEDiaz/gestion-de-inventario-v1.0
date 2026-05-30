@@ -67,6 +67,12 @@ export function SuppliersListView() {
             catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear proveedor'); }
             finally { setIsCreating(false); }
           }}
+          onContinue={async (data) => {
+            setIsCreating(true);
+            try { await create(data); toast.success('Proveedor creado. Puedes seguir agregando.'); }
+            catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear proveedor'); }
+            finally { setIsCreating(false); }
+          }}
           isSubmitting={isCreating} onCancel={() => setShowForm(false)}
         />
       )}
