@@ -6,11 +6,10 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.util.UUID;
 
-public interface SpringDataIdempotencyRepository extends ReactiveCrudRepository<IdempotencyKeyEntity, UUID> {
-    Mono<IdempotencyKeyEntity> findByOperationId(String operationId);
-    
+public interface SpringDataIdempotencyRepository extends ReactiveCrudRepository<IdempotencyKeyEntity, String> {
+    Mono<IdempotencyKeyEntity> findByKey(String key);
+
     @Query("DELETE FROM idempotency_keys WHERE created_at < :before")
     Mono<Void> deleteOlderThan(Instant before);
 }

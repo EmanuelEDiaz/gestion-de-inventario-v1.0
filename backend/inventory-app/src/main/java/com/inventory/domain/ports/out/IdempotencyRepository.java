@@ -10,5 +10,6 @@ public interface IdempotencyRepository {
     Mono<Boolean> existsByKey(String key);
     Mono<Void> store(String key, String requestHash, String responseJson);
     Mono<String> getCachedResponse(String key);
+    Mono<String> findRealIdByTempId(String tempEntityId);
     Mono<Void> deleteOlderThan(java.time.Instant before); // limpieza TTL
 }

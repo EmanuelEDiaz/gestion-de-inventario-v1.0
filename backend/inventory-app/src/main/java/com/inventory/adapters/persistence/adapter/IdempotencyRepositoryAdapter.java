@@ -24,7 +24,7 @@ public class IdempotencyRepositoryAdapter implements IdempotencyRepository {
 
     @Override
     public Mono<Boolean> existsByKey(String key) {
-        return springRepo.findByOperationId(key)
+        return springRepo.findByKey(key)
             .map(entity -> true)
             .defaultIfEmpty(false);
     }
@@ -37,8 +37,20 @@ public class IdempotencyRepositoryAdapter implements IdempotencyRepository {
 
     @Override
     public Mono<String> getCachedResponse(String key) {
-        return springRepo.findByOperationId(key)
+        return springRepo.findByKey(key)
             .map(IdempotencyKeyEntity::getResponseJson);
+    }
+
+    @Override
+    public Mono<String> findRealIdByTempId(String tempEntityId) {
+        return springRepo.findByKey(tempEntityId)
+            .map(IdempotencyKeyEntity::getResponseJson)
+            .mapNotNull(json -> {
+                if (json == null || !json.contains("\"realId\"")) return null;
+                int start = json.indexOf("\"realId\":\"") + 10;
+                int end = json.indexOf("\"", start);
+                return start > 9 && end > start ? json.substring(start, end) : null;
+            });
     }
 
     @Override

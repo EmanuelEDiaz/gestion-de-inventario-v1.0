@@ -26,6 +26,10 @@ public class IdempotencyService {
         return idempotencyRepository.getCachedResponse(operationId);
     }
 
+    public Mono<String> findRealIdByTempId(String tempEntityId) {
+        return idempotencyRepository.findRealIdByTempId(tempEntityId);
+    }
+
     public Mono<Void> deleteOlderThan(java.time.Instant before) {
         return idempotencyRepository.deleteOlderThan(before);
     }

@@ -5,29 +5,30 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
-import java.util.Objects;
-import java.util.UUID;
 
 /**
- * R2DBC entity for idempotency_keys table.
- * Each row caches a request's response to prevent duplicate processing.
+ * R2DBC entity for idempotency_keys table (V1+V4 schema).
  *
- * Schema (from V1 or early migration):
+ * Actual schema (V1):
  *   CREATE TABLE idempotency_keys (
- *     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
- *     operation_id VARCHAR(255) UNIQUE NOT NULL,  -- operationId from frontend outbox
- *     request_hash VARCHAR(64) NOT NULL,          -- SHA256 of request payload
- *     response_json TEXT NOT NULL,                -- cached response (JSON)
- *     created_at TIMESTAMPTZ DEFAULT NOW()
+ *     key           VARCHAR(100) PRIMARY KEY,
+ *     scope         VARCHAR(50)  NOT NULL,
+ *     request_hash  VARCHAR(64),
+ *     response_json JSONB,
+ *     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+ *     expires_at    TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '72 hours'
  *   );
+ * V4 adds: status TEXT DEFAULT 'PENDING'
  */
 @Table("idempotency_keys")
 public class IdempotencyKeyEntity {
-    @Id
-    private UUID id;
 
-    @Column("operation_id")
-    private String operationId;
+    @Id
+    @Column("key")
+    private String key;
+
+    @Column("scope")
+    private String scope;
 
     @Column("request_hash")
     private String requestHash;
@@ -38,43 +39,53 @@ public class IdempotencyKeyEntity {
     @Column("created_at")
     private Instant createdAt;
 
-    // Constructors
+    @Column("expires_at")
+    private Instant expiresAt;
+
+    @Column("status")
+    private String status;
+
     public IdempotencyKeyEntity() {
     }
 
-    public IdempotencyKeyEntity(UUID id, String operationId, String requestHash, String responseJson, Instant createdAt) {
-        this.id = id;
-        this.operationId = operationId;
+    public IdempotencyKeyEntity(String key, String scope, String requestHash,
+                                String responseJson, Instant createdAt,
+                                Instant expiresAt, String status) {
+        this.key = key;
+        this.scope = scope;
         this.requestHash = requestHash;
         this.responseJson = responseJson;
         this.createdAt = createdAt;
+        this.expiresAt = expiresAt;
+        this.status = status;
     }
 
-    public static IdempotencyKeyEntity create(String operationId, String requestHash, String responseJson) {
+    public static IdempotencyKeyEntity create(String key, String requestHash, String responseJson) {
         return new IdempotencyKeyEntity(
-            UUID.randomUUID(),
-            operationId,
+            key,
+            "sync",
             requestHash,
             responseJson,
-            Instant.now()
+            Instant.now(),
+            Instant.now().plusSeconds(72 * 3600),
+            "COMPLETED"
         );
     }
 
-    // Getters / Setters
-    public UUID getId() {
-        return id;
+    public String getKey() {
+        return key;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public void setKey(String key) {
+        this.key = key;
     }
 
-    public String getOperationId() {
-        return operationId;
+    public String getScope() {
+        return scope;
     }
 
-    public void setOperationId(String operationId) {
-        this.operationId = operationId;
+    public void setScope(String scope) {
+        this.scope = scope;
     }
 
     public String getRequestHash() {
@@ -101,26 +112,19 @@ public class IdempotencyKeyEntity {
         this.createdAt = createdAt;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        IdempotencyKeyEntity that = (IdempotencyKeyEntity) o;
-        return Objects.equals(id, that.id);
+    public Instant getExpiresAt() {
+        return expiresAt;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
     }
 
-    @Override
-    public String toString() {
-        return "IdempotencyKeyEntity{" +
-                "id=" + id +
-                ", operationId='" + operationId + '\'' +
-                ", requestHash='" + requestHash + '\'' +
-                ", createdAt=" + createdAt +
-                '}';
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

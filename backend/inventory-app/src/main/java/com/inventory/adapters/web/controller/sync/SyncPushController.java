@@ -48,7 +48,7 @@ public class SyncPushController {
         return syncPushUseCase.execute(operations, userId)
             .map(response -> {
                 var results = response.results().stream()
-                    .map(r -> new PushResultDto(r.operationId(), r.accepted(), r.data(), r.error()))
+                    .map(r -> new PushResultDto(r.operationId(), r.accepted(), r.data(), r.error(), r.entityId()))
                     .toList();
                 return new SyncPushResponseDto(results);
             });

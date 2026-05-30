@@ -36,19 +36,27 @@ export interface SyncPullResponse {
 interface SyncPushOperation {
   operationId: string;
   entityType: string;
+  entityId: string;
   action: string;
   payload: unknown;
 }
 
 interface SyncPushResponseEntry {
   operationId: string;
-  status: 'accepted' | 'conflict' | 'error';
-  serverId?: string;
+  accepted: boolean;
+  data?: unknown;
   error?: string;
+  entityId?: string;
 }
 
 interface SyncPushResponse {
-  entries: SyncPushResponseEntry[];
+  results: SyncPushResponseEntry[];
+}
+
+interface TempIdMapping {
+  tempId: string;
+  realId: string;
+  entityType: string;
 }
 
 const MAX_BATCH_SIZE = 50;
@@ -60,6 +68,67 @@ const CONCURRENCY = 3;
 
 function nextRetryDelay(retryCount: number): number {
   return Math.min(30_000 * Math.pow(4, retryCount), 2 * 60 * 60 * 1000);
+}
+
+function collapseOutboxEntries(entries: OutboxEntry[]): OutboxEntry[] {
+  const groups = new Map<string, OutboxEntry[]>();
+  for (const entry of entries) {
+    const key = `${entry.entityType}:${entry.entityId}`;
+    const group = groups.get(key) ?? [];
+    group.push(entry);
+    groups.set(key, group);
+  }
+
+  const collapsed: OutboxEntry[] = [];
+  for (const [, group] of groups) {
+    if (group.length === 1) {
+      collapsed.push(group[0]);
+    } else {
+      const merged = mergeOutboxGroup(group);
+      collapsed.push(...merged);
+    }
+  }
+  return collapsed;
+}
+
+function mergeOutboxGroup(group: OutboxEntry[]): OutboxEntry[] {
+  group.sort((a, b) => a.createdAt - b.createdAt);
+  const first = group[0];
+  const last = group[group.length - 1];
+
+  const actions = group.map(e => e.action);
+  const hasCreate = actions.includes('CREATE');
+  const hasDelete = actions.includes('DELETE');
+
+  if (hasCreate && hasDelete && group.length === 2) {
+    return [{ ...first, action: 'NOOP', skip: true }];
+  }
+
+  if (hasDelete) {
+    return [last];
+  }
+
+  if (hasCreate && group.length > 1) {
+    const update = { ...last, entityId: first.entityId, isTempId: true };
+    return [first, update];
+  }
+
+  return [last];
+}
+
+async function updateTempIdMappings(mappings: TempIdMapping[]): Promise<void> {
+  const db = await getDB();
+  for (const m of mappings) {
+    const storeName = m.entityType.toLowerCase();
+    const tx = db.transaction(storeName as any, 'readwrite');
+    const store = tx.objectStore(storeName as any) as any;
+    const cached = await store.get(m.tempId);
+    if (cached) {
+      await store.delete(m.tempId);
+      await store.put({ ...cached, id: m.realId });
+    }
+    await tx.done;
+  }
 }
 
 export async function pushOutbox(): Promise<PushResult> {
@@ -82,9 +151,10 @@ export async function pushOutbox(): Promise<PushResult> {
   }
 
   all = await getPendingOutbox() as any[];
-  const eligible = all.filter((e: any) => !e.nextRetryAt || e.nextRetryAt <= now);
+  const collapsed = collapseOutboxEntries(all);
+  const eligible = collapsed.filter((e: any) => !e.skip && (!e.nextRetryAt || e.nextRetryAt <= now));
 
-  result.total = eligible.length;
+  result.total = collapsed.length;
 
   for (let i = 0; i < eligible.length; i += MAX_BATCH_SIZE) {
     const batch = eligible.slice(i, i + MAX_BATCH_SIZE);
@@ -97,28 +167,33 @@ export async function pushOutbox(): Promise<PushResult> {
       const body = { operations: batch.map((e: OutboxEntry) => ({
         operationId: e.operationId,
         entityType: e.entityType,
+        entityId: e.entityId,
         action: e.action,
         payload: e.payload,
       })) };
 
       const response = await apiClient.post<SyncPushResponse>('/api/v1/sync/push', body);
 
-      for (const entry of response.data.entries) {
+      const mappings: TempIdMapping[] = [];
+      for (const entry of response.data.results) {
         const match = batch.find((e: any) => e.operationId === entry.operationId);
         if (!match) continue;
 
-        if (entry.status === 'accepted') {
+        if (entry.accepted) {
           await removeFromOutbox(match.id!);
           result.pushed++;
-        } else if (entry.status === 'conflict') {
-          await removeFromOutbox(match.id!);
-          result.conflicts++;
-          result.incidents.push(`Conflict on ${entry.operationId}: ${entry.error}`);
+          if (entry.entityId) {
+            mappings.push({ tempId: match.entityId, realId: entry.entityId, entityType: match.entityType });
+          }
         } else {
           await moveToDeadLetter(match);
           result.failed++;
           result.incidents.push(`Error on ${entry.operationId}: ${entry.error}`);
         }
+      }
+
+      if (mappings.length > 0) {
+        await updateTempIdMappings(mappings);
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -149,6 +224,12 @@ export async function pushOutbox(): Promise<PushResult> {
           result.incidents.push(`${entry.operationId} unexpected error, retry ${newRetryCount}`);
         }
       }
+    }
+  }
+
+  for (const entry of collapsed) {
+    if (entry.skip && entry.id !== undefined) {
+      await removeFromOutbox(entry.id);
     }
   }
 

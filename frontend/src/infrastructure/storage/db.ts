@@ -28,6 +28,8 @@ export interface OutboxEntry {
   expiresAt: number;
   lastError?: string;
   createdAt: number;
+  skip?: boolean;
+  isTempId?: boolean;
 }
 
 export interface DeadLetterEntry {

@@ -134,7 +134,11 @@
 |   **B6.2** — Backend: UserImage service + DTO + controller + response modifications | ✅ Hecho |
 |   **B6.3** — Frontend: Header avatar + UserForm upload + AuthUser type + UserRepository fix | ✅ Hecho |
 |   **B6.4** — Frontend: UsersView avatar column (preexistente) | ✅ Hecho |
-| **B7** — Resolución Conflictos Offline (Outbox Collapsing) | ⏳ Pendiente |
+| **B7** — Resolución Conflictos Offline (Outbox Collapsing) | ✅ Hecho |
+|   **B7.0** — Fix IdempotencyKeyEntity schema mismatch (V1 migration vs entity) | ✅ Hecho |
+|   **B7.1** — Frontend: collapseOutboxEntries() + mergeOutboxGroup() + OutboxEntry skip/isTempId | ✅ Hecho |
+|   **B7.2** — Backend: resolveTempIds() + findRealIdByTempId() + TempIdMapping en response | ✅ Hecho |
+|   **B7.3** — Frontend: updateTempIdMappings() + fix push request body + response types | ✅ Hecho |
 | **B8** — Mapas Offline (Leaflet + PMTiles + FlexSearch) | ⏳ Pendiente |
 | **B9** — Compartir Ubicación (Deep Links sin API externa) | ⏳ Pendiente |
 
