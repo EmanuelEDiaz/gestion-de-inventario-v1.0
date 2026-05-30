@@ -123,7 +123,12 @@
 |   **B4.1** — Auto-select-all al focus (useAutoSelect hook + Input.autoSelect prop) | ✅ Hecho |
 |   **B4.2** — Pre-llenado inteligente (ProductCreateView ?prefillFrom=, PurchaseFormFields ?supplierId=) | ✅ Hecho |
 |   **B4.3** — Botón "Crear y Continuar" (Product, Supplier, Customer, Category, Purchase, User) | ✅ Hecho |
-| **B5** — Gráficos + Estadísticas + Métricas Dashboard | ⏳ Pendiente |
+| **B5** — Gráficos + Estadísticas + Métricas Dashboard | ⏳ Parcial |
+|   **B5.1** — Backend: DTOs + Use Cases + Controller (5 endpoints: sales-timeline, top-products, top-customers, profit-summary, inventory-value) | ✅ Hecho |
+|   **B5.2** — Frontend: Core entities + IDashboardMetricsRepository + DashboardMetricsRepository + useDashboardMetrics hook | ⏳ Pendiente |
+|   **B5.3** — Frontend: Chart components (SalesTimelineChart, TopProductsChart, TopCustomersChart, ProfitSummaryCards) | ⏳ Pendiente |
+|   **B5.4** — Dashboard redesign: TanStack Query + chart integration + fix DashboardRepository | ⏳ Pendiente |
+|   **B5.5** — Custom chart builder (ChartBuilderModal, CustomChartWidget, useDashboardLayout) | ⏳ Pendiente |
 | **B6** — Imagen de Perfil de Usuario | ⏳ Pendiente |
 | **B7** — Resolución Conflictos Offline (Outbox Collapsing) | ⏳ Pendiente |
 | **B8** — Mapas Offline (Leaflet + PMTiles + FlexSearch) | ⏳ Pendiente |
