@@ -7,8 +7,8 @@ describe('GetProductsUseCase', () => {
   it('should return paginated products from repository', async () => {
     const mockResponse: PaginatedResponse<Product> = {
       content: [
-        { id: '1', name: 'Product 1', status: 'ACTIVE', sku: null, barcode: null, description: null, categoryId: null, categoryName: null, costMethod: 'STANDARD', standardCost: null, salePrice: null, taxRate: 0, reorderPoint: null, unitOfMeasure: 'UNIT', createdAt: '', updatedAt: '' },
-        { id: '2', name: 'Product 2', status: 'ACTIVE', sku: null, barcode: null, description: null, categoryId: null, categoryName: null, costMethod: 'STANDARD', standardCost: null, salePrice: null, taxRate: 0, reorderPoint: null, unitOfMeasure: 'UNIT', createdAt: '', updatedAt: '' },
+        { id: '1', name: 'Product 1', status: 'ACTIVE', sku: null, barcode: null, description: null, categoryId: null, categoryName: null, costMethod: 'STANDARD', standardCost: null, salePrice: null, taxRate: 0, reorderPoint: null, unitOfMeasure: 'UNIT', mainImage: null, createdAt: '', updatedAt: '' },
+        { id: '2', name: 'Product 2', status: 'ACTIVE', sku: null, barcode: null, description: null, categoryId: null, categoryName: null, costMethod: 'STANDARD', standardCost: null, salePrice: null, taxRate: 0, reorderPoint: null, unitOfMeasure: 'UNIT', mainImage: null, createdAt: '', updatedAt: '' },
       ],
       totalElements: 2,
       totalPages: 1,

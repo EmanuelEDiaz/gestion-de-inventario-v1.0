@@ -17,7 +17,7 @@ describe('useMarkRead', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseQueryClient.mockReturnValue({ invalidateQueries: mockInvalidate } as ReturnType<typeof useQueryClient>);
+    mockUseQueryClient.mockReturnValue({ invalidateQueries: mockInvalidate } as unknown as ReturnType<typeof useQueryClient>);
     mockUseMutation.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,

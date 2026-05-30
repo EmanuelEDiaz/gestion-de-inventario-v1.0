@@ -93,7 +93,7 @@ describe('usePosCart', () => {
     // Act
     act(() => {
       result.current.setPaymentMode('CREDIT');
-      result.current.setCustomer({ id: 'c1', name: 'Cliente Test', code: 'C001', active: true, version: 1, createdAt: '', updatedAt: '' });
+      result.current.setCustomer({ id: 'c1', name: 'Cliente Test', code: 'C001', active: true, createdAt: '', updatedAt: '' });
     });
     act(() => {
       result.current.setPaymentMode('IMMEDIATE');

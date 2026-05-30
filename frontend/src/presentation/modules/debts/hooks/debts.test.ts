@@ -24,7 +24,7 @@ vi.mock('@/presentation/shared/components/ui/toast', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-const { useQuery, useMutation } = await import('@tanstack/react-query') as {
+const { useQuery, useMutation } = await import('@tanstack/react-query') as unknown as {
   useQuery: ReturnType<typeof vi.fn>;
   useMutation: ReturnType<typeof vi.fn>;
 };

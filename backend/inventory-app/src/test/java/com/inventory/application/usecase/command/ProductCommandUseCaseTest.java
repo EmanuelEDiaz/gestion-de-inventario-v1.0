@@ -10,6 +10,8 @@ import com.inventory.domain.ports.in.product.ProductCommandPort.CreateProductCom
 import com.inventory.domain.ports.in.product.ProductCommandPort.UpdateProductCommand;
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;
+import com.inventory.domain.ports.out.AuditLogRepository;
+import com.inventory.application.shared.AuditSerializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,8 +38,16 @@ class ProductCommandUseCaseTest {
     @Mock
     private CategoryRepository categoryRepository;
 
+    @Mock
+    private AuditLogRepository auditLogRepository;
+
+    @Mock
+    private AuditSerializer auditSerializer;
+
     @InjectMocks
     private ProductCommandUseCase useCase;
+
+    private final UUID userId = UUID.randomUUID();
 
     @Test
     @DisplayName("create() creates product when SKU and barcode are unique")
@@ -50,8 +60,10 @@ class ProductCommandUseCaseTest {
         when(productRepository.findBySku("SKU-001")).thenReturn(Mono.empty());
         when(productRepository.findByBarcode("BAR-001")).thenReturn(Mono.empty());
         when(productRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
+        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
-        StepVerifier.create(useCase.create(command))
+        StepVerifier.create(useCase.create(userId, command))
             .assertNext(product -> {
                 assertThat(product.getId()).isNotNull();
                 assertThat(product.getName()).isEqualTo("Test Product");
@@ -80,7 +92,7 @@ class ProductCommandUseCaseTest {
         when(productRepository.findBySku("SKU-001")).thenReturn(Mono.just(existingProduct));
         when(productRepository.findByBarcode(any())).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.create(command))
+        StepVerifier.create(useCase.create(userId, command))
             .expectErrorMatches(e ->
                 e instanceof ConflictException && e.getMessage().contains("SKU"))
             .verify();
@@ -102,7 +114,7 @@ class ProductCommandUseCaseTest {
         when(productRepository.findBySku("SKU-001")).thenReturn(Mono.empty());
         when(productRepository.findByBarcode("BAR-001")).thenReturn(Mono.just(existingProduct));
 
-        StepVerifier.create(useCase.create(command))
+        StepVerifier.create(useCase.create(userId, command))
             .expectErrorMatches(e ->
                 e instanceof ConflictException && e.getMessage().contains("Código de barras"))
             .verify();
@@ -125,7 +137,7 @@ class ProductCommandUseCaseTest {
         when(productRepository.findByBarcode("BAR-001")).thenReturn(Mono.empty());
         when(categoryRepository.findById(categoryId)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.create(command))
+        StepVerifier.create(useCase.create(userId, command))
             .expectErrorMatches(e ->
                 e instanceof BadRequestException && e.getMessage().contains("Categoría"))
             .verify();
@@ -156,8 +168,10 @@ class ProductCommandUseCaseTest {
         when(productRepository.findBySku("NEW-SKU")).thenReturn(Mono.empty());
         when(productRepository.findByBarcode("NEW-BAR")).thenReturn(Mono.empty());
         when(productRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
+        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
-        StepVerifier.create(useCase.update(productId, command))
+        StepVerifier.create(useCase.update(productId, userId, command))
             .assertNext(product -> {
                 assertThat(product.getName()).isEqualTo("Updated Name");
                 assertThat(product.getSku()).isEqualTo("NEW-SKU");
@@ -183,7 +197,7 @@ class ProductCommandUseCaseTest {
 
         when(productRepository.findById(productId)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.update(productId, command))
+        StepVerifier.create(useCase.update(productId, userId, command))
             .expectErrorMatches(e ->
                 e instanceof NotFoundException && e.getMessage().contains("Producto"))
             .verify();
@@ -202,8 +216,10 @@ class ProductCommandUseCaseTest {
 
         when(productRepository.findById(productId)).thenReturn(Mono.just(activeProduct));
         when(productRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
+        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
-        StepVerifier.create(useCase.archive(productId))
+        StepVerifier.create(useCase.archive(productId, userId))
             .assertNext(product -> {
                 assertThat(product.getStatus()).isEqualTo(Product.ProductStatus.ARCHIVED);
                 assertThat(product.getId()).isEqualTo(productId);
@@ -226,8 +242,10 @@ class ProductCommandUseCaseTest {
 
         when(productRepository.findById(productId)).thenReturn(Mono.just(archivedProduct));
         when(productRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
+        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
-        StepVerifier.create(useCase.activate(productId))
+        StepVerifier.create(useCase.activate(productId, userId))
             .assertNext(product -> {
                 assertThat(product.getStatus()).isEqualTo(Product.ProductStatus.ACTIVE);
                 assertThat(product.getId()).isEqualTo(productId);
@@ -242,13 +260,15 @@ class ProductCommandUseCaseTest {
     void delete_success() {
         var productId = UUID.randomUUID();
 
-        when(productRepository.existsById(productId)).thenReturn(Mono.just(true));
         when(productRepository.deleteById(productId)).thenReturn(Mono.empty());
+        when(productRepository.findById(productId)).thenReturn(Mono.just(Product.create("Test", "SKU-1", null, BigDecimal.ONE)));
+        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
-        StepVerifier.create(useCase.delete(productId))
+        StepVerifier.create(useCase.delete(productId, userId))
             .verifyComplete();
 
-        verify(productRepository).existsById(productId);
+        verify(productRepository).findById(productId);
         verify(productRepository).deleteById(productId);
     }
 
@@ -257,14 +277,14 @@ class ProductCommandUseCaseTest {
     void delete_throwsNotFoundWhenProductMissing() {
         var productId = UUID.randomUUID();
 
-        when(productRepository.existsById(productId)).thenReturn(Mono.just(false));
+        when(productRepository.findById(productId)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.delete(productId))
+        StepVerifier.create(useCase.delete(productId, userId))
             .expectErrorMatches(e ->
                 e instanceof NotFoundException && e.getMessage().contains("Producto"))
             .verify();
 
-        verify(productRepository).existsById(productId);
+        verify(productRepository).findById(productId);
         verify(productRepository, never()).deleteById(any());
     }
 }

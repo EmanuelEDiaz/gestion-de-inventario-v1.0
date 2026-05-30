@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotificationRepository } from './NotificationRepository';
 import { notificationApi } from '@/infrastructure/api/notification-api';
-import type { Notification } from '@/core/notification/entities/notification';
+import type { Notification, CreateNotificationRequest } from '@/core/notification/entities/notification';
+import { NotificationCategory, NotificationTargetType, NotificationSource, NotificationPriority, DeliveryChannel } from '@/core/notification/entities/notification';
 
 vi.mock('@/infrastructure/api/notification-api', () => ({
   notificationApi: {
@@ -15,15 +16,13 @@ vi.mock('@/infrastructure/api/notification-api', () => ({
 
 const mockNotif: Notification = {
   id: 'notif-1',
-  type: 'SYSTEM_AUTO',
-  category: 'LOW_STOCK',
   title: 'Stock bajo',
-  body: null,
-  targetType: 'ALL',
-  targetUserId: null,
-  createdBy: null,
-  entityType: null,
-  entityId: null,
+  body: 'Stock bajo de producto',
+  category: NotificationCategory.LOW_STOCK,
+  source: NotificationSource.SYSTEM,
+  priority: NotificationPriority.MEDIUM,
+  deliveryChannel: DeliveryChannel.TOAST,
+  targetType: NotificationTargetType.ALL,
   createdAt: '2026-01-01T00:00:00Z',
   read: false,
 };
@@ -77,8 +76,9 @@ describe('NotificationRepository', () => {
     // Act
     const result = await repo.create({
       title: 'Test',
-      category: 'SYSTEM',
-      targetType: 'ALL',
+      body: '',
+      category: NotificationCategory.SYSTEM_MAINTENANCE,
+      targetType: NotificationTargetType.ALL,
     });
 
     // Assert

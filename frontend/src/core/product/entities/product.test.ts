@@ -17,6 +17,7 @@ describe('Product Entity', () => {
     taxRate: 10,
     reorderPoint: 10,
     unitOfMeasure: 'UNIT' as UnitOfMeasure,
+    mainImage: null,
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-02T00:00:00Z',
   };
@@ -49,6 +50,7 @@ describe('Product Entity', () => {
       description: null,
       categoryId: null,
       categoryName: null,
+      mainImage: null,
       standardCost: null,
       salePrice: null,
       reorderPoint: null,

@@ -24,7 +24,7 @@ describe('ProductRepository', () => {
     it('should fetch products with filters', async () => {
       const mockResponse = {
         data: {
-          content: [{ id: '1', name: 'Product 1', status: 'ACTIVE' as const, sku: null, barcode: null, description: null, categoryId: null, categoryName: null, costMethod: 'STANDARD' as const, standardCost: null, salePrice: null, taxRate: 0, reorderPoint: null, unitOfMeasure: 'UNIT' as const, createdAt: '', updatedAt: '' }],
+          content: [{ id: '1', name: 'Product 1', status: 'ACTIVE' as const, sku: null, barcode: null, description: null, categoryId: null, categoryName: null, costMethod: 'STANDARD' as const, standardCost: null, salePrice: null, taxRate: 0, reorderPoint: null, unitOfMeasure: 'UNIT' as const, mainImage: null, createdAt: '', updatedAt: '' }],
           totalElements: 1,
           totalPages: 1,
           size: 20,
@@ -78,6 +78,7 @@ describe('ProductRepository', () => {
         taxRate: 0,
         reorderPoint: null,
         unitOfMeasure: 'UNIT',
+        mainImage: null,
         createdAt: '',
         updatedAt: '',
       };
@@ -99,7 +100,7 @@ describe('ProductRepository', () => {
         sku: 'SKU-001',
       };
 
-      const createdProduct: Product = {
+      const createdProduct = {
         id: 'new-id',
         ...createData,
         status: 'ACTIVE',
@@ -113,9 +114,10 @@ describe('ProductRepository', () => {
         taxRate: 0,
         reorderPoint: null,
         unitOfMeasure: 'UNIT',
+        mainImage: null,
         createdAt: '',
         updatedAt: '',
-      };
+      } as Product;
 
       vi.mocked(apiClient.post).mockResolvedValue({ data: createdProduct });
 
@@ -134,7 +136,7 @@ describe('ProductRepository', () => {
         status: 'ARCHIVED',
       };
 
-      const updatedProduct: Product = {
+      const updatedProduct = {
         id: '1',
         ...updateData,
         sku: null,
@@ -148,9 +150,10 @@ describe('ProductRepository', () => {
         taxRate: 0,
         reorderPoint: null,
         unitOfMeasure: 'UNIT',
+        mainImage: null,
         createdAt: '',
         updatedAt: '',
-      };
+      } as Product;
 
       vi.mocked(apiClient.put).mockResolvedValue({ data: updatedProduct });
 
@@ -189,6 +192,7 @@ describe('ProductRepository', () => {
         taxRate: 0,
         reorderPoint: null,
         unitOfMeasure: 'UNIT',
+        mainImage: null,
         createdAt: '',
         updatedAt: '',
       };
@@ -219,6 +223,7 @@ describe('ProductRepository', () => {
         taxRate: 0,
         reorderPoint: null,
         unitOfMeasure: 'UNIT',
+        mainImage: null,
         createdAt: '',
         updatedAt: '',
       };

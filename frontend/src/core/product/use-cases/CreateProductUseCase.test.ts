@@ -18,15 +18,16 @@ describe('CreateProductUseCase', () => {
       unitOfMeasure: 'UNIT',
     };
 
-    const createdProduct: Product = {
+    const createdProduct = {
       id: 'new-id',
       ...createData,
       categoryName: 'Electronics',
       status: 'ACTIVE',
       costMethod: 'STANDARD',
+      mainImage: null,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
-    };
+    } as Product;
 
     const mockRepo = {
       getAll: vi.fn(),
@@ -62,6 +63,7 @@ describe('CreateProductUseCase', () => {
       salePrice: null,
       taxRate: 0,
       reorderPoint: null,
+      mainImage: null,
       unitOfMeasure: 'UNIT',
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',

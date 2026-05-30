@@ -9,8 +9,11 @@ import com.inventory.domain.model.sale.SaleLine;
 import com.inventory.domain.model.stock.StockBalance;
 import com.inventory.domain.ports.in.sale.SaleCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
+import com.inventory.domain.ports.out.AuditLogRepository;
+import com.inventory.domain.ports.out.CustomerDebtRepository;
 import com.inventory.domain.ports.out.SaleRepository;
 import com.inventory.domain.ports.out.StockRepository;
+import com.inventory.application.shared.AuditSerializer;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +41,9 @@ class SaleCommandUseCaseTest {
     @Mock private SaleRepository saleRepository;
     @Mock private StockRepository stockRepository;
     @Mock private MovementRepository movementRepository;
+    @Mock private AuditLogRepository auditLogRepository;
+    @Mock private AuditSerializer auditSerializer;
+    @Mock private CustomerDebtRepository customerDebtRepository;
     @InjectMocks private SaleCommandUseCase useCase;
 
     private final UUID warehouseId = UUID.randomUUID();
@@ -63,6 +69,8 @@ class SaleCommandUseCaseTest {
         var command = validCommand();
         when(saleRepository.generateSaleNumber()).thenReturn(Mono.just("VEN-001"));
         when(saleRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
+        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
         StepVerifier.create(useCase.create(command, userId))
             .assertNext(sale -> {
