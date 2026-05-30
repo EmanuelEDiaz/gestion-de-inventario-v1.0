@@ -1,122 +1,193 @@
-const CACHE_PREFIX = 'inventory-';
-const CACHE_NAME = 'inventory-static-v2';
-const STATIC_ASSETS = [
-  '/manifest.json',
-  '/icons/icon-192x192.svg',
-  '/icons/icon-512x512.svg',
-  '/icons/apple-touch-icon.svg',
-];
-const IS_LOCALHOST =
-  self.location.hostname === 'localhost' ||
-  self.location.hostname === '127.0.0.1';
+const CACHES = {
+  static: 'inventory-static-v2',
+  pages: 'inventory-pages-v1',
+  thumbs: 'inventory-thumbs-v1',
+};
 
-function isNavigationRequest(request) {
-  return request.mode === 'navigate' || request.destination === 'document';
-}
+const THUMB_MAX_ENTRIES = 100;
+const OFFLINE_PAGE = '/offline.html';
 
-function isCacheableAsset(request, url) {
-  if (request.method !== 'GET') {
-    return false;
-  }
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHES.static));
+  self.skipWaiting();
+});
 
-  if (url.origin !== self.location.origin) {
-    return false;
-  }
-
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/')) {
-    return false;
-  }
-
-  return ['font', 'image', 'script', 'style'].includes(request.destination);
-}
-
-async function deleteInventoryCaches() {
-  const cacheNames = await caches.keys();
-  await Promise.all(
-    cacheNames
-      .filter((cacheName) => cacheName.startsWith(CACHE_PREFIX))
-      .map((cacheName) => caches.delete(cacheName))
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      const current = Object.values(CACHES);
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((k) => k.startsWith('inventory-') && !current.includes(k))
+          .map((k) => caches.delete(k))
+      );
+      await self.clients.claim();
+    })()
   );
+});
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  if (request.method !== 'GET') {
+    if (url.pathname.startsWith('/api/v1/')) {
+      event.respondWith(
+        fetch(request).catch(() => {
+          self.registration.sync.register('sync-outbox').catch(() => {});
+          return new Response(null, { status: 503, statusText: 'Service Unavailable' });
+        })
+      );
+    }
+    return;
+  }
+
+  if (url.pathname.includes('thumb256')) {
+    event.respondWith(thumbCacheFirst(event));
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/v1/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(networkFirstPage(event));
+    return;
+  }
+
+  if (request.destination === 'image') {
+    event.respondWith(staleWhileRevalidate(event));
+    return;
+  }
+
+  if (['font', 'script', 'style'].includes(request.destination) && url.origin === self.location.origin) {
+    event.respondWith(staticCacheFirst(event));
+  }
+});
+
+async function thumbCacheFirst(event) {
+  const { request } = event;
+  const cached = await caches.match(request, { cacheName: CACHES.thumbs });
+  if (cached) {
+    event.waitUntil(touchLru(request.url));
+    return cached;
+  }
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      event.waitUntil(putThumbWithLru(request.url, response.clone()));
+    }
+    return response;
+  } catch {
+    return new Response(null, { status: 404 });
+  }
 }
 
-if (IS_LOCALHOST) {
-  self.addEventListener('install', () => {
-    self.skipWaiting();
-  });
+async function touchLru(url) {
+  const cache = await caches.open(CACHES.thumbs);
+  const meta = await cache.match('__lru__');
+  if (!meta) return;
+  const map = await meta.json();
+  map[url] = Date.now();
+  cache.put('__lru__', new Response(JSON.stringify(map)));
+}
 
-  self.addEventListener('activate', (event) => {
-    event.waitUntil(
-      (async () => {
-        await deleteInventoryCaches();
-        await self.registration.unregister();
+async function putThumbWithLru(url, response) {
+  const cache = await caches.open(CACHES.thumbs);
+  await cache.put(url, response);
+  const meta = await cache.match('__lru__');
+  let map = {};
+  if (meta) map = await meta.json();
+  const now = Date.now();
+  map[url] = now;
+  const entries = Object.entries(map).sort((a, b) => a[1] - b[1]);
+  if (entries.length > THUMB_MAX_ENTRIES) {
+    const toDelete = entries.slice(0, entries.length - THUMB_MAX_ENTRIES);
+    for (const [delUrl] of toDelete) {
+      cache.delete(delUrl);
+      delete map[delUrl];
+    }
+  }
+  cache.put('__lru__', new Response(JSON.stringify(map)));
+}
 
-        const clients = await self.clients.matchAll({
-          type: 'window',
-          includeUncontrolled: true,
-        });
-
-        if (self.location.hostname !== 'localhost') {
-          await Promise.all(
-            clients.map((client) => {
-              if ('navigate' in client) {
-                return client.navigate(client.url);
-              }
-
-              return Promise.resolve(undefined);
-            })
+async function staleWhileRevalidate(event) {
+  const { request } = event;
+  const cached = await caches.match(request, { cacheName: CACHES.static });
+  if (cached) {
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          event.waitUntil(
+            caches.open(CACHES.static).then((c) => c.put(request, response))
           );
         }
-      })()
-    );
-  });
-} else {
-  self.addEventListener('install', (event) => {
-    event.waitUntil(
-      caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-    );
-    self.skipWaiting();
-  });
-
-  self.addEventListener('activate', (event) => {
-    event.waitUntil(
-      (async () => {
-        await deleteInventoryCaches();
-        await self.clients.claim();
-      })()
-    );
-  });
-
-  self.addEventListener('fetch', (event) => {
-    const url = new URL(event.request.url);
-
-    if (isNavigationRequest(event.request)) {
-      event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
+      })
+      .catch(() => {});
+    return cached;
+  }
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const clone = response.clone();
+      event.waitUntil(
+        caches.open(CACHES.static).then((c) => c.put(request, clone))
       );
-      return;
     }
+    return response;
+  } catch {
+    return new Response(null, { status: 404 });
+  }
+}
 
-    if (!isCacheableAsset(event.request, url)) {
-      return;
+async function networkFirstPage(event) {
+  const { request } = event;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const clone = response.clone();
+      event.waitUntil(
+        caches.open(CACHES.pages).then((c) => c.put(request, clone))
+      );
     }
+    return response;
+  } catch {
+    const cached = await caches.match(request, { cacheName: CACHES.pages });
+    if (cached) return cached;
+    const offline = await caches.match(OFFLINE_PAGE);
+    if (offline) return offline;
+    return new Response('Offline', { status: 503 });
+  }
+}
 
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
+async function staticCacheFirst(event) {
+  const { request } = event;
+  const cached = await caches.match(request, { cacheName: CACHES.static });
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      event.waitUntil(
+        caches.open(CACHES.static).then((c) => c.put(request, response.clone()))
+      );
+    }
+    return response;
+  } catch {
+    return new Response(null, { status: 404 });
+  }
+}
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-outbox') {
+    event.waitUntil(
+      self.clients.matchAll().then((clients) => {
+        for (const client of clients) {
+          client.postMessage({ type: 'SYNC_OUTBOX' });
         }
-
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse.ok) {
-            const responseClone = networkResponse.clone();
-            void caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-
-          return networkResponse;
-        });
       })
     );
-  });
-}
+  }
+});

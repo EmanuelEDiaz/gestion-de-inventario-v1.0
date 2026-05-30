@@ -12,7 +12,7 @@ import { X } from '@/presentation/shared/components/ui/icon-mapping';
 export function NetworkStatusWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { backendStatus } = useNetworkHealth();
-  const { status: syncStatus, lastSync, pendingCount, sync } = useSyncStatus();
+  const { status: syncStatus, lastSyncAt, pendingCount, sync } = useSyncStatus();
   const { modules, overallPercent, isComplete } = useCacheProgress();
 
   const borderColor = getStatusColor(backendStatus, syncStatus, pendingCount);
@@ -57,7 +57,7 @@ export function NetworkStatusWidget() {
             pendingCount={pendingCount}
             syncStatus={syncStatus}
             backendStatus={backendStatus}
-            lastSync={lastSync}
+            lastSync={lastSyncAt ? new Date(lastSyncAt) : null}
             onSync={sync}
           />
         </div>

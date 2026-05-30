@@ -122,7 +122,7 @@ class ProductControllerTest {
         var product = createTestProduct();
         var response = createTestResponse();
 
-        when(productCommand.create(any(ProductCommandPort.CreateProductCommand.class)))
+        when(productCommand.create(any(), any(ProductCommandPort.CreateProductCommand.class)))
             .thenReturn(Mono.just(product));
         when(mapper.toResponse(product, null)).thenReturn(response);
 
@@ -168,7 +168,7 @@ class ProductControllerTest {
         var product = createTestProduct();
         var response = createTestResponse();
 
-        when(productCommand.update(eq(productId), any(ProductCommandPort.UpdateProductCommand.class)))
+        when(productCommand.update(eq(productId), any(), any(ProductCommandPort.UpdateProductCommand.class)))
             .thenReturn(Mono.just(product));
         when(mapper.toResponse(product, null)).thenReturn(response);
 
@@ -193,7 +193,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("DELETE /api/v1/products/{id} deletes successfully (204)")
     void delete_success() {
-        when(productCommand.delete(productId)).thenReturn(Mono.empty());
+        when(productCommand.delete(eq(productId), any())).thenReturn(Mono.empty());
 
         webTestClient
             .mutateWith(mockUser())
@@ -219,7 +219,7 @@ class ProductControllerTest {
             Instant.now(), Instant.now(), 0, null
         );
 
-        when(productCommand.archive(productId)).thenReturn(Mono.just(archivedProduct));
+        when(productCommand.archive(eq(productId), any())).thenReturn(Mono.just(archivedProduct));
         when(mapper.toResponse(archivedProduct, null)).thenReturn(archivedResponse);
 
         webTestClient
@@ -248,7 +248,7 @@ class ProductControllerTest {
             Instant.now(), Instant.now(), 0, null
         );
 
-        when(productCommand.activate(productId)).thenReturn(Mono.just(activatedProduct));
+        when(productCommand.activate(eq(productId), any())).thenReturn(Mono.just(activatedProduct));
         when(mapper.toResponse(activatedProduct, null)).thenReturn(activatedResponse);
 
         webTestClient

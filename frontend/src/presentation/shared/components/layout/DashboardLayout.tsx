@@ -11,8 +11,10 @@ import { LogoutConfirmDialog } from '../feedback/LogoutConfirmDialog';
 import { LoadingOverlay } from '../form/LoadingSpinner';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { useSidebarSections } from '@/presentation/shared/hooks/ui/useSidebarSections';
-import { getOutboxCount } from '@/infrastructure/storage/db';
+import { getOutboxCount, initPersistence, isPersistenceReady } from '@/infrastructure/storage/db';
 import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.config';
+import { useSyncStatus } from '@/presentation/shared/hooks/storage/useSyncStatus';
+import { useCacheProgress } from '@/presentation/shared/hooks/storage/useCacheProgress';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -39,9 +41,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [pendingForLogout, setPendingForLogout] = useState(0);
   const { isAuthenticated, hasHydrated, logout } = useAuthStore();
+  const { status: syncStatus, pendingCount } = useSyncStatus();
+  const { isComplete: cacheComplete } = useCacheProgress();
+  const [appReady, setAppReady] = useState(false);
   const router = useRouter();
 
   useEffect(() => { if (!hasHydrated) return; if (!isAuthenticated) router.push('/login'); }, [hasHydrated, isAuthenticated, router]);
+
+  useEffect(() => {
+    initPersistence().then(() => setAppReady(true));
+  }, []);
 
   const handleLogoutRequest = async () => {
     try { setPendingForLogout(await getOutboxCount()); } catch { setPendingForLogout(0); }

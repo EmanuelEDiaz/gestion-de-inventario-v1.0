@@ -1,0 +1,55 @@
+import { getNetworkMode } from '@/infrastructure/storage/networkStore';
+import {
+  getCachedProducts, getCachedProduct, cacheProducts,
+  getCachedCategories, getCachedCustomerDebts,
+  getCachedCount,
+} from '@/infrastructure/storage/db';
+import {
+  addToOutbox, OfflineQueueFullError,
+} from '@/infrastructure/storage/outbox';
+
+export function isOnline(): boolean {
+  return getNetworkMode() !== 'offline';
+}
+
+export async function readWithCache<T>(
+  apiCall: () => Promise<T>,
+  cacheFallback: () => Promise<T>,
+): Promise<T> {
+  if (isOnline()) {
+    return apiCall();
+  }
+  return cacheFallback();
+}
+
+export async function writeWithOutbox<T, TPayload>(
+  apiCall: () => Promise<T>,
+  operation: {
+    entityType: string;
+    entityId: string;
+    action: string;
+    payload: TPayload;
+  },
+  onlineFallback: (result: T) => Promise<void>,
+): Promise<T> {
+  if (isOnline()) {
+    const result = await apiCall();
+    await onlineFallback(result);
+    return result;
+  }
+  await addToOutbox({ operationId: crypto.randomUUID(), ...operation });
+  return operation.payload as unknown as T;
+}
+
+export async function readCachedByEntityType<T>(
+  entityType: string,
+): Promise<T[]> {
+  switch (entityType) {
+    case 'products': return getCachedProducts() as unknown as Promise<T[]>;
+    case 'categories': return getCachedCategories() as unknown as Promise<T[]>;
+    case 'customerDebts': return getCachedCustomerDebts() as unknown as Promise<T[]>;
+    default: return [];
+  }
+}
+
+export { OfflineQueueFullError };

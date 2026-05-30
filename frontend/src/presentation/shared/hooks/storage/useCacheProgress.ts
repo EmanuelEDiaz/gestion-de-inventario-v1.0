@@ -1,132 +1,156 @@
 'use client';
 
-/**
- * useCacheProgress - PERSISTENCIA NO IMPLEMENTADA
- * ==========================================
- * 
- * Hook para mostrar barra de progreso de carga de datos offline.
- * NO está activo actualmente - no hay datos que cargar.
- * 
- * DOCUMENTACIÓN PARA IMPLEMENTACIÓN FUTURA:
- * 
- * - Mostrar progreso de carga desde IndexedDB al inicio de la app
- * - 30% peso para app shell (siempre cargado)
- * - 70% peso para datos (repartido entre entidades)
- * - polling cada 3 segundos hasta completar
- * 
- * ==========================================
- * CÓDIGO COMENTADO - NO USAR HASTA IMPLEMENTACIÓN
- */
-
-// import { useState, useEffect, useCallback, useRef } from 'react';
-// import { isPersistenceReady, getDB } from '@/infrastructure/storage/db';
-
-// export interface CacheModule {
-//   name: string;
-//   store: 'products' | 'syncMeta';
-//   loaded: boolean;
-//   count: number;
-// }
-
-// const MODULE_DEFS: { name: string; store: 'products' | 'syncMeta' }[] = [
-//   { name: 'Productos', store: 'products' },
-// ];
-
-// const CHECK_INTERVAL = 3_000;
-// const MAX_CHECKS = 200;
-
-// export function useCacheProgress() {
-//   const [modules, setModules] = useState<CacheModule[]>(
-//     MODULE_DEFS.map((m) => ({ ...m, loaded: false, count: 0 })),
-//   );
-//   const [overallPercent, setOverallPercent] = useState(0);
-//   const [isComplete, setIsComplete] = useState(false);
-//   const checksRef = useRef(0);
-//   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-//   const checkStores = useCallback(async () => {
-//     if (!isPersistenceReady()) return;
-
-//     checksRef.current++;
-//     if (checksRef.current > MAX_CHECKS) {
-//       if (intervalRef.current) {
-//         clearInterval(intervalRef.current);
-//         intervalRef.current = null;
-//       }
-//       return;
-//     }
-
-//     try {
-//       const db = await getDB();
-//       const updated: CacheModule[] = [];
-
-//       for (const mod of MODULE_DEFS) {
-//         const count = await db.count(mod.store);
-//         updated.push({ ...mod, loaded: true, count });
-//       }
-
-//       setModules(updated);
-
-//       const APP_SHELL_WEIGHT = 30;
-//       const DATA_WEIGHT = 70;
-//       const loadedCount = updated.filter((m) => m.loaded).length;
-//       const dataPercent = MODULE_DEFS.length > 0
-//         ? (loadedCount / MODULE_DEFS.length) * DATA_WEIGHT
-//         : DATA_WEIGHT;
-//       const total = Math.round(APP_SHELL_WEIGHT + dataPercent);
-
-//       setOverallPercent(total);
-//       setIsComplete(total >= 100);
-
-//       if (total >= 100 && intervalRef.current) {
-//         clearInterval(intervalRef.current);
-//         intervalRef.current = null;
-//       }
-//     } catch {
-//       // DB not ready yet
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     checksRef.current = 0;
-//     checkStores();
-//     intervalRef.current = setInterval(checkStores, CHECK_INTERVAL);
-
-//     return () => {
-//       if (intervalRef.current) clearInterval(intervalRef.current);
-//     };
-//   }, [checkStores]);
-
-//   return { modules, overallPercent, isComplete };
-// }
-
-// Export dummy - siempre indica 100% cuando no hay persistencia
 import { useState, useEffect, useRef } from 'react';
+import { getDB, getCachedCount, isStale } from '@/infrastructure/storage/db';
+import { getNetworkMode } from '@/infrastructure/storage/networkStore';
+
+export interface StorageUsage {
+  usageBytes: number;
+  quotaBytes: number;
+  percentUsed: number;
+  isLow: boolean;
+  isWarning: boolean;
+  isCritical: boolean;
+  isSupported: boolean;
+  readyForOffline: boolean;
+}
+
+export interface CacheProgress {
+  phase: 'loading' | 'ready' | 'error';
+  progress: number;
+  currentStep: string;
+  storageUsage: StorageUsage;
+  isAppReady: boolean;
+  modules: CacheModule[];
+  overallPercent: number;
+  isComplete: boolean;
+}
+
+const FASE_A_LABELS = ['Aplicación', 'Autenticación', 'Bodegas', 'Categorías'] as const;
+const FASE_B = [
+  { label: 'Productos', store: 'products' as const },
+  { label: 'Clientes', store: 'customers' as const },
+  { label: 'Proveedores', store: 'suppliers' as const },
+  { label: 'Stock', store: 'stockBalances' as const },
+] as const;
+
+const DEFAULT_USAGE: StorageUsage = {
+  usageBytes: 0, quotaBytes: 0, percentUsed: 0,
+  isLow: false, isWarning: false, isCritical: false,
+  isSupported: false, readyForOffline: true,
+};
+
+export function hasValidToken(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const token = localStorage.getItem('access_token');
+    if (!token) return false;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now() + 300_000;
+  } catch {
+    return false;
+  }
+}
+
+export async function getStorageUsage(): Promise<StorageUsage> {
+  try {
+    if (!navigator.storage?.estimate) return { ...DEFAULT_USAGE, isSupported: false };
+    const est = await navigator.storage.estimate();
+    const usageBytes = est.usage ?? 0;
+    const quotaBytes = est.quota ?? 0;
+    const percentUsed = quotaBytes > 0 ? (usageBytes / quotaBytes) * 100 : 0;
+    return {
+      usageBytes, quotaBytes, percentUsed,
+      isLow: percentUsed > 50,
+      isWarning: percentUsed > 70,
+      isCritical: percentUsed > 90,
+      isSupported: true,
+      readyForOffline: percentUsed < 80,
+    };
+  } catch {
+    return { ...DEFAULT_USAGE };
+  }
+}
+
+export function useCacheProgress(): CacheProgress {
+  const allStores = [...FASE_A_LABELS.map(l => ({ name: l, store: l === 'Aplicación' ? 'outbox' : l === 'Autenticación' ? 'syncMeta' : l.toLowerCase() })), ...FASE_B.map(m => ({ name: m.label, store: m.store as string }))];
+
+  const buildModules = (phase: string, progress: number): CacheModule[] => {
+    const loadedCount = Math.floor((progress / 100) * allStores.length);
+    return allStores.map((s, i) => ({
+      name: s.name, store: s.store,
+      loaded: i < loadedCount || phase === 'ready',
+      count: 0,
+    }));
+  };
+
+  const [st, setSt] = useState<CacheProgress>({
+    phase: 'loading',
+    progress: 0,
+    currentStep: 'Inicializando',
+    storageUsage: DEFAULT_USAGE, isAppReady: false,
+    modules: buildModules('loading', 0),
+    overallPercent: 0, isComplete: false,
+  });
+
+  const phaseBRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  const setVal = (upd: Partial<CacheProgress>) => {
+    if (mountedRef.current) setSt(prev => ({ ...prev, ...upd }));
+  };
+
+  useEffect(() => {
+    getNetworkMode();
+
+    (async () => {
+      for (let i = 0; i < FASE_A_LABELS.length; i++) {
+        setVal({ currentStep: FASE_A_LABELS[i] });
+        try {
+          if (i === 0) await getDB();
+          else if (i === 1) hasValidToken();
+          else await getCachedCount(i === 2 ? 'warehouses' : 'categories');
+        } catch {
+          setVal({ phase: 'error' });
+          return;
+        }
+        setVal({ progress: Math.round(((i + 1) / FASE_A_LABELS.length) * 60) });
+      }
+
+      const storageUsage = await getStorageUsage();
+      setVal({ isAppReady: true, storageUsage, progress: 60 });
+
+      if (phaseBRef.current) return;
+      phaseBRef.current = true;
+
+      for (let i = 0; i < FASE_B.length; i++) {
+        setVal({ currentStep: FASE_B[i].label });
+        try { await getCachedCount(FASE_B[i].store); } catch { /* background */ }
+        setVal({ progress: Math.round(60 + ((i + 1) / FASE_B.length) * 40) });
+      }
+
+      const finalUsage = await getStorageUsage();
+      setVal({ phase: 'ready', storageUsage: finalUsage, progress: 100 });
+    })();
+  }, []);
+
+  const overallPercent = st.progress;
+  const modules = buildModules(st.phase, st.progress);
+  const isComplete = st.isAppReady;
+
+  return { ...st, overallPercent, modules, isComplete };
+}
+
+export { isStale };
 
 export interface CacheModule {
   name: string;
   store: string;
   loaded: boolean;
   count: number;
-}
-
-export function useCacheProgress() {
-  const [modules] = useState<CacheModule[]>([
-    { name: 'Productos', store: 'products', loaded: false, count: 0 },
-  ]);
-  const [overallPercent, setOverallPercent] = useState(0);
-  const [isComplete, setIsComplete] = useState(true); // Fake: siempre completo si no hay IndexedDB
-  
-  const hasRun = useRef(false);
-  
-  useEffect(() => {
-    if (hasRun.current) return;
-    hasRun.current = true;
-    
-    // Simular carga rápida si no hay persistencia
-    setOverallPercent(100);
-    setIsComplete(true);
-  }, []);
-  
-  return { modules, overallPercent, isComplete };
 }

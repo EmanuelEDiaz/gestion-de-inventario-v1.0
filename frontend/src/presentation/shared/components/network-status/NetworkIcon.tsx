@@ -2,11 +2,11 @@
 
 import { Wifi, WifiOff, RefreshCw, Signal } from '@/presentation/shared/components/ui/icon-mapping';
 import type { BackendStatus } from '@/presentation/shared/hooks/storage/useNetworkHealth';
-import type { SyncStatus } from '@/presentation/shared/hooks/storage/useSyncStatus';
+type SyncState = 'online' | 'offline' | 'syncing' | 'error';
 
 interface NetworkIconProps {
   backendStatus: BackendStatus;
-  syncStatus: SyncStatus;
+  syncStatus: SyncState;
   pendingCount: number;
   size?: number;
 }
@@ -24,14 +24,14 @@ export function NetworkIcon({ backendStatus, syncStatus, pendingCount, size = 16
   return <Wifi size={size} className="text-green-500" />;
 }
 
-export function getStatusColor(backendStatus: BackendStatus, syncStatus: SyncStatus, pendingCount: number): string {
+export function getStatusColor(backendStatus: BackendStatus, syncStatus: SyncState, pendingCount: number): string {
   if (syncStatus === 'syncing') return 'border-blue-400 bg-blue-50';
   if (backendStatus === 'disconnected') return 'border-red-400 bg-red-50';
   if (pendingCount > 0) return 'border-amber-400 bg-amber-50';
   return 'border-green-400 bg-green-50';
 }
 
-export function getStatusLabel(backendStatus: BackendStatus, syncStatus: SyncStatus, pendingCount: number): string {
+export function getStatusLabel(backendStatus: BackendStatus, syncStatus: SyncState, pendingCount: number): string {
   if (syncStatus === 'syncing') return 'Sincronizando...';
   if (backendStatus === 'disconnected') return 'Sin conexión';
   if (pendingCount > 0) return `${pendingCount} cambio${pendingCount > 1 ? 's' : ''} pendiente${pendingCount > 1 ? 's' : ''}`;

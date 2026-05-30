@@ -1,106 +1,78 @@
 'use client';
 
-/**
- * useSyncStatus - PERSISTENCIA NO IMPLEMENTADA
- * ==========================================
- * 
- * Hook para manejar estado de sincronización offline/online.
- * NO está activo actualmente - no hay datos que sincronizar.
- * 
- * DOCUMENTACIÓN PARA IMPLEMENTACIÓN FUTURA:
- * 
- * - Estados: online, offline, syncing, error
- * - Auto-sync cada 30 segundos cuando online
- * - Mostrar contador de operaciones pendientes en outbox
- * 
- * ==========================================
- * CÓDIGO COMENTADO - NO USAR HASTA IMPLEMENTACIÓN
- */
-
-// import { useState, useEffect, useCallback, useRef } from 'react';
-// import { isPersistenceReady } from '@/infrastructure/storage/db';
-// import { pushOutbox, pullSync } from '@/infrastructure/storage/SyncService';
-
-// export type SyncStatus = 'online' | 'offline' | 'syncing' | 'error';
-
-// export function useSyncStatus() {
-//   const [status, setStatus] = useState<SyncStatus>('online');
-//   const [lastSync, setLastSync] = useState<Date | null>(null);
-//   const [pendingCount, setPendingCount] = useState(0);
-//   const syncInProgress = useRef(false);
-
-//   const updateOnlineStatus = useCallback(() => {
-//     setStatus((prev) => {
-//       if (!navigator.onLine) return 'offline';
-//       if (prev === 'offline') return 'online';
-//       return prev;
-//     });
-//   }, []);
-
-//   const sync = useCallback(async () => {
-//     if (syncInProgress.current || !navigator.onLine || !isPersistenceReady()) return;
-//     syncInProgress.current = true;
-//     setStatus('syncing');
-//     try {
-//       const { pushed } = await pushOutbox();
-//       await pullSync();
-//       setLastSync(new Date());
-//       setPendingCount(prev => Math.max(0, prev - pushed));
-//       setStatus('online');
-//     } catch {
-//       setStatus('error');
-//       setTimeout(() => setStatus(navigator.onLine ? 'online' : 'offline'), 3000);
-//     } finally {
-//       syncInProgress.current = false;
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     window.addEventListener('online', updateOnlineStatus);
-//     window.addEventListener('offline', updateOnlineStatus);
-//     return () => {
-//       window.removeEventListener('online', updateOnlineStatus);
-//       window.removeEventListener('offline', updateOnlineStatus);
-//     };
-//   }, [updateOnlineStatus]);
-
-//   useEffect(() => {
-//     const interval = setInterval(() => {
-//       if (navigator.onLine) sync();
-//     }, 30000);
-//     return () => clearInterval(interval);
-//   }, [sync]);
-
-//   return { status, lastSync, pendingCount, sync };
-// }
-
-// Export dummy - siempre online
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { pushOutbox, pullCatalogsIfStale, pullDeltaSync } from '@/infrastructure/storage/SyncService';
+import { getOutboxCount } from '@/infrastructure/storage/outbox';
+import { useNetworkStore } from '@/infrastructure/storage/networkStore';
+import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 
-export type SyncStatus = 'online' | 'offline' | 'syncing' | 'error';
+export interface SyncStatus {
+  status: 'online' | 'offline' | 'syncing' | 'error';
+  pendingCount: number;
+  lastSyncAt: number | null;
+  sync: () => Promise<void>;
+  isOffline: boolean;
+}
 
-export function useSyncStatus() {
-  const [status, setStatus] = useState<SyncStatus>('online');
-  const [lastSync] = useState<Date | null>(null);
-  const [pendingCount] = useState(0);
+export function useSyncStatus(): SyncStatus {
+  const [status, setStatus] = useState<'online' | 'offline' | 'syncing' | 'error'>('online');
+  const [pendingCount, setPendingCount] = useState(0);
+  const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+  const mode = useNetworkStore(s => s.mode);
 
-  const updateOnlineStatus = useCallback(() => {
-    setStatus(navigator.onLine ? 'online' : 'offline');
-  }, []);
+  const sync = useCallback(async () => {
+    const currentMode = getNetworkMode();
+    if (currentMode === 'offline') {
+      setStatus('offline');
+      return;
+    }
+
+    setStatus('syncing');
+    try {
+      await pushOutbox();
+      await pullCatalogsIfStale();
+      await pullDeltaSync();
+      await queryClient.invalidateQueries();
+      setLastSyncAt(Date.now());
+      setStatus('online');
+    } catch (err) {
+      setStatus('error');
+      console.error('sync failed', err);
+    }
+  }, [queryClient]);
 
   useEffect(() => {
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    return () => {
-      window.removeEventListener('online', updateOnlineStatus);
-      window.removeEventListener('offline', updateOnlineStatus);
-    };
-  }, [updateOnlineStatus]);
+    setStatus(mode === 'offline' ? 'offline' : 'online');
+    if (mode !== 'offline') {
+      sync();
+    }
+  }, [mode, sync]);
 
-  // Sync no-op cuando no hay persistencia
-  const sync = useCallback(async () => {
-    return;
+  useEffect(() => {
+    if (mode === 'offline') return;
+    const interval = setInterval(sync, 30000);
+    return () => clearInterval(interval);
+  }, [mode, sync]);
+
+  useEffect(() => {
+    const poll = setInterval(async () => {
+      try {
+        const count = await getOutboxCount();
+        setPendingCount(count);
+      } catch {
+        // ignore
+      }
+    }, 5000);
+    return () => clearInterval(poll);
   }, []);
 
-  return { status, lastSync, pendingCount, sync };
+  return {
+    status,
+    pendingCount,
+    lastSyncAt,
+    sync,
+    isOffline: mode === 'offline',
+  };
 }
