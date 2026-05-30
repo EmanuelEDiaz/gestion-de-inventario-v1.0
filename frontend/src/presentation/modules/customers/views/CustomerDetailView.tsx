@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/presentation/shared/components/ui/card';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { statusBadge } from '@/presentation/shared/lib/colors';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
@@ -45,9 +46,11 @@ export function CustomerDetailView({ customerId, onBack }: CustomerDetailViewPro
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         {onBack && (
-          <Button size="sm" variant="ghost" onClick={onBack} title="Volver al listado de clientes">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <TooltipWrapper content="Volver al listado de clientes">
+            <Button size="sm" variant="ghost" onClick={onBack} title="Volver al listado de clientes">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </TooltipWrapper>
         )}
         <h1 className="text-xl font-semibold">{customer.name}</h1>
         <Badge className={statusBadge(customer.active)}>
@@ -57,18 +60,20 @@ export function CustomerDetailView({ customerId, onBack }: CustomerDetailViewPro
 
       <div className="flex gap-0 border-b">
         {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            title={`Ver ${TAB_LABELS[t]}`}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === t
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {TAB_LABELS[t]}
-          </button>
+          <TooltipWrapper content={`Ver ${TAB_LABELS[t]}`} side="top">
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              title={`Ver ${TAB_LABELS[t]}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                tab === t
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {TAB_LABELS[t]}
+            </button>
+          </TooltipWrapper>
         ))}
       </div>
 

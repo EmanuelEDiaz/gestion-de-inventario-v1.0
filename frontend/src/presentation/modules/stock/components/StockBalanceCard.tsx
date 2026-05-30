@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { StockBalance } from '@/core/stock/entities/stock-balance';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
@@ -26,9 +27,11 @@ export function StockBalanceCard({ balance, onClick }: StockBalanceCardProps) {
             <p className="text-sm text-muted-foreground">{balance.productSku}</p>
           </div>
           {isLowStock && (
-            <span className={`px-2 py-1 text-xs font-medium rounded ${statusColors.destructive}`}>
-              Stock Bajo
-            </span>
+            <TooltipWrapper content="Stock por debajo del mínimo configurado" side="top">
+              <span className={`px-2 py-1 text-xs font-medium rounded ${statusColors.destructive}`}>
+                Stock Bajo
+              </span>
+            </TooltipWrapper>
           )}
         </div>
 

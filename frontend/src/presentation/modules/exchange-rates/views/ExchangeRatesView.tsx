@@ -5,6 +5,7 @@ import { toast } from '@/presentation/shared/components/ui/toast';
 import { useExchangeRatesController } from '../hooks/useExchangeRatesController';
 import { ExchangeRateFormFields } from '../components/form/ExchangeRateFormFields';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -31,7 +32,7 @@ export function ExchangeRatesView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Tasas de Cambio" description="Historial de tasas de cambio entre monedas"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Registrar nueva tasa de cambio">+ Nueva Tasa</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nueva tasa de cambio"><Button size="sm" onClick={() => setShowForm(true)} title="Registrar nueva tasa de cambio">+ Nueva Tasa</Button></TooltipWrapper>}
       />
       {showForm && (
         <ExchangeRateFormFields

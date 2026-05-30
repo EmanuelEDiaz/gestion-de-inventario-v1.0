@@ -1,6 +1,7 @@
 'use client';
 
 import { type Purchase, getPurchaseStatusLabel, getPurchaseStatusColor } from '@/core/purchase/entities/purchase';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 
 interface PurchaseDetailHeaderProps {
@@ -22,7 +23,9 @@ export function PurchaseDetailHeader({ purchase, onClose }: PurchaseDetailHeader
           {getPurchaseStatusLabel(purchase.status)}
         </span>
         {onClose && (
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded">✕</button>
+          <TooltipWrapper content="Cerrar detalle" side="left">
+            <button onClick={onClose} className="p-2 hover:bg-muted rounded">✕</button>
+          </TooltipWrapper>
         )}
       </div>
     </div>

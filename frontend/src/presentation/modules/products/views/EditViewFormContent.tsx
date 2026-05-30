@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Card } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui';
 import { ProductFormFields, type ProductFormData } from '../components/form/ProductFormFields';
@@ -22,12 +23,16 @@ export function EditViewFormContent({
       <form onSubmit={onSubmit} className="space-y-6">
         <ProductFormFields data={formData} categories={categories} onChange={onChange} />
         <div className="flex justify-end gap-4 border-t pt-6">
-          <Button type="button" variant="secondary" onClick={onCancel} title="Cancelar edición">
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isSaving} title="Guardar cambios del producto">
-            {isSaving ? 'Guardando...' : 'Guardar cambios'}
-          </Button>
+          <TooltipWrapper content="Cancelar edición" side="top">
+            <Button type="button" variant="secondary" onClick={onCancel}>
+              Cancelar
+            </Button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Guardar cambios del producto" side="top">
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </TooltipWrapper>
         </div>
       </form>
     </Card>

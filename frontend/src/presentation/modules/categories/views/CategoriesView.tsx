@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Pencil, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -49,7 +50,7 @@ export function CategoriesView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Categorías" description="Organiza los productos en categorías"
-        actions={!showForm && <Button onClick={() => openForm()} title="Crear nueva categoría">+ Nueva Categoría</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nueva categoría" side="top"><Button onClick={() => openForm()}>+ Nueva Categoría</Button></TooltipWrapper>}
       />
       {error && <AlertMessage message={error} onDismiss={clearError} />}
       {showForm && (

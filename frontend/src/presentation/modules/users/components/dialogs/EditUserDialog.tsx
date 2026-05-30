@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Input, Dialog } from '@/presentation/shared/components/ui';
+import { Button, Input, Dialog, TooltipWrapper } from '@/presentation/shared/components/ui';
 import { useRoles } from '@/presentation/modules/roles/hooks/useRoles';
 import type { User, UpdateUserData } from '@/core/user/entities/user';
 
@@ -57,10 +57,14 @@ export function EditUserDialog({ open, user, onClose, onSave, isSaving }: Props)
           </select>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" size="sm" type="button" onClick={onClose} title="Cancelar">Cancelar</Button>
-          <Button size="sm" type="submit" disabled={isSaving} title="Guardar cambios">
-            {isSaving ? 'Guardando...' : 'Guardar cambios'}
-          </Button>
+          <TooltipWrapper content="Cancelar">
+            <Button variant="ghost" size="sm" type="button" onClick={onClose} title="Cancelar">Cancelar</Button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Guardar cambios">
+            <Button size="sm" type="submit" disabled={isSaving} title="Guardar cambios">
+              {isSaving ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </TooltipWrapper>
         </div>
       </form>
     </Dialog>

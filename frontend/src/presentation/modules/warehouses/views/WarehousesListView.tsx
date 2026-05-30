@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Pencil, Power } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -39,12 +40,14 @@ export function WarehousesListView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Almacenes" description="Gestiona los almacenes del sistema"
-        actions={<Link href="/warehouses/new"><Button title="Crear nuevo almacén">+ Nuevo Almacén</Button></Link>}
+        actions={<TooltipWrapper content="Crear nuevo almacén" side="top"><Link href="/warehouses/new"><Button>+ Nuevo Almacén</Button></Link></TooltipWrapper>}
       />
-      <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer" title="Mostrar almacenes inactivos">
-        <input type="checkbox" checked={showInactive} onChange={(e) => toggleShowInactive(e.target.checked)} className="rounded border-gray-300" />
-        Mostrar inactivos
-      </label>
+      <TooltipWrapper content="Mostrar/ocultar almacenes inactivos" side="top">
+        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <input type="checkbox" checked={showInactive} onChange={(e) => toggleShowInactive(e.target.checked)} className="rounded border-gray-300" />
+          Mostrar inactivos
+        </label>
+      </TooltipWrapper>
       {error && <AlertMessage message={error} onDismiss={clearError} />}
       {isLoading && <LoadingOverlay />}
       {!isLoading && (

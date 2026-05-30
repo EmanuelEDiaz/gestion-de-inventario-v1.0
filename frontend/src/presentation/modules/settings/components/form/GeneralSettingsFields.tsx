@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { AppSettings, CostMethod, UpdateSettingsInput } from '@/core/settings/entities/app-settings';
 import { COST_METHOD_LABELS } from '@/core/settings/entities/app-settings';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { SystemSettingsFields } from './SystemSettingsFields';
 
@@ -88,9 +89,11 @@ export function GeneralSettingsFields({ settings, onSubmit, isSubmitting }: Gene
 
         <SystemSettingsFields updatedAt={settings.updatedAt} version={settings.version} />
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : 'Guardar configuración del sistema'}
-        </Button>
+        <TooltipWrapper content="Guardar configuración del sistema">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Guardando...' : 'Guardar configuración del sistema'}
+          </Button>
+        </TooltipWrapper>
       </form>
     </section>
   );

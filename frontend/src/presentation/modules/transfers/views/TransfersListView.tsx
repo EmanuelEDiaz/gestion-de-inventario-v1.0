@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { useTransfers } from '../hooks/useTransfers';
 import { useTransferColumns } from '../hooks/useTransferColumns';
@@ -23,7 +24,7 @@ export function TransfersListView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Transferencias" description="Gestiona las transferencias entre almacenes"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nueva transferencia">+ Nueva Transferencia</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nueva transferencia" side="top"><Button size="sm" onClick={() => setShowForm(true)}>+ Nueva Transferencia</Button></TooltipWrapper>}
       />
       {showForm && (
         <TransferFormFields

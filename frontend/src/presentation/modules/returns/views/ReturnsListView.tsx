@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { useReturns } from '../hooks/useReturns';
 import { useReturnColumns } from '../hooks/useReturnColumns';
@@ -23,7 +24,7 @@ export function ReturnsListView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Devoluciones" description="Gestiona las devoluciones del sistema"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nueva devolución">+ Nueva Devolución</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nueva devolución" side="top"><Button size="sm" onClick={() => setShowForm(true)}>+ Nueva Devolución</Button></TooltipWrapper>}
       />
       {showForm && (
         <ReturnFormFields

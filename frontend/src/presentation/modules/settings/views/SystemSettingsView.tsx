@@ -5,6 +5,7 @@ import { useSystemSettingsController } from '../hooks/useSystemSettingsControlle
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
@@ -57,19 +58,25 @@ function SettingRow({
               className="w-32 h-8 text-sm"
               autoFocus
             />
-            <Button size="sm" onClick={handleSave} disabled={isUpdating}>
-              Guardar
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
-              Cancelar
-            </Button>
+            <TooltipWrapper content="Guardar cambios">
+              <Button size="sm" onClick={handleSave} disabled={isUpdating}>
+                Guardar
+              </Button>
+            </TooltipWrapper>
+            <TooltipWrapper content="Cancelar">
+              <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+                Cancelar
+              </Button>
+            </TooltipWrapper>
           </>
         ) : (
           <>
             <span className="text-sm font-mono">{setting.value}</span>
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-              Editar
-            </Button>
+            <TooltipWrapper content="Editar parámetro">
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                Editar
+              </Button>
+            </TooltipWrapper>
           </>
         )}
       </div>

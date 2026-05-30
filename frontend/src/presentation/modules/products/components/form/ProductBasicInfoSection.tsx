@@ -5,6 +5,7 @@ import { Input } from '@/presentation/shared/components/ui';
 import { FormField } from '@/presentation/shared/components/form/FormField';
 import { Textarea } from '@/presentation/shared/components/form/Textarea';
 import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 
 interface ProductBasicInfoSectionProps {
   data: ProductFormData;
@@ -32,6 +33,7 @@ export function ProductBasicInfoSection({ data, onChange, categoryOptions }: Pro
         />
         <Input
           label="Código de Barras"
+          labelSuffix={<TooltipHint title="Código de Barras" description="Código único para lector de barras (opcional)" />}
           value={data.barcode}
           onChange={(e) => onChange('barcode', e.target.value)}
           placeholder="Ej: 7501234567890"

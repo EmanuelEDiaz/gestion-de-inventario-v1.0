@@ -4,20 +4,21 @@
 
 interface FormFieldProps {
   label: string;
+  labelSuffix?: React.ReactNode;
   htmlFor?: string;
   required?: boolean;
   error?: string;
   children: React.ReactNode;
 }
 
-export function FormField({ label, htmlFor, required, error, children }: FormFieldProps) {
+export function FormField({ label, labelSuffix, htmlFor, required, error, children }: FormFieldProps) {
   return (
     <div>
       <label 
         htmlFor={htmlFor} 
         className="mb-1 block text-sm font-medium text-gray-700"
       >
-        {label}
+        <span className="inline-flex items-center gap-1">{label}{labelSuffix}</span>
         {required && <span className="text-red-500"> *</span>}
       </label>
       {children}

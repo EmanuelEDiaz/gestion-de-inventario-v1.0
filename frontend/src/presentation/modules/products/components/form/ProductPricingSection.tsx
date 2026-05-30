@@ -2,6 +2,7 @@
 
 import type { ProductFormData } from './ProductFormFields';
 import { Input } from '@/presentation/shared/components/ui';
+import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 
 interface ProductPricingSectionProps {
   data: ProductFormData;
@@ -15,6 +16,7 @@ export function ProductPricingSection({ data, onChange }: ProductPricingSectionP
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           label="Costo Estándar"
+          labelSuffix={<TooltipHint title="Costo" description="Precio de compra al proveedor" />}
           type="number"
           step="0.01"
           min="0"
@@ -24,6 +26,7 @@ export function ProductPricingSection({ data, onChange }: ProductPricingSectionP
         />
         <Input
           label="Precio de Venta"
+          labelSuffix={<TooltipHint title="Precio" description="Precio de venta al público" />}
           type="number"
           step="0.01"
           min="0"

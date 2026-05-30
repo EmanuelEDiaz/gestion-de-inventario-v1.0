@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { useInfiniteProducts } from '../hooks/useInfiniteProducts';
 import { useCategories } from '../hooks/useCategories';
 import { ProductTable } from './table/ProductTable';
@@ -57,7 +58,7 @@ export function ProductsInfiniteList({ maxPages = 20 }: ProductsInfiniteListProp
 
   if (isError) {
     return (
-      <EmptyState message="Error al cargar productos" action={<Button onClick={() => refetch()}>Reintentar</Button>} />
+      <EmptyState message="Error al cargar productos" action={<TooltipWrapper content="Reintentar carga de productos" side="top"><Button onClick={() => refetch()}>Reintentar</Button></TooltipWrapper>} />
     );
   }
 

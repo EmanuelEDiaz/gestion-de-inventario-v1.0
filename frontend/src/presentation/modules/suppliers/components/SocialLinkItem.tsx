@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { ExternalLink, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { SOCIAL_PLATFORM_LABELS, type SocialPlatform } from '@/core/supplier/entities/supplier-social-link';
 
@@ -31,13 +32,15 @@ export function SocialLinkItem({ link, onRemove }: SocialLinkItemProps) {
         </a>
         <ExternalLink className="h-3 w-3 text-gray-400 shrink-0" />
       </div>
-      <button
-        className="ml-2 p-1 rounded hover:bg-red-50"
-        onClick={() => onRemove(link.id)}
-        title="Eliminar enlace"
-      >
-        <Trash2 className="h-4 w-4 text-red-500" />
-      </button>
+      <TooltipWrapper content="Eliminar enlace">
+        <button
+          className="ml-2 p-1 rounded hover:bg-red-50"
+          onClick={() => onRemove(link.id)}
+          title="Eliminar enlace"
+        >
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </button>
+      </TooltipWrapper>
     </li>
   );
 }

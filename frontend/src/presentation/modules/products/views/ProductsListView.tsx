@@ -6,6 +6,7 @@
 'use client';
 
 import Link from 'next/link';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Button } from '@/presentation/shared/components/ui';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
 import { ProductsInfiniteList } from '../components/ProductsInfiniteList';
@@ -21,9 +22,11 @@ export function ProductsListView() {
         title="Productos"
         description="Gestiona el catálogo de productos"
         actions={
-          <Link href="/products/new">
-            <Button>+ Nuevo Producto</Button>
-          </Link>
+          <TooltipWrapper content="Crear nuevo producto" side="top">
+            <Link href="/products/new">
+              <Button>+ Nuevo Producto</Button>
+            </Link>
+          </TooltipWrapper>
         }
       />
 

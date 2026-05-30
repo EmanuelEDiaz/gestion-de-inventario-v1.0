@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Edit } from '@material-symbols-svg/react';
-import { Button } from '@/presentation/shared/components/ui';
+import { Button, TooltipWrapper } from '@/presentation/shared/components/ui';
 import { useNotificationStream } from '../hooks/useNotificationStream';
 import { NotificationInbox } from '../components/NotificationInbox';
 import { ComposeMessageDialog } from '../components/ComposeMessageDialog';
@@ -34,40 +34,46 @@ export function NotificationsView() {
 
       {/* Tabs */}
       <div className="mb-3 flex items-center gap-1 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('SYSTEM')}
-          title="Ver notificaciones del sistema"
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-            activeTab === 'SYSTEM'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Sistema
-        </button>
-        <button
-          onClick={() => setActiveTab('USER')}
-          title="Ver mensajes de otros usuarios"
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-            activeTab === 'USER'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Mensajes
-        </button>
+        <TooltipWrapper content="Ver notificaciones del sistema">
+          <button
+            onClick={() => setActiveTab('SYSTEM')}
+            title="Ver notificaciones del sistema"
+            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              activeTab === 'SYSTEM'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Sistema
+          </button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Ver mensajes de otros usuarios">
+          <button
+            onClick={() => setActiveTab('USER')}
+            title="Ver mensajes de otros usuarios"
+            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              activeTab === 'USER'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Mensajes
+          </button>
+        </TooltipWrapper>
 
         {activeTab === 'USER' && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="ml-auto mb-1"
-            onClick={() => setComposeOpen(true)}
-            title="Redactar nuevo mensaje para otro usuario"
-          >
-            <Edit className="mr-1.5 h-4 w-4" />
-            Redactar
-          </Button>
+          <TooltipWrapper content="Redactar nuevo mensaje para otro usuario">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto mb-1"
+              onClick={() => setComposeOpen(true)}
+              title="Redactar nuevo mensaje para otro usuario"
+            >
+              <Edit className="mr-1.5 h-4 w-4" />
+              Redactar
+            </Button>
+          </TooltipWrapper>
         )}
       </div>
 

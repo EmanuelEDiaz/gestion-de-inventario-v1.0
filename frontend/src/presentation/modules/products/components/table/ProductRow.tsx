@@ -2,6 +2,7 @@
  * ProductRow - Single row in products table
  */
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Image as ImageIcon } from '@/presentation/shared/components/ui/icon-mapping';
 import type { Product } from '@/core/product/entities/product';
 import { StatusBadge } from '@/presentation/shared/components/data-display/StatusBadge';
@@ -72,25 +73,28 @@ export function ProductRow({ product, onDeleteSuccess }: ProductRowProps) {
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-1">
-          <IconButton
-            icon={Eye}
-            title="Ver detalles del producto"
-            href={`/products/${product.id}`}
-            size="sm"
-          />
-          <IconButton
-            icon={Pencil}
-            title="Modificar información del producto"
-            href={`/products/${product.id}/edit`}
-            size="sm"
-          />
-          <IconButton
-            icon={Trash2}
-            title="Eliminar producto del sistema"
-            onClick={handleDelete}
-            variant="danger"
-            size="sm"
-          />
+          <TooltipWrapper content="Ver detalles del producto" side="left">
+            <IconButton
+              icon={Eye}
+              href={`/products/${product.id}`}
+              size="sm"
+            />
+          </TooltipWrapper>
+          <TooltipWrapper content="Modificar información del producto" side="left">
+            <IconButton
+              icon={Pencil}
+              href={`/products/${product.id}/edit`}
+              size="sm"
+            />
+          </TooltipWrapper>
+          <TooltipWrapper content="Eliminar producto del sistema" side="left">
+            <IconButton
+              icon={Trash2}
+              onClick={handleDelete}
+              variant="danger"
+              size="sm"
+            />
+          </TooltipWrapper>
         </div>
       </td>
     </tr>

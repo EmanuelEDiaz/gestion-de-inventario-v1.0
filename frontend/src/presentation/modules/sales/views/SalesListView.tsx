@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { useSales } from '../hooks/useSales';
 import { useSaleColumns } from '../hooks/useSaleColumns';
@@ -22,7 +23,7 @@ export function SalesListView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Ventas" description="Gestiona las ventas del sistema"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nueva venta">+ Nueva Venta</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nueva venta" side="top"><Button size="sm" onClick={() => setShowForm(true)}>+ Nueva Venta</Button></TooltipWrapper>}
       />
       {showForm && (
         <SaleFormFields

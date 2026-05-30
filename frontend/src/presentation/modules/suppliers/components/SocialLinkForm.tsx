@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
@@ -66,17 +67,21 @@ export function SocialLinkForm({ onSave, onCancel }: SocialLinkFormProps) {
         title="URL completa del perfil o contacto"
       />
       <div className="flex gap-2 justify-end">
-        <Button size="sm" variant="ghost" onClick={onCancel} title="Cancelar">
-          Cancelar
-        </Button>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={!url.trim() || isPending}
-          title="Guardar enlace"
-        >
-          {isPending ? 'Guardando...' : 'Guardar'}
-        </Button>
+        <TooltipWrapper content="Cancelar">
+          <Button size="sm" variant="ghost" onClick={onCancel} title="Cancelar">
+            Cancelar
+          </Button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Guardar enlace">
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={!url.trim() || isPending}
+            title="Guardar enlace"
+          >
+            {isPending ? 'Guardando...' : 'Guardar'}
+          </Button>
+        </TooltipWrapper>
       </div>
     </div>
   );

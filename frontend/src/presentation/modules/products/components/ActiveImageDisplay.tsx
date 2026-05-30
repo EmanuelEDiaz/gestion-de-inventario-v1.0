@@ -47,47 +47,51 @@ export function ActiveImageDisplay({
 
       {imagesLength > 1 && (
         <>
-          <button
-            type="button"
-            onClick={goPrev}
-            title="Ver imagen anterior"
-            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow transition hover:bg-white"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            title="Ver siguiente imagen"
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow transition hover:bg-white"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+          <TooltipWrapper content="Ver imagen anterior" side="top">
+            <button
+              type="button"
+              onClick={goPrev}
+              className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow transition hover:bg-white"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Ver siguiente imagen" side="top">
+            <button
+              type="button"
+              onClick={goNext}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow transition hover:bg-white"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </TooltipWrapper>
         </>
       )}
 
       {editable && (
         <div className="absolute bottom-3 right-3 flex gap-2">
           {!isPrimary && (
+            <TooltipWrapper content="Definir como imagen principal" side="top">
+              <button
+                type="button"
+                disabled={isBusy}
+                onClick={() => onSetPrimary(activeImage.id)}
+                className="rounded-full bg-white/95 p-2 text-amber-600 shadow transition hover:bg-white disabled:opacity-50"
+              >
+                <Star className="h-4 w-4" />
+              </button>
+            </TooltipWrapper>
+          )}
+          <TooltipWrapper content="Eliminar imagen actual" side="top">
             <button
               type="button"
-              title="Definir como imagen principal"
               disabled={isBusy}
-              onClick={() => onSetPrimary(activeImage.id)}
-              className="rounded-full bg-white/95 p-2 text-amber-600 shadow transition hover:bg-white disabled:opacity-50"
+              onClick={() => onDelete(activeImage.id)}
+              className="rounded-full bg-white/95 p-2 text-danger shadow transition hover:bg-white disabled:opacity-50"
             >
-              <Star className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
             </button>
-          )}
-          <button
-            type="button"
-            title="Eliminar imagen actual"
-            disabled={isBusy}
-            onClick={() => onDelete(activeImage.id)}
-            className="rounded-full bg-white/95 p-2 text-danger shadow transition hover:bg-white disabled:opacity-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          </TooltipWrapper>
         </div>
       )}
 

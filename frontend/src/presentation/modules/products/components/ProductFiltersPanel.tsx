@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { ChevronDown, ChevronUp, Filter, X } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Badge } from '@/presentation/shared/components/ui/badge';
@@ -52,21 +53,25 @@ export function ProductFiltersPanel({ filters, onChange, categories }: ProductFi
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2">
-          <Filter className="h-4 w-4" />
-          Filtros
-          {activeFiltersCount > 0 && (
-            <Badge variant="secondary" className="ml-1 px-1.5 py-0">
-              {activeFiltersCount}
-            </Badge>
-          )}
-          {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
-        {activeFiltersCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            <X className="h-4 w-4 mr-1" />
-            Limpiar
+        <TooltipWrapper content="Abrir/cerrar panel de filtros" side="top">
+          <Button variant="outline" size="sm" onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filtros
+            {activeFiltersCount > 0 && (
+              <Badge variant="secondary" className="ml-1 px-1.5 py-0">
+                {activeFiltersCount}
+              </Badge>
+            )}
+            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
+        </TooltipWrapper>
+        {activeFiltersCount > 0 && (
+          <TooltipWrapper content="Limpiar todos los filtros" side="top">
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <X className="h-4 w-4 mr-1" />
+              Limpiar
+            </Button>
+          </TooltipWrapper>
         )}
       </div>
 

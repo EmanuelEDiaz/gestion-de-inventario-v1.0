@@ -6,6 +6,7 @@ import { toast } from '@/presentation/shared/components/ui/toast';
 import { useCustomers } from '../hooks/useCustomers';
 import { CustomerFormFields } from '../components/form/CustomerFormFields';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -56,7 +57,7 @@ export function CustomersListView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Clientes" description="Gestiona los clientes del sistema"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nuevo cliente">+ Nuevo Cliente</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nuevo cliente"><Button size="sm" onClick={() => setShowForm(true)} title="Crear nuevo cliente">+ Nuevo Cliente</Button></TooltipWrapper>}
       />
       {showForm && (
         <CustomerFormFields

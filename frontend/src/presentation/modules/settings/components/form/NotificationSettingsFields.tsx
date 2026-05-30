@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { UiPreferences } from '@/core/settings/entities/app-settings';
 import { DEFAULT_UI_PREFS } from '@/core/settings/entities/app-settings';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { toast } from '@/presentation/shared/components/ui/toast';
@@ -71,7 +72,9 @@ export function NotificationSettingsFields() {
           <p className="text-xs text-muted-foreground">Tiempo de espera antes de ejecutar búsquedas. 300ms es lo recomendado.</p>
         </div>
 
-        <Button type="submit" variant="outline">Guardar preferencias de interfaz</Button>
+        <TooltipWrapper content="Guardar cambios">
+          <Button type="submit" variant="outline">Guardar preferencias de interfaz</Button>
+        </TooltipWrapper>
       </form>
     </section>
   );

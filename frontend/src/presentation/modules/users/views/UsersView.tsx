@@ -8,6 +8,7 @@ import { UserFormFields } from '../components/form/UserFormFields';
 import { EditUserDialog } from '../components/dialogs/EditUserDialog';
 import { ChangePasswordDialog } from '../components/dialogs/ChangePasswordDialog';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -67,7 +68,7 @@ export function UsersView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Usuarios" description="Gestiona los usuarios del sistema"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nuevo usuario">+ Nuevo Usuario</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nuevo usuario"><Button size="sm" onClick={() => setShowForm(true)} title="Crear nuevo usuario">+ Nuevo Usuario</Button></TooltipWrapper>}
       />
       {showForm && (
         <UserFormFields onSubmit={async (data) => { await create(data); setShowForm(false); }}

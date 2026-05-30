@@ -6,6 +6,7 @@ import { useDebtPayment } from '../hooks/useDebtPayment';
 import { DebtPaymentForm } from './DebtPaymentForm';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { DEBT_STATUS_LABELS, DEBT_STATUS_COLORS } from '@/core/customer/entities/customer-debt';
@@ -61,15 +62,17 @@ export function CustomerDebtList({ customerId }: CustomerDebtListProps) {
           </div>
 
           {debt.status !== 'PAID' && debt.status !== 'CANCELLED' && payingId !== debt.id && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setPayingId(debt.id)}
-              title="Registrar pago para esta deuda"
-            >
-              <CreditCard className="h-3 w-3 mr-1" />
-              Registrar pago
-            </Button>
+            <TooltipWrapper content="Registrar pago">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setPayingId(debt.id)}
+                title="Registrar pago para esta deuda"
+              >
+                <CreditCard className="h-3 w-3 mr-1" />
+                Registrar pago
+              </Button>
+            </TooltipWrapper>
           )}
 
           {payingId === debt.id && (

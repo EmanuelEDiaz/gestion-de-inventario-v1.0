@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { CustomerDebt, UpdateDebtData } from '@/core/customer/entities/customer-debt';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/form/Textarea';
@@ -62,12 +63,16 @@ export function DebtUpdateForm({ debt, onSubmit, onCancel }: DebtUpdateFormProps
       />
       {error && <p className="text-sm text-red-500">{error}</p>}
       <div className="flex gap-2">
-        <Button type="submit" disabled={loading} title="Guardar cambios en la deuda">
-          {loading ? 'Guardando...' : 'Guardar'}
-        </Button>
-        <Button type="button" variant="outline" onClick={onCancel} title="Cancelar edición">
-          Cancelar
-        </Button>
+        <TooltipWrapper content="Guardar cambios en la deuda">
+          <Button type="submit" disabled={loading} title="Guardar cambios en la deuda">
+            {loading ? 'Guardando...' : 'Guardar'}
+          </Button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Cancelar edición">
+          <Button type="button" variant="outline" onClick={onCancel} title="Cancelar edición">
+            Cancelar
+          </Button>
+        </TooltipWrapper>
       </div>
     </form>
   );

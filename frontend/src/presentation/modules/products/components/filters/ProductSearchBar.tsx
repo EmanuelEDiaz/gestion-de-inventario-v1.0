@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Search, X } from '@/presentation/shared/components/ui/icon-mapping';
 import { Input } from '@/presentation/shared/components/ui';
 import { useDebounce } from '@/presentation/shared/hooks/ui/useDebounce';
@@ -44,13 +45,15 @@ export function ProductSearchBar({
           className="pl-9 max-w-sm pr-8"
         />
         {value && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <TooltipWrapper content="Limpiar búsqueda" side="top">
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </TooltipWrapper>
         )}
       </div>
     </div>

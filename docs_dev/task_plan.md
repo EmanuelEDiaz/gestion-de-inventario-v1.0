@@ -103,9 +103,9 @@
 | **A3** — Backend: Import CSV | ✅ Hecho |
 | **A5** — Fix POS: CREDIT/RESERVE wiring + Debts bug | ✅ Hecho |
 | **A6** — Frontend: Notification Preferences UI | ✅ Hecho |
-| **A7** — Offline: IndexedDB + SW + Sync | ⏳ Pendiente |
-| **A8** — Housekeeping | ⏳ Pendiente |
-| **B1** — Tooltips: Iconos + Copiar + Auditoría | ⏳ Pendiente |
+| **A7** — Offline: IndexedDB + SW + Sync | ✅ Hecho |
+| **A8** — Housekeeping | ✅ Hecho |
+| **B1** — Tooltips: Iconos + Copiar + Auditoría | ✅ Hecho |
 | **B2** — Permisos: Iconos por Sección + Validación en UI | ⏳ Pendiente |
 | **B3** — Dirección Estructurada (Provincia/Municipio/Calle) | ⏳ Pendiente |
 | **B4** — UX Formularios: Pre-llenado + Crear y Continuar | ⏳ Pendiente |

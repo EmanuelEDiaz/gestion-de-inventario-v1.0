@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useImportController } from '../hooks/useImportController';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { IMPORT_STATUS_LABELS, IMPORT_STATUS_COLORS } from '@/core/import/entities/import-job';
 import { Upload, FileText } from '@/presentation/shared/components/ui/icon-mapping';
@@ -46,30 +47,34 @@ export function ImportView() {
               onChange={handleFileChange}
               className="hidden"
             />
-            <Button variant="outline" onClick={() => fileRef.current?.click()} title="Seleccionar archivo CSV">
+            <TooltipWrapper content="Seleccionar archivo CSV"><Button variant="outline" onClick={() => fileRef.current?.click()} title="Seleccionar archivo CSV">
               <FileText className="h-4 w-4 mr-2" />
               {selectedFile ? selectedFile.name : 'Seleccionar archivo'}
-            </Button>
+            </Button></TooltipWrapper>
           </div>
 
           {selectedFile && (
             <div className="flex gap-2">
-              <Button
-                onClick={handleDryRun}
-                variant="outline"
-                disabled={dryRunMutation.isPending}
-                title="Simular importación sin aplicar cambios"
-              >
-                {dryRunMutation.isPending ? 'Simulando...' : 'Simular (Dry Run)'}
-              </Button>
-              <Button
-                onClick={handleUpload}
-                disabled={uploadMutation.isPending}
-                title="Importar datos desde CSV"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {uploadMutation.isPending ? 'Importando...' : 'Importar'}
-              </Button>
+              <TooltipWrapper content="Validar CSV sin importar">
+                <Button
+                  onClick={handleDryRun}
+                  variant="outline"
+                  disabled={dryRunMutation.isPending}
+                  title="Simular importación sin aplicar cambios"
+                >
+                  {dryRunMutation.isPending ? 'Simulando...' : 'Simular (Dry Run)'}
+                </Button>
+              </TooltipWrapper>
+              <TooltipWrapper content="Iniciar importación">
+                <Button
+                  onClick={handleUpload}
+                  disabled={uploadMutation.isPending}
+                  title="Importar datos desde CSV"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploadMutation.isPending ? 'Importando...' : 'Importar'}
+                </Button>
+              </TooltipWrapper>
             </div>
           )}
         </CardContent>

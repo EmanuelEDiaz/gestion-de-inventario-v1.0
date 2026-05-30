@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Button } from '@/presentation/shared/components/ui/Button';
 
@@ -56,10 +57,14 @@ export function CatalogAddForm({
         />
       </div>
       <div className="flex gap-2 justify-end">
-        <Button size="sm" variant="ghost" onClick={onCancel} title="Cancelar">Cancelar</Button>
-        <Button size="sm" onClick={onSave} disabled={!description.trim() || isPending} title="Guardar producto en catálogo">
-          {isPending ? 'Guardando...' : 'Guardar'}
-        </Button>
+        <TooltipWrapper content="Cancelar">
+          <Button size="sm" variant="ghost" onClick={onCancel} title="Cancelar">Cancelar</Button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Guardar producto en catálogo">
+          <Button size="sm" onClick={onSave} disabled={!description.trim() || isPending} title="Guardar producto en catálogo">
+            {isPending ? 'Guardando...' : 'Guardar'}
+          </Button>
+        </TooltipWrapper>
       </div>
     </div>
   );

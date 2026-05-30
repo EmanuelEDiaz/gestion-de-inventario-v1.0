@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSupplierSocialLinks } from '../hooks/useSupplierSocialLinks';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 import { toast } from '@/presentation/shared/components/ui/toast';
@@ -33,10 +34,12 @@ export function SupplierSocialLinks({ supplierId }: SupplierSocialLinksProps) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-500">{links.length} enlace(s)</span>
-        <Button size="sm" onClick={() => setShowForm(!showForm)} title="Agregar red social">
-          <Plus className="h-4 w-4 mr-1" />
-          Agregar
-        </Button>
+        <TooltipWrapper content="Agregar red social">
+          <Button size="sm" onClick={() => setShowForm(!showForm)} title="Agregar red social">
+            <Plus className="h-4 w-4 mr-1" />
+            Agregar
+          </Button>
+        </TooltipWrapper>
       </div>
 
       {showForm && (

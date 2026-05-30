@@ -6,6 +6,7 @@ import { toast } from '@/presentation/shared/components/ui/toast';
 import { useSuppliers } from '../hooks/useSuppliers';
 import { SupplierFormFields } from '../components/form/SupplierFormFields';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -56,7 +57,7 @@ export function SuppliersListView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Proveedores" description="Gestiona los proveedores del sistema"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nuevo proveedor">+ Nuevo Proveedor</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nuevo proveedor"><Button size="sm" onClick={() => setShowForm(true)} title="Crear nuevo proveedor">+ Nuevo Proveedor</Button></TooltipWrapper>}
       />
       {showForm && (
         <SupplierFormFields

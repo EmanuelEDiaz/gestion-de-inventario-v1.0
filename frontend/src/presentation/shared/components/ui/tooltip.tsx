@@ -52,26 +52,54 @@ function VariantIcon({ variant }: { variant: Exclude<TooltipVariant, 'default'> 
   );
 }
 
+// ─── Copy button ──────────────────────────────────────────────────────────────
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => navigator.clipboard.writeText(text).then(() => {
+        setCopied(true); setTimeout(() => setCopied(false), 1500);
+      })}
+      className="ml-auto shrink-0 rounded p-1 hover:bg-white/10 transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+      aria-label="Copiar texto"
+    >
+      {copied ? <span className="text-green-400 text-xs">✅</span> : <span className="text-gray-400 text-xs">📋</span>}
+    </button>
+  );
+}
+
 // ─── Rich content renderer ────────────────────────────────────────────────────
 
 interface TooltipBody {
   content: React.ReactNode;
   description?: string;
   variant?: TooltipVariant;
+  sectionIcon?: React.ReactNode;
+  sectionName?: string;
+  copyText?: string;
 }
 
-function TooltipBody({ content, description, variant }: TooltipBody) {
+function TooltipBody({ content, description, variant, sectionIcon, sectionName, copyText }: TooltipBody) {
   const showIcon = variant && variant !== 'default';
 
-  if (!showIcon && !description) {
+  if (!showIcon && !description && !sectionIcon && !copyText) {
     return <>{content}</>;
   }
 
   return (
     <div className="flex flex-col gap-1.5">
+      {sectionIcon && sectionName && (
+        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-gray-400">
+          {sectionIcon}
+          <span>{sectionName}</span>
+        </div>
+      )}
       <div className="flex items-start gap-1.5">
         {showIcon && <VariantIcon variant={variant as Exclude<TooltipVariant, 'default'>} />}
         <span className="font-medium leading-tight">{content}</span>
+        {copyText && <CopyButton text={copyText} />}
       </div>
       {description && (
         <>
@@ -93,11 +121,14 @@ interface TooltipProps {
   placement?: Placement;
   delay?: number;
   className?: string;
+  sectionIcon?: React.ReactNode;
+  sectionName?: string;
+  copyText?: string;
 }
 
 const Tooltip = memo(
   forwardRef<HTMLSpanElement, TooltipProps>(function Tooltip(
-    { content, description, variant = 'default', children, placement = 'top', delay = 300, className },
+    { content, description, variant = 'default', children, placement = 'top', delay = 300, className, sectionIcon, sectionName, copyText },
     ref
   ) {
     const [isOpen, setIsOpen] = useState(false);
@@ -147,7 +178,7 @@ const Tooltip = memo(
               style={floatingStyles}
               {...getFloatingProps()}
             >
-              <TooltipBody content={content} description={description} variant={variant} />
+              <TooltipBody content={content} description={description} variant={variant} sectionIcon={sectionIcon} sectionName={sectionName} copyText={copyText} />
             </div>,
             document.body
           )}
@@ -165,6 +196,9 @@ interface TooltipWrapperProps {
   children: React.ReactNode;
   side?: 'top' | 'right' | 'bottom' | 'left';
   delayDuration?: number;
+  sectionIcon?: React.ReactNode;
+  sectionName?: string;
+  copyText?: string;
 }
 
 function TooltipWrapper({
@@ -174,6 +208,9 @@ function TooltipWrapper({
   children,
   side = 'top',
   delayDuration = 300,
+  sectionIcon,
+  sectionName,
+  copyText,
 }: TooltipWrapperProps) {
   const placementMap: Record<string, Placement> = {
     top: 'top', right: 'right', bottom: 'bottom', left: 'left',
@@ -186,6 +223,9 @@ function TooltipWrapper({
       variant={variant}
       placement={placementMap[side]}
       delay={delayDuration}
+      sectionIcon={sectionIcon}
+      sectionName={sectionName}
+      copyText={copyText}
     >
       {children}
     </Tooltip>

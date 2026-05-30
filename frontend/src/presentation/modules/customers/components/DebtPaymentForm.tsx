@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
@@ -80,12 +81,16 @@ export function DebtPaymentForm({ debtId, pendingAmount, onSubmit, onCancel }: D
       </div>
       {error && <p className="text-sm text-danger">{error}</p>}
       <div className="flex gap-2 justify-end">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel} title="Cancelar pago">
-          Cancelar
-        </Button>
-        <Button type="submit" size="sm" disabled={loading} title="Confirmar pago">
-          {loading ? 'Registrando...' : 'Confirmar pago'}
-        </Button>
+        <TooltipWrapper content="Cancelar pago">
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel} title="Cancelar pago">
+            Cancelar
+          </Button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Confirmar pago">
+          <Button type="submit" size="sm" disabled={loading} title="Confirmar pago">
+            {loading ? 'Registrando...' : 'Confirmar pago'}
+          </Button>
+        </TooltipWrapper>
       </div>
     </form>
   );

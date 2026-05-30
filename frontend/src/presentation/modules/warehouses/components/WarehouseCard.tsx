@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Warehouse } from '@/core/warehouse/entities/warehouse';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Button } from '@/presentation/shared/components/ui';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/presentation/shared/components/ui/card';
 import { Badge } from '@/presentation/shared/components/ui/badge';
@@ -28,18 +29,22 @@ export function WarehouseCard({ warehouse, onToggleStatus }: WarehouseCardProps)
         <p className="mb-4 px-6 text-sm text-muted-foreground">{warehouse.address}</p>
       )}
       <div className="flex gap-2 px-6 pb-6">
-        <Link href={`/warehouses/${warehouse.id}/edit`} className="flex-1">
-          <Button variant="secondary" className="w-full">
-            Editar
+        <TooltipWrapper content="Editar almacén" side="top">
+          <Link href={`/warehouses/${warehouse.id}/edit`} className="flex-1">
+            <Button variant="secondary" className="w-full">
+              Editar
+            </Button>
+          </Link>
+        </TooltipWrapper>
+        <TooltipWrapper content={warehouse.active ? 'Desactivar almacén' : 'Activar almacén'} side="top">
+          <Button
+            variant="ghost"
+            onClick={() => onToggleStatus(warehouse)}
+            className={warehouse.active ? 'text-danger' : 'text-success'}
+          >
+            {warehouse.active ? 'Desactivar' : 'Activar'}
           </Button>
-        </Link>
-        <Button
-          variant="ghost"
-          onClick={() => onToggleStatus(warehouse)}
-          className={warehouse.active ? 'text-danger' : 'text-success'}
-        >
-          {warehouse.active ? 'Desactivar' : 'Activar'}
-        </Button>
+        </TooltipWrapper>
       </div>
     </Card>
   );

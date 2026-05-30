@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import type { AuditLogEntry } from '@/core/audit/entities/audit-log';
 import { formatDate } from '@/presentation/shared/lib/utils';
 import { useMemo } from 'react';
@@ -39,11 +40,13 @@ export function AuditLogDetailModal({ entry, isOpen, onClose }: AuditLogDetailMo
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Detalle del Cambio</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded" aria-label="Cerrar">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <TooltipWrapper content="Cerrar">
+            <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded" aria-label="Cerrar">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </TooltipWrapper>
         </div>
 
         <div className="p-4 space-y-4">
@@ -94,10 +97,12 @@ export function AuditLogDetailModal({ entry, isOpen, onClose }: AuditLogDetailMo
         </div>
 
         <div className="flex justify-end p-4 border-t">
-          <button onClick={onClose}
-            className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded">
-            Cerrar
-          </button>
+          <TooltipWrapper content="Cerrar detalle">
+            <button onClick={onClose}
+              className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded">
+              Cerrar
+            </button>
+          </TooltipWrapper>
         </div>
       </div>
     </div>

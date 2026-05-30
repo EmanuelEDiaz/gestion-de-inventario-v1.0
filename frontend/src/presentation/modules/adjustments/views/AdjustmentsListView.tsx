@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { useAdjustments } from '../hooks/useAdjustments';
 import { useAdjustmentColumns } from '../hooks/useAdjustmentColumns';
@@ -23,7 +24,7 @@ export function AdjustmentsListView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Ajustes de Inventario" description="Gestiona los ajustes de inventario"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nuevo ajuste">+ Nuevo Ajuste</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nuevo ajuste" side="top"><Button size="sm" onClick={() => setShowForm(true)}>+ Nuevo Ajuste</Button></TooltipWrapper>}
       />
       {showForm && (
         <AdjustmentFormFields

@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface CatalogProduct {
@@ -31,13 +32,15 @@ export function CatalogTable({ products, onRemove }: CatalogTableProps) {
               </p>
             )}
           </div>
-          <button
-            className="ml-2 p-1 rounded hover:bg-red-50"
-            onClick={() => onRemove(p.id)}
-            title="Eliminar del catálogo"
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </button>
+          <TooltipWrapper content="Eliminar del catálogo">
+            <button
+              className="ml-2 p-1 rounded hover:bg-red-50"
+              onClick={() => onRemove(p.id)}
+              title="Eliminar del catálogo"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </button>
+          </TooltipWrapper>
         </div>
       ))}
     </div>

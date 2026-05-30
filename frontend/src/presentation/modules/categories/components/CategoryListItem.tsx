@@ -2,6 +2,7 @@
  * CategoryListItem - Single category item in list
  */
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import type { Category } from '@/core/category/entities/category';
 
 interface CategoryListItemProps {
@@ -28,18 +29,22 @@ export function CategoryListItem({ category, onEdit, onDelete }: CategoryListIte
         )}
       </div>
       <div className="flex gap-2">
-        <button
-          onClick={() => onEdit(category)}
-          className="text-sm text-blue-600 hover:text-blue-800"
-        >
-          Editar
-        </button>
-        <button
-          onClick={() => onDelete(category)}
-          className="text-sm text-red-600 hover:text-red-800"
-        >
-          Eliminar
-        </button>
+        <TooltipWrapper content="Editar categoría" side="left">
+          <button
+            onClick={() => onEdit(category)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            Editar
+          </button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Eliminar categoría" side="left">
+          <button
+            onClick={() => onDelete(category)}
+            className="text-sm text-red-600 hover:text-red-800"
+          >
+            Eliminar
+          </button>
+        </TooltipWrapper>
       </div>
     </li>
   );

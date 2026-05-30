@@ -130,3 +130,28 @@ export const NAVIGATION_CONFIG: NavSectionConfig[] = [
     ],
   },
 ];
+
+export const sectionIconsMap: Record<IconKey, { section: string; icon: string }> = {
+  dashboard:    { section: 'General',      icon: 'dashboard' },
+  products:     { section: 'Inventario',   icon: 'products' },
+  category:     { section: 'Inventario',   icon: 'category' },
+  warehouse:    { section: 'Inventario',   icon: 'warehouse' },
+  stock:        { section: 'Inventario',   icon: 'stock' },
+  movements:    { section: 'Inventario',   icon: 'movements' },
+  supplier:     { section: 'Comercial',    icon: 'supplier' },
+  customer:     { section: 'Comercial',    icon: 'customer' },
+  purchase:     { section: 'Operaciones',  icon: 'purchase' },
+  sale:         { section: 'Operaciones',  icon: 'sale' },
+  transfer:     { section: 'Operaciones',  icon: 'transfer' },
+  adjustment:   { section: 'Operaciones',  icon: 'adjustment' },
+  returnDoc:    { section: 'Operaciones',  icon: 'returnDoc' },
+  importData:   { section: 'Datos',        icon: 'importData' },
+  exportData:   { section: 'Datos',        icon: 'exportData' },
+  report:       { section: 'Datos',        icon: 'report' },
+  auditLog:     { section: 'Sistema',      icon: 'auditLog' },
+  users:        { section: 'Sistema',      icon: 'users' },
+  roles:        { section: 'Sistema',      icon: 'roles' },
+  currency:     { section: 'Sistema',      icon: 'currency' },
+  exchangeRate: { section: 'Sistema',      icon: 'exchangeRate' },
+  settings:     { section: 'Sistema',      icon: 'settings' },
+};

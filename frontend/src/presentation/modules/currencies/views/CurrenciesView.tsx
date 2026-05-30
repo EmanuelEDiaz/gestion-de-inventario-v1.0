@@ -6,6 +6,7 @@ import { toast } from '@/presentation/shared/components/ui/toast';
 import { useCurrenciesController } from '../hooks/useCurrenciesController';
 import { CurrencyFormFields } from '../components/form/CurrencyFormFields';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -47,7 +48,7 @@ export function CurrenciesView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Monedas" description="Gestiona las monedas del sistema"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Agregar nueva moneda">+ Nueva Moneda</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nueva moneda"><Button size="sm" onClick={() => setShowForm(true)} title="Agregar nueva moneda">+ Nueva Moneda</Button></TooltipWrapper>}
       />
       {showForm && (
         <CurrencyFormFields

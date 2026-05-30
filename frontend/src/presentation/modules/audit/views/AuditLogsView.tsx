@@ -6,6 +6,7 @@ import { GenericTable } from '@/presentation/shared/components/data-display/Gene
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import type { AuditLogEntry } from '@/core/audit/entities/audit-log';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Eye, RefreshCw } from '@/presentation/shared/components/ui/icon-mapping';
 import { useMemo, useState } from 'react';
 
@@ -49,11 +50,13 @@ export function AuditLogsView() {
         title="Auditoría"
         description="Registro de cambios realizados en el sistema"
         actions={
-          <button onClick={refresh}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded min-h-11">
-            <RefreshCw className="w-4 h-4" />
-            Actualizar
-          </button>
+          <TooltipWrapper content="Actualizar registros de auditoría">
+            <button onClick={refresh}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded min-h-11">
+              <RefreshCw className="w-4 h-4" />
+              Actualizar
+            </button>
+          </TooltipWrapper>
         }
       />
 
@@ -87,7 +90,7 @@ export function AuditLogsView() {
       {error && (
         <div className="p-3 text-sm text-red-700 bg-red-50 rounded flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={clearError} className="text-red-500 hover:text-red-700">✕</button>
+          <TooltipWrapper content="Cerrar mensaje de error"><button onClick={clearError} className="text-red-500 hover:text-red-700">✕</button></TooltipWrapper>
         </div>
       )}
 
@@ -107,17 +110,21 @@ export function AuditLogsView() {
       <div className="flex items-center justify-between text-sm">
         <span className="text-gray-500">Total: {total} registros</span>
         <div className="flex gap-2">
-          <button onClick={prevPage} disabled={page === 0}
-            className="px-3 py-2 border rounded text-sm min-h-11 disabled:opacity-50 hover:bg-gray-50">
-            ← Anterior
-          </button>
+          <TooltipWrapper content="Página anterior">
+            <button onClick={prevPage} disabled={page === 0}
+              className="px-3 py-2 border rounded text-sm min-h-11 disabled:opacity-50 hover:bg-gray-50">
+              ← Anterior
+            </button>
+          </TooltipWrapper>
           <span className="px-3 py-2 text-sm">
             Página {page + 1} de {totalPages}
           </span>
-          <button onClick={nextPage} disabled={page >= totalPages - 1}
-            className="px-3 py-2 border rounded text-sm min-h-11 disabled:opacity-50 hover:bg-gray-50">
-            Siguiente →
-          </button>
+          <TooltipWrapper content="Página siguiente">
+            <button onClick={nextPage} disabled={page >= totalPages - 1}
+              className="px-3 py-2 border rounded text-sm min-h-11 disabled:opacity-50 hover:bg-gray-50">
+              Siguiente →
+            </button>
+          </TooltipWrapper>
         </div>
       </div>
 

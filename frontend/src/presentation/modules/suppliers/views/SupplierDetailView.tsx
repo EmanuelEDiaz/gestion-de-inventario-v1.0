@@ -6,6 +6,7 @@ import { SupplierRepository } from '@/infrastructure/repositories/supplier/Suppl
 import { SupplierImageCarousel } from '../components/SupplierImageCarousel';
 import { SupplierSocialLinks } from '../components/SupplierSocialLinks';
 import { SupplierCatalogProducts } from '../components/SupplierCatalogProducts';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
@@ -47,18 +48,20 @@ export function SupplierDetailView({ supplierId, onBack }: SupplierDetailViewPro
 
       <div className="flex gap-0 border-b overflow-x-auto">
         {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            title={`Ver ${TAB_LABELS[t]}`}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
-              tab === t
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {TAB_LABELS[t]}
-          </button>
+            <TooltipWrapper content={`Ver ${TAB_LABELS[t]}`} side="top">
+              <button
+              key={t}
+              onClick={() => setTab(t)}
+              title={`Ver ${TAB_LABELS[t]}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
+                tab === t
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {TAB_LABELS[t]}
+            </button>
+            </TooltipWrapper>
         ))}
       </div>
 

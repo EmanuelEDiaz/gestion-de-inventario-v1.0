@@ -1,6 +1,7 @@
 'use client';
 
 import type { Adjustment } from '@/core/adjustment/entities/adjustment';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { CheckCircle, XCircle, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 
@@ -20,19 +21,25 @@ export function AdjustmentActions({ status, id, onConfirm, onCancel, onDelete }:
   return (
     <div className="flex justify-end gap-1">
       {canConfirm && onConfirm && (
-        <Button size="sm" variant="outline" onClick={() => onConfirm(id)} title="Confirmar">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-        </Button>
+        <TooltipWrapper content="Confirmar ajuste" side="left">
+          <Button size="sm" variant="outline" onClick={() => onConfirm(id)}>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </Button>
+        </TooltipWrapper>
       )}
       {canCancel && onCancel && (
-        <Button size="sm" variant="ghost" onClick={() => onCancel(id)} title="Cancelar">
-          <XCircle className="h-4 w-4 text-red-600" />
-        </Button>
+        <TooltipWrapper content="Cancelar ajuste" side="left">
+          <Button size="sm" variant="ghost" onClick={() => onCancel(id)}>
+            <XCircle className="h-4 w-4 text-red-600" />
+          </Button>
+        </TooltipWrapper>
       )}
       {canDelete && onDelete && (
-        <Button size="sm" variant="ghost" onClick={() => onDelete(id)} title="Eliminar">
-          <Trash2 className="h-4 w-4 text-red-600" />
-        </Button>
+        <TooltipWrapper content="Eliminar ajuste" side="left">
+          <Button size="sm" variant="ghost" onClick={() => onDelete(id)}>
+            <Trash2 className="h-4 w-4 text-red-600" />
+          </Button>
+        </TooltipWrapper>
       )}
     </div>
   );

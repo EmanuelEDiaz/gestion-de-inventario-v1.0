@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { toast } from '@/presentation/shared/components/ui/toast';
 import { usePurchases } from '../hooks/usePurchases';
 import { usePurchaseColumns } from '../hooks/usePurchaseColumns';
@@ -22,7 +23,7 @@ export function PurchasesListView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Compras" description="Gestiona las compras del sistema"
-        actions={!showForm && <Button size="sm" onClick={() => setShowForm(true)} title="Crear nueva compra">+ Nueva Compra</Button>}
+        actions={!showForm && <TooltipWrapper content="Crear nueva compra" side="top"><Button size="sm" onClick={() => setShowForm(true)}>+ Nueva Compra</Button></TooltipWrapper>}
       />
       {showForm && (
         <PurchaseFormFields

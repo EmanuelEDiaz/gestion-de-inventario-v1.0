@@ -1,6 +1,7 @@
 'use client';
 
 import type { Transfer } from '@/core/transfer/entities/transfer';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { CheckCircle, Truck, XCircle, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 
@@ -23,29 +24,39 @@ export function TransferActions({
   return (
     <div className="flex justify-end gap-1">
       {status === 'DRAFT' && onConfirm && (
-        <Button size="sm" variant="outline" onClick={() => onConfirm(id)} title="Confirmar">
-          <CheckCircle className="h-4 w-4" />
-        </Button>
+        <TooltipWrapper content="Confirmar transferencia" side="left">
+          <Button size="sm" variant="outline" onClick={() => onConfirm(id)}>
+            <CheckCircle className="h-4 w-4" />
+          </Button>
+        </TooltipWrapper>
       )}
       {status === 'CONFIRMED' && onShip && (
-        <Button size="sm" variant="outline" onClick={() => onShip(id)} title="Enviar">
-          <Truck className="h-4 w-4" />
-        </Button>
+        <TooltipWrapper content="Despachar transferencia" side="left">
+          <Button size="sm" variant="outline" onClick={() => onShip(id)}>
+            <Truck className="h-4 w-4" />
+          </Button>
+        </TooltipWrapper>
       )}
       {status === 'IN_TRANSIT' && onComplete && (
-        <Button size="sm" variant="outline" onClick={() => onComplete(id)} title="Completar">
-          <CheckCircle className="h-4 w-4 text-success" />
-        </Button>
+        <TooltipWrapper content="Completar recepción" side="left">
+          <Button size="sm" variant="outline" onClick={() => onComplete(id)}>
+            <CheckCircle className="h-4 w-4 text-success" />
+          </Button>
+        </TooltipWrapper>
       )}
       {canCancel && onCancel && (
-        <Button size="sm" variant="ghost" onClick={() => onCancel(id)} title="Cancelar">
-          <XCircle className="h-4 w-4 text-danger" />
-        </Button>
+        <TooltipWrapper content="Cancelar transferencia" side="left">
+          <Button size="sm" variant="ghost" onClick={() => onCancel(id)}>
+            <XCircle className="h-4 w-4 text-danger" />
+          </Button>
+        </TooltipWrapper>
       )}
       {canDelete && onDelete && (
-        <Button size="sm" variant="ghost" onClick={() => onDelete(id)} title="Eliminar">
-          <Trash2 className="h-4 w-4 text-danger" />
-        </Button>
+        <TooltipWrapper content="Eliminar transferencia" side="left">
+          <Button size="sm" variant="ghost" onClick={() => onDelete(id)}>
+            <Trash2 className="h-4 w-4 text-danger" />
+          </Button>
+        </TooltipWrapper>
       )}
     </div>
   );

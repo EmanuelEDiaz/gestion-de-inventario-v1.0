@@ -5,6 +5,7 @@ import type { CreateUserData } from '@/core/user/entities/user';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { useRoles } from '@/presentation/modules/roles/hooks/useRoles';
+import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 
 interface UserFormFieldsProps {
   onSubmit: (data: CreateUserData) => void;
@@ -44,14 +45,18 @@ export function UserFormFields({ onSubmit, isSubmitting, onCancel }: UserFormFie
             placeholder="juan@empresa.com" title="Dirección de correo electrónico del usuario" />
         </div>
         <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-medium">Contraseña</label>
+          <label htmlFor="password" className="text-sm font-medium">
+            <span className="inline-flex items-center gap-1">Contraseña<TooltipHint title="Contraseña" description="Mínimo 8 caracteres, incluir mayúscula y número" /></span>
+          </label>
           <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••" required minLength={8} title="Contraseña de al menos 8 caracteres" />
         </div>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="roleId" className="text-sm font-medium">Rol</label>
+        <label htmlFor="roleId" className="text-sm font-medium">
+          <span className="inline-flex items-center gap-1">Rol<TooltipHint title="Rol" description="Define los permisos del usuario en el sistema" /></span>
+        </label>
         <select id="roleId" value={roleId} onChange={(e) => setRoleId(e.target.value)}
           required title="Rol del usuario en el sistema"
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50">

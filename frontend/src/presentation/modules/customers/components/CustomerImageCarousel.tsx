@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCustomerImages } from '../hooks/useCustomerImages';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 import { toast } from '@/presentation/shared/components/ui/toast';
@@ -63,10 +64,12 @@ export function CustomerImageCarousel({ customerId }: CustomerImageCarouselProps
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-500">{images.length} imagen(es)</span>
-        <Button size="sm" onClick={() => setShowUpload(!showUpload)} title="Registrar nueva imagen">
-          <Plus className="h-4 w-4 mr-1" />
-          Agregar imagen
-        </Button>
+        <TooltipWrapper content="Agregar nueva imagen">
+          <Button size="sm" onClick={() => setShowUpload(!showUpload)} title="Registrar nueva imagen">
+            <Plus className="h-4 w-4 mr-1" />
+            Agregar imagen
+          </Button>
+        </TooltipWrapper>
       </div>
 
       {showUpload && (

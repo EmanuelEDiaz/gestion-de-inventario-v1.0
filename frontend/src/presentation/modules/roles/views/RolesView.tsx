@@ -7,6 +7,7 @@ import { useRoleActions } from '../hooks/useRoleActions';
 import { RoleForm } from '../components/RoleForm';
 import type { Role, CreateRoleData, UpdateRoleData } from '@/core/user/entities/user';
 import { Button } from '@/presentation/shared/components/ui/Button';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
@@ -53,7 +54,7 @@ export function RolesView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Roles" description="Gestiona los roles y permisos del sistema"
-        actions={!showCreate && !editingRole && <Button size="sm" onClick={() => setShowCreate(true)} title="Crear nuevo rol">+ Nuevo Rol</Button>}
+        actions={!showCreate && !editingRole && <TooltipWrapper content="Crear nuevo rol"><Button size="sm" onClick={() => setShowCreate(true)} title="Crear nuevo rol">+ Nuevo Rol</Button></TooltipWrapper>}
       />
       {(showCreate || editingRole) && (
         <RoleForm role={editingRole ?? undefined}

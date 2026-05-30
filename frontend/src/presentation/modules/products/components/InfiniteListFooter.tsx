@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 
@@ -19,7 +20,8 @@ export function InfiniteListFooter({
   if (hasNextPage) {
     return (
       <div className="flex justify-center">
-        <Button variant="outline" onClick={onLoadMore} disabled={isFetchingNextPage}>
+        <TooltipWrapper content="Cargar más productos" side="top">
+          <Button variant="outline" onClick={onLoadMore} disabled={isFetchingNextPage}>
           {isFetchingNextPage ? (
             <>
               <LoadingSpinner className="mr-2 h-4 w-4" />
@@ -29,6 +31,7 @@ export function InfiniteListFooter({
             'Cargar más productos'
           )}
         </Button>
+        </TooltipWrapper>
       </div>
     );
   }

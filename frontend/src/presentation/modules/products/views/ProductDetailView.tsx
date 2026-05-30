@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { ProductRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { ProductImageGallery } from '../components/ProductImageGallery';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
@@ -42,19 +43,19 @@ export function ProductDetailView({ productId, onBack }: ProductDetailViewProps)
 
       <div className="flex gap-0 border-b">
         {(Object.keys(TAB_LABELS) as Tab[]).map((currentTab) => (
-          <button
-            key={currentTab}
-            type="button"
-            onClick={() => setTab(currentTab)}
-            title={`Ver ${TAB_LABELS[currentTab]}`}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              tab === currentTab
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {TAB_LABELS[currentTab]}
-          </button>
+          <TooltipWrapper key={currentTab} content={`Ver ${TAB_LABELS[currentTab]}`} side="top">
+            <button
+              type="button"
+              onClick={() => setTab(currentTab)}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+                tab === currentTab
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {TAB_LABELS[currentTab]}
+            </button>
+          </TooltipWrapper>
         ))}
       </div>
 

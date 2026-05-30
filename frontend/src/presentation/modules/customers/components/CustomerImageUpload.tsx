@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 
 interface CustomerImageUploadProps {
@@ -25,17 +26,21 @@ export function CustomerImageUpload({ selectedFile, uploading, onFileChange, onU
         className="block w-full text-sm text-gray-700"
       />
       <div className="flex gap-2 justify-end">
-        <Button size="sm" variant="ghost" onClick={onCancel} title="Cancelar">
-          Cancelar
-        </Button>
-        <Button
-          size="sm"
-          onClick={onUpload}
-          disabled={uploading || !selectedFile}
-          title="Subir imagen seleccionada"
-        >
-          {uploading ? 'Subiendo...' : 'Subir'}
-        </Button>
+        <TooltipWrapper content="Cancelar">
+          <Button size="sm" variant="ghost" onClick={onCancel} title="Cancelar">
+            Cancelar
+          </Button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Subir imagen seleccionada">
+          <Button
+            size="sm"
+            onClick={onUpload}
+            disabled={uploading || !selectedFile}
+            title="Subir imagen seleccionada"
+          >
+            {uploading ? 'Subiendo...' : 'Subir'}
+          </Button>
+        </TooltipWrapper>
       </div>
     </div>
   );

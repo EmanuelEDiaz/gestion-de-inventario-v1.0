@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Input, Dialog } from '@/presentation/shared/components/ui';
+import { Button, Input, Dialog, TooltipWrapper } from '@/presentation/shared/components/ui';
 import type { User } from '@/core/user/entities/user';
 
 interface Props {
@@ -48,10 +48,14 @@ export function ChangePasswordDialog({ open, user, onClose, onSave, isSaving }: 
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" size="sm" type="button" onClick={onClose} title="Cancelar">Cancelar</Button>
-          <Button size="sm" type="submit" disabled={isSaving} title="Cambiar contraseña">
-            {isSaving ? 'Guardando...' : 'Cambiar contraseña'}
-          </Button>
+          <TooltipWrapper content="Cancelar">
+            <Button variant="ghost" size="sm" type="button" onClick={onClose} title="Cancelar">Cancelar</Button>
+          </TooltipWrapper>
+          <TooltipWrapper content="Cambiar contraseña del usuario">
+            <Button size="sm" type="submit" disabled={isSaving} title="Cambiar contraseña">
+              {isSaving ? 'Guardando...' : 'Cambiar contraseña'}
+            </Button>
+          </TooltipWrapper>
         </div>
       </form>
     </Dialog>

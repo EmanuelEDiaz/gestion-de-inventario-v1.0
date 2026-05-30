@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useExportController } from '../hooks/useExportController';
 import type { ExportFormat } from '@/core/export/ports/IExportRepository';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
@@ -49,23 +50,27 @@ export function ExportView() {
           </div>
 
           <div className="flex gap-2">
-            <Button
-              onClick={() => exportSalesMutation.mutate(filter)}
-              disabled={exportSalesMutation.isPending}
-              title="Exportar reporte de ventas"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {exportSalesMutation.isPending ? 'Exportando...' : 'Exportar Ventas'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => exportInventoryMutation.mutate(filter)}
-              disabled={exportInventoryMutation.isPending}
-              title="Exportar reporte de inventario"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {exportInventoryMutation.isPending ? 'Exportando...' : 'Exportar Inventario'}
-            </Button>
+            <TooltipWrapper content="Exportar datos en formato seleccionado">
+              <Button
+                onClick={() => exportSalesMutation.mutate(filter)}
+                disabled={exportSalesMutation.isPending}
+                title="Exportar reporte de ventas"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {exportSalesMutation.isPending ? 'Exportando...' : 'Exportar Ventas'}
+              </Button>
+            </TooltipWrapper>
+            <TooltipWrapper content="Exportar datos en formato seleccionado">
+              <Button
+                variant="outline"
+                onClick={() => exportInventoryMutation.mutate(filter)}
+                disabled={exportInventoryMutation.isPending}
+                title="Exportar reporte de inventario"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {exportInventoryMutation.isPending ? 'Exportando...' : 'Exportar Inventario'}
+              </Button>
+            </TooltipWrapper>
           </div>
         </CardContent>
       </Card>

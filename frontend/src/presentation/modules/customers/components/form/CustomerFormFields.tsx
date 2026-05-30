@@ -5,6 +5,7 @@ import type { CreateCustomerData } from '@/core/customer/entities/customer';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/form/Textarea';
+import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 
 interface CustomerFormFieldsProps {
   onSubmit: (data: CreateCustomerData) => void;
@@ -42,7 +43,9 @@ export function CustomerFormFields({ onSubmit, isSubmitting, onCancel }: Custome
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Cliente S.A." required title="Nombre del cliente" />
         </div>
         <div className="space-y-1">
-          <label htmlFor="code" className="text-sm font-medium">Código</label>
+          <label htmlFor="code" className="text-sm font-medium">
+            <span className="inline-flex items-center gap-1">Código<TooltipHint title="Código" description="Código interno del cliente (CLI-001)" /></span>
+          </label>
           <Input id="code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="CLI-001" title="Código de referencia" />
         </div>
         <div className="space-y-1">

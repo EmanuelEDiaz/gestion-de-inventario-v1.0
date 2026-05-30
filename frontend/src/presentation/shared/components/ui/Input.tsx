@@ -3,11 +3,12 @@ import { cn } from '@/presentation/shared/lib/utils';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  labelSuffix?: React.ReactNode;
   error?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, error, id, ...props }, ref) => {
+  ({ className, type, label, labelSuffix, error, id, ...props }, ref) => {
     const generatedId = React.useId();
     const inputId = id ?? generatedId;
     
@@ -18,7 +19,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             htmlFor={inputId}
             className="block text-sm font-medium text-gray-700"
           >
-            {label}
+            <span className="inline-flex items-center gap-1">{label}{labelSuffix}</span>
           </label>
         )}
         <input

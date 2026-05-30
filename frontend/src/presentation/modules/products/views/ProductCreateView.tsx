@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Sparkles } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
@@ -85,12 +86,16 @@ export function ProductCreateView() {
             />
           </div>
           <div className="flex justify-end gap-4 border-t pt-6">
-            <Button type="button" variant="secondary" onClick={goBack} title="Cancelar creación del producto">
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading} title="Guardar producto y subir sus imágenes">
-              {isLoading ? 'Guardando...' : 'Crear Producto'}
-            </Button>
+            <TooltipWrapper content="Cancelar creación del producto" side="top">
+              <Button type="button" variant="secondary" onClick={goBack}>
+                Cancelar
+              </Button>
+            </TooltipWrapper>
+            <TooltipWrapper content="Guardar producto y subir sus imágenes" side="top">
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? 'Guardando...' : 'Crear Producto'}
+              </Button>
+            </TooltipWrapper>
           </div>
         </form>
       </Card>

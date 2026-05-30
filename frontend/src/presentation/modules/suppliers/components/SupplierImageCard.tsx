@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Star, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { getMediaUrl } from '@/presentation/shared/lib/utils';
 
@@ -32,21 +33,25 @@ export function SupplierImageCard({ image, onSetPrimary, onRemove }: SupplierIma
       )}
       <div className="absolute top-1 right-1 hidden group-hover:flex gap-1">
         {!image.isPrimary && (
+          <TooltipWrapper content="Marcar como imagen principal">
+            <button
+              className="bg-white rounded p-1 shadow"
+              onClick={() => onSetPrimary(image.id)}
+              title="Marcar como imagen principal"
+            >
+              <Star className="h-3 w-3 text-yellow-500" />
+            </button>
+          </TooltipWrapper>
+        )}
+        <TooltipWrapper content="Eliminar imagen">
           <button
             className="bg-white rounded p-1 shadow"
-            onClick={() => onSetPrimary(image.id)}
-            title="Marcar como imagen principal"
+            onClick={() => onRemove(image.id)}
+            title="Eliminar imagen"
           >
-            <Star className="h-3 w-3 text-yellow-500" />
+            <Trash2 className="h-3 w-3 text-red-500" />
           </button>
-        )}
-        <button
-          className="bg-white rounded p-1 shadow"
-          onClick={() => onRemove(image.id)}
-          title="Eliminar imagen"
-        >
-          <Trash2 className="h-3 w-3 text-red-500" />
-        </button>
+        </TooltipWrapper>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 'use client';
 
+import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { ArrowLeft } from '@/presentation/shared/components/ui/icon-mapping';
 import { Badge } from '@/presentation/shared/components/ui/badge';
 import { statusBadge } from '@/presentation/shared/lib/colors';
@@ -14,9 +15,11 @@ export function SupplierInfoCard({ supplier, onBack }: SupplierInfoCardProps) {
   return (
     <div className="flex items-center gap-2">
       {onBack && (
-        <Button size="sm" variant="ghost" onClick={onBack} title="Volver al listado de proveedores">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <TooltipWrapper content="Volver al listado de proveedores">
+          <Button size="sm" variant="ghost" onClick={onBack} title="Volver al listado de proveedores">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </TooltipWrapper>
       )}
       <h1 className="text-xl font-semibold">{supplier.name}</h1>
       <Badge className={statusBadge(supplier.active)}>
