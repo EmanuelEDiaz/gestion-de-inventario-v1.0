@@ -127,7 +127,7 @@
 |   **B5.1** — Backend: DTOs + Use Cases + Controller (5 endpoints: sales-timeline, top-products, top-customers, profit-summary, inventory-value) | ✅ Hecho |
 |   **B5.2** — Frontend: Core entities + IDashboardMetricsRepository + DashboardMetricsRepository + useDashboardMetrics hook | ✅ Hecho |
 |   **B5.3** — Frontend: Chart components (SalesTimelineChart, TopProductsChart, TopCustomersChart, ProfitSummaryCards) | ✅ Hecho |
-|   **B5.4** — Dashboard redesign: TanStack Query + chart integration + fix DashboardRepository | ⏳ Pendiente |
+|   **B5.4** — Dashboard redesign: TanStack Query + chart integration + fix DashboardRepository | ✅ Hecho |
 |   **B5.5** — Custom chart builder (ChartBuilderModal, CustomChartWidget, useDashboardLayout) | ⏳ Pendiente |
 | **B6** — Imagen de Perfil de Usuario | ⏳ Pendiente |
 | **B7** — Resolución Conflictos Offline (Outbox Collapsing) | ⏳ Pendiente |

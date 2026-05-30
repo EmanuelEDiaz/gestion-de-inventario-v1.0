@@ -1,20 +1,28 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { useDashboard } from '@/presentation/modules/dashboard/hooks/useDashboard';
 import { useDashboardMetrics } from '@/presentation/modules/dashboard/hooks/useDashboardMetrics';
+import { useDashboardLayout } from '@/presentation/modules/dashboard/hooks/useDashboardLayout';
 import { DashboardStatsGrid } from '@/presentation/modules/dashboard/components/DashboardStatsGrid';
 import { LowStockList } from '@/presentation/modules/dashboard/components/LowStockList';
 import { ProfitSummaryCards } from '@/presentation/modules/dashboard/components/ProfitSummaryCards';
 import { SalesTimelineChart } from '@/presentation/modules/dashboard/components/SalesTimelineChart';
 import { TopProductsChart } from '@/presentation/modules/dashboard/components/TopProductsChart';
 import { TopCustomersChart } from '@/presentation/modules/dashboard/components/TopCustomersChart';
+import { ChartBuilderModal } from '@/presentation/modules/dashboard/components/ChartBuilderModal';
+import { CustomChartWidget } from '@/presentation/modules/dashboard/components/CustomChartWidget';
+import { Button } from '@/presentation/shared/components/ui/Button';
+import { Plus } from '@/presentation/shared/components/ui/icon-mapping';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { stats, lowStockItems, loading, errorMessage } = useDashboard();
   const { profitSummary, inventoryValue, timeline, topProducts, topCustomers, loading: metricsLoading } = useDashboardMetrics();
+  const { widgets } = useDashboardLayout();
+  const [showChartBuilder, setShowChartBuilder] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -72,6 +80,34 @@ export default function DashboardPage() {
           <LowStockList items={lowStockItems} />
         </div>
       </div>
+
+      {widgets.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Widgets Personalizados</h2>
+            <Button variant="outline" size="sm" onClick={() => setShowChartBuilder(true)}>
+              <Plus className="mr-1 h-4 w-4" /> Agregar Gráfico
+            </Button>
+          </div>
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
+            {widgets.map(w => (
+              <div key={w.config.id} style={{ gridColumn: `span ${w.position.w}` }}>
+                <CustomChartWidget widget={w} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {widgets.length === 0 && (
+        <div className="text-center">
+          <Button variant="outline" onClick={() => setShowChartBuilder(true)}>
+            <Plus className="mr-1 h-4 w-4" /> Agregar Gráfico Personalizado
+          </Button>
+        </div>
+      )}
+
+      <ChartBuilderModal open={showChartBuilder} onClose={() => setShowChartBuilder(false)} />
     </div>
   );
 }
