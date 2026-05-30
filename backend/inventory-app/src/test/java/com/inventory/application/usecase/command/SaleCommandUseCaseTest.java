@@ -11,6 +11,7 @@ import com.inventory.domain.ports.in.sale.SaleCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CustomerDebtRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import com.inventory.domain.ports.out.SaleRepository;
 import com.inventory.domain.ports.out.StockRepository;
 import com.inventory.application.shared.AuditSerializer;
@@ -44,6 +45,7 @@ class SaleCommandUseCaseTest {
     @Mock private AuditLogRepository auditLogRepository;
     @Mock private AuditSerializer auditSerializer;
     @Mock private CustomerDebtRepository customerDebtRepository;
+    @Mock private SyncLogWriterPort syncLogWriter;
     @InjectMocks private SaleCommandUseCase useCase;
 
     private final UUID warehouseId = UUID.randomUUID();

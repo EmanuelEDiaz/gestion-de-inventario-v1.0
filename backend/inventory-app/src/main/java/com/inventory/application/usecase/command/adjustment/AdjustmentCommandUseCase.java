@@ -7,6 +7,7 @@ import com.inventory.domain.ports.in.adjustment.AdjustmentCommandPort;
 import com.inventory.domain.ports.out.AdjustmentRepository;
 import com.inventory.domain.ports.out.StockRepository;
 import com.inventory.domain.ports.out.MovementRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,20 +27,25 @@ public class AdjustmentCommandUseCase implements AdjustmentCommandPort {
     private final AdjustmentRepository adjustmentRepository;
     private final StockRepository stockRepository;
     private final MovementRepository movementRepository;
+    private final SyncLogWriterPort syncLogWriter;
 
     public AdjustmentCommandUseCase(AdjustmentRepository adjustmentRepository,
                                      StockRepository stockRepository,
-                                     MovementRepository movementRepository) {
+                                     MovementRepository movementRepository,
+                                     SyncLogWriterPort syncLogWriter) {
         this.adjustmentRepository = adjustmentRepository;
         this.stockRepository = stockRepository;
         this.movementRepository = movementRepository;
+        this.syncLogWriter = syncLogWriter;
     }
 
     @Override
     public Mono<Adjustment> create(CreateAdjustmentCommand command) {
         return adjustmentRepository.generateAdjustmentNumber()
                 .map(number -> buildAdjustment(number, command))
-                .flatMap(adjustmentRepository::save);
+                .flatMap(adj -> adjustmentRepository.save(adj)
+                        .flatMap(saved -> syncLogWriter.log("ADJUSTMENT", saved.getId(), "CREATE", saved, null)
+                                .thenReturn(saved)));
     }
 
     @Override

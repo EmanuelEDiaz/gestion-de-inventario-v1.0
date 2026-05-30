@@ -1,14 +1,14 @@
 'use client';
 import type { ReactNode } from 'react';
 
-interface DebtPaymentHistoryProps {
+interface DebtActionFormsProps {
   showPayForm: boolean;
   showEditForm: boolean;
   payForm: ReactNode;
   editForm: ReactNode;
 }
 
-export function DebtPaymentHistory({ showPayForm, showEditForm, payForm, editForm }: DebtPaymentHistoryProps) {
+export function DebtActionForms({ showPayForm, showEditForm, payForm, editForm }: DebtActionFormsProps) {
   return (
     <>
       {showPayForm && payForm}

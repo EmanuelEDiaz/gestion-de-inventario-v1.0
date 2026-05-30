@@ -320,6 +320,17 @@ Ver [CLAUDE.md](CLAUDE.md) para reglas completas.
 | MANAGER | Operaciones + catálogo (sin usuarios) |
 | SELLER | Solo ventas y consultas de stock |
 
+## API — Nuevos grupos de endpoints
+
+Los siguientes grupos de endpoints han sido añadidos (ver [docs/contracts/endpoints.md](docs/contracts/endpoints.md) para detalle completo):
+
+- **Audit Logs** — listado, consulta por entidad
+- **System Settings** — gestión de configuraciones (admin)
+- **Reports** — reportes de ventas e inventario
+- **Exports** — exportación CSV de ventas e inventario
+- **Imports** — importación CSV con dry-run y jobs async
+- **Sync (Offline)** — push/pull, checksums, incidencias
+
 ## Licencia
 
 MIT

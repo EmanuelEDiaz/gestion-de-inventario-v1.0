@@ -11,7 +11,7 @@ import { formatCurrency } from '@/presentation/shared/lib/utils';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { DebtInfoHeader } from './DebtInfoHeader';
 import { DebtActions } from './DebtActions';
-import { DebtPaymentHistory } from './DebtPaymentHistory';
+import { DebtActionForms } from './DebtActionForms';
 
 interface DebtDetailPanelProps {
   debt: CustomerDebt;
@@ -43,7 +43,7 @@ export function DebtDetailPanel({ debt }: DebtDetailPanelProps) {
             cancelPending={cancelMutation.isPending}
           />
 
-          <DebtPaymentHistory
+          <DebtActionForms
             showPayForm={showPayForm}
             showEditForm={showEditForm}
             payForm={

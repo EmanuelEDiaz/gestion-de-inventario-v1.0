@@ -7,6 +7,7 @@ import com.inventory.domain.ports.in.returns.ReturnCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.ReturnRepository;
 import com.inventory.domain.ports.out.StockRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -25,20 +26,25 @@ public class ReturnCommandUseCase implements ReturnCommandPort {
     private final ReturnRepository returnRepository;
     private final StockRepository stockRepository;
     private final MovementRepository movementRepository;
+    private final SyncLogWriterPort syncLogWriter;
 
     public ReturnCommandUseCase(ReturnRepository returnRepository,
                                  StockRepository stockRepository,
-                                 MovementRepository movementRepository) {
+                                 MovementRepository movementRepository,
+                                 SyncLogWriterPort syncLogWriter) {
         this.returnRepository = returnRepository;
         this.stockRepository = stockRepository;
         this.movementRepository = movementRepository;
+        this.syncLogWriter = syncLogWriter;
     }
 
     @Override
     public Mono<Return> create(CreateReturnCommand command) {
         return returnRepository.generateReturnNumber(command.type())
                 .map(number -> buildReturn(number, command))
-                .flatMap(returnRepository::save);
+                .flatMap(ret -> returnRepository.save(ret)
+                        .flatMap(saved -> syncLogWriter.log("RETURN", saved.getId(), "CREATE", saved, null)
+                                .thenReturn(saved)));
     }
 
     @Override

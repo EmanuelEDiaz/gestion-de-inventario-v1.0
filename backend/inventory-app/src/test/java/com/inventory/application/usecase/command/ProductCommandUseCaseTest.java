@@ -11,6 +11,7 @@ import com.inventory.domain.ports.in.product.ProductCommandPort.UpdateProductCom
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;
 import com.inventory.domain.ports.out.AuditLogRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import com.inventory.application.shared.AuditSerializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,9 @@ class ProductCommandUseCaseTest {
 
     @Mock
     private AuditLogRepository auditLogRepository;
+
+    @Mock
+    private SyncLogWriterPort syncLogWriter;
 
     @Mock
     private AuditSerializer auditSerializer;

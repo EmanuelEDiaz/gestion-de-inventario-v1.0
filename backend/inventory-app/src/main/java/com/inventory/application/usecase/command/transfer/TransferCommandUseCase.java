@@ -9,6 +9,7 @@ import com.inventory.domain.model.transfer.TransferLine;
 import com.inventory.domain.ports.in.transfer.TransferCommandPort;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.StockRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import com.inventory.domain.ports.out.TransferRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,14 +32,17 @@ public class TransferCommandUseCase implements TransferCommandPort {
     private final TransferRepository transferRepository;
     private final StockRepository stockRepository;
     private final MovementRepository movementRepository;
+    private final SyncLogWriterPort syncLogWriter;
 
     public TransferCommandUseCase(
             TransferRepository transferRepository,
             StockRepository stockRepository,
-            MovementRepository movementRepository) {
+            MovementRepository movementRepository,
+            SyncLogWriterPort syncLogWriter) {
         this.transferRepository = transferRepository;
         this.stockRepository = stockRepository;
         this.movementRepository = movementRepository;
+        this.syncLogWriter = syncLogWriter;
     }
 
     @Override
@@ -53,7 +57,9 @@ public class TransferCommandUseCase implements TransferCommandPort {
                             command.toWarehouseId(),
                             command.createdBy(),
                             lines);
-                    return transferRepository.save(transfer);
+                    return transferRepository.save(transfer)
+                            .flatMap(saved -> syncLogWriter.log("TRANSFER", saved.getId(), "CREATE", saved, null)
+                                    .thenReturn(saved));
                 });
     }
 

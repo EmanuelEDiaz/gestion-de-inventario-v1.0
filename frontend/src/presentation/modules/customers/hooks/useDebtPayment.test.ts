@@ -55,5 +55,6 @@ describe('useDebtPayment', () => {
 
     // Assert
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['customer-debts', 'cust-42'] });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['debts'] });
   });
 });

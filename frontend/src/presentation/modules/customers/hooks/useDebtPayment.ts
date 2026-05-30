@@ -10,8 +10,10 @@ export function useDebtPayment(customerId: string, _debtId?: string) {
   const mutation = useMutation({
     mutationFn: ({ debtId, data }: { debtId: string; data: RegisterDebtPaymentData }) =>
       customerDebtApi.registerPayment(debtId, data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ['customer-debts', customerId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['customer-debts', customerId] });
+      qc.invalidateQueries({ queryKey: ['debts'] });
+    },
   });
 
   return {

@@ -308,3 +308,54 @@ Base: `/api/v1`
 - `barcode` puede usarse para identificar el producto (campo en la línea)
 - Si no se especifica `soldAt`, el servidor usa `now()`
 - La venta se confirma inmediatamente (no queda en DRAFT)
+
+---
+
+## Audit Logs
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| GET | `/audit-logs` | Listar con filtros (entityType, actorId, action, fromDate, toDate, page, size) | ADMIN |
+| GET | `/audit-logs/{id}` | Obtener por ID | ADMIN |
+| GET | `/audit-logs/entity/{entityType}/{entityId}` | Obtener logs de una entidad | ADMIN |
+
+## System Settings
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| GET | `/settings/system` | Listar todas las configuraciones | ADMIN |
+| PUT | `/settings/system/{key}` | Actualizar una configuración | ADMIN |
+| GET | `/settings/public` | Listar configuraciones públicas | Sin auth |
+
+## Reports
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| GET | `/reports/sales` | Reporte de ventas (fromDate, toDate, warehouseId, categoryId, paymentMode) | Autenticado |
+| GET | `/reports/inventory` | Reporte de inventario (warehouseId, categoryId, lowStockThreshold) | Autenticado |
+
+## Exports
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| GET | `/exports/sales` | Exportar ventas (fromDate, toDate, warehouseId, format=csv) | ADMIN/MANAGER |
+| GET | `/exports/inventory` | Exportar inventario (warehouseId, categoryId, format=csv) | ADMIN/MANAGER |
+
+## Imports
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| POST | `/imports/csv` | Subir CSV para importar (multipart) | ADMIN |
+| POST | `/imports/dry-run` | Validar CSV sin importar | ADMIN |
+| GET | `/imports/{id}/status` | Consultar estado del job | ADMIN |
+| GET | `/imports/{id}/result` | Obtener resultado del job | ADMIN |
+
+## Sync (Offline)
+
+| Método | Endpoint | Descripción | Rol |
+|--------|----------|-------------|-----|
+| POST | `/sync/push` | Push de operaciones offline en batch | Autenticado |
+| GET | `/sync/pull` | Pull de cambios desde cursor (cursor, entityType, limit) | Autenticado |
+| GET | `/sync/checksums` | Checksums de stores para validación de caché | Autenticado |
+| POST | `/sync/incidents/report` | Reportar una incidencia de sync | Autenticado |
+| PUT | `/sync/incidents/{id}/resolve` | Resolver una incidencia de sync | ADMIN/MANAGER |
