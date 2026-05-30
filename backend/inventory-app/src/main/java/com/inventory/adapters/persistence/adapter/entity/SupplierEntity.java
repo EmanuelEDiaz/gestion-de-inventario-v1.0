@@ -7,6 +7,7 @@ import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -34,6 +35,27 @@ public class SupplierEntity implements Persistable<UUID> {
     @Column("address")
     private String address;
 
+    @Column("province")
+    private String province;
+
+    @Column("municipality")
+    private String municipality;
+
+    @Column("street")
+    private String street;
+
+    @Column("locality")
+    private String locality;
+
+    @Column("zip_code")
+    private String zipCode;
+
+    @Column("latitude")
+    private BigDecimal latitude;
+
+    @Column("longitude")
+    private BigDecimal longitude;
+
     @Column("notes")
     private String notes;
 
@@ -58,7 +80,6 @@ public class SupplierEntity implements Persistable<UUID> {
 
     public SupplierEntity() {}
 
-    // Getters y Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
@@ -79,6 +100,27 @@ public class SupplierEntity implements Persistable<UUID> {
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+
+    public String getProvince() { return province; }
+    public void setProvince(String province) { this.province = province; }
+
+    public String getMunicipality() { return municipality; }
+    public void setMunicipality(String municipality) { this.municipality = municipality; }
+
+    public String getStreet() { return street; }
+    public void setStreet(String street) { this.street = street; }
+
+    public String getLocality() { return locality; }
+    public void setLocality(String locality) { this.locality = locality; }
+
+    public String getZipCode() { return zipCode; }
+    public void setZipCode(String zipCode) { this.zipCode = zipCode; }
+
+    public BigDecimal getLatitude() { return latitude; }
+    public void setLatitude(BigDecimal latitude) { this.latitude = latitude; }
+
+    public BigDecimal getLongitude() { return longitude; }
+    public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }

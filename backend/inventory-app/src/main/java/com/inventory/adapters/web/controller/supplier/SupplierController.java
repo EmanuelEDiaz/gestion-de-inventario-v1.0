@@ -18,9 +18,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * REST Controller para gestión de proveedores.
- */
 @RestController
 @RequestMapping("/api/v1/suppliers")
 public class SupplierController {
@@ -77,7 +74,14 @@ public class SupplierController {
             request.email(),
             request.address(),
             request.notes(),
-            request.website()
+            request.website(),
+            request.province(),
+            request.municipality(),
+            request.street(),
+            request.locality(),
+            request.zipCode(),
+            request.latitude(),
+            request.longitude()
         ), extractUserId(user)).map(mapper::toDto);
     }
 
@@ -94,7 +98,14 @@ public class SupplierController {
             request.email(),
             request.address(),
             request.notes(),
-            request.website()
+            request.website(),
+            request.province(),
+            request.municipality(),
+            request.street(),
+            request.locality(),
+            request.zipCode(),
+            request.latitude(),
+            request.longitude()
         ), extractUserId(user)).map(mapper::toDto);
     }
 

@@ -113,7 +113,12 @@
 |   **B2.4** — Route guards (permission-routes.ts + DashboardLayout) | ✅ Hecho |
 |   **B2.5** — Sidebar filtering (navigation.config.ts + DashboardLayout) | ✅ Hecho |
 |   **B2.6** — Backend: V20 migration + seed + @PreAuthorize granular | ✅ Hecho |
-| **B3** — Dirección Estructurada (Provincia/Municipio/Calle) | ⏳ Pendiente |
+| **B3** — Dirección Estructurada (Provincia/Municipio/Calle) | ✅ Hecho |
+|   **B3.0** — V21 geo_regions + V22 structured address SQL | ✅ Hecho |
+|   **B3.1** — Backend: GeoRegion domain + port + useCase + controller | ✅ Hecho |
+|   **B3.2** — Backend: Supplier/Customer DTOs + entities + mappers | ✅ Hecho |
+|   **B3.3** — Frontend: GeoRegion entity + port + repository + hooks | ✅ Hecho |
+|   **B3.4** — Frontend: Supplier/Customer structured address forms | ✅ Hecho |
 | **B4** — UX Formularios: Pre-llenado + Crear y Continuar | ⏳ Pendiente |
 | **B5** — Gráficos + Estadísticas + Métricas Dashboard | ⏳ Pendiente |
 | **B6** — Imagen de Perfil de Usuario | ⏳ Pendiente |

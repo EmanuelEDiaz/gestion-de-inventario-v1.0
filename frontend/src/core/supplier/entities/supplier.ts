@@ -14,6 +14,13 @@ export interface Supplier {
   address?: string;
   notes?: string;
   website?: string | null;
+  province?: string;
+  municipality?: string;
+  street?: string;
+  locality?: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -29,6 +36,13 @@ export interface CreateSupplierData {
   phone?: string;
   email?: string;
   address?: string;
+  province?: string;
+  municipality?: string;
+  street?: string;
+  locality?: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
   notes?: string;
 }
 
@@ -39,5 +53,12 @@ export interface UpdateSupplierData {
   phone?: string;
   email?: string;
   address?: string;
+  province?: string;
+  municipality?: string;
+  street?: string;
+  locality?: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
   notes?: string;
 }

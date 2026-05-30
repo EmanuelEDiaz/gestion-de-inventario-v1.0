@@ -18,9 +18,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * REST Controller para gestión de clientes.
- */
 @RestController
 @RequestMapping("/api/v1/customers")
 public class CustomerController {
@@ -76,7 +73,14 @@ public class CustomerController {
             request.phone(),
             request.email(),
             request.address(),
-            request.notes()
+            request.notes(),
+            request.province(),
+            request.municipality(),
+            request.street(),
+            request.locality(),
+            request.zipCode(),
+            request.latitude(),
+            request.longitude()
         ), extractUserId(user)).map(mapper::toDto);
     }
 
@@ -92,7 +96,14 @@ public class CustomerController {
             request.phone(),
             request.email(),
             request.address(),
-            request.notes()
+            request.notes(),
+            request.province(),
+            request.municipality(),
+            request.street(),
+            request.locality(),
+            request.zipCode(),
+            request.latitude(),
+            request.longitude()
         ), extractUserId(user)).map(mapper::toDto);
     }
 

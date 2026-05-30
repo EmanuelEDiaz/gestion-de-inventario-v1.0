@@ -7,6 +7,8 @@ import { Textarea } from '@/presentation/shared/components/form/Textarea';
 import { SupplierBasicInfo } from './SupplierBasicInfo';
 import { SupplierContactFields } from './SupplierContactFields';
 import { SupplierAddressFields } from './SupplierAddressFields';
+import { useProvinces } from '@/presentation/modules/geo/hooks/useProvinces';
+import { useMunicipalities } from '@/presentation/modules/geo/hooks/useMunicipalities';
 
 interface SupplierFormFieldsProps {
   onSubmit: (data: CreateSupplierData) => void;
@@ -20,8 +22,15 @@ export function SupplierFormFields({ onSubmit, isSubmitting, onCancel }: Supplie
   const [contactName, setContactName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
+  const [province, setProvince] = useState('');
+  const [municipality, setMunicipality] = useState('');
+  const [street, setStreet] = useState('');
+  const [locality, setLocality] = useState('');
+  const [zipCode, setZipCode] = useState('');
   const [notes, setNotes] = useState('');
+
+  const { data: provinces } = useProvinces();
+  const { data: municipalities } = useMunicipalities(province || undefined);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +40,11 @@ export function SupplierFormFields({ onSubmit, isSubmitting, onCancel }: Supplie
       contactName: contactName || undefined,
       phone: phone || undefined,
       email: email || undefined,
-      address: address || undefined,
+      province: province || undefined,
+      municipality: municipality || undefined,
+      street: street || undefined,
+      locality: locality || undefined,
+      zipCode: zipCode || undefined,
       notes: notes || undefined,
     });
   };
@@ -54,8 +67,18 @@ export function SupplierFormFields({ onSubmit, isSubmitting, onCancel }: Supplie
           onCodeChange={setCode}
         />
         <SupplierAddressFields
-          address={address}
-          onAddressChange={setAddress}
+          province={province}
+          municipality={municipality}
+          street={street}
+          locality={locality}
+          zipCode={zipCode}
+          provinces={provinces}
+          municipalities={municipalities}
+          onProvinceChange={setProvince}
+          onMunicipalityChange={setMunicipality}
+          onStreetChange={setStreet}
+          onLocalityChange={setLocality}
+          onZipCodeChange={setZipCode}
         />
       </div>
       <div className="space-y-1">

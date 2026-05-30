@@ -13,9 +13,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Implementación de comandos de clientes.
- */
 @Service
 public class CustomerCommandUseCase implements CustomerCommandPort {
     
@@ -41,9 +38,16 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
             command.name(),
             command.contactName(),
             command.phone(),
-            command.email()
+            command.email(),
+            command.province(),
+            command.municipality(),
+            command.street(),
+            command.locality(),
+            command.zipCode(),
+            command.latitude(),
+            command.longitude()
         );
-        
+
         if (command.address() != null || command.notes() != null) {
             customer = customer.update(
                 command.code(),
@@ -52,7 +56,14 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
                 command.phone(),
                 command.email(),
                 command.address(),
-                command.notes()
+                command.notes(),
+                command.province(),
+                command.municipality(),
+                command.street(),
+                command.locality(),
+                command.zipCode(),
+                command.latitude(),
+                command.longitude()
             );
         }
         return customerRepository.save(customer)
@@ -80,7 +91,14 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
                     command.phone(),
                     command.email(),
                     command.address(),
-                    command.notes()
+                    command.notes(),
+                    command.province(),
+                    command.municipality(),
+                    command.street(),
+                    command.locality(),
+                    command.zipCode(),
+                    command.latitude(),
+                    command.longitude()
                 );
                 return customerRepository.save(updated)
                     .flatMap(c -> {

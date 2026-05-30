@@ -6,6 +6,8 @@ import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Textarea } from '@/presentation/shared/components/form/Textarea';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
+import { useProvinces } from '@/presentation/modules/geo/hooks/useProvinces';
+import { useMunicipalities } from '@/presentation/modules/geo/hooks/useMunicipalities';
 
 interface CustomerFormFieldsProps {
   onSubmit: (data: CreateCustomerData) => void;
@@ -20,7 +22,15 @@ export function CustomerFormFields({ onSubmit, isSubmitting, onCancel }: Custome
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
+  const [province, setProvince] = useState('');
+  const [municipality, setMunicipality] = useState('');
+  const [street, setStreet] = useState('');
+  const [locality, setLocality] = useState('');
+  const [zipCode, setZipCode] = useState('');
   const [notes, setNotes] = useState('');
+
+  const { data: provinces } = useProvinces();
+  const { data: municipalities } = useMunicipalities(province || undefined);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +41,11 @@ export function CustomerFormFields({ onSubmit, isSubmitting, onCancel }: Custome
       phone: phone || undefined,
       email: email || undefined,
       address: address || undefined,
+      province: province || undefined,
+      municipality: municipality || undefined,
+      street: street || undefined,
+      locality: locality || undefined,
+      zipCode: zipCode || undefined,
       notes: notes || undefined,
     });
   };
@@ -63,6 +78,40 @@ export function CustomerFormFields({ onSubmit, isSubmitting, onCancel }: Custome
         <div className="space-y-1">
           <label htmlFor="address" className="text-sm font-medium">Dirección</label>
           <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle 10 #123" title="Dirección del cliente" />
+        </div>
+        <div className="space-y-1 sm:col-span-2">
+          <label className="text-sm font-medium">
+            <span className="inline-flex items-center gap-1">Dirección estructurada <TooltipHint title="Dirección estructurada" description="Provincia, municipio, calle y código postal" /></span>
+          </label>
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="customer-province" className="text-sm font-medium">Provincia</label>
+          <select id="customer-province" value={province} onChange={(e) => setProvince(e.target.value)}
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+            <option value="">Seleccionar provincia</option>
+            {provinces?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="customer-municipality" className="text-sm font-medium">Municipio</label>
+          <select id="customer-municipality" value={municipality} onChange={(e) => setMunicipality(e.target.value)}
+            disabled={!province}
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50">
+            <option value="">Seleccionar municipio</option>
+            {municipalities?.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Input id="customer-street" value={street} onChange={(e) => setStreet(e.target.value)}
+            placeholder="Calle #123" title="Calle y número" />
+        </div>
+        <div className="space-y-1">
+          <Input id="customer-locality" value={locality} onChange={(e) => setLocality(e.target.value)}
+            placeholder="Reparto/Comunidad" title="Reparto o comunidad" />
+        </div>
+        <div className="space-y-1">
+          <Input id="customer-zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)}
+            placeholder="Código Postal" title="Código postal" />
         </div>
       </div>
       <div className="space-y-1">

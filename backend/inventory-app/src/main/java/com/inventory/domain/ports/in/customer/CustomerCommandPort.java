@@ -3,12 +3,10 @@ package com.inventory.domain.ports.in.customer;
 import com.inventory.domain.model.customer.Customer;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Puerto de entrada para comandos de clientes.
- */
 public interface CustomerCommandPort {
     Mono<Customer> create(CreateCommand command, UUID userId);
     Mono<Customer> update(UUID id, UpdateCommand command, UUID userId);
@@ -24,7 +22,14 @@ public interface CustomerCommandPort {
         String phone,
         String email,
         String address,
-        String notes
+        String notes,
+        String province,
+        String municipality,
+        String street,
+        String locality,
+        String zipCode,
+        BigDecimal latitude,
+        BigDecimal longitude
     ) {}
 
     record UpdateCommand(
@@ -34,6 +39,13 @@ public interface CustomerCommandPort {
         String phone,
         String email,
         String address,
-        String notes
+        String notes,
+        String province,
+        String municipality,
+        String street,
+        String locality,
+        String zipCode,
+        BigDecimal latitude,
+        BigDecimal longitude
     ) {}
 }

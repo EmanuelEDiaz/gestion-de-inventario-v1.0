@@ -5,12 +5,10 @@ import com.inventory.domain.model.product.Product;
 import com.inventory.domain.model.category.Category;
 import com.inventory.domain.model.customer.Customer;
 import com.inventory.domain.model.supplier.Supplier;
+import com.inventory.domain.model.geo.GeoRegion;
 import com.inventory.domain.model.warehouse.Warehouse;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper para entidades del catálogo (Warehouse, Category, Supplier, Customer, Product).
- */
 @Component
 public class CatalogPersistenceMapper {
 
@@ -98,6 +96,13 @@ public class CatalogPersistenceMapper {
             entity.getUpdatedAt(),
             entity.getVersion() != null ? entity.getVersion() : 0,
             entity.getWebsite(),
+            entity.getProvince(),
+            entity.getMunicipality(),
+            entity.getStreet(),
+            entity.getLocality(),
+            entity.getZipCode(),
+            entity.getLatitude(),
+            entity.getLongitude(),
             null, null, null
         );
     }
@@ -118,6 +123,13 @@ public class CatalogPersistenceMapper {
         entity.setUpdatedAt(domain.getUpdatedAt());
         entity.setVersion(domain.getVersion());
         entity.setWebsite(domain.getWebsite());
+        entity.setProvince(domain.getProvince());
+        entity.setMunicipality(domain.getMunicipality());
+        entity.setStreet(domain.getStreet());
+        entity.setLocality(domain.getLocality());
+        entity.setZipCode(domain.getZipCode());
+        entity.setLatitude(domain.getLatitude());
+        entity.setLongitude(domain.getLongitude());
         entity.setNew(isNew);
         return entity;
     }
@@ -139,6 +151,13 @@ public class CatalogPersistenceMapper {
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
             entity.getVersion() != null ? entity.getVersion() : 0,
+            entity.getProvince(),
+            entity.getMunicipality(),
+            entity.getStreet(),
+            entity.getLocality(),
+            entity.getZipCode(),
+            entity.getLatitude(),
+            entity.getLongitude(),
             null
         );
     }
@@ -158,8 +177,31 @@ public class CatalogPersistenceMapper {
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
         entity.setVersion(domain.getVersion());
+        entity.setProvince(domain.getProvince());
+        entity.setMunicipality(domain.getMunicipality());
+        entity.setStreet(domain.getStreet());
+        entity.setLocality(domain.getLocality());
+        entity.setZipCode(domain.getZipCode());
+        entity.setLatitude(domain.getLatitude());
+        entity.setLongitude(domain.getLongitude());
         entity.setNew(isNew);
         return entity;
+    }
+
+    // ===================== GEO REGION =====================
+
+    public GeoRegion toDomain(GeoRegionEntity entity) {
+        if (entity == null) return null;
+        return new GeoRegion(
+            entity.getId(),
+            entity.getCountryCode(),
+            entity.getLevel(),
+            entity.getName(),
+            entity.getParentId(),
+            entity.getLatitude(),
+            entity.getLongitude(),
+            entity.isActive()
+        );
     }
 
     // ===================== PRODUCT =====================

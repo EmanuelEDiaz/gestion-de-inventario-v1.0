@@ -3,12 +3,10 @@ package com.inventory.domain.ports.in.supplier;
 import com.inventory.domain.model.supplier.Supplier;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Puerto de entrada para comandos de proveedores.
- */
 public interface SupplierCommandPort {
     Mono<Supplier> create(CreateCommand command, UUID userId);
     Mono<Supplier> update(UUID id, UpdateCommand command, UUID userId);
@@ -25,7 +23,14 @@ public interface SupplierCommandPort {
         String email,
         String address,
         String notes,
-        String website
+        String website,
+        String province,
+        String municipality,
+        String street,
+        String locality,
+        String zipCode,
+        BigDecimal latitude,
+        BigDecimal longitude
     ) {}
 
     record UpdateCommand(
@@ -36,6 +41,13 @@ public interface SupplierCommandPort {
         String email,
         String address,
         String notes,
-        String website
+        String website,
+        String province,
+        String municipality,
+        String street,
+        String locality,
+        String zipCode,
+        BigDecimal latitude,
+        BigDecimal longitude
     ) {}
 }

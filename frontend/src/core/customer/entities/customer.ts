@@ -10,6 +10,13 @@ export interface Customer {
   phone?: string;
   email?: string;
   address?: string;
+  province?: string;
+  municipality?: string;
+  street?: string;
+  locality?: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
   notes?: string;
   active: boolean;
   createdAt: string;
@@ -24,6 +31,13 @@ export interface CreateCustomerData {
   phone?: string;
   email?: string;
   address?: string;
+  province?: string;
+  municipality?: string;
+  street?: string;
+  locality?: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
   notes?: string;
 }
 
@@ -34,5 +48,12 @@ export interface UpdateCustomerData {
   phone?: string;
   email?: string;
   address?: string;
+  province?: string;
+  municipality?: string;
+  street?: string;
+  locality?: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
   notes?: string;
 }

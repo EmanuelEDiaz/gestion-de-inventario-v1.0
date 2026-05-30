@@ -13,9 +13,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Implementación de comandos de proveedores.
- */
 @Service
 public class SupplierCommandUseCase implements SupplierCommandPort {
 
@@ -41,7 +38,14 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
             command.name(),
             command.contactName(),
             command.phone(),
-            command.email()
+            command.email(),
+            command.province(),
+            command.municipality(),
+            command.street(),
+            command.locality(),
+            command.zipCode(),
+            command.latitude(),
+            command.longitude()
         );
 
         if (command.address() != null || command.notes() != null || command.website() != null) {
@@ -53,7 +57,14 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                 command.email(),
                 command.address(),
                 command.notes(),
-                command.website()
+                command.website(),
+                command.province(),
+                command.municipality(),
+                command.street(),
+                command.locality(),
+                command.zipCode(),
+                command.latitude(),
+                command.longitude()
             );
         }
 
@@ -83,7 +94,14 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                     command.email(),
                     command.address(),
                     command.notes(),
-                    command.website()
+                    command.website(),
+                    command.province(),
+                    command.municipality(),
+                    command.street(),
+                    command.locality(),
+                    command.zipCode(),
+                    command.latitude(),
+                    command.longitude()
                 );
                 return supplierRepository.save(updated)
                     .flatMap(saved -> {

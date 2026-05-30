@@ -1,14 +1,11 @@
 package com.inventory.domain.model.customer;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Entidad de dominio: Cliente.
- * Representa un tercero que compra productos.
- */
 public class Customer {
     private final UUID id;
     private final String code;
@@ -17,6 +14,13 @@ public class Customer {
     private final String phone;
     private final String email;
     private final String address;
+    private final String province;
+    private final String municipality;
+    private final String street;
+    private final String locality;
+    private final String zipCode;
+    private final BigDecimal latitude;
+    private final BigDecimal longitude;
     private final String notes;
     private final boolean active;
     private final Instant createdAt;
@@ -27,6 +31,8 @@ public class Customer {
     public Customer(UUID id, String code, String name, String contactName, String phone,
                     String email, String address, String notes, boolean active,
                     Instant createdAt, Instant updatedAt, int version,
+                    String province, String municipality, String street, String locality, String zipCode,
+                    BigDecimal latitude, BigDecimal longitude,
                     List<CustomerImage> images) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Customer name cannot be null or blank");
@@ -38,6 +44,13 @@ public class Customer {
         this.phone = phone;
         this.email = email;
         this.address = address;
+        this.province = province;
+        this.municipality = municipality;
+        this.street = street;
+        this.locality = locality;
+        this.zipCode = zipCode;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.notes = notes;
         this.active = active;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
@@ -46,7 +59,9 @@ public class Customer {
         this.images = images != null ? Collections.unmodifiableList(images) : Collections.emptyList();
     }
 
-    public static Customer create(String code, String name, String contactName, String phone, String email) {
+    public static Customer create(String code, String name, String contactName, String phone, String email,
+                                  String province, String municipality, String street, String locality, String zipCode,
+                                  BigDecimal latitude, BigDecimal longitude) {
         return new Customer(
             UUID.randomUUID(),
             code,
@@ -60,11 +75,17 @@ public class Customer {
             Instant.now(),
             Instant.now(),
             0,
+            province,
+            municipality,
+            street,
+            locality,
+            zipCode,
+            latitude,
+            longitude,
             null
         );
     }
 
-    // Getters
     public UUID getId() { return id; }
     public String getCode() { return code; }
     public String getName() { return name; }
@@ -72,6 +93,13 @@ public class Customer {
     public String getPhone() { return phone; }
     public String getEmail() { return email; }
     public String getAddress() { return address; }
+    public String getProvince() { return province; }
+    public String getMunicipality() { return municipality; }
+    public String getStreet() { return street; }
+    public String getLocality() { return locality; }
+    public String getZipCode() { return zipCode; }
+    public BigDecimal getLatitude() { return latitude; }
+    public BigDecimal getLongitude() { return longitude; }
     public String getNotes() { return notes; }
     public boolean isActive() { return active; }
     public Instant getCreatedAt() { return createdAt; }
@@ -79,8 +107,10 @@ public class Customer {
     public int getVersion() { return version; }
     public List<CustomerImage> getImages() { return images; }
 
-    public Customer update(String code, String name, String contactName, String phone, 
-                           String email, String address, String notes) {
+    public Customer update(String code, String name, String contactName, String phone,
+                           String email, String address, String notes,
+                           String province, String municipality, String street, String locality, String zipCode,
+                           BigDecimal latitude, BigDecimal longitude) {
         return new Customer(
             this.id,
             code != null ? code : this.code,
@@ -94,22 +124,32 @@ public class Customer {
             this.createdAt,
             Instant.now(),
             this.version,
+            province,
+            municipality,
+            street,
+            locality,
+            zipCode,
+            latitude,
+            longitude,
             this.images
         );
     }
 
     public Customer deactivate() {
-        return new Customer(id, code, name, contactName, phone, email, address, notes, 
-                           false, createdAt, Instant.now(), version, images);
+        return new Customer(id, code, name, contactName, phone, email, address, notes,
+                           false, createdAt, Instant.now(), version,
+                           province, municipality, street, locality, zipCode, latitude, longitude, images);
     }
 
     public Customer activate() {
-        return new Customer(id, code, name, contactName, phone, email, address, notes, 
-                           true, createdAt, Instant.now(), version, images);
+        return new Customer(id, code, name, contactName, phone, email, address, notes,
+                           true, createdAt, Instant.now(), version,
+                           province, municipality, street, locality, zipCode, latitude, longitude, images);
     }
 
     public Customer withVersion(int newVersion) {
-        return new Customer(id, code, name, contactName, phone, email, address, notes, 
-                           active, createdAt, updatedAt, newVersion, images);
+        return new Customer(id, code, name, contactName, phone, email, address, notes,
+                           active, createdAt, updatedAt, newVersion,
+                           province, municipality, street, locality, zipCode, latitude, longitude, images);
     }
 }

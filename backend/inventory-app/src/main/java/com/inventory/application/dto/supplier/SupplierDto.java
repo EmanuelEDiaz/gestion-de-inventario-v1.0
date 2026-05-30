@@ -1,11 +1,9 @@
 package com.inventory.application.supplier.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * DTO de respuesta para proveedores.
- */
 public record SupplierDto(
     UUID id,
     String code,
@@ -17,6 +15,13 @@ public record SupplierDto(
     String notes,
     boolean active,
     String website,
+    String province,
+    String municipality,
+    String street,
+    String locality,
+    String zipCode,
+    BigDecimal latitude,
+    BigDecimal longitude,
     Instant createdAt,
     Instant updatedAt
 ) {}
