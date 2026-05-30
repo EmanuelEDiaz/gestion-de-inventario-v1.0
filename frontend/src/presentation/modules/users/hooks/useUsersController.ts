@@ -52,6 +52,12 @@ export function useUsersController() {
     onError: (error: Error) => toast.error(error.message || 'Error al subir avatar'),
   });
 
+  const deleteAvatarMutation = useMutation({
+    mutationFn: (id: string) => userRepository.deleteAvatar(id),
+    onSuccess: () => { invalidate(); toast.success('Avatar eliminado'); },
+    onError: (error: Error) => toast.error(error.message || 'Error al eliminar avatar'),
+  });
+
   return {
     users: query.data ?? [],
     isLoading: query.isLoading,
@@ -62,6 +68,7 @@ export function useUsersController() {
     },
     changeUserPassword: passwordMutation.mutateAsync,
     uploadAvatar: avatarMutation.mutateAsync,
+    deleteAvatar: deleteAvatarMutation.mutateAsync,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isChangingPassword: passwordMutation.isPending,

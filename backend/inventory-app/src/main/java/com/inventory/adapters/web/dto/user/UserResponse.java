@@ -11,6 +11,7 @@ public record UserResponse(
     String displayName,
     RoleResponse role,
     boolean isActive,
+    String avatarUrl,
     Instant createdAt,
     Instant updatedAt
 ) {}

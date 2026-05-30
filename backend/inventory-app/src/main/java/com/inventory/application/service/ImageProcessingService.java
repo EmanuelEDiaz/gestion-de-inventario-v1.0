@@ -38,6 +38,11 @@ public class ImageProcessingService {
         return processAndSaveInternal("suppliers", supplierId, fileData, originalFilename, contentType, false);
     }
 
+    public String processAndSaveUser(UUID userId, byte[] fileData,
+                                     String originalFilename, String contentType) throws IOException {
+        return processAndSaveInternal("users", userId, fileData, originalFilename, contentType, false);
+    }
+
     private String processAndSaveInternal(String bucket,
                                           UUID ownerId,
                                           byte[] fileData,

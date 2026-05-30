@@ -47,7 +47,7 @@ const COLUMNS: Column<User>[] = [
 ];
 
 export function UsersView() {
-  const { users, isLoading, error, create, update, changeUserPassword, isCreating, isUpdating, isChangingPassword } = useUsersController();
+  const { users, isLoading, error, create, update, changeUserPassword, uploadAvatar, deleteAvatar, isCreating, isUpdating, isChangingPassword } = useUsersController();
   const [showForm, setShowForm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dialogType, setDialogType] = useState<'edit' | 'password' | null>(null);
@@ -79,7 +79,8 @@ export function UsersView() {
       )}
       <GenericTable data={users} columns={COLUMNS} actions={actions} emptyMessage="No hay usuarios registrados" />
       {selectedUser && <EditUserDialog open={dialogType === 'edit'} user={selectedUser}
-        onSave={(id, data) => update({ id, data })} onClose={closeDialog} isSaving={isUpdating} />}
+        onSave={(id, data) => update({ id, data })} onClose={closeDialog} isSaving={isUpdating}
+        onUploadAvatar={(id, file) => uploadAvatar({ id, file })} onDeleteAvatar={deleteAvatar} />}
       {selectedUser && <ChangePasswordDialog open={dialogType === 'password'} user={selectedUser}
         onSave={(id, password) => changeUserPassword({ id, data: { newPassword: password } })} onClose={closeDialog} isSaving={isChangingPassword} />}
     </div>

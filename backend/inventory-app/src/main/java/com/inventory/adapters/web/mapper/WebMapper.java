@@ -11,21 +11,26 @@ import org.springframework.stereotype.Component;
 public class WebMapper {
     
     public AuthResponse toAuthResponse(AuthResult result) {
+        return toAuthResponse(result, null);
+    }
+    
+    public AuthResponse toAuthResponse(AuthResult result, String avatarUrl) {
         return new AuthResponse(
                 result.accessToken(),
                 result.refreshToken(),
                 "Bearer",
                 result.expiresIn(),
-                toUserDto(result.user())
+                toUserDto(result.user(), avatarUrl)
         );
     }
     
-    private AuthResponse.UserDto toUserDto(AuthResult.UserInfo user) {
+    private AuthResponse.UserDto toUserDto(AuthResult.UserInfo user, String avatarUrl) {
         return new AuthResponse.UserDto(
                 user.id(),
                 user.username(),
                 user.displayName(),
                 user.email(),
+                avatarUrl,
                 toRoleDto(user.role())
         );
     }

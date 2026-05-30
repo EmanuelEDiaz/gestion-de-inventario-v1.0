@@ -1,9 +1,47 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { NotificationTray } from '@/presentation/modules/notifications/components/NotificationTray';
 import { Icons } from './SidebarIcons';
+
+function stringToColor(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 55%, 45%)`;
+}
+
+function UserAvatar({ user }: { user: { displayName: string; username: string; avatarUrl?: string } }) {
+  const [imageError, setImageError] = useState(false);
+  const initials = user.displayName
+    ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : user.username[0].toUpperCase();
+  const bgColor = stringToColor(user.username);
+
+  if (user.avatarUrl && !imageError) {
+    return (
+      <img
+        src={user.avatarUrl}
+        alt={user.displayName}
+        className="h-8 w-8 rounded-full object-cover"
+        onError={() => setImageError(true)}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
+      style={{ backgroundColor: bgColor }}
+    >
+      {initials}
+    </div>
+  );
+}
 
 interface HeaderProps {
   isSidebarCollapsed?: boolean;
@@ -50,10 +88,10 @@ export function Header({ onLogoutRequest, onToggleMobileMenu }: HeaderProps) {
         <div className="flex items-center gap-1 md:gap-4">
           <NotificationTray />
 
-          {/* Nombre del usuario - oculto en móvil */}
+          {/* Avatar + Nombre del usuario - oculto en móvil */}
           <div className="hidden items-center gap-2 text-sm text-gray-600 md:flex">
-            {Icons.user}
-            <span>{user?.displayName || user?.username || 'Usuario'}</span>
+            {user && <UserAvatar user={user} />}
+            <span className="max-w-[120px] truncate">{user?.displayName || user?.username || 'Usuario'}</span>
             {user?.role && (
               <span className="rounded bg-info/10 px-2 py-0.5 text-xs text-info">
                 {user.role.name}

@@ -4,6 +4,8 @@ import com.inventory.adapters.web.dto.user.AuthResponse;
 import com.inventory.adapters.web.dto.user.LoginRequest;
 import com.inventory.adapters.web.dto.user.RefreshTokenRequest;
 import com.inventory.adapters.web.mapper.WebMapper;
+import com.inventory.application.service.UserImageService;
+import com.inventory.application.user.dto.AuthResult;
 import com.inventory.application.user.dto.LoginCommand;
 import com.inventory.application.user.dto.RefreshTokenCommand;
 import com.inventory.application.usecase.LoginUseCase;
@@ -25,15 +27,18 @@ public class AuthController {
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
     private final WebMapper mapper;
+    private final UserImageService userImageService;
     
     public AuthController(LoginUseCase loginUseCase,
                           RefreshTokenUseCase refreshTokenUseCase,
                           LogoutUseCase logoutUseCase,
-                          WebMapper mapper) {
+                          WebMapper mapper,
+                          UserImageService userImageService) {
         this.loginUseCase = loginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.logoutUseCase = logoutUseCase;
         this.mapper = mapper;
+        this.userImageService = userImageService;
     }
     
     /**
@@ -47,7 +52,7 @@ public class AuthController {
         );
         
         return loginUseCase.execute(command)
-                .map(mapper::toAuthResponse);
+                .flatMap(this::enrichAuthResponse);
     }
     
     /**
@@ -60,7 +65,16 @@ public class AuthController {
         );
         
         return refreshTokenUseCase.execute(command)
-                .map(mapper::toAuthResponse);
+                .flatMap(this::enrichAuthResponse);
+    }
+    
+    private Mono<AuthResponse> enrichAuthResponse(AuthResult result) {
+        return userImageService.getByUserId(result.user().id())
+            .map(img -> mapper.toAuthResponse(
+                result,
+                "/api/v1/users/" + result.user().id() + "/avatar"
+            ))
+            .defaultIfEmpty(mapper.toAuthResponse(result));
     }
     
     /**

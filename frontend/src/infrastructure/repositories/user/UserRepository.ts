@@ -40,12 +40,20 @@ export class UserRepository implements IUserRepository {
   async uploadAvatar(id: string, file: File): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await apiClient.post<{ url: string }>(
-      `${this.basePath}/${id}/avatar`,
+    await apiClient.post(
+      `${this.basePath}/${id}/images`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
-    return response.data.url;
+    return `/api/v1/users/${id}/avatar`;
+  }
+
+  async deleteAvatar(id: string): Promise<void> {
+    const response = await apiClient.get(`${this.basePath}/${id}/images`);
+    const image = response.data as { id?: string } | null;
+    if (image?.id) {
+      await apiClient.delete(`${this.basePath}/${id}/images/${image.id}`);
+    }
   }
 }
 

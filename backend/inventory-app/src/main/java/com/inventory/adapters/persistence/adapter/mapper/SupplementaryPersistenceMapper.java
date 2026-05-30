@@ -15,6 +15,7 @@ import com.inventory.domain.model.notification.NotificationRead;
 import com.inventory.domain.model.notification.NotificationPriority;
 import com.inventory.domain.model.notification.NotificationSource;
 import com.inventory.domain.model.sync.SyncIncident;
+import com.inventory.domain.model.user.UserImage;
 import org.springframework.stereotype.Component;
 
 /**
@@ -423,6 +424,35 @@ public class SupplementaryPersistenceMapper {
         e.setUserId(d.getUserId());
         e.setCreatedAt(d.getCreatedAt());
         e.setResolvedAt(d.getResolvedAt());
+        e.setNew(isNew);
+        return e;
+    }
+
+    // ==================== UserImage ====================
+
+    public UserImage toDomain(UserImageEntity e) {
+        if (e == null) return null;
+        return new UserImage(
+            e.getId(),
+            e.getUserId(),
+            e.getContentType(),
+            e.getFilePath(),
+            e.getOriginalFilename(),
+            e.getSizeBytes(),
+            e.getCreatedAt()
+        );
+    }
+
+    public UserImageEntity toEntity(UserImage d, boolean isNew) {
+        if (d == null) return null;
+        UserImageEntity e = new UserImageEntity();
+        e.setId(d.id());
+        e.setUserId(d.userId());
+        e.setContentType(d.contentType());
+        e.setFilePath(d.filePath());
+        e.setOriginalFilename(d.originalFilename());
+        e.setSizeBytes(d.sizeBytes());
+        e.setCreatedAt(d.createdAt());
         e.setNew(isNew);
         return e;
     }

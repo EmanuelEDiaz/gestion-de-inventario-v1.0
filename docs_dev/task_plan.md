@@ -123,13 +123,17 @@
 |   **B4.1** — Auto-select-all al focus (useAutoSelect hook + Input.autoSelect prop) | ✅ Hecho |
 |   **B4.2** — Pre-llenado inteligente (ProductCreateView ?prefillFrom=, PurchaseFormFields ?supplierId=) | ✅ Hecho |
 |   **B4.3** — Botón "Crear y Continuar" (Product, Supplier, Customer, Category, Purchase, User) | ✅ Hecho |
-| **B5** — Gráficos + Estadísticas + Métricas Dashboard | ⏳ Parcial |
+| **B5** — Gráficos + Estadísticas + Métricas Dashboard | ✅ Hecho |
 |   **B5.1** — Backend: DTOs + Use Cases + Controller (5 endpoints: sales-timeline, top-products, top-customers, profit-summary, inventory-value) | ✅ Hecho |
 |   **B5.2** — Frontend: Core entities + IDashboardMetricsRepository + DashboardMetricsRepository + useDashboardMetrics hook | ✅ Hecho |
 |   **B5.3** — Frontend: Chart components (SalesTimelineChart, TopProductsChart, TopCustomersChart, ProfitSummaryCards) | ✅ Hecho |
 |   **B5.4** — Dashboard redesign: TanStack Query + chart integration + fix DashboardRepository | ✅ Hecho |
-|   **B5.5** — Custom chart builder (ChartBuilderModal, CustomChartWidget, useDashboardLayout) | ⏳ Pendiente |
-| **B6** — Imagen de Perfil de Usuario | ⏳ Pendiente |
+|   **B5.5** — Custom chart builder (ChartBuilderModal, CustomChartWidget, useDashboardLayout) | ✅ Hecho |
+| **B6** — Imagen de Perfil de Usuario | ✅ Hecho |
+|   **B6.1** — Backend: UserImage domain + port + persistence + mapper | ✅ Hecho |
+|   **B6.2** — Backend: UserImage service + DTO + controller + response modifications | ✅ Hecho |
+|   **B6.3** — Frontend: Header avatar + UserForm upload + AuthUser type + UserRepository fix | ✅ Hecho |
+|   **B6.4** — Frontend: UsersView avatar column (preexistente) | ✅ Hecho |
 | **B7** — Resolución Conflictos Offline (Outbox Collapsing) | ⏳ Pendiente |
 | **B8** — Mapas Offline (Leaflet + PMTiles + FlexSearch) | ⏳ Pendiente |
 | **B9** — Compartir Ubicación (Deep Links sin API externa) | ⏳ Pendiente |

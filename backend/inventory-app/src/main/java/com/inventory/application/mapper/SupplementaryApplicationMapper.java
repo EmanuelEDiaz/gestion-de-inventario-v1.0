@@ -23,6 +23,8 @@ import com.inventory.domain.model.supplier.SupplierCatalogProduct;
 import com.inventory.domain.model.supplier.SupplierImage;
 import com.inventory.domain.model.supplier.SupplierSocialLink;
 import com.inventory.domain.model.sync.SyncIncident;
+import com.inventory.domain.model.user.UserImage;
+import com.inventory.application.user.dto.UserImageDto;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -212,6 +214,14 @@ public class SupplementaryApplicationMapper {
             domain.bypassOnCritical(),
             domain.createdAt(),
             domain.updatedAt()
+        );
+    }
+
+    public UserImageDto toDto(UserImage img) {
+        if (img == null) return null;
+        return new UserImageDto(
+            img.id(), img.userId(), img.contentType(), img.filePath(),
+            img.originalFilename(), img.sizeBytes(), img.createdAt()
         );
     }
 

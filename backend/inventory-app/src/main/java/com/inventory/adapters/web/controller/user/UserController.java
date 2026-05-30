@@ -6,6 +6,7 @@ import com.inventory.adapters.web.dto.role.PermissionResponse;
 import com.inventory.adapters.web.dto.role.RoleResponse;
 import com.inventory.adapters.web.dto.user.UpdateUserRequest;
 import com.inventory.adapters.web.dto.user.UserResponse;
+import com.inventory.application.service.UserImageService;
 import com.inventory.domain.model.role.Role;
 import com.inventory.domain.model.user.User;
 import com.inventory.domain.ports.in.user.AdminUserCommandPort;
@@ -28,21 +29,27 @@ public class UserController {
 
     private final AdminUserQueryPort userQuery;
     private final AdminUserCommandPort userCommand;
+    private final UserImageService userImageService;
 
-    public UserController(AdminUserQueryPort userQuery, AdminUserCommandPort userCommand) {
+    public UserController(AdminUserQueryPort userQuery,
+                          AdminUserCommandPort userCommand,
+                          UserImageService userImageService) {
         this.userQuery   = userQuery;
         this.userCommand = userCommand;
+        this.userImageService = userImageService;
     }
 
     @GetMapping
     public Flux<UserResponse> getAll() {
-        return userQuery.findAll().map(this::toResponse);
+        return userQuery.findAll()
+            .flatMap(this::enrichWithAvatar);
     }
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<UserResponse>> getById(@PathVariable UUID id) {
         return userQuery.findById(id)
-            .map(u -> ResponseEntity.ok(toResponse(u)))
+            .flatMap(user -> enrichWithAvatar(user)
+                .map(resp -> ResponseEntity.ok(resp)))
             .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
@@ -53,7 +60,7 @@ public class UserController {
             request.displayName(), request.roleId()
         );
         return userCommand.createUser(command)
-            .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved)));
+            .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved, null)));
     }
 
     @PatchMapping("/{id}")
@@ -64,7 +71,7 @@ public class UserController {
             request.email(), request.displayName(), request.roleId(), request.isActive()
         );
         return userCommand.updateUser(id, command)
-            .map(updated -> ResponseEntity.ok(toResponse(updated)));
+            .map(updated -> ResponseEntity.ok(toResponse(updated, null)));
     }
 
     @DeleteMapping("/{id}")
@@ -84,11 +91,17 @@ public class UserController {
             .thenReturn(ResponseEntity.<Void>noContent().<Void>build());
     }
 
-    private UserResponse toResponse(User u) {
+    private Mono<UserResponse> enrichWithAvatar(User u) {
+        return userImageService.getByUserId(u.getId())
+            .map(img -> toResponse(u, "/api/v1/users/" + u.getId() + "/avatar"))
+            .defaultIfEmpty(toResponse(u, null));
+    }
+
+    private UserResponse toResponse(User u, String avatarUrl) {
         return new UserResponse(
             u.getId(), u.getUsername(), u.getEmail(), u.getDisplayName(),
             toRoleResponse(u.getRole()),
-            u.isActive(), u.getCreatedAt(), u.getUpdatedAt()
+            u.isActive(), avatarUrl, u.getCreatedAt(), u.getUpdatedAt()
         );
     }
 

@@ -25,6 +25,7 @@ public record AuthResponse(
         String username,
         String displayName,
         String email,
+        String avatarUrl,
         RoleDto role
     ) {}
     
