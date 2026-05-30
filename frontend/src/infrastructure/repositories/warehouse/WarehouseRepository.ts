@@ -3,7 +3,8 @@
  */
 
 import { apiClient } from '../../api/client';
-import { isOnline, readWithCache } from '@/infrastructure/storage/networkAwareUtils';
+import { readWithCache } from '@/infrastructure/storage/networkAwareUtils';
+import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB } from '@/infrastructure/storage/db';
 import type { IWarehouseRepository } from '@/core/warehouse/ports/IWarehouseRepository';
@@ -29,51 +30,87 @@ export class WarehouseRepository implements IWarehouseRepository {
   }
 
   async create(data: CreateWarehouseData): Promise<Warehouse> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: `temp_${crypto.randomUUID()}`,
-        action: 'CREATE', payload: data,
-      });
-      return { id: `temp_${crypto.randomUUID()}`, ...data } as unknown as Warehouse;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.post<Warehouse>(this.basePath, data);
+      return response.data;
     }
-    const response = await apiClient.post<Warehouse>(this.basePath, data);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.post<Warehouse>(this.basePath, data);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: `temp_${crypto.randomUUID()}`,
+      action: 'CREATE', payload: data,
+    });
+    return { id: `temp_${crypto.randomUUID()}`, ...data } as unknown as Warehouse;
   }
 
   async update(id: string, data: UpdateWarehouseData): Promise<Warehouse> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
-        action: 'UPDATE', payload: data,
-      });
-      return { id, ...data } as unknown as Warehouse;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.put<Warehouse>(`${this.basePath}/${id}`, data);
+      return response.data;
     }
-    const response = await apiClient.put<Warehouse>(`${this.basePath}/${id}`, data);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.put<Warehouse>(`${this.basePath}/${id}`, data);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
+      action: 'UPDATE', payload: data,
+    });
+    return { id, ...data } as unknown as Warehouse;
   }
 
   async activate(id: string): Promise<Warehouse> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
-        action: 'ACTIVATE', payload: { id },
-      });
-      return { id, active: true } as unknown as Warehouse;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.post<Warehouse>(`${this.basePath}/${id}/activate`);
+      return response.data;
     }
-    const response = await apiClient.post<Warehouse>(`${this.basePath}/${id}/activate`);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.post<Warehouse>(`${this.basePath}/${id}/activate`);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
+      action: 'ACTIVATE', payload: { id },
+    });
+    return { id, active: true } as unknown as Warehouse;
   }
 
   async deactivate(id: string): Promise<Warehouse> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
-        action: 'DEACTIVATE', payload: { id },
-      });
-      return { id, active: false } as unknown as Warehouse;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.post<Warehouse>(`${this.basePath}/${id}/deactivate`);
+      return response.data;
     }
-    const response = await apiClient.post<Warehouse>(`${this.basePath}/${id}/deactivate`);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.post<Warehouse>(`${this.basePath}/${id}/deactivate`);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
+      action: 'DEACTIVATE', payload: { id },
+    });
+    return { id, active: false } as unknown as Warehouse;
   }
 }
 

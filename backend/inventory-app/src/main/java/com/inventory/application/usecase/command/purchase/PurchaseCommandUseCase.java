@@ -12,6 +12,7 @@ import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.PurchaseRepository;
 import com.inventory.domain.ports.out.StockRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -30,6 +31,7 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
     private final StockRepository stockRepository;
     private final MovementRepository movementRepository;
     private final AuditLogRepository auditLogRepository;
+    private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
 
     public PurchaseCommandUseCase(
@@ -37,11 +39,13 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
             StockRepository stockRepository,
             MovementRepository movementRepository,
             AuditLogRepository auditLogRepository,
+            SyncLogWriterPort syncLogWriter,
             AuditSerializer auditSerializer) {
         this.purchaseRepository = purchaseRepository;
         this.stockRepository = stockRepository;
         this.movementRepository = movementRepository;
         this.auditLogRepository = auditLogRepository;
+        this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
 
@@ -70,7 +74,9 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                     AuditLog log = AuditLog.create(
                             userId, "PURCHASE", saved.getId(), "CREATE",
                             null, auditSerializer.toJsonTruncated(saved), null);
-                    return auditLogRepository.save(log).thenReturn(saved);
+                    return auditLogRepository.save(log)
+                            .then(syncLogWriter.log("PURCHASE", saved.getId(), "CREATE", saved, null))
+                            .thenReturn(saved);
                 });
     }
 
@@ -90,7 +96,9 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                                 AuditLog log = AuditLog.create(
                                         userId, "PURCHASE", saved.getId(), "CONFIRM",
                                         beforeData, auditSerializer.toJsonTruncated(saved), null);
-                                return auditLogRepository.save(log).thenReturn(saved);
+                                return auditLogRepository.save(log)
+                                        .then(syncLogWriter.log("PURCHASE", saved.getId(), "CONFIRM", saved, null))
+                                        .thenReturn(saved);
                             });
                 });
     }
@@ -117,7 +125,9 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                                 AuditLog log = AuditLog.create(
                                         userId, "PURCHASE", saved.getId(), "RECEIVE",
                                         beforeData, auditSerializer.toJsonTruncated(saved), null);
-                                return auditLogRepository.save(log).thenReturn(saved);
+                                return auditLogRepository.save(log)
+                                        .then(syncLogWriter.log("PURCHASE", saved.getId(), "RECEIVE", saved, null))
+                                        .thenReturn(saved);
                             });
                 });
     }
@@ -160,7 +170,9 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                                 AuditLog log = AuditLog.create(
                                         userId, "PURCHASE", saved.getId(), "CANCEL",
                                         beforeData, auditSerializer.toJsonTruncated(saved), null);
-                                return auditLogRepository.save(log).thenReturn(saved);
+                                return auditLogRepository.save(log)
+                                        .then(syncLogWriter.log("PURCHASE", saved.getId(), "CANCEL", saved, null))
+                                        .thenReturn(saved);
                             });
                 });
     }
@@ -213,7 +225,9 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                                 AuditLog log = AuditLog.create(
                                         userId, "PURCHASE", saved.getId(), "UPDATE",
                                         beforeData, auditSerializer.toJsonTruncated(saved), null);
-                                return auditLogRepository.save(log).thenReturn(saved);
+                                return auditLogRepository.save(log)
+                                        .then(syncLogWriter.log("PURCHASE", saved.getId(), "UPDATE", saved, null))
+                                        .thenReturn(saved);
                             });
                 });
     }
@@ -234,7 +248,8 @@ public class PurchaseCommandUseCase implements PurchaseCommandPort {
                                         userId, "PURCHASE", purchaseId, "DELETE",
                                         beforeData, null, null);
                                 return auditLogRepository.save(log);
-                            }));
+                            }))
+                            .then(syncLogWriter.log("PURCHASE", purchaseId, "DELETE", purchase, null));
                 });
     }
 

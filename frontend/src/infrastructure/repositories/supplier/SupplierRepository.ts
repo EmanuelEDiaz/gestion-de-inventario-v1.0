@@ -1,7 +1,8 @@
 import { apiClient } from '@/infrastructure/api/client';
 import type { ISupplierRepository } from '@/core/supplier/ports/ISupplierRepository';
 import type { Supplier, CreateSupplierData, UpdateSupplierData } from '@/core/supplier/entities/supplier';
-import { isOnline, readWithCache } from '@/infrastructure/storage/networkAwareUtils';
+import { readWithCache } from '@/infrastructure/storage/networkAwareUtils';
+import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB } from '@/infrastructure/storage/db';
 
@@ -89,75 +90,129 @@ export class SupplierRepository implements ISupplierRepository {
   }
 
   async create(data: CreateSupplierData): Promise<Supplier> {
-    if (!isOnline()) {
-      const id = `temp_${crypto.randomUUID()}`;
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
-        action: 'CREATE', payload: data,
-      });
-      return { id, ...data, createdAt: new Date().toISOString() } as unknown as Supplier;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.post<Supplier>(this.basePath, data);
+      return response.data;
     }
-    const response = await apiClient.post<Supplier>(this.basePath, data);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.post<Supplier>(this.basePath, data);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    const id = `temp_${crypto.randomUUID()}`;
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
+      action: 'CREATE', payload: data,
+    });
+    return { id, ...data, createdAt: new Date().toISOString() } as unknown as Supplier;
   }
 
   async update(id: string, data: UpdateSupplierData): Promise<Supplier> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
-        action: 'UPDATE', payload: data,
-      });
-      return { id, ...data } as unknown as Supplier;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.put<Supplier>(`${this.basePath}/${id}`, data);
+      return response.data;
     }
-    const response = await apiClient.put<Supplier>(`${this.basePath}/${id}`, data);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.put<Supplier>(`${this.basePath}/${id}`, data);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
+      action: 'UPDATE', payload: data,
+    });
+    return { id, ...data } as unknown as Supplier;
   }
 
   async activate(id: string): Promise<Supplier> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
-        action: 'ACTIVATE', payload: {},
-      });
-      return { id } as Supplier;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.post<Supplier>(`${this.basePath}/${id}/activate`);
+      return response.data;
     }
-    const response = await apiClient.post<Supplier>(`${this.basePath}/${id}/activate`);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.post<Supplier>(`${this.basePath}/${id}/activate`);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
+      action: 'ACTIVATE', payload: {},
+    });
+    return { id } as Supplier;
   }
 
   async deactivate(id: string): Promise<Supplier> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
-        action: 'DEACTIVATE', payload: {},
-      });
-      return { id } as Supplier;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.post<Supplier>(`${this.basePath}/${id}/deactivate`);
+      return response.data;
     }
-    const response = await apiClient.post<Supplier>(`${this.basePath}/${id}/deactivate`);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.post<Supplier>(`${this.basePath}/${id}/deactivate`);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
+      action: 'DEACTIVATE', payload: {},
+    });
+    return { id } as Supplier;
   }
 
   async delete(id: string): Promise<void> {
-    if (!isOnline()) {
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      await apiClient.delete(`${this.basePath}/${id}`);
+      return;
+    }
+    if (mode === 'online-degraded') {
+      try {
+        await apiClient.delete(`${this.basePath}/${id}`);
+        return;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
+      action: 'DELETE', payload: {},
+    });
+  }
+
+  async deleteAll(ids: string[]): Promise<void> {
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+      return;
+    }
+    if (mode === 'online-degraded') {
+      try {
+        await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+        return;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    for (const id of ids) {
       await addToOutbox({
         operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
         action: 'DELETE', payload: {},
       });
-      return;
     }
-    await apiClient.delete(`${this.basePath}/${id}`);
-  }
-
-  async deleteAll(ids: string[]): Promise<void> {
-    if (!isOnline()) {
-      for (const id of ids) {
-        await addToOutbox({
-          operationId: crypto.randomUUID(), entityType: 'SUPPLIER', entityId: id,
-          action: 'DELETE', payload: {},
-        });
-      }
-      return;
-    }
-    await apiClient.delete(`${this.basePath}/batch`, { data: ids });
   }
 }

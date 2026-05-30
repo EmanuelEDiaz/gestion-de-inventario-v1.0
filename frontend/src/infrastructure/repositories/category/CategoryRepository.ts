@@ -3,7 +3,8 @@
  */
 
 import { apiClient } from '../../api/client';
-import { isOnline, readWithCache } from '@/infrastructure/storage/networkAwareUtils';
+import { readWithCache } from '@/infrastructure/storage/networkAwareUtils';
+import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB } from '@/infrastructure/storage/db';
 import type { ICategoryRepository } from '@/core/category/ports/ICategoryRepository';
@@ -29,51 +30,87 @@ export class CategoryRepository implements ICategoryRepository {
   }
 
   async create(data: CreateCategoryData): Promise<Category> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: `temp_${crypto.randomUUID()}`,
-        action: 'CREATE', payload: data,
-      });
-      return { id: `temp_${crypto.randomUUID()}`, ...data } as unknown as Category;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.post<Category>(this.basePath, data);
+      return response.data;
     }
-    const response = await apiClient.post<Category>(this.basePath, data);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.post<Category>(this.basePath, data);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: `temp_${crypto.randomUUID()}`,
+      action: 'CREATE', payload: data,
+    });
+    return { id: `temp_${crypto.randomUUID()}`, ...data } as unknown as Category;
   }
 
   async update(id: string, data: UpdateCategoryData): Promise<Category> {
-    if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
-        action: 'UPDATE', payload: data,
-      });
-      return { id, ...data } as unknown as Category;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      const response = await apiClient.put<Category>(`${this.basePath}/${id}`, data);
+      return response.data;
     }
-    const response = await apiClient.put<Category>(`${this.basePath}/${id}`, data);
-    return response.data;
+    if (mode === 'online-degraded') {
+      try {
+        const response = await apiClient.put<Category>(`${this.basePath}/${id}`, data);
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
+      action: 'UPDATE', payload: data,
+    });
+    return { id, ...data } as unknown as Category;
   }
 
   async delete(id: string): Promise<void> {
-    if (!isOnline()) {
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      await apiClient.delete(`${this.basePath}/${id}`);
+      return;
+    }
+    if (mode === 'online-degraded') {
+      try {
+        await apiClient.delete(`${this.basePath}/${id}`);
+        return;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
+      action: 'DELETE', payload: { id },
+    });
+  }
+
+  async deleteAll(ids: string[]): Promise<void> {
+    const mode = getNetworkMode();
+    if (mode === 'online-direct') {
+      await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+      return;
+    }
+    if (mode === 'online-degraded') {
+      try {
+        await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+        return;
+      } catch {
+        // fall through to outbox
+      }
+    }
+    for (const id of ids) {
       await addToOutbox({
         operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
         action: 'DELETE', payload: { id },
       });
-      return;
     }
-    await apiClient.delete(`${this.basePath}/${id}`);
-  }
-
-  async deleteAll(ids: string[]): Promise<void> {
-    if (!isOnline()) {
-      for (const id of ids) {
-        await addToOutbox({
-          operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
-          action: 'DELETE', payload: { id },
-        });
-      }
-      return;
-    }
-    await apiClient.delete(`${this.basePath}/batch`, { data: ids });
   }
 }
 

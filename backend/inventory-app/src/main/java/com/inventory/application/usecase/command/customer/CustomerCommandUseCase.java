@@ -6,6 +6,7 @@ import com.inventory.domain.model.customer.Customer;
 import com.inventory.domain.ports.in.customer.CustomerCommandPort;
 import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CustomerRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -20,13 +21,16 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
     
     private final CustomerRepository customerRepository;
     private final AuditLogRepository auditLogRepository;
+    private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
     
     public CustomerCommandUseCase(CustomerRepository customerRepository,
                                   AuditLogRepository auditLogRepository,
+                                  SyncLogWriterPort syncLogWriter,
                                   AuditSerializer auditSerializer) {
         this.customerRepository = customerRepository;
         this.auditLogRepository = auditLogRepository;
+        this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
     
@@ -57,7 +61,9 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
                     userId, "CUSTOMER", c.getId(), "CREATE",
                     null, auditSerializer.toJson(c), null
                 );
-                return auditLogRepository.save(log).thenReturn(c);
+                return auditLogRepository.save(log)
+                    .then(syncLogWriter.log("CUSTOMER", c.getId(), "CREATE", c, null))
+                    .thenReturn(c);
             });
     }
     
@@ -82,7 +88,9 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
                             userId, "CUSTOMER", c.getId(), "UPDATE",
                             beforeJson, auditSerializer.toJson(c), null
                         );
-                        return auditLogRepository.save(log).thenReturn(c);
+                        return auditLogRepository.save(log)
+                            .then(syncLogWriter.log("CUSTOMER", c.getId(), "UPDATE", c, null))
+                            .thenReturn(c);
                     });
             });
     }
@@ -97,7 +105,8 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
                     auditSerializer.toJson(existing), null, null
                 );
                 return auditLogRepository.save(log)
-                    .then(customerRepository.deleteById(id));
+                    .then(customerRepository.deleteById(id))
+                    .then(syncLogWriter.log("CUSTOMER", id, "DELETE", existing, null));
             });
     }
     
@@ -118,7 +127,9 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
                         userId, "CUSTOMER", saved.getId(), "ACTIVATE",
                         null, auditSerializer.toJson(saved), null
                     );
-                    return auditLogRepository.save(log).thenReturn(saved);
+                    return auditLogRepository.save(log)
+                        .then(syncLogWriter.log("CUSTOMER", saved.getId(), "ACTIVATE", saved, null))
+                        .thenReturn(saved);
                 }));
     }
     
@@ -133,7 +144,9 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
                         userId, "CUSTOMER", saved.getId(), "DEACTIVATE",
                         null, auditSerializer.toJson(saved), null
                     );
-                    return auditLogRepository.save(log).thenReturn(saved);
+                    return auditLogRepository.save(log)
+                        .then(syncLogWriter.log("CUSTOMER", saved.getId(), "DEACTIVATE", saved, null))
+                        .thenReturn(saved);
                 }));
     }
 }

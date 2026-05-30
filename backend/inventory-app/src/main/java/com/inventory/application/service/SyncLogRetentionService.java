@@ -1,6 +1,7 @@
 package com.inventory.application.service;
 
 import com.inventory.domain.ports.out.IdempotencyRepository;
+import com.inventory.domain.ports.out.ImportJobRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -19,15 +20,18 @@ public class SyncLogRetentionService {
     private final SystemSettingsService settings;
     private final DatabaseClient db;
     private final IdempotencyRepository idempotencyRepository;
+    private final ImportJobRepository importJobRepository;
 
     public SyncLogRetentionService(
         SystemSettingsService settings,
         DatabaseClient db,
-        IdempotencyRepository idempotencyRepository
+        IdempotencyRepository idempotencyRepository,
+        ImportJobRepository importJobRepository
     ) {
         this.settings = settings;
         this.db = db;
         this.idempotencyRepository = idempotencyRepository;
+        this.importJobRepository = importJobRepository;
     }
 
     @Scheduled(cron = "0 2 * * *")
@@ -43,6 +47,16 @@ public class SyncLogRetentionService {
         idempotencyRepository.deleteOlderThan(Instant.now().minus(2, ChronoUnit.DAYS))
             .doOnSuccess(ignore -> log.info("Limpiadas claves de idempotencia con más de 2 días"))
             .doOnError(e -> log.error("Error limpiando idempotency_keys", e))
+            .subscribe();
+    }
+
+    @Scheduled(cron = "0 4 * * *")
+    public void cleanupImportJobs() {
+        settings.getInt("import.retention-days", 7)
+            .flatMap(days -> importJobRepository.deleteCompletedOlderThan(
+                Instant.now().minus(days, ChronoUnit.DAYS)))
+            .doOnSuccess(ignore -> log.info("Limpiados import_jobs completados/fallidos con más de 7 días"))
+            .doOnError(e -> log.error("Error limpiando import_jobs", e))
             .subscribe();
     }
 

@@ -1,33 +1,57 @@
 import { apiClient } from '@/infrastructure/api/client';
 import { ISaleRepository } from '@/core/sale/ports/ISaleRepository';
 import { Sale, SaleFilter, CreateSaleInput } from '@/core/sale/entities/sale';
-import { isOnline } from '@/infrastructure/storage/networkAwareUtils';
+import { readWithCache, isOnline } from '@/infrastructure/storage/networkAwareUtils';
+import { getCachedSales } from '@/infrastructure/storage/db';
 import { addToOutbox } from '@/infrastructure/storage/outbox';
 
 export class SaleRepository implements ISaleRepository {
   private basePath = '/api/v1/sales';
 
   async getById(id: string): Promise<Sale | null> {
-    try {
-      const response = await apiClient.get<Sale>(`${this.basePath}/${id}`);
-      return response.data;
-    } catch {
-      return null;
-    }
+    return readWithCache(
+      async () => {
+        try {
+          const response = await apiClient.get<Sale>(`${this.basePath}/${id}`);
+          return response.data;
+        } catch {
+          return null;
+        }
+      },
+      async () => {
+        const sales = await getCachedSales();
+        const sale = sales.find(s => s.id === id);
+        return sale as unknown as Sale ?? null;
+      },
+    );
   }
 
   async getByNumber(saleNumber: string): Promise<Sale | null> {
-    try {
-      const response = await apiClient.get<Sale>(`${this.basePath}/number/${saleNumber}`);
-      return response.data;
-    } catch {
-      return null;
-    }
+    return readWithCache(
+      async () => {
+        try {
+          const response = await apiClient.get<Sale>(`${this.basePath}/number/${saleNumber}`);
+          return response.data;
+        } catch {
+          return null;
+        }
+      },
+      async () => {
+        const sales = await getCachedSales();
+        const sale = sales.find(s => s.saleNumber === saleNumber);
+        return sale as unknown as Sale ?? null;
+      },
+    );
   }
 
   async getAll(filter?: SaleFilter): Promise<Sale[]> {
-    const response = await apiClient.get<Sale[]>(this.basePath, { params: filter });
-    return response.data;
+    return readWithCache(
+      async () => {
+        const response = await apiClient.get<Sale[]>(this.basePath, { params: filter });
+        return response.data;
+      },
+      async () => getCachedSales() as unknown as Sale[],
+    );
   }
 
   async create(input: CreateSaleInput): Promise<Sale> {
@@ -45,11 +69,7 @@ export class SaleRepository implements ISaleRepository {
 
   async confirm(id: string): Promise<Sale> {
     if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'SALE', entityId: id,
-        action: 'CONFIRM', payload: { id },
-      });
-      return { id } as Sale;
+      throw new Error('Requiere conexión a internet para confirmar ventas');
     }
     const response = await apiClient.post<Sale>(`${this.basePath}/${id}/confirm`);
     return response.data;
@@ -57,11 +77,7 @@ export class SaleRepository implements ISaleRepository {
 
   async deliver(id: string): Promise<Sale> {
     if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'SALE', entityId: id,
-        action: 'DELIVER', payload: { id },
-      });
-      return { id } as Sale;
+      throw new Error('Requiere conexión a internet para entregar ventas');
     }
     const response = await apiClient.post<Sale>(`${this.basePath}/${id}/deliver`);
     return response.data;
@@ -69,11 +85,7 @@ export class SaleRepository implements ISaleRepository {
 
   async cancel(id: string): Promise<Sale> {
     if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'SALE', entityId: id,
-        action: 'CANCEL', payload: { id },
-      });
-      return { id } as Sale;
+      throw new Error('Requiere conexión a internet para cancelar ventas');
     }
     const response = await apiClient.post<Sale>(`${this.basePath}/${id}/cancel`);
     return response.data;

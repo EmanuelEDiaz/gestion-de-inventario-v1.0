@@ -8,6 +8,7 @@ import com.inventory.domain.ports.out.ImportJobRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Repository
@@ -32,5 +33,10 @@ public class ImportJobRepositoryAdapter implements ImportJobRepository {
     public Mono<ImportJob> findById(UUID id) {
         return r2dbcRepository.findById(id)
             .map(mapper::toDomain);
+    }
+
+    @Override
+    public Mono<Void> deleteCompletedOlderThan(Instant before) {
+        return r2dbcRepository.deleteCompletedOlderThan(before);
     }
 }

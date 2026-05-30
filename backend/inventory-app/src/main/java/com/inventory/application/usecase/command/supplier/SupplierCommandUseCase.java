@@ -6,6 +6,7 @@ import com.inventory.domain.model.supplier.Supplier;
 import com.inventory.domain.ports.in.supplier.SupplierCommandPort;
 import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.SupplierRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -20,13 +21,16 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
 
     private final SupplierRepository supplierRepository;
     private final AuditLogRepository auditLogRepository;
+    private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
 
     public SupplierCommandUseCase(SupplierRepository supplierRepository,
                                   AuditLogRepository auditLogRepository,
+                                  SyncLogWriterPort syncLogWriter,
                                   AuditSerializer auditSerializer) {
         this.supplierRepository = supplierRepository;
         this.auditLogRepository = auditLogRepository;
+        this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
 
@@ -59,7 +63,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                     userId, "SUPPLIER", saved.getId(), "CREATE",
                     null, auditSerializer.toJson(saved), null
                 );
-                return auditLogRepository.save(log).thenReturn(saved);
+                return auditLogRepository.save(log)
+                    .then(syncLogWriter.log("SUPPLIER", saved.getId(), "CREATE", saved, null))
+                    .thenReturn(saved);
             });
     }
 
@@ -85,7 +91,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                             userId, "SUPPLIER", id, "UPDATE",
                             beforeJson, auditSerializer.toJson(saved), null
                         );
-                        return auditLogRepository.save(log).thenReturn(saved);
+                        return auditLogRepository.save(log)
+                            .then(syncLogWriter.log("SUPPLIER", id, "UPDATE", saved, null))
+                            .thenReturn(saved);
                     });
             });
     }
@@ -100,7 +108,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                     userId, "SUPPLIER", id, "DELETE",
                     beforeJson, null, null
                 );
-                return auditLogRepository.save(log).then(supplierRepository.deleteById(id));
+                return auditLogRepository.save(log)
+                    .then(supplierRepository.deleteById(id))
+                    .then(syncLogWriter.log("SUPPLIER", id, "DELETE", existing, null));
             });
     }
 
@@ -122,7 +132,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                             userId, "SUPPLIER", id, "ACTIVATE",
                             null, auditSerializer.toJson(saved), null
                         );
-                        return auditLogRepository.save(log).thenReturn(saved);
+                        return auditLogRepository.save(log)
+                            .then(syncLogWriter.log("SUPPLIER", id, "ACTIVATE", saved, null))
+                            .thenReturn(saved);
                     });
             });
     }
@@ -139,7 +151,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                             userId, "SUPPLIER", id, "DEACTIVATE",
                             null, auditSerializer.toJson(saved), null
                         );
-                        return auditLogRepository.save(log).thenReturn(saved);
+                        return auditLogRepository.save(log)
+                            .then(syncLogWriter.log("SUPPLIER", id, "DEACTIVATE", saved, null))
+                            .thenReturn(saved);
                     });
             });
     }

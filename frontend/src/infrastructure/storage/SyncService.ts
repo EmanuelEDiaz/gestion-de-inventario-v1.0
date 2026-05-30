@@ -1,6 +1,6 @@
 import { apiClient } from '@/infrastructure/api/client';
 import axios from 'axios';
-import { getDB, getSyncMeta, setSyncMeta, getStoreCursor, setStoreCursor } from './db';
+import { getDB, getSyncMeta, setSyncMeta, getStoreCursor, setStoreCursor, type OutboxEntry } from './db';
 import { getPendingOutbox, removeFromOutbox, markOutboxEntry, moveToDeadLetter, updateRetry } from './outbox';
 import { getNetworkMode } from './networkStore';
 
@@ -33,16 +33,15 @@ export interface SyncPullResponse {
   entries: SyncLogEntry[];
 }
 
-interface SyncPushEntry {
-  idempotencyKey: string;
-  method: string;
-  url: string;
-  body: unknown;
-  createdAt: number;
+interface SyncPushOperation {
+  operationId: string;
+  entityType: string;
+  action: string;
+  payload: unknown;
 }
 
 interface SyncPushResponseEntry {
-  idempotencyKey: string;
+  operationId: string;
   status: 'accepted' | 'conflict' | 'error';
   serverId?: string;
   error?: string;
@@ -76,7 +75,7 @@ export async function pushOutbox(): Promise<PushResult> {
       await markOutboxEntry(entry.id!, 'pending');
     }
     if (entry.retryCount >= MAX_RETRIES) {
-      await moveToDeadLetter(entry.id!);
+      await moveToDeadLetter(entry);
       result.failed++;
       result.incidents.push(`Outbox entry ${entry.id} exceeded max retries`);
     }
@@ -95,18 +94,17 @@ export async function pushOutbox(): Promise<PushResult> {
         await markOutboxEntry(entry.id!, 'syncing');
       }
 
-      const body: SyncPushEntry[] = batch.map((e: any) => ({
-        idempotencyKey: e.idempotencyKey,
-        method: e.method,
-        url: e.url,
-        body: e.body,
-        createdAt: e.createdAt,
-      }));
+      const body = { operations: batch.map((e: OutboxEntry) => ({
+        operationId: e.operationId,
+        entityType: e.entityType,
+        action: e.action,
+        payload: e.payload,
+      })) };
 
       const response = await apiClient.post<SyncPushResponse>('/api/v1/sync/push', body);
 
       for (const entry of response.data.entries) {
-        const match = batch.find((e: any) => e.idempotencyKey === entry.idempotencyKey);
+        const match = batch.find((e: any) => e.operationId === entry.operationId);
         if (!match) continue;
 
         if (entry.status === 'accepted') {
@@ -115,11 +113,11 @@ export async function pushOutbox(): Promise<PushResult> {
         } else if (entry.status === 'conflict') {
           await removeFromOutbox(match.id!);
           result.conflicts++;
-          result.incidents.push(`Conflict on ${entry.idempotencyKey}: ${entry.error}`);
+          result.incidents.push(`Conflict on ${entry.operationId}: ${entry.error}`);
         } else {
-          await moveToDeadLetter(match.id!);
+          await moveToDeadLetter(match);
           result.failed++;
-          result.incidents.push(`Error on ${entry.idempotencyKey}: ${entry.error}`);
+          result.incidents.push(`Error on ${entry.operationId}: ${entry.error}`);
         }
       }
     } catch (error) {
@@ -127,9 +125,9 @@ export async function pushOutbox(): Promise<PushResult> {
         const status = error.response?.status;
         if (status === 404 || status === 409) {
           for (const entry of batch) {
-            await moveToDeadLetter(entry.id!);
+            await moveToDeadLetter(entry);
             result.failed++;
-            result.incidents.push(`${entry.idempotencyKey} failed with status ${status}`);
+            result.incidents.push(`${entry.operationId} failed with status ${status}`);
           }
         } else {
           for (const entry of batch) {
@@ -138,7 +136,7 @@ export async function pushOutbox(): Promise<PushResult> {
             await updateRetry(entry.id!, newRetryCount, now + delay);
             await markOutboxEntry(entry.id!, 'pending');
             result.failed++;
-            result.incidents.push(`${entry.idempotencyKey} network error, retry ${newRetryCount}`);
+            result.incidents.push(`${entry.operationId} network error, retry ${newRetryCount}`);
           }
         }
       } else {
@@ -148,7 +146,7 @@ export async function pushOutbox(): Promise<PushResult> {
           await updateRetry(entry.id!, newRetryCount, now + delay);
           await markOutboxEntry(entry.id!, 'pending');
           result.failed++;
-          result.incidents.push(`${entry.idempotencyKey} unexpected error, retry ${newRetryCount}`);
+          result.incidents.push(`${entry.operationId} unexpected error, retry ${newRetryCount}`);
         }
       }
     }

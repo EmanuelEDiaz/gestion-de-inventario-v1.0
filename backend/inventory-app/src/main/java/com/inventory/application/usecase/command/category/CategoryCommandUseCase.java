@@ -9,6 +9,7 @@ import com.inventory.domain.model.category.Category;
 import com.inventory.domain.ports.in.category.CategoryCommandPort;
 import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CategoryRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -24,13 +25,16 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
 
     private final CategoryRepository categoryRepository;
     private final AuditLogRepository auditLogRepository;
+    private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
 
     public CategoryCommandUseCase(CategoryRepository categoryRepository,
                                   AuditLogRepository auditLogRepository,
+                                  SyncLogWriterPort syncLogWriter,
                                   AuditSerializer auditSerializer) {
         this.categoryRepository = categoryRepository;
         this.auditLogRepository = auditLogRepository;
+        this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
 
@@ -41,7 +45,9 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
             .flatMap(saved -> {
                 String afterData = auditSerializer.toJsonTruncated(saved);
                 AuditLog auditLog = AuditLog.create(userId, "CATEGORY", saved.getId(), "CREATE", null, afterData, null);
-                return auditLogRepository.save(auditLog).thenReturn(saved);
+                return auditLogRepository.save(auditLog)
+                    .then(syncLogWriter.log("CATEGORY", saved.getId(), "CREATE", saved, null))
+                    .thenReturn(saved);
             });
     }
 
@@ -90,7 +96,9 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
                     .flatMap(saved -> {
                         String afterData = auditSerializer.toJsonTruncated(saved);
                         AuditLog auditLog = AuditLog.create(userId, "CATEGORY", id, "UPDATE", beforeData, afterData, null);
-                        return auditLogRepository.save(auditLog).thenReturn(saved);
+                        return auditLogRepository.save(auditLog)
+                            .then(syncLogWriter.log("CATEGORY", id, "UPDATE", saved, null))
+                            .thenReturn(saved);
                     });
             });
     }
@@ -107,7 +115,8 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
                     String beforeData = auditSerializer.toJsonTruncated(category);
                     AuditLog auditLog = AuditLog.create(userId, "CATEGORY", id, "DELETE", beforeData, null, null);
                     return auditLogRepository.save(auditLog)
-                        .then(categoryRepository.deleteById(id));
+                        .then(categoryRepository.deleteById(id))
+                        .then(syncLogWriter.log("CATEGORY", id, "DELETE", category, null));
                 }));
     }
 

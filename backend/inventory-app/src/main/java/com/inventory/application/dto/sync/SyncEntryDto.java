@@ -1,4 +1,4 @@
-package com.inventory.application.sync.dto;
+package com.inventory.application.dto.sync;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;

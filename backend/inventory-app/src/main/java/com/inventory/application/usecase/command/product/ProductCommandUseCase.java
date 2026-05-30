@@ -10,6 +10,7 @@ import com.inventory.domain.ports.in.product.ProductCommandPort;
 import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,13 +28,16 @@ public class ProductCommandUseCase implements ProductCommandPort {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final AuditLogRepository auditLogRepository;
+    private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
 
     public ProductCommandUseCase(ProductRepository productRepository, CategoryRepository categoryRepository,
-                                  AuditLogRepository auditLogRepository, AuditSerializer auditSerializer) {
+                                  AuditLogRepository auditLogRepository, SyncLogWriterPort syncLogWriter,
+                                  AuditSerializer auditSerializer) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.auditLogRepository = auditLogRepository;
+        this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
 
@@ -67,6 +71,7 @@ public class ProductCommandUseCase implements ProductCommandPort {
             .flatMap(saved -> auditLogRepository.save(AuditLog.create(
                 userId, "Product", saved.getId(), "CREATE",
                 null, auditSerializer.toJsonTruncated(saved), null))
+                .then(syncLogWriter.log("PRODUCT", saved.getId(), "CREATE", saved, null))
                 .thenReturn(saved));
     }
 
@@ -96,6 +101,7 @@ public class ProductCommandUseCase implements ProductCommandPort {
                     .flatMap(saved -> auditLogRepository.save(AuditLog.create(
                         userId, "Product", saved.getId(), "UPDATE",
                         auditSerializer.toJsonTruncated(existing), auditSerializer.toJsonTruncated(saved), null))
+                        .then(syncLogWriter.log("PRODUCT", saved.getId(), "UPDATE", saved, null))
                         .thenReturn(saved));
             });
     }
@@ -109,6 +115,7 @@ public class ProductCommandUseCase implements ProductCommandPort {
             .flatMap(saved -> auditLogRepository.save(AuditLog.create(
                 userId, "Product", saved.getId(), "ARCHIVE",
                 null, auditSerializer.toJsonTruncated(saved), null))
+                .then(syncLogWriter.log("PRODUCT", saved.getId(), "ARCHIVE", saved, null))
                 .thenReturn(saved));
     }
 
@@ -121,6 +128,7 @@ public class ProductCommandUseCase implements ProductCommandPort {
             .flatMap(saved -> auditLogRepository.save(AuditLog.create(
                 userId, "Product", saved.getId(), "ACTIVATE",
                 null, auditSerializer.toJsonTruncated(saved), null))
+                .then(syncLogWriter.log("PRODUCT", saved.getId(), "ACTIVATE", saved, null))
                 .thenReturn(saved));
     }
 
@@ -131,7 +139,8 @@ public class ProductCommandUseCase implements ProductCommandPort {
             .flatMap(existing -> auditLogRepository.save(AuditLog.create(
                 userId, "Product", existing.getId(), "DELETE",
                 auditSerializer.toJsonTruncated(existing), null, null))
-                .then(productRepository.deleteById(id)));
+                .then(productRepository.deleteById(id))
+                .then(syncLogWriter.log("PRODUCT", existing.getId(), "DELETE", existing, null)));
     }
 
     @Override

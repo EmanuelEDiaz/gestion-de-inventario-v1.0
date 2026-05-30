@@ -15,6 +15,7 @@ import com.inventory.domain.ports.out.CustomerDebtRepository;
 import com.inventory.domain.ports.out.MovementRepository;
 import com.inventory.domain.ports.out.SaleRepository;
 import com.inventory.domain.ports.out.StockRepository;
+import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -32,6 +33,7 @@ public class SaleCommandUseCase implements SaleCommandPort {
     private final StockRepository stockRepository;
     private final MovementRepository movementRepository;
     private final AuditLogRepository auditLogRepository;
+    private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
     private final CustomerDebtRepository customerDebtRepository;
     public SaleCommandUseCase(
@@ -39,6 +41,7 @@ public class SaleCommandUseCase implements SaleCommandPort {
         StockRepository stockRepository,
         MovementRepository movementRepository,
         AuditLogRepository auditLogRepository,
+        SyncLogWriterPort syncLogWriter,
         AuditSerializer auditSerializer,
         CustomerDebtRepository customerDebtRepository
     ) {
@@ -46,6 +49,7 @@ public class SaleCommandUseCase implements SaleCommandPort {
         this.stockRepository = stockRepository;
         this.movementRepository = movementRepository;
         this.auditLogRepository = auditLogRepository;
+        this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
         this.customerDebtRepository = customerDebtRepository;
     }
@@ -85,6 +89,7 @@ public class SaleCommandUseCase implements SaleCommandPort {
             .flatMap(saved -> auditLogRepository.save(AuditLog.create(
                 createdBy, "SALE", saved.id(), "CREATE",
                 null, auditSerializer.toJsonTruncated(saved), null))
+                .then(syncLogWriter.log("SALE", saved.id(), "CREATE", saved, null))
                 .thenReturn(saved));
     }
 
@@ -104,6 +109,7 @@ public class SaleCommandUseCase implements SaleCommandPort {
             .flatMap(saved -> auditLogRepository.save(AuditLog.create(
                 createdBy, "SALE", saved.id(), "CREATE",
                 null, auditSerializer.toJsonTruncated(saved), null))
+                .then(syncLogWriter.log("SALE", saved.id(), "CREATE", saved, null))
                 .thenReturn(saved));
     }
 
@@ -120,6 +126,7 @@ public class SaleCommandUseCase implements SaleCommandPort {
             .flatMap(saved -> auditLogRepository.save(AuditLog.create(
                 createdBy, "SALE", saved.id(), "CREATE",
                 null, auditSerializer.toJsonTruncated(saved), null))
+                .then(syncLogWriter.log("SALE", saved.id(), "CREATE", saved, null))
                 .thenReturn(saved));
     }
 
@@ -260,7 +267,8 @@ public class SaleCommandUseCase implements SaleCommandPort {
                     return Mono.error(new BadRequestException(
                         "Cannot delete sale with status: " + sale.status()));
                 }
-                return saleRepository.deleteById(saleId);
+                return saleRepository.deleteById(saleId)
+                    .then(syncLogWriter.log("SALE", saleId, "DELETE", sale, null));
             });
     }
 

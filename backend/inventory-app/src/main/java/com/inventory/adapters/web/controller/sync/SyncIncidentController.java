@@ -1,8 +1,8 @@
 package com.inventory.adapters.web.controller.sync;
 
-import com.inventory.application.sync.dto.ReportSyncIncidentRequest;
-import com.inventory.application.sync.dto.ResolveSyncIncidentRequest;
-import com.inventory.application.sync.dto.SyncIncidentDto;
+import com.inventory.application.dto.sync.ReportSyncIncidentRequest;
+import com.inventory.application.dto.sync.ResolveSyncIncidentRequest;
+import com.inventory.application.dto.sync.SyncIncidentDto;
 import com.inventory.application.mapper.SupplementaryApplicationMapper;
 import com.inventory.domain.model.sync.SyncIncident;
 import com.inventory.domain.ports.in.sync.SyncIncidentCommandPort;

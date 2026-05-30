@@ -1,35 +1,57 @@
 import { apiClient } from '@/infrastructure/api/client';
 import { IPurchaseRepository } from '@/core/purchase/ports/IPurchaseRepository';
 import { Purchase, PurchaseFilter, CreatePurchaseInput } from '@/core/purchase/entities/purchase';
-import { isOnline } from '@/infrastructure/storage/networkAwareUtils';
+import { readWithCache, isOnline } from '@/infrastructure/storage/networkAwareUtils';
+import { getCachedPurchases } from '@/infrastructure/storage/db';
 import { addToOutbox } from '@/infrastructure/storage/outbox';
 
 export class PurchaseRepository implements IPurchaseRepository {
   private basePath = '/api/v1/purchases';
 
   async getById(id: string): Promise<Purchase | null> {
-    try {
-      const response = await apiClient.get<Purchase>(`${this.basePath}/${id}`);
-      return response.data;
-    } catch {
-      return null;
-    }
+    return readWithCache(
+      async () => {
+        try {
+          const response = await apiClient.get<Purchase>(`${this.basePath}/${id}`);
+          return response.data;
+        } catch {
+          return null;
+        }
+      },
+      async () => {
+        const purchases = await getCachedPurchases();
+        const purchase = purchases.find(p => p.id === id);
+        return purchase as unknown as Purchase ?? null;
+      },
+    );
   }
 
   async getByNumber(purchaseNumber: string): Promise<Purchase | null> {
-    try {
-      const response = await apiClient.get<Purchase>(`${this.basePath}/number/${purchaseNumber}`);
-      return response.data;
-    } catch {
-      return null;
-    }
+    return readWithCache(
+      async () => {
+        try {
+          const response = await apiClient.get<Purchase>(`${this.basePath}/number/${purchaseNumber}`);
+          return response.data;
+        } catch {
+          return null;
+        }
+      },
+      async () => {
+        const purchases = await getCachedPurchases();
+        const purchase = purchases.find(p => p.purchaseNumber === purchaseNumber);
+        return purchase as unknown as Purchase ?? null;
+      },
+    );
   }
 
   async getAll(filter?: PurchaseFilter): Promise<Purchase[]> {
-    const response = await apiClient.get<Purchase[]>(this.basePath, {
-      params: filter
-    });
-    return response.data;
+    return readWithCache(
+      async () => {
+        const response = await apiClient.get<Purchase[]>(this.basePath, { params: filter });
+        return response.data;
+      },
+      async () => getCachedPurchases() as unknown as Purchase[],
+    );
   }
 
   async create(input: CreatePurchaseInput): Promise<Purchase> {
@@ -47,11 +69,7 @@ export class PurchaseRepository implements IPurchaseRepository {
 
   async confirm(id: string): Promise<Purchase> {
     if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'PURCHASE', entityId: id,
-        action: 'CONFIRM', payload: { id },
-      });
-      return { id } as Purchase;
+      throw new Error('Requiere conexión a internet para confirmar compras');
     }
     const response = await apiClient.post<Purchase>(`${this.basePath}/${id}/confirm`);
     return response.data;
@@ -59,11 +77,7 @@ export class PurchaseRepository implements IPurchaseRepository {
 
   async receive(id: string, receivedDate?: string): Promise<Purchase> {
     if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'PURCHASE', entityId: id,
-        action: 'RECEIVE', payload: { id, receivedDate },
-      });
-      return { id } as Purchase;
+      throw new Error('Requiere conexión a internet para recibir compras');
     }
     const response = await apiClient.post<Purchase>(`${this.basePath}/${id}/receive`, null, {
       params: receivedDate ? { receivedDate } : undefined
@@ -73,11 +87,7 @@ export class PurchaseRepository implements IPurchaseRepository {
 
   async cancel(id: string): Promise<Purchase> {
     if (!isOnline()) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'PURCHASE', entityId: id,
-        action: 'CANCEL', payload: { id },
-      });
-      return { id } as Purchase;
+      throw new Error('Requiere conexión a internet para cancelar compras');
     }
     const response = await apiClient.post<Purchase>(`${this.basePath}/${id}/cancel`);
     return response.data;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { API_BASE_URL } from '@/presentation/shared/lib/utils';
+import { useNetworkStore, type NetworkMode } from '@/infrastructure/storage/networkStore';
 
 export type BackendStatus = 'connected' | 'disconnected' | 'checking';
 
@@ -14,12 +15,14 @@ const PING_TIMEOUT = 2_000;
 const MAX_CONSECUTIVE_ERRORS = 3;
 const BACKOFF_MULTIPLIER = 4;
 
-export function useNetworkHealth() {
+export function useNetworkHealth(onReconnect?: () => void) {
   const [backendStatus, setBackendStatus] = useState<BackendStatus>('checking');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
   const errorsRef = useRef(0);
+  const prevBackendRef = useRef<BackendStatus>('checking');
+  const onReconnectRef = useRef(onReconnect);
 
   const startPolling = useCallback((interval: number) => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -117,6 +120,24 @@ export function useNetworkHealth() {
       window.removeEventListener('offline', onOffline);
     };
   }, [scheduleNext]);
+
+  useEffect(() => {
+    const mode: NetworkMode = !navigator.onLine ? 'offline'
+      : backendStatus === 'connected' ? 'online-direct'
+      : 'online-degraded';
+    useNetworkStore.getState().setMode(mode);
+  }, [backendStatus]);
+
+  useEffect(() => {
+    if (prevBackendRef.current === 'disconnected' && backendStatus === 'connected') {
+      onReconnectRef.current?.();
+    }
+    prevBackendRef.current = backendStatus;
+  }, [backendStatus]);
+
+  useEffect(() => {
+    onReconnectRef.current = onReconnect;
+  }, [onReconnect]);
 
   return { backendStatus, checkHealth: () => fetch(LOCAL_HEALTH_URL, { method: 'GET', cache: 'no-store', signal: AbortSignal.timeout(PING_TIMEOUT) }).then(() => true).catch(() => false) };
 }

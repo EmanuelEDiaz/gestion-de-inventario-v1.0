@@ -11,7 +11,7 @@ import com.inventory.application.product.dto.ProductImageDto;
 import com.inventory.application.supplier.dto.SupplierCatalogProductDto;
 import com.inventory.application.supplier.dto.SupplierImageDto;
 import com.inventory.application.supplier.dto.SupplierSocialLinkDto;
-import com.inventory.application.sync.dto.SyncIncidentDto;
+import com.inventory.application.dto.sync.SyncIncidentDto;
 import com.inventory.domain.model.customer.CustomerDebt;
 import com.inventory.domain.model.customer.CustomerImage;
 import com.inventory.domain.model.customer.DebtPayment;

@@ -2,15 +2,15 @@ import { openDB, deleteDB, type DBSchema, type IDBPDatabase } from 'idb';
 
 const MAX_OUTBOX_ENTRIES = 500;
 const DB_NAME = 'inventory-offline';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const DB_OPEN_TIMEOUT = 5_000;
 
 const BACKOFF_DELAYS = [30_000, 120_000, 480_000, 1_920_000, 7_200_000];
 
 const RETENTION = {
   DEAD_LETTER: 7 * 24 * 60 * 60 * 1000,
-  NOTIFICATION: 30 * 24 * 60 * 60 * 1000,
-  IMAGE_CACHE: 7 * 24 * 60 * 60 * 1000,
+  NOTIFICATION: 7 * 24 * 60 * 60 * 1000,
+  SALES: 30 * 24 * 60 * 60 * 1000,
   REJECTED_OUTBOX: 7 * 24 * 60 * 60 * 1000,
 };
 
@@ -156,6 +156,16 @@ export interface CachedReturn {
   cachedAt: number;
 }
 
+export interface CachedMovement {
+  id: string;
+  productId: string;
+  warehouseId: string;
+  type: string;
+  quantity: number;
+  reference: string;
+  cachedAt: number;
+}
+
 export interface CachedCustomerDebt {
   id: string;
   customerId: string;
@@ -239,6 +249,11 @@ interface InventoryDB extends DBSchema {
     key: string;
     value: CachedAdjustment;
     indexes: { 'by-number': string; 'by-date': number };
+  };
+  movements: {
+    key: string;
+    value: CachedMovement;
+    indexes: { 'by-date': number };
   };
   returns: {
     key: string;
@@ -394,15 +409,16 @@ export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
         if (!store.indexNames.contains('by-date')) store.createIndex('by-date', 'cachedAt');
       }
 
-      if (!db.objectStoreNames.contains('returns')) {
-        const store = db.createObjectStore('returns', { keyPath: 'id' });
-        store.createIndex('by-number', 'returnNumber');
-        store.createIndex('by-date', 'cachedAt');
-      } else if (oldVersion < 3) {
-        const store = transaction.objectStore('returns');
-        if (!store.indexNames.contains('by-number')) store.createIndex('by-number', 'returnNumber');
-        if (!store.indexNames.contains('by-date')) store.createIndex('by-date', 'cachedAt');
-      }
+  if (!db.objectStoreNames.contains('movements')) {
+    const store = db.createObjectStore('movements', { keyPath: 'id' });
+    store.createIndex('by-date', 'cachedAt');
+  }
+
+  if (!db.objectStoreNames.contains('returns')) {
+    const store = db.createObjectStore('returns', { keyPath: 'id' });
+    store.createIndex('by-number', 'returnNumber');
+    store.createIndex('by-date', 'cachedAt');
+  }
 
       if (!db.objectStoreNames.contains('customerDebts')) {
         const store = db.createObjectStore('customerDebts', { keyPath: 'id' });
@@ -463,6 +479,7 @@ export function isPersistenceReady(): boolean {
 export async function initPersistence(): Promise<void> {
   dbReady = true;
   try {
+    await requestPersistentStorage();
     const db = await getDB();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tx = db.transaction(['outbox', 'syncMeta', 'products'] as any, 'readonly');
@@ -577,7 +594,7 @@ export async function cleanupStaleData(): Promise<void> {
 
   await deleteWhere('deadLetter', (v) => now - v.rejectedAt > RETENTION.DEAD_LETTER);
   await deleteWhere('notifications', (v) => now - v.cachedAt > RETENTION.NOTIFICATION);
-  await deleteWhere('imageCache', (v) => now - v.lastAccessed > RETENTION.IMAGE_CACHE);
+  await deleteWhere('sales', (v) => now - v.cachedAt > RETENTION.SALES);
   await deleteWhere('outbox', (v) => v.status === 'rejected' && now - v.createdAt > RETENTION.REJECTED_OUTBOX);
 }
 
@@ -686,6 +703,132 @@ export async function getCachedCustomerDebts(): Promise<CachedCustomerDebt[]> {
 export async function cacheCustomerDebt(debt: CachedCustomerDebt): Promise<void> {
   const db = await getDB();
   await db.put('customerDebts', debt);
+}
+
+export async function getCachedCurrencies(): Promise<CachedCurrency[]> {
+  const db = await getDB();
+  return db.getAll('currencies');
+}
+
+export async function cacheCurrencies(currencies: CachedCurrency[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('currencies', 'readwrite');
+  for (const currency of currencies) {
+    await tx.objectStore('currencies').put(currency);
+  }
+  await tx.done;
+}
+
+export async function getCachedExchangeRates(): Promise<CachedExchangeRate[]> {
+  const db = await getDB();
+  return db.getAll('exchangeRates');
+}
+
+export async function cacheExchangeRates(rates: CachedExchangeRate[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('exchangeRates', 'readwrite');
+  for (const rate of rates) {
+    await tx.objectStore('exchangeRates').put(rate);
+  }
+  await tx.done;
+}
+
+export async function getCachedStockBalances(): Promise<CachedStockBalance[]> {
+  const db = await getDB();
+  return db.getAll('stockBalances');
+}
+
+export async function cacheStockBalances(balances: CachedStockBalance[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('stockBalances', 'readwrite');
+  for (const balance of balances) {
+    await tx.objectStore('stockBalances').put(balance);
+  }
+  await tx.done;
+}
+
+export async function getCachedSales(): Promise<CachedSale[]> {
+  const db = await getDB();
+  return db.getAll('sales');
+}
+
+export async function cacheSales(sales: CachedSale[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('sales', 'readwrite');
+  for (const sale of sales) {
+    await tx.objectStore('sales').put(sale);
+  }
+  await tx.done;
+}
+
+export async function getCachedPurchases(): Promise<CachedPurchase[]> {
+  const db = await getDB();
+  return db.getAll('purchases');
+}
+
+export async function cachePurchases(purchases: CachedPurchase[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('purchases', 'readwrite');
+  for (const purchase of purchases) {
+    await tx.objectStore('purchases').put(purchase);
+  }
+  await tx.done;
+}
+
+export async function getCachedTransfers(): Promise<CachedTransfer[]> {
+  const db = await getDB();
+  return db.getAll('transfers');
+}
+
+export async function cacheTransfers(transfers: CachedTransfer[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('transfers', 'readwrite');
+  for (const transfer of transfers) {
+    await tx.objectStore('transfers').put(transfer);
+  }
+  await tx.done;
+}
+
+export async function getCachedAdjustments(): Promise<CachedAdjustment[]> {
+  const db = await getDB();
+  return db.getAll('adjustments');
+}
+
+export async function cacheAdjustments(adjustments: CachedAdjustment[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('adjustments', 'readwrite');
+  for (const adjustment of adjustments) {
+    await tx.objectStore('adjustments').put(adjustment);
+  }
+  await tx.done;
+}
+
+export async function getCachedReturns(): Promise<CachedReturn[]> {
+  const db = await getDB();
+  return db.getAll('returns');
+}
+
+export async function cacheReturns(returns: CachedReturn[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('returns', 'readwrite');
+  for (const ret of returns) {
+    await tx.objectStore('returns').put(ret);
+  }
+  await tx.done;
+}
+
+export async function getCachedMovements(): Promise<CachedMovement[]> {
+  const db = await getDB();
+  return db.getAll('movements');
+}
+
+export async function cacheMovements(movements: CachedMovement[]): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('movements', 'readwrite');
+  for (const movement of movements) {
+    await tx.objectStore('movements').put(movement);
+  }
+  await tx.done;
 }
 
 export { MAX_OUTBOX_ENTRIES, BACKOFF_DELAYS };

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getDB, getCachedCount, isStale } from '@/infrastructure/storage/db';
+import { getDB, getCachedCount, cacheStoreData, isStale } from '@/infrastructure/storage/db';
 import { getNetworkMode } from '@/infrastructure/storage/networkStore';
+import { apiClient } from '@/infrastructure/api/client';
 
 export interface StorageUsage {
   usageBytes: number;
@@ -36,7 +37,7 @@ const FASE_B = [
 
 const DEFAULT_USAGE: StorageUsage = {
   usageBytes: 0, quotaBytes: 0, percentUsed: 0,
-  isLow: false, isWarning: false, isCritical: false,
+  isLow: true, isWarning: false, isCritical: false,
   isSupported: false, readyForOffline: true,
 };
 
@@ -58,17 +59,44 @@ export async function getStorageUsage(): Promise<StorageUsage> {
     const est = await navigator.storage.estimate();
     const usageBytes = est.usage ?? 0;
     const quotaBytes = est.quota ?? 0;
-    const percentUsed = quotaBytes > 0 ? (usageBytes / quotaBytes) * 100 : 0;
+    const percentUsed = quotaBytes > 0 ? usageBytes / quotaBytes : 0;
     return {
       usageBytes, quotaBytes, percentUsed,
-      isLow: percentUsed > 50,
-      isWarning: percentUsed > 70,
-      isCritical: percentUsed > 90,
+      isLow: percentUsed < 0.3,
+      isWarning: percentUsed >= 0.8,
+      isCritical: percentUsed >= 0.95,
       isSupported: true,
-      readyForOffline: percentUsed < 80,
+      readyForOffline: percentUsed < 0.95,
     };
   } catch {
     return { ...DEFAULT_USAGE };
+  }
+}
+
+async function fetchPaginated(endpoint: string, store: string, pageSize: number): Promise<void> {
+  let page = 0;
+  let hasMore = true;
+  while (hasMore) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const res = await apiClient.get<any>(`${endpoint}?page=${page}&size=${pageSize}`);
+    const data = res.data;
+    const items = (data.content ?? []).map((item: Record<string, unknown>) => ({ ...item, cachedAt: Date.now() }));
+    if (items.length > 0) {
+      await cacheStoreData(store, items);
+    }
+    hasMore = page + 1 < (data.totalPages ?? 0);
+    page++;
+  }
+}
+
+async function fetchAll(endpoint: string, store: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const res = await apiClient.get<any>(endpoint);
+  const items = (Array.isArray(res.data) ? res.data : []).map(
+    (item: Record<string, unknown>) => ({ ...item, cachedAt: Date.now() })
+  );
+  if (items.length > 0) {
+    await cacheStoreData(store, items);
   }
 }
 
@@ -128,11 +156,34 @@ export function useCacheProgress(): CacheProgress {
       if (phaseBRef.current) return;
       phaseBRef.current = true;
 
-      for (let i = 0; i < FASE_B.length; i++) {
-        setVal({ currentStep: FASE_B[i].label });
-        try { await getCachedCount(FASE_B[i].store); } catch { /* background */ }
-        setVal({ progress: Math.round(60 + ((i + 1) / FASE_B.length) * 40) });
-      }
+      // Fase B — background data fetch (no await)
+      setVal({ currentStep: 'Productos' });
+      try {
+        const count = await getCachedCount('products');
+        if (count === 0) await fetchPaginated('/api/v1/products', 'products', 200);
+      } catch { /* background, ignore */ }
+      setVal({ progress: 70 });
+
+      setVal({ currentStep: 'Clientes' });
+      try {
+        const count = await getCachedCount('customers');
+        if (count === 0) await fetchAll('/api/v1/customers', 'customers');
+      } catch { /* background, ignore */ }
+      setVal({ progress: 80 });
+
+      setVal({ currentStep: 'Proveedores' });
+      try {
+        const count = await getCachedCount('suppliers');
+        if (count === 0) await fetchAll('/api/v1/suppliers', 'suppliers');
+      } catch { /* background, ignore */ }
+      setVal({ progress: 90 });
+
+      setVal({ currentStep: 'Stock' });
+      try {
+        const count = await getCachedCount('stockBalances');
+        if (count === 0) await fetchAll('/api/v1/stock', 'stockBalances');
+      } catch { /* background, ignore */ }
+      setVal({ progress: 95 });
 
       const finalUsage = await getStorageUsage();
       setVal({ phase: 'ready', storageUsage: finalUsage, progress: 100 });
@@ -141,7 +192,7 @@ export function useCacheProgress(): CacheProgress {
 
   const overallPercent = st.progress;
   const modules = buildModules(st.phase, st.progress);
-  const isComplete = st.isAppReady;
+  const isComplete = st.phase === 'ready';
 
   return { ...st, overallPercent, modules, isComplete };
 }

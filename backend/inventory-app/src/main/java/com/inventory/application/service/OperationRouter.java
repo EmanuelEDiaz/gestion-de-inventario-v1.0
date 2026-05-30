@@ -128,7 +128,7 @@ public class OperationRouter {
             .map(result -> new PushResult(true, result))
             .onErrorResume(e -> {
                 if (e instanceof BadRequestException || e instanceof DomainException) {
-                    return Mono.just(new PushResult(false, e.getMessage()));
+                    return Mono.error(e);
                 }
                 return Mono.just(new PushResult(false, e.getMessage()));
             });

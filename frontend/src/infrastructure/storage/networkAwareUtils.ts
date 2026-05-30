@@ -9,7 +9,8 @@ import {
 } from '@/infrastructure/storage/outbox';
 
 export function isOnline(): boolean {
-  return getNetworkMode() !== 'offline';
+  const mode = getNetworkMode();
+  return mode === 'online-direct' || mode === 'online-degraded';
 }
 
 export async function readWithCache<T>(
