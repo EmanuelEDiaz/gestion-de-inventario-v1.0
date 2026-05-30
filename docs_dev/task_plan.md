@@ -139,7 +139,16 @@
 |   **B7.1** — Frontend: collapseOutboxEntries() + mergeOutboxGroup() + OutboxEntry skip/isTempId | ✅ Hecho |
 |   **B7.2** — Backend: resolveTempIds() + findRealIdByTempId() + TempIdMapping en response | ✅ Hecho |
 |   **B7.3** — Frontend: updateTempIdMappings() + fix push request body + response types | ✅ Hecho |
-| **B8** — Mapas Offline (Leaflet + PMTiles + FlexSearch) | ⏳ Pendiente |
+| **B8** — Mapas Offline (Leaflet + PMTiles + FlexSearch) | ✅ Hecho |
+|   **B8.0** — Build scripts: generate-geo-index.mjs + data prep | ✅ Hecho |
+|   **B8.2** — Core: Entities (map-location.ts) + Ports (IGeoSearchAdapter, ITileManager) | ✅ Hecho |
+|   **B8.3** — Infra: CubaGeoSearchAdapter + CubaTileManager + RegionDownloadService | ✅ Hecho |
+|   **B8.4** — Dependencias: pnpm add leaflet react-leaflet pmtiles leaflet.vectorgrid flexsearch @types/leaflet | ✅ Hecho |
+|   **B8.5** — Componentes: MapContainer, OfflineMap, MapControls, GeoSearchInput, MapPickerModal + states | ✅ Hecho |
+|   **B8.6** — Integración B3: SupplierAddressFields + CustomerFormFields con map picker | ✅ Hecho |
+|   **B8.7** — SW: Cache tiles + geo index en sw.js | ✅ Hecho |
+|   **B8.8** — Settings: MapSettingsPanel + maps.* system settings | ✅ Hecho |
+|   **B8.9** — Script build-time: generate-geo-index.mjs | ✅ Hecho |
 | **B9** — Compartir Ubicación (Deep Links sin API externa) | ⏳ Pendiente |
 
 ---

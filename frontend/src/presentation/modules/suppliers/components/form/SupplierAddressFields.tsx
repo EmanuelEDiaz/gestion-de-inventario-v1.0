@@ -1,7 +1,9 @@
 'use client';
 
 import { Input } from '@/presentation/shared/components/ui/Input';
+import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
+import { MapPin } from 'lucide-react';
 
 interface ProvinceOption {
   id: string;
@@ -19,6 +21,8 @@ interface SupplierAddressFieldsProps {
   street: string;
   locality: string;
   zipCode: string;
+  latitude: string;
+  longitude: string;
   provinces?: ProvinceOption[];
   municipalities?: MunicipalityOption[];
   onProvinceChange: (value: string) => void;
@@ -26,9 +30,12 @@ interface SupplierAddressFieldsProps {
   onStreetChange: (value: string) => void;
   onLocalityChange: (value: string) => void;
   onZipCodeChange: (value: string) => void;
+  onLatitudeChange: (value: string) => void;
+  onLongitudeChange: (value: string) => void;
+  onOpenMapPicker: () => void;
 }
 
-export function SupplierAddressFields({ province, municipality, street, locality, zipCode, provinces, municipalities, onProvinceChange, onMunicipalityChange, onStreetChange, onLocalityChange, onZipCodeChange }: SupplierAddressFieldsProps) {
+export function SupplierAddressFields({ province, municipality, street, locality, zipCode, latitude, longitude, provinces, municipalities, onProvinceChange, onMunicipalityChange, onStreetChange, onLocalityChange, onZipCodeChange, onLatitudeChange, onLongitudeChange, onOpenMapPicker }: SupplierAddressFieldsProps) {
   return (
     <>
       <div className="space-y-1 sm:col-span-2">
@@ -64,6 +71,16 @@ export function SupplierAddressFields({ province, municipality, street, locality
       <div className="space-y-1">
         <Input id="zipCode" value={zipCode} onChange={(e) => onZipCodeChange(e.target.value)}
           placeholder="Código Postal" title="Código postal" />
+      </div>
+      <div className="sm:col-span-2 flex items-center gap-2 pt-2">
+        <Button type="button" variant="outline" size="sm" onClick={onOpenMapPicker}>
+          <MapPin className="h-4 w-4 mr-1" /> Seleccionar en Mapa
+        </Button>
+        {latitude && longitude && (
+          <span className="text-xs text-muted-foreground">
+            Coordenadas: {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
+          </span>
+        )}
       </div>
     </>
   );

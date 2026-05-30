@@ -8,6 +8,8 @@ import { Textarea } from '@/presentation/shared/components/form/Textarea';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 import { useProvinces } from '@/presentation/modules/geo/hooks/useProvinces';
 import { useMunicipalities } from '@/presentation/modules/geo/hooks/useMunicipalities';
+import { MapPin } from 'lucide-react';
+import { MapPickerModal } from '@/presentation/shared/components/map/MapPickerModal';
 
 interface CustomerFormFieldsProps {
   onSubmit: (data: CreateCustomerData) => void;
@@ -29,6 +31,9 @@ export function CustomerFormFields({ onSubmit, onContinue, isSubmitting, onCance
   const [locality, setLocality] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [notes, setNotes] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [showMapPicker, setShowMapPicker] = useState(false);
   const [shouldContinue, setShouldContinue] = useState(false);
 
   const { data: provinces } = useProvinces();
@@ -46,6 +51,8 @@ export function CustomerFormFields({ onSubmit, onContinue, isSubmitting, onCance
     setStreet('');
     setLocality('');
     setZipCode('');
+    setLatitude('');
+    setLongitude('');
     setNotes('');
   };
 
@@ -61,6 +68,8 @@ export function CustomerFormFields({ onSubmit, onContinue, isSubmitting, onCance
     street: street || undefined,
     locality: locality || undefined,
     zipCode: zipCode || undefined,
+    latitude: latitude ? parseFloat(latitude) : undefined,
+    longitude: longitude ? parseFloat(longitude) : undefined,
     notes: notes || undefined,
   });
 
@@ -139,7 +148,32 @@ export function CustomerFormFields({ onSubmit, onContinue, isSubmitting, onCance
           <Input id="customer-zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)}
             placeholder="Código Postal" title="Código postal" />
         </div>
+        <div className="sm:col-span-2 flex items-center gap-2 pt-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => setShowMapPicker(true)}>
+            <MapPin className="h-4 w-4 mr-1" /> Seleccionar en Mapa
+          </Button>
+          {latitude && longitude && (
+            <span className="text-xs text-muted-foreground">
+              Coordenadas: {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
+            </span>
+          )}
+        </div>
       </div>
+      <MapPickerModal
+        open={showMapPicker}
+        province={province}
+        municipality={municipality}
+        initialLocation={latitude && longitude ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined}
+        onSelect={(lat, lng, entry) => {
+          setLatitude(lat.toString());
+          setLongitude(lng.toString());
+          if (entry?.parentName && !province) setProvince(entry.parentName);
+          if (entry?.extra?.municipality && !municipality) setMunicipality(entry.extra.municipality);
+          if (entry?.name && !street) setStreet(entry.name);
+          setShowMapPicker(false);
+        }}
+        onClose={() => setShowMapPicker(false)}
+      />
       <div className="space-y-1">
         <label htmlFor="notes" className="text-sm font-medium">Notas</label>
         <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." rows={3} />

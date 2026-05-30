@@ -9,6 +9,7 @@ import { SupplierContactFields } from './SupplierContactFields';
 import { SupplierAddressFields } from './SupplierAddressFields';
 import { useProvinces } from '@/presentation/modules/geo/hooks/useProvinces';
 import { useMunicipalities } from '@/presentation/modules/geo/hooks/useMunicipalities';
+import { MapPickerModal } from '@/presentation/shared/components/map/MapPickerModal';
 
 interface SupplierFormFieldsProps {
   onSubmit: (data: CreateSupplierData) => void;
@@ -28,6 +29,9 @@ export function SupplierFormFields({ onSubmit, onContinue, isSubmitting, onCance
   const [street, setStreet] = useState('');
   const [locality, setLocality] = useState('');
   const [zipCode, setZipCode] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [showMapPicker, setShowMapPicker] = useState(false);
   const [notes, setNotes] = useState('');
   const [shouldContinue, setShouldContinue] = useState(false);
 
@@ -45,6 +49,8 @@ export function SupplierFormFields({ onSubmit, onContinue, isSubmitting, onCance
     setStreet('');
     setLocality('');
     setZipCode('');
+    setLatitude('');
+    setLongitude('');
     setNotes('');
   };
 
@@ -59,6 +65,8 @@ export function SupplierFormFields({ onSubmit, onContinue, isSubmitting, onCance
     street: street || undefined,
     locality: locality || undefined,
     zipCode: zipCode || undefined,
+    latitude: latitude ? parseFloat(latitude) : undefined,
+    longitude: longitude ? parseFloat(longitude) : undefined,
     notes: notes || undefined,
   });
 
@@ -97,6 +105,8 @@ export function SupplierFormFields({ onSubmit, onContinue, isSubmitting, onCance
           street={street}
           locality={locality}
           zipCode={zipCode}
+          latitude={latitude}
+          longitude={longitude}
           provinces={provinces}
           municipalities={municipalities}
           onProvinceChange={setProvince}
@@ -104,6 +114,9 @@ export function SupplierFormFields({ onSubmit, onContinue, isSubmitting, onCance
           onStreetChange={setStreet}
           onLocalityChange={setLocality}
           onZipCodeChange={setZipCode}
+          onLatitudeChange={setLatitude}
+          onLongitudeChange={setLongitude}
+          onOpenMapPicker={() => setShowMapPicker(true)}
         />
       </div>
       <div className="space-y-1">
@@ -116,6 +129,21 @@ export function SupplierFormFields({ onSubmit, onContinue, isSubmitting, onCance
           rows={3}
         />
       </div>
+      <MapPickerModal
+        open={showMapPicker}
+        province={province}
+        municipality={municipality}
+        initialLocation={latitude && longitude ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined}
+        onSelect={(lat, lng, entry) => {
+          setLatitude(lat.toString());
+          setLongitude(lng.toString());
+          if (entry?.parentName && !province) setProvince(entry.parentName);
+          if (entry?.extra?.municipality && !municipality) setMunicipality(entry.extra.municipality);
+          if (entry?.name && !street) setStreet(entry.name);
+          setShowMapPicker(false);
+        }}
+        onClose={() => setShowMapPicker(false)}
+      />
       <div className="flex gap-2">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Guardando...' : 'Crear Proveedor'}

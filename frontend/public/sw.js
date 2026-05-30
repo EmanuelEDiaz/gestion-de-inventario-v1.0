@@ -2,6 +2,7 @@ const CACHES = {
   static: 'inventory-static-v2',
   pages: 'inventory-pages-v1',
   thumbs: 'inventory-thumbs-v1',
+  tiles: 'map-tiles-v1',
 };
 
 const THUMB_MAX_ENTRIES = 100;
@@ -58,6 +59,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (url.pathname.startsWith('/tiles/') || url.pathname.startsWith('/geo/')) {
+    event.respondWith(tilesCacheFirst(event));
+    return;
+  }
+
   if (request.destination === 'image') {
     event.respondWith(staleWhileRevalidate(event));
     return;
@@ -67,6 +73,23 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(staticCacheFirst(event));
   }
 });
+
+async function tilesCacheFirst(event) {
+  const { request } = event;
+  const cached = await caches.match(request, { cacheName: CACHES.tiles });
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      event.waitUntil(
+        caches.open(CACHES.tiles).then((c) => c.put(request, response.clone()))
+      );
+    }
+    return response;
+  } catch {
+    return new Response(null, { status: 404 });
+  }
+}
 
 async function thumbCacheFirst(event) {
   const { request } = event;
