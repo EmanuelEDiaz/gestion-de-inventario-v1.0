@@ -1,38 +1,37 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import type { DashboardStats, LowStockItem } from '@/core/dashboard/entities/dashboard';
+import { useQuery } from '@tanstack/react-query';
 import { DashboardRepository } from '@/infrastructure/repositories/dashboard/DashboardRepository';
-import { GetDashboardStatsUseCase, GetLowStockItemsUseCase } from '@/core/dashboard/use-cases/get-dashboard';
 
 const repo = new DashboardRepository();
-const getStats = new GetDashboardStatsUseCase(repo);
-const getLowStock = new GetLowStockItemsUseCase(repo);
+
+export function useDashboardStats() {
+  return useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: () => repo.getStats(),
+  });
+}
+
+export function useDashboardLowStock() {
+  return useQuery({
+    queryKey: ['dashboard-low-stock'],
+    queryFn: () => repo.getLowStockItems(),
+  });
+}
 
 export function useDashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const statsQuery = useDashboardStats();
+  const lowStockQuery = useDashboardLowStock();
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [statsData, lowStockData] = await Promise.all([
-        getStats.execute(),
-        getLowStock.execute()
-      ]);
-      setStats(statsData);
-      setLowStockItems(lowStockData);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar datos del dashboard');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  return { stats, lowStockItems, loading, error, refresh: fetchData };
+  return {
+    stats: statsQuery.data ?? null,
+    lowStockItems: lowStockQuery.data ?? [],
+    loading: statsQuery.isLoading || lowStockQuery.isLoading,
+    error: statsQuery.error || lowStockQuery.error,
+    refresh: () => {
+      statsQuery.refetch();
+      lowStockQuery.refetch();
+    },
+    errorMessage: statsQuery.error instanceof Error ? statsQuery.error.message : lowStockQuery.error instanceof Error ? lowStockQuery.error.message : null,
+  };
 }

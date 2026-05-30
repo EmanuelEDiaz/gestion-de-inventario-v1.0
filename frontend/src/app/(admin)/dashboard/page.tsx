@@ -2,13 +2,19 @@
 
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { useDashboard } from '@/presentation/modules/dashboard/hooks/useDashboard';
+import { useDashboardMetrics } from '@/presentation/modules/dashboard/hooks/useDashboardMetrics';
 import { DashboardStatsGrid } from '@/presentation/modules/dashboard/components/DashboardStatsGrid';
 import { LowStockList } from '@/presentation/modules/dashboard/components/LowStockList';
+import { ProfitSummaryCards } from '@/presentation/modules/dashboard/components/ProfitSummaryCards';
+import { SalesTimelineChart } from '@/presentation/modules/dashboard/components/SalesTimelineChart';
+import { TopProductsChart } from '@/presentation/modules/dashboard/components/TopProductsChart';
+import { TopCustomersChart } from '@/presentation/modules/dashboard/components/TopCustomersChart';
 import { formatCurrency } from '@/presentation/shared/lib/utils';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { stats, lowStockItems, loading, error } = useDashboard();
+  const { stats, lowStockItems, loading, errorMessage } = useDashboard();
+  const { profitSummary, inventoryValue, timeline, topProducts, topCustomers, loading: metricsLoading } = useDashboardMetrics();
 
   return (
     <div className="space-y-6">
@@ -19,9 +25,15 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {error && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">{error}</div>
+      {errorMessage && (
+        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">{errorMessage}</div>
       )}
+
+      <ProfitSummaryCards
+        profitSummary={profitSummary}
+        inventoryValue={inventoryValue}
+        loading={metricsLoading}
+      />
 
       {loading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -33,31 +45,21 @@ export default function DashboardPage() {
         <DashboardStatsGrid stats={stats} />
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Resumen Semanal</h2>
-          {stats ? (
-            <dl className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <dt className="text-gray-500">Ventas esta semana</dt>
-                <dd className="font-medium text-gray-900">{formatCurrency(stats.salesThisWeek)}</dd>
-              </div>
-              <div className="flex justify-between text-sm">
-                <dt className="text-gray-500">Compras esta semana</dt>
-                <dd className="font-medium text-gray-900">{formatCurrency(stats.purchasesThisWeek)}</dd>
-              </div>
-              <div className="flex justify-between text-sm">
-                <dt className="text-gray-500">Sin stock</dt>
-                <dd className={`font-medium ${stats.outOfStockCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                  {stats.outOfStockCount} producto{stats.outOfStockCount !== 1 ? 's' : ''}
-                </dd>
-              </div>
-            </dl>
-          ) : (
-            <div className="py-8 text-center text-gray-400 text-sm">Cargando...</div>
-          )}
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="xl:col-span-2">
+          <SalesTimelineChart data={timeline} />
         </div>
+        <div>
+          <WeeklySummaryCard stats={stats} />
+        </div>
+      </div>
 
+      <div className="grid gap-6 lg:grid-cols-2">
+        <TopProductsChart data={topProducts} />
+        <TopCustomersChart data={topCustomers} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
             Productos con Bajo Stock
@@ -70,6 +72,39 @@ export default function DashboardPage() {
           <LowStockList items={lowStockItems} />
         </div>
       </div>
+    </div>
+  );
+}
+
+function WeeklySummaryCard({ stats }: { stats: { salesThisWeek: number; purchasesThisWeek: number; outOfStockCount: number } | null }) {
+  if (!stats) {
+    return (
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">Resumen Semanal</h2>
+        <div className="py-8 text-center text-sm text-gray-400">Cargando...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg bg-white p-6 shadow">
+      <h2 className="mb-4 text-lg font-semibold text-gray-900">Resumen Semanal</h2>
+      <dl className="space-y-3">
+        <div className="flex justify-between text-sm">
+          <dt className="text-gray-500">Ventas esta semana</dt>
+          <dd className="font-medium text-gray-900">{formatCurrency(stats.salesThisWeek)}</dd>
+        </div>
+        <div className="flex justify-between text-sm">
+          <dt className="text-gray-500">Compras esta semana</dt>
+          <dd className="font-medium text-gray-900">{formatCurrency(stats.purchasesThisWeek)}</dd>
+        </div>
+        <div className="flex justify-between text-sm">
+          <dt className="text-gray-500">Sin stock</dt>
+          <dd className={`font-medium ${stats.outOfStockCount > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+            {stats.outOfStockCount} producto{stats.outOfStockCount !== 1 ? 's' : ''}
+          </dd>
+        </div>
+      </dl>
     </div>
   );
 }
