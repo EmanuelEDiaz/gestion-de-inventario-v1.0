@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Icons } from './SidebarIcons';
@@ -17,22 +17,31 @@ import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.confi
 import { useSyncStatus } from '@/presentation/shared/hooks/storage/useSyncStatus';
 import { useCacheProgress } from '@/presentation/shared/hooks/storage/useCacheProgress';
 import { Loader2 } from '../ui/icon-mapping';
+import { usePermission } from '@/presentation/shared/hooks/auth/usePermission';
+import { PERMISSION_ROUTES } from '@/presentation/shared/config/permission-routes';
+import { toast } from 'sonner';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const navigationSections = NAVIGATION_CONFIG.map((section) => ({
-  ...section,
-  label: section.title,
-  items: section.items.map(({ iconKey, ...rest }) => ({
-    ...rest,
-    icon: Icons[iconKey as keyof typeof Icons] ?? Icons.dashboard,
-  })),
-}));
-
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const { can } = usePermission();
+
+  const navigationSections = useMemo(() => NAVIGATION_CONFIG
+    .map((section) => ({
+      ...section,
+      label: section.title,
+      items: section.items
+        .filter((item) => !item.requiredPermission || can(item.requiredPermission))
+        .map(({ iconKey, ...rest }) => ({
+          ...rest,
+          icon: Icons[iconKey as keyof typeof Icons] ?? Icons.dashboard,
+        })),
+    }))
+    .filter((section) => section.items.length > 0), [can]);
+
   const { openSections, toggleSection } = useSidebarSections({
     sections: navigationSections, currentPathname: pathname,
   });
@@ -48,6 +57,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
 
   useEffect(() => { if (!hasHydrated) return; if (!isAuthenticated) router.push('/login'); }, [hasHydrated, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!hasHydrated || !isAuthenticated) return;
+    const required = PERMISSION_ROUTES[pathname];
+    if (required && !can(...(Array.isArray(required) ? required : [required]))) {
+      router.push('/dashboard');
+      toast.error('No tienes permiso para acceder a esta sección');
+    }
+  }, [pathname, hasHydrated, isAuthenticated]);
 
   const handleLogoutRequest = async () => {
     try { setPendingForLogout(await getOutboxCount()); } catch { setPendingForLogout(0); }

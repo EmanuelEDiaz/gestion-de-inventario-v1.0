@@ -7,6 +7,7 @@ import com.inventory.domain.ports.in.warehouse.WarehouseQueryPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -35,12 +36,14 @@ public class WarehouseController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('warehouses:read')")
     public Flux<WarehouseResponse> getAll(@RequestParam(defaultValue = "false") boolean activeOnly) {
         return warehouseQuery.findAll(activeOnly)
             .map(mapper::toResponse);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('warehouses:read')")
     public Mono<ResponseEntity<WarehouseResponse>> getById(@PathVariable UUID id) {
         return warehouseQuery.findById(id)
             .map(warehouse -> ResponseEntity.ok(mapper.toResponse(warehouse)))
@@ -48,6 +51,7 @@ public class WarehouseController {
     }
 
     @GetMapping("/code/{code}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('warehouses:read')")
     public Mono<ResponseEntity<WarehouseResponse>> getByCode(@PathVariable String code) {
         return warehouseQuery.findByCode(code)
             .map(warehouse -> ResponseEntity.ok(mapper.toResponse(warehouse)))
@@ -55,6 +59,7 @@ public class WarehouseController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('warehouses:create')")
     public Mono<ResponseEntity<WarehouseResponse>> create(@Valid @RequestBody CreateWarehouseRequest request) {
         var command = new WarehouseCommandPort.CreateWarehouseCommand(
             request.code(),
@@ -67,6 +72,7 @@ public class WarehouseController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('warehouses:update')")
     public Mono<ResponseEntity<WarehouseResponse>> update(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateWarehouseRequest request) {
@@ -95,6 +101,7 @@ public class WarehouseController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('warehouses:delete')")
     public Mono<ResponseEntity<Void>> delete(@PathVariable UUID id) {
         return warehouseQuery.findById(id)
             .flatMap(existing -> Mono.just(ResponseEntity.noContent().<Void>build()))
@@ -102,6 +109,7 @@ public class WarehouseController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('warehouses:update')")
     public Mono<ResponseEntity<WarehouseResponse>> deactivate(@PathVariable UUID id) {
         return warehouseCommand.deactivate(id)
             .map(deactivated -> ResponseEntity.ok(mapper.toResponse(deactivated)))
@@ -109,6 +117,7 @@ public class WarehouseController {
     }
 
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('warehouses:update')")
     public Mono<ResponseEntity<WarehouseResponse>> activate(@PathVariable UUID id) {
         return warehouseCommand.activate(id)
             .map(activated -> ResponseEntity.ok(mapper.toResponse(activated)))

@@ -36,7 +36,7 @@ public class CustomerDebtController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('finance:read')")
     public Flux<CustomerDebtDto> listAll(
         @RequestParam(required = false) String status
     ) {
@@ -47,25 +47,25 @@ public class CustomerDebtController {
     }
 
     @GetMapping("/overdue")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('finance:read')")
     public Flux<CustomerDebtDto> listOverdue() {
         return queryPort.listOverdue().map(mapper::toDto);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('finance:read')")
     public Mono<CustomerDebtDto> getById(@PathVariable UUID id) {
         return queryPort.getById(id).map(mapper::toDto);
     }
 
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('finance:read')")
     public Flux<CustomerDebtDto> listByCustomer(@PathVariable UUID customerId) {
         return queryPort.listByCustomer(customerId).map(mapper::toDto);
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('finance:update')")
     public Mono<CustomerDebtDto> update(
         @PathVariable UUID id,
         @RequestBody UpdateDebtRequest request
@@ -78,13 +78,13 @@ public class CustomerDebtController {
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('finance:delete')")
     public Mono<CustomerDebtDto> cancel(@PathVariable UUID id) {
         return commandPort.cancel(id).map(mapper::toDto);
     }
 
     @PostMapping("/{id}/payments")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('finance:create')")
     public Mono<DebtPaymentDto> registerPayment(
         @PathVariable UUID id,
         @Valid @RequestBody RegisterDebtPaymentRequest request,

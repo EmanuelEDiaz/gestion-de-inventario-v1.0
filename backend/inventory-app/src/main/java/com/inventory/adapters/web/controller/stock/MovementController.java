@@ -4,6 +4,7 @@ import com.inventory.application.stock.dto.MovementDto;
 import com.inventory.application.mapper.MovementMapper;
 import com.inventory.domain.model.stock.InventoryMovement;
 import com.inventory.domain.ports.in.stock.MovementQueryPort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,6 +28,7 @@ public class MovementController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Flux<MovementDto> getAll(
             @RequestParam(required = false) UUID warehouseId,
             @RequestParam(required = false) UUID productId,
@@ -51,12 +53,14 @@ public class MovementController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Mono<MovementDto> getById(@PathVariable UUID id) {
         return movementQueryPort.findById(id)
                 .map(mapper::toDto);
     }
 
     @GetMapping("/warehouse/{warehouseId}/product/{productId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Flux<MovementDto> getByWarehouseAndProduct(
             @PathVariable UUID warehouseId,
             @PathVariable UUID productId) {
@@ -66,6 +70,7 @@ public class MovementController {
     }
 
     @GetMapping("/document/{docType}/{docId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Flux<MovementDto> getByDocument(
             @PathVariable String docType,
             @PathVariable UUID docId) {
@@ -75,6 +80,7 @@ public class MovementController {
     }
 
     @GetMapping("/count")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Mono<Long> count(
             @RequestParam(required = false) String movementType) {
         

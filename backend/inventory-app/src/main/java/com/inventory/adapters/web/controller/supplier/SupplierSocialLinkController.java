@@ -28,14 +28,14 @@ public class SupplierSocialLinkController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('suppliers:read')")
     public Flux<SupplierSocialLinkDto> list(@PathVariable UUID supplierId) {
         return commandPort.listBySupplierId(supplierId).map(mapper::toDto);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('suppliers:update')")
     public Mono<SupplierSocialLinkDto> add(
         @PathVariable UUID supplierId,
         @Valid @RequestBody AddSocialLinkRequest request
@@ -51,7 +51,7 @@ public class SupplierSocialLinkController {
 
     @DeleteMapping("/{linkId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('suppliers:delete')")
     public Mono<Void> delete(
         @PathVariable UUID supplierId,
         @PathVariable UUID linkId

@@ -22,13 +22,13 @@ public class DashboardController {
     }
 
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('dashboard:read')")
     public Mono<DashboardQueryPort.DashboardStats> getStats() {
         return queryPort.getStats();
     }
 
     @GetMapping("/low-stock")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('dashboard:read')")
     public Flux<DashboardQueryPort.LowStockItem> getLowStockItems() {
         return queryPort.getLowStockItems();
     }

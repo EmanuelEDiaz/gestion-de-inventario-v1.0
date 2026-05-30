@@ -11,6 +11,7 @@ import com.inventory.domain.ports.out.CategoryRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -49,6 +50,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
     public Mono<ProductsPageResponse> getAll(
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size,
@@ -92,12 +94,14 @@ public class ProductController {
     ) {}
 
     @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
     public Flux<ProductResponse> search(@RequestParam String q) {
         return productQuery.search(q)
             .flatMap(this::enrichWithCategory);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
     public Mono<ResponseEntity<ProductResponse>> getById(@PathVariable UUID id) {
         return productQuery.findById(id)
             .flatMap(this::enrichWithCategory)
@@ -106,6 +110,7 @@ public class ProductController {
     }
 
     @GetMapping("/sku/{sku}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
     public Mono<ResponseEntity<ProductResponse>> getBySku(@PathVariable String sku) {
         return productQuery.findBySku(sku)
             .flatMap(this::enrichWithCategory)
@@ -114,6 +119,7 @@ public class ProductController {
     }
 
     @GetMapping("/barcode/{barcode}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
     public Mono<ResponseEntity<ProductResponse>> getByBarcode(@PathVariable String barcode) {
         return productQuery.findByBarcode(barcode)
             .flatMap(this::enrichWithCategory)
@@ -122,12 +128,14 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
     public Flux<ProductResponse> getByCategory(@PathVariable UUID categoryId) {
         return productQuery.findByCategory(categoryId)
             .flatMap(this::enrichWithCategory);
     }
 
     @GetMapping("/count")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
     public Mono<Long> count(@RequestParam(required = false) String status) {
         if (status != null) {
             return productQuery.countByStatus(Product.ProductStatus.valueOf(status.toUpperCase()));
@@ -136,6 +144,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('products:create')")
     public Mono<ResponseEntity<ProductResponse>> create(
             @Valid @RequestBody CreateProductRequest request,
             @AuthenticationPrincipal UserDetails user) {
@@ -157,6 +166,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('products:update')")
     public Mono<ResponseEntity<ProductResponse>> update(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateProductRequest request,
@@ -181,11 +191,13 @@ public class ProductController {
     }
 
     @DeleteMapping("/batch")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('products:delete')")
     public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
         return productCommand.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('products:delete')")
     public Mono<ResponseEntity<Void>> delete(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails user) {
@@ -195,6 +207,7 @@ public class ProductController {
     }
 
     @PostMapping("/{id}/archive")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('products:update')")
     public Mono<ResponseEntity<ProductResponse>> archive(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails user) {
@@ -205,6 +218,7 @@ public class ProductController {
     }
 
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('products:update')")
     public Mono<ResponseEntity<ProductResponse>> activate(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails user) {

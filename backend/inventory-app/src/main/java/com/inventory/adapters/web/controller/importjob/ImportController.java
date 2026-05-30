@@ -36,7 +36,7 @@ public class ImportController {
     }
 
     @PostMapping(value = "/csv", consumes = MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('imports:create')")
     public Mono<ImportResponse> uploadCsv(
         @RequestPart("file") FilePart file,
         @RequestPart("mapping") String mapping,
@@ -49,7 +49,7 @@ public class ImportController {
     }
 
     @PostMapping(value = "/dry-run", consumes = MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('imports:create')")
     public Mono<ImportResponse> dryRun(
         @RequestPart("file") FilePart file,
         @RequestPart("mapping") String mapping,
@@ -62,7 +62,7 @@ public class ImportController {
     }
 
     @GetMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('imports:create')")
     public Mono<ImportResponse> getStatus(@PathVariable UUID id) {
         return getImportJobStatusQuery.execute(id)
             .switchIfEmpty(Mono.error(
@@ -70,7 +70,7 @@ public class ImportController {
     }
 
     @GetMapping("/{id}/result")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('imports:create')")
     public Mono<ImportResponse> getResult(@PathVariable UUID id) {
         return getImportJobStatusQuery.execute(id)
             .switchIfEmpty(Mono.error(

@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/audit-logs")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') || hasAuthority('audit:read')")
 public class AuditLogController {
 
     private final AuditLogQueryUseCase queryUseCase;

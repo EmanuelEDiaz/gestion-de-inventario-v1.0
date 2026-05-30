@@ -10,6 +10,7 @@ import com.inventory.domain.ports.in.returns.ReturnQueryPort;
 import com.inventory.domain.ports.in.warehouse.WarehouseQueryPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -40,27 +41,32 @@ public class ReturnController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('returns:read')")
     public Flux<ReturnDto> findAll() {
         return queryPort.findAll().flatMap(this::enrichWithWarehouse);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('returns:read')")
     public Mono<ReturnDto> findById(@PathVariable UUID id) {
         return queryPort.findById(id).flatMap(this::enrichWithWarehouse);
     }
 
     @GetMapping("/warehouse/{warehouseId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('returns:read')")
     public Flux<ReturnDto> findByWarehouse(@PathVariable UUID warehouseId) {
         return queryPort.findByWarehouse(warehouseId).flatMap(this::enrichWithWarehouse);
     }
 
     @GetMapping("/type/{type}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('returns:read')")
     public Flux<ReturnDto> findByType(@PathVariable String type) {
         var returnType = Return.ReturnType.valueOf(type.toUpperCase());
         return queryPort.findByType(returnType).flatMap(this::enrichWithWarehouse);
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('returns:read')")
     public Flux<ReturnDto> findByStatus(@PathVariable String status) {
         var returnStatus = Return.ReturnStatus.valueOf(status.toUpperCase());
         return queryPort.findByStatus(returnStatus).flatMap(this::enrichWithWarehouse);
@@ -68,6 +74,7 @@ public class ReturnController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('returns:create')")
     public Mono<ReturnDto> create(@Valid @RequestBody CreateReturnRequest request,
                                    @AuthenticationPrincipal UserDetails user) {
         var command = buildCreateCommand(request, user);
@@ -75,6 +82,7 @@ public class ReturnController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('returns:update')")
     public Mono<ReturnDto> update(@PathVariable UUID id,
                                    @Valid @RequestBody UpdateReturnRequest request) {
         var command = buildUpdateCommand(id, request);
@@ -82,23 +90,27 @@ public class ReturnController {
     }
 
     @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('returns:update')")
     public Mono<ReturnDto> confirm(@PathVariable UUID id) {
         return commandPort.confirm(id).flatMap(this::enrichWithWarehouse);
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('returns:update')")
     public Mono<ReturnDto> cancel(@PathVariable UUID id) {
         return commandPort.cancel(id).flatMap(this::enrichWithWarehouse);
     }
 
     @DeleteMapping("/batch")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('returns:delete')")
     public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
         return commandPort.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('returns:delete')")
     public Mono<Void> delete(@PathVariable UUID id) {
         return commandPort.delete(id);
     }

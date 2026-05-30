@@ -8,6 +8,7 @@ import com.inventory.domain.ports.out.CategoryRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -42,18 +43,21 @@ public class CategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('categories:read')")
     public Flux<CategoryResponse> getAll(@RequestParam(defaultValue = "false") boolean activeOnly) {
         return categoryQuery.findAll(activeOnly)
             .map(mapper::toResponse);
     }
 
     @GetMapping("/roots")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('categories:read')")
     public Flux<CategoryResponse> getRoots() {
         return categoryQuery.findRootCategories()
             .map(mapper::toResponse);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('categories:read')")
     public Mono<ResponseEntity<CategoryResponse>> getById(@PathVariable UUID id) {
         return categoryQuery.findById(id)
             .map(category -> ResponseEntity.ok(mapper.toResponse(category)))
@@ -61,18 +65,21 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}/children")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('categories:read')")
     public Flux<CategoryResponse> getChildren(@PathVariable UUID id) {
         return categoryQuery.findByParent(id)
             .map(mapper::toResponse);
     }
 
     @GetMapping("/{id}/descendants")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('categories:read')")
     public Flux<CategoryResponse> getDescendants(@PathVariable UUID id) {
         return categoryRepository.findDescendants(id)
             .map(mapper::toResponse);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('categories:create')")
     public Mono<ResponseEntity<CategoryResponse>> create(
             @Valid @RequestBody CreateCategoryRequest request,
             @AuthenticationPrincipal UserDetails user) {
@@ -87,6 +94,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('categories:update')")
     public Mono<ResponseEntity<CategoryResponse>> update(
             @PathVariable UUID id,
             @Valid @RequestBody CreateCategoryRequest request,
@@ -102,11 +110,13 @@ public class CategoryController {
     }
 
     @DeleteMapping("/batch")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('categories:delete')")
     public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
         return categoryCommand.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('categories:delete')")
     public Mono<ResponseEntity<Void>> delete(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails user) {
@@ -116,6 +126,7 @@ public class CategoryController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('categories:update')")
     public Mono<ResponseEntity<CategoryResponse>> deactivate(@PathVariable UUID id) {
         return categoryQuery.findById(id)
             .flatMap(existing -> {
@@ -136,6 +147,7 @@ public class CategoryController {
     }
 
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('categories:update')")
     public Mono<ResponseEntity<CategoryResponse>> activate(@PathVariable UUID id) {
         return categoryQuery.findById(id)
             .flatMap(existing -> {

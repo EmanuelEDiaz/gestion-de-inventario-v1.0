@@ -27,13 +27,13 @@ public class SystemSettingsController {
     }
 
     @GetMapping("/system")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('settings:read')")
     public Flux<SystemSettingResponse> getAll() {
         return settingsService.getAll();
     }
 
     @PutMapping("/system/{key}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('settings:write')")
     public Mono<Void> update(
             @PathVariable String key,
             @RequestBody UpdateSettingRequest request,

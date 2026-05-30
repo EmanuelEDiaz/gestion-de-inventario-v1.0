@@ -32,7 +32,7 @@ public class ExportController {
     }
 
     @GetMapping(value = "/sales", produces = "text/csv")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('exports:read')")
     public Flux<String> exportSales(
         @RequestParam(required = false) Instant fromDate,
         @RequestParam(required = false) Instant toDate,
@@ -54,7 +54,7 @@ public class ExportController {
     }
 
     @GetMapping(value = "/inventory", produces = "text/csv")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('exports:read')")
     public Flux<String> exportInventory(
         @RequestParam(required = false) UUID warehouseId,
         @RequestParam(required = false) UUID categoryId,

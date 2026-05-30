@@ -38,7 +38,7 @@ public class CustomerController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('customers:read')")
     public Flux<CustomerDto> findAll(@RequestParam(required = false) Boolean active) {
         if (active != null) {
             return queryPort.findByActive(active).map(mapper::toDto);
@@ -47,26 +47,26 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('customers:read')")
     public Mono<CustomerDto> findById(@PathVariable UUID id) {
         return queryPort.findById(id).map(mapper::toDto);
     }
 
     @GetMapping("/code/{code}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('customers:read')")
     public Mono<CustomerDto> findByCode(@PathVariable String code) {
         return queryPort.findByCode(code).map(mapper::toDto);
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('customers:read')")
     public Flux<CustomerDto> search(@RequestParam String q) {
         return queryPort.search(q).map(mapper::toDto);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('customers:create')")
     public Mono<CustomerDto> create(@Valid @RequestBody CreateCustomerRequest request,
                                     @AuthenticationPrincipal UserDetails user) {
         return commandPort.create(new CustomerCommandPort.CreateCommand(
@@ -81,7 +81,7 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('customers:update')")
     public Mono<CustomerDto> update(@PathVariable UUID id, 
                                     @Valid @RequestBody UpdateCustomerRequest request,
                                     @AuthenticationPrincipal UserDetails user) {
@@ -97,14 +97,14 @@ public class CustomerController {
     }
 
     @PostMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('customers:update')")
     public Mono<CustomerDto> activate(@PathVariable UUID id,
                                       @AuthenticationPrincipal UserDetails user) {
         return commandPort.activate(id, extractUserId(user)).map(mapper::toDto);
     }
 
     @PostMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('customers:update')")
     public Mono<CustomerDto> deactivate(@PathVariable UUID id,
                                         @AuthenticationPrincipal UserDetails user) {
         return commandPort.deactivate(id, extractUserId(user)).map(mapper::toDto);
@@ -112,14 +112,14 @@ public class CustomerController {
 
     @DeleteMapping("/batch")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('customers:delete')")
     public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
         return commandPort.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('customers:delete')")
     public Mono<Void> delete(@PathVariable UUID id,
                              @AuthenticationPrincipal UserDetails user) {
         return commandPort.delete(id, extractUserId(user));

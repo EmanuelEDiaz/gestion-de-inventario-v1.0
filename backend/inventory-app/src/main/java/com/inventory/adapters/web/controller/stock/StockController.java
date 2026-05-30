@@ -3,6 +3,7 @@ package com.inventory.adapters.web.controller.stock;
 import com.inventory.application.stock.dto.StockBalanceDto;
 import com.inventory.application.mapper.StockBalanceMapper;
 import com.inventory.domain.ports.in.stock.StockQueryPort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -25,6 +26,7 @@ public class StockController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Flux<StockBalanceDto> getAllBalances(
             @RequestParam(required = false) UUID warehouseId,
             @RequestParam(required = false) UUID productId,
@@ -43,6 +45,7 @@ public class StockController {
     }
 
     @GetMapping("/warehouse/{warehouseId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Flux<StockBalanceDto> getByWarehouse(
             @PathVariable UUID warehouseId,
             @RequestParam(defaultValue = "false") boolean belowReorderOnly) {
@@ -52,12 +55,14 @@ public class StockController {
     }
 
     @GetMapping("/product/{productId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Flux<StockBalanceDto> getByProduct(@PathVariable UUID productId) {
         return stockQueryPort.getBalancesByProduct(productId)
                 .map(mapper::toDto);
     }
 
     @GetMapping("/warehouse/{warehouseId}/product/{productId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Mono<StockBalanceDto> getBalance(
             @PathVariable UUID warehouseId,
             @PathVariable UUID productId) {
@@ -67,6 +72,7 @@ public class StockController {
     }
 
     @GetMapping("/alerts/low-stock")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
     public Flux<StockBalanceDto> getLowStockAlerts() {
         return stockQueryPort.getLowStockAlerts()
                 .map(mapper::toDto);

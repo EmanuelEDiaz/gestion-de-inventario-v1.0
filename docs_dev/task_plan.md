@@ -106,7 +106,13 @@
 | **A7** — Offline: IndexedDB + SW + Sync | ✅ Hecho |
 | **A8** — Housekeeping | ✅ Hecho |
 | **B1** — Tooltips: Iconos + Copiar + Auditoría | ✅ Hecho |
-| **B2** — Permisos: Iconos por Sección + Validación en UI | ⏳ Pendiente |
+| **B2** — Permisos: Iconos por Sección + Validación en UI | ✅ Hecho |
+|   **B2.1** — permission-categories.ts config file | ✅ Hecho |
+|   **B2.2** — PermissionGroupSelector rewrite con iconos | ✅ Hecho |
+|   **B2.3** — usePermission() hook + `<Can>` component | ✅ Hecho |
+|   **B2.4** — Route guards (permission-routes.ts + DashboardLayout) | ✅ Hecho |
+|   **B2.5** — Sidebar filtering (navigation.config.ts + DashboardLayout) | ✅ Hecho |
+|   **B2.6** — Backend: V20 migration + seed + @PreAuthorize granular | ✅ Hecho |
 | **B3** — Dirección Estructurada (Provincia/Municipio/Calle) | ⏳ Pendiente |
 | **B4** — UX Formularios: Pre-llenado + Crear y Continuar | ⏳ Pendiente |
 | **B5** — Gráficos + Estadísticas + Métricas Dashboard | ⏳ Pendiente |

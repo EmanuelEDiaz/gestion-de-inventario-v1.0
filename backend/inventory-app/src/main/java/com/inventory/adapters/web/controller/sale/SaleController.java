@@ -7,6 +7,7 @@ import com.inventory.domain.model.sale.Sale;
 import com.inventory.domain.ports.in.sale.SaleCommandPort;
 import com.inventory.domain.ports.in.sale.SaleQueryPort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,7 @@ public class SaleController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('sales:read')")
     public Flux<SaleDto> getAll(
         @RequestParam(required = false) UUID warehouseId,
         @RequestParam(required = false) UUID customerId,
@@ -61,12 +63,14 @@ public class SaleController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('sales:read')")
     public Mono<SaleDto> getById(@PathVariable UUID id) {
         return saleQueryPort.findById(id)
             .map(saleMapper::toDto);
     }
 
     @GetMapping("/number/{saleNumber}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('sales:read')")
     public Mono<SaleDto> getByNumber(@PathVariable String saleNumber) {
         return saleQueryPort.findByNumber(saleNumber)
             .map(saleMapper::toDto);
@@ -74,6 +78,7 @@ public class SaleController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('sales:create')")
     public Mono<SaleDto> create(
         @RequestBody CreateSaleRequest request,
         @AuthenticationPrincipal UserDetails userDetails
@@ -99,18 +104,21 @@ public class SaleController {
     }
 
     @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('sales:update')")
     public Mono<SaleDto> confirm(@PathVariable UUID id) {
         return saleCommandPort.confirm(id)
             .map(saleMapper::toDto);
     }
 
     @PostMapping("/{id}/deliver")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('sales:update')")
     public Mono<SaleDto> deliver(@PathVariable UUID id) {
         return saleCommandPort.deliver(id)
             .map(saleMapper::toDto);
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('sales:update')")
     public Mono<SaleDto> cancel(@PathVariable UUID id) {
         return saleCommandPort.cancel(id)
             .map(saleMapper::toDto);
@@ -118,12 +126,14 @@ public class SaleController {
 
     @DeleteMapping("/batch")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('sales:delete')")
     public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
         return saleCommandPort.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('sales:delete')")
     public Mono<Void> delete(@PathVariable UUID id) {
         return saleCommandPort.delete(id);
     }

@@ -23,7 +23,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') || hasAuthority('users:read')")
 public class UserController {
 
     private final AdminUserQueryPort userQuery;

@@ -28,7 +28,7 @@ public class ReportController {
     }
 
     @GetMapping("/sales")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('reports:read')")
     public Mono<SalesReportResponse> getSalesReport(
         @RequestParam(required = false) Instant fromDate,
         @RequestParam(required = false) Instant toDate,
@@ -38,7 +38,7 @@ public class ReportController {
     }
 
     @GetMapping("/inventory")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('reports:read')")
     public Mono<InventoryReportResponse> getInventoryReport(
         @RequestParam(required = false) UUID warehouseId,
         @RequestParam(required = false) UUID categoryId

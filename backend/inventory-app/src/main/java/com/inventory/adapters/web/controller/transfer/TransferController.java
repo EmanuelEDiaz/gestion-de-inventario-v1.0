@@ -10,6 +10,7 @@ import com.inventory.domain.ports.in.transfer.TransferQueryPort;
 import com.inventory.domain.ports.in.warehouse.WarehouseQueryPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -46,31 +47,37 @@ public class TransferController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('transfers:read')")
     public Flux<TransferDto> getAll() {
         return queryPort.findAll().flatMap(this::enrichWithNames);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('transfers:read')")
     public Mono<TransferDto> getById(@PathVariable UUID id) {
         return queryPort.findById(id).flatMap(this::enrichWithNames);
     }
 
     @GetMapping("/from-warehouse/{warehouseId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('transfers:read')")
     public Flux<TransferDto> getByFromWarehouse(@PathVariable UUID warehouseId) {
         return queryPort.findByFromWarehouse(warehouseId).flatMap(this::enrichWithNames);
     }
 
     @GetMapping("/to-warehouse/{warehouseId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('transfers:read')")
     public Flux<TransferDto> getByToWarehouse(@PathVariable UUID warehouseId) {
         return queryPort.findByToWarehouse(warehouseId).flatMap(this::enrichWithNames);
     }
 
     @GetMapping("/warehouse/{warehouseId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('transfers:read')")
     public Flux<TransferDto> getByWarehouse(@PathVariable UUID warehouseId) {
         return queryPort.findByWarehouse(warehouseId).flatMap(this::enrichWithNames);
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('transfers:read')")
     public Flux<TransferDto> getByStatus(@PathVariable String status) {
         Transfer.TransferStatus transferStatus = Transfer.TransferStatus.valueOf(status.toUpperCase());
         return queryPort.findByStatus(transferStatus).flatMap(this::enrichWithNames);
@@ -78,6 +85,7 @@ public class TransferController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('transfers:create')")
     public Mono<TransferDto> create(
             @Valid @RequestBody CreateTransferRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -96,6 +104,7 @@ public class TransferController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('transfers:update')")
     public Mono<TransferDto> update(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateTransferRequest request) {
@@ -112,16 +121,19 @@ public class TransferController {
     }
 
     @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('transfers:update')")
     public Mono<TransferDto> confirm(@PathVariable UUID id) {
         return commandPort.confirm(id).flatMap(this::enrichWithNames);
     }
 
     @PostMapping("/{id}/ship")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('transfers:update')")
     public Mono<TransferDto> ship(@PathVariable UUID id) {
         return commandPort.ship(id).flatMap(this::enrichWithNames);
     }
 
     @PostMapping("/{id}/complete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('transfers:update')")
     public Mono<TransferDto> complete(
             @PathVariable UUID id,
             @RequestParam(required = false) LocalDate receivedDate) {
@@ -129,18 +141,21 @@ public class TransferController {
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('transfers:update')")
     public Mono<TransferDto> cancel(@PathVariable UUID id) {
         return commandPort.cancel(id).flatMap(this::enrichWithNames);
     }
 
     @DeleteMapping("/batch")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('transfers:delete')")
     public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
         return commandPort.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('transfers:delete')")
     public Mono<Void> delete(@PathVariable UUID id) {
         return commandPort.delete(id);
     }

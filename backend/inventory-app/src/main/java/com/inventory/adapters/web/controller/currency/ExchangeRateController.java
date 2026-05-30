@@ -31,6 +31,7 @@ public class ExchangeRateController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('exchange_rates:read')")
     public Flux<ExchangeRateResponse> getAll(
             @RequestParam(required = false) String baseCode,
             @RequestParam(required = false) String quoteCode,
@@ -39,6 +40,7 @@ public class ExchangeRateController {
     }
 
     @GetMapping("/latest")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('exchange_rates:read')")
     public Mono<ResponseEntity<ExchangeRateResponse>> getLatest(
             @RequestParam String baseCode,
             @RequestParam String quoteCode) {
@@ -48,7 +50,7 @@ public class ExchangeRateController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') || hasAuthority('exchange_rates:create')")
     public Mono<ResponseEntity<ExchangeRateResponse>> create(
             @Valid @RequestBody CreateExchangeRateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {

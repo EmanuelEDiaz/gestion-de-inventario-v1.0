@@ -10,6 +10,7 @@ import com.inventory.domain.ports.in.adjustment.AdjustmentQueryPort;
 import com.inventory.domain.ports.in.warehouse.WarehouseQueryPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -41,21 +42,25 @@ public class AdjustmentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('adjustments:read')")
     public Flux<AdjustmentDto> findAll() {
         return queryPort.findAll().flatMap(this::enrichWithWarehouse);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('adjustments:read')")
     public Mono<AdjustmentDto> findById(@PathVariable UUID id) {
         return queryPort.findById(id).flatMap(this::enrichWithWarehouse);
     }
 
     @GetMapping("/warehouse/{warehouseId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('adjustments:read')")
     public Flux<AdjustmentDto> findByWarehouse(@PathVariable UUID warehouseId) {
         return queryPort.findByWarehouse(warehouseId).flatMap(this::enrichWithWarehouse);
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('adjustments:read')")
     public Flux<AdjustmentDto> findByStatus(@PathVariable String status) {
         var adjustmentStatus = Adjustment.AdjustmentStatus.valueOf(status.toUpperCase());
         return queryPort.findByStatus(adjustmentStatus).flatMap(this::enrichWithWarehouse);
@@ -63,6 +68,7 @@ public class AdjustmentController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('adjustments:create')")
     public Mono<AdjustmentDto> create(@Valid @RequestBody CreateAdjustmentRequest request,
                                        @AuthenticationPrincipal UserDetails user) {
         var command = buildCreateCommand(request, user);
@@ -70,6 +76,7 @@ public class AdjustmentController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('adjustments:update')")
     public Mono<AdjustmentDto> update(@PathVariable UUID id,
                                        @Valid @RequestBody UpdateAdjustmentRequest request) {
         var command = buildUpdateCommand(id, request);
@@ -77,23 +84,27 @@ public class AdjustmentController {
     }
 
     @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('adjustments:update')")
     public Mono<AdjustmentDto> confirm(@PathVariable UUID id) {
         return commandPort.confirm(id).flatMap(this::enrichWithWarehouse);
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('adjustments:update')")
     public Mono<AdjustmentDto> cancel(@PathVariable UUID id) {
         return commandPort.cancel(id).flatMap(this::enrichWithWarehouse);
     }
 
     @DeleteMapping("/batch")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('adjustments:delete')")
     public Mono<Void> deleteBatch(@RequestBody List<UUID> ids) {
         return commandPort.deleteAll(ids);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('adjustments:delete')")
     public Mono<Void> delete(@PathVariable UUID id) {
         return commandPort.delete(id);
     }

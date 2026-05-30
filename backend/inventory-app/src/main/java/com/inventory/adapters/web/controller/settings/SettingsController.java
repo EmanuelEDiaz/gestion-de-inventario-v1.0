@@ -41,7 +41,7 @@ public class SettingsController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('settings:read')")
     public Mono<ResponseEntity<AppSettingsResponse>> getSettings() {
         return queryUseCase.execute()
                 .map(settings -> ResponseEntity.ok()
@@ -50,7 +50,7 @@ public class SettingsController {
     }
 
     @PatchMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('settings:write')")
     public Mono<ResponseEntity<AppSettingsResponse>> updateSettings(
             @Valid @RequestBody AppSettingsUpdateRequest request,
             @RequestHeader(value = "If-Match", required = false) String ifMatch,

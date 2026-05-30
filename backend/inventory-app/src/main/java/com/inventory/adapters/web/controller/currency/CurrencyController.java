@@ -27,11 +27,13 @@ public class CurrencyController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('currencies:read')")
     public Flux<CurrencyResponse> getAll() {
         return currencyQuery.findAll().map(this::toResponse);
     }
 
     @GetMapping("/{code}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('currencies:read')")
     public Mono<ResponseEntity<CurrencyResponse>> getByCode(@PathVariable String code) {
         return currencyQuery.findByCode(code)
             .map(c -> ResponseEntity.ok(toResponse(c)))
@@ -39,7 +41,7 @@ public class CurrencyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('currencies:create')")
     public Mono<ResponseEntity<CurrencyResponse>> create(@Valid @RequestBody CreateCurrencyRequest request) {
         var command = new CurrencyCommandPort.CreateCurrencyCommand(
             request.code(), request.name(), request.symbol()
@@ -49,7 +51,7 @@ public class CurrencyController {
     }
 
     @PatchMapping("/{code}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('currencies:update')")
     public Mono<ResponseEntity<CurrencyResponse>> update(
             @PathVariable String code,
             @Valid @RequestBody UpdateCurrencyRequest request) {

@@ -7,6 +7,7 @@ import com.inventory.domain.model.purchase.Purchase;
 import com.inventory.domain.ports.in.purchase.PurchaseCommandPort;
 import com.inventory.domain.ports.in.purchase.PurchaseQueryPort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,7 @@ public class PurchaseController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('purchases:read')")
     public Flux<PurchaseDto> getAll(
             @RequestParam(required = false) UUID supplierId,
             @RequestParam(required = false) UUID warehouseId,
@@ -55,17 +57,20 @@ public class PurchaseController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('purchases:read')")
     public Mono<PurchaseDto> getById(@PathVariable UUID id) {
         return queryPort.findById(id).map(mapper::toDto);
     }
 
     @GetMapping("/number/{purchaseNumber}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('purchases:read')")
     public Mono<PurchaseDto> getByNumber(@PathVariable String purchaseNumber) {
         return queryPort.findByNumber(purchaseNumber).map(mapper::toDto);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('purchases:create')")
     public Mono<PurchaseDto> create(
             @RequestBody CreatePurchaseRequest request,
             @AuthenticationPrincipal UserDetails user) {
@@ -89,11 +94,13 @@ public class PurchaseController {
     }
 
     @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('purchases:update')")
     public Mono<PurchaseDto> confirm(@PathVariable UUID id, @AuthenticationPrincipal UserDetails user) {
         return commandPort.confirm(id, extractUserId(user)).map(mapper::toDto);
     }
 
     @PostMapping("/{id}/receive")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('purchases:update')")
     public Mono<PurchaseDto> receive(
             @PathVariable UUID id,
             @RequestParam(required = false) LocalDate receivedDate,
@@ -102,18 +109,21 @@ public class PurchaseController {
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('purchases:update')")
     public Mono<PurchaseDto> cancel(@PathVariable UUID id, @AuthenticationPrincipal UserDetails user) {
         return commandPort.cancel(id, extractUserId(user)).map(mapper::toDto);
     }
 
     @DeleteMapping("/batch")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('purchases:delete')")
     public Mono<Void> deleteBatch(@RequestBody List<UUID> ids, @AuthenticationPrincipal UserDetails user) {
         return commandPort.deleteAll(ids, extractUserId(user));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('purchases:delete')")
     public Mono<Void> delete(@PathVariable UUID id, @AuthenticationPrincipal UserDetails user) {
         return commandPort.delete(id, extractUserId(user));
     }

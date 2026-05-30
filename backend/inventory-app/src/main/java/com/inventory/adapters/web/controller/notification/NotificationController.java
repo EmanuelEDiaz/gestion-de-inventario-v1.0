@@ -158,7 +158,7 @@ public class NotificationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('settings:read')")
     public Mono<NotificationDto> create(
         @Valid @RequestBody CreateNotificationRequest request,
         @AuthenticationPrincipal UserDetails userDetails

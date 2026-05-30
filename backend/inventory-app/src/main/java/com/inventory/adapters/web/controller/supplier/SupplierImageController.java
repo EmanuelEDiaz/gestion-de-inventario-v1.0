@@ -28,14 +28,14 @@ public class SupplierImageController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('suppliers:read')")
     public Flux<SupplierImageDto> listImages(@PathVariable UUID supplierId) {
         return commandPort.listBySupplierId(supplierId).map(mapper::toDto);
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('suppliers:update')")
     public Mono<SupplierImageDto> upload(
         @PathVariable UUID supplierId,
         @RequestPart("file") FilePart file,
@@ -58,7 +58,7 @@ public class SupplierImageController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('suppliers:update')")
     public Mono<SupplierImageDto> uploadLegacy(
         @PathVariable UUID supplierId,
         @RequestBody UploadRequest body
@@ -70,7 +70,7 @@ public class SupplierImageController {
     }
 
     @PostMapping("/{imageId}/primary")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('suppliers:update')")
     public Mono<SupplierImageDto> setPrimary(
         @PathVariable UUID supplierId,
         @PathVariable UUID imageId
@@ -80,7 +80,7 @@ public class SupplierImageController {
 
     @DeleteMapping("/{imageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('suppliers:delete')")
     public Mono<Void> delete(
         @PathVariable UUID supplierId,
         @PathVariable UUID imageId

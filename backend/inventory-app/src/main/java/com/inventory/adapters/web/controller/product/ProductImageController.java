@@ -29,14 +29,14 @@ public class ProductImageController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
     public Flux<ProductImageDto> listImages(@PathVariable UUID productId) {
         return commandPort.listByProduct(productId).map(mapper::toDto);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('products:update')")
     public Mono<ProductImageDto> uploadJson(
         @PathVariable UUID productId,
         @RequestBody UploadRequest body
@@ -57,7 +57,7 @@ public class ProductImageController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('products:update')")
     public Mono<ProductImageDto> uploadMultipart(
         @PathVariable UUID productId,
         @RequestPart("file") FilePart file,
@@ -92,7 +92,7 @@ public class ProductImageController {
     ) {}
 
     @PostMapping("/{imageId}/primary")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('products:update')")
     public Mono<ProductImageDto> setPrimary(
         @PathVariable UUID productId,
         @PathVariable UUID imageId
@@ -102,7 +102,7 @@ public class ProductImageController {
 
     @DeleteMapping("/{imageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasAuthority('products:delete')")
     public Mono<Void> delete(
         @PathVariable UUID productId,
         @PathVariable UUID imageId
