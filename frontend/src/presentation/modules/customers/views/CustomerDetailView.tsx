@@ -14,6 +14,7 @@ import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpi
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { formatDateShort } from '@/presentation/shared/lib/utils';
 import { ArrowLeft } from '@/presentation/shared/components/ui/icon-mapping';
+import { LocationShareButton } from '@/presentation/shared/components/location/LocationShareButton';
 
 type Tab = 'info' | 'images' | 'debts';
 
@@ -91,6 +92,18 @@ export function CustomerDetailView({ customerId, onBack }: CustomerDetailViewPro
                 <div className="col-span-2">
                   <dt className="text-gray-500">Notas</dt>
                   <dd className="mt-0.5">{customer.notes}</dd>
+                </div>
+              )}
+              {customer.latitude != null && customer.longitude != null && (
+                <div className="col-span-2 flex items-center gap-2 pt-2 border-t">
+                  <LocationShareButton
+                    place={{
+                      name: customer.name,
+                      lat: customer.latitude,
+                      lng: customer.longitude,
+                      address: customer.address ?? undefined,
+                    }}
+                  />
                 </div>
               )}
             </dl>

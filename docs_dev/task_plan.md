@@ -149,7 +149,10 @@
 |   **B8.7** — SW: Cache tiles + geo index en sw.js | ✅ Hecho |
 |   **B8.8** — Settings: MapSettingsPanel + maps.* system settings | ✅ Hecho |
 |   **B8.9** — Script build-time: generate-geo-index.mjs | ✅ Hecho |
-| **B9** — Compartir Ubicación (Deep Links sin API externa) | ⏳ Pendiente |
+| **B9** — Compartir Ubicación (Deep Links sin API externa) | ✅ Hecho |
+|   **B9.1** — Utility locationShare.ts (buildShareLinks) | ✅ Hecho |
+|   **B9.2** — Component LocationShareButton.tsx (dropdown: maps, waze, whatsapp, copy) | ✅ Hecho |
+|   **B9.3** — Integración en SupplierContactList + CustomerDetailView | ✅ Hecho |
 
 ---
 

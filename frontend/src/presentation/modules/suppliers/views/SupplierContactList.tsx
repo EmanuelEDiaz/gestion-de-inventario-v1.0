@@ -1,6 +1,7 @@
 'use client';
 
 import { formatDateShort } from '@/presentation/shared/lib/utils';
+import { LocationShareButton } from '@/presentation/shared/components/location/LocationShareButton';
 
 interface SupplierContactListProps {
   supplier: {
@@ -10,6 +11,8 @@ interface SupplierContactListProps {
     email?: string | null;
     website?: string | null;
     address?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     createdAt: string;
     notes?: string | null;
   };
@@ -29,6 +32,18 @@ export function SupplierContactList({ supplier }: SupplierContactListProps) {
         <div className="col-span-2">
           <dt className="text-gray-500">Notas</dt>
           <dd className="mt-0.5">{supplier.notes}</dd>
+        </div>
+      )}
+      {supplier.latitude != null && supplier.longitude != null && (
+        <div className="col-span-2 flex items-center gap-2 pt-2 border-t">
+          <LocationShareButton
+            place={{
+              name: supplier.contactName ?? 'Ubicación',
+              lat: supplier.latitude,
+              lng: supplier.longitude,
+              address: supplier.address ?? undefined,
+            }}
+          />
         </div>
       )}
     </dl>
