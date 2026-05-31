@@ -3,6 +3,7 @@
 import { cn } from '@/presentation/shared/lib/utils';
 import { TableBody, TableCell, TableRow } from '../ui/table';
 import { IconButton } from '../form/IconButton';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import type { Column, TableAction } from './GenericTable';
 
 function getValue(row: unknown, key: string): unknown {
@@ -35,12 +36,13 @@ export function GenericTableBody<T extends { id: string }>({
           onClick={() => onRowClick?.(row)}>
           {selectable && (
             <TableCell className="w-10 text-center" onClick={(e) => e.stopPropagation()}>
-              <input
-                type="checkbox" checked={selectedIds?.has(row.id) ?? false}
-                onChange={() => onToggleOne?.(row.id)}
-                title="Seleccionar fila"
-                className="h-4 w-4 cursor-pointer rounded border-gray-300"
-              />
+              <TooltipWrapper content="Seleccionar fila">
+                <input
+                  type="checkbox" checked={selectedIds?.has(row.id) ?? false}
+                  onChange={() => onToggleOne?.(row.id)}
+                  className="h-4 w-4 cursor-pointer rounded border-gray-300"
+                />
+              </TooltipWrapper>
             </TableCell>
           )}
           {columns.map((col) => (

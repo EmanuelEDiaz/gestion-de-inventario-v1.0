@@ -63,6 +63,13 @@ public class CurrencyController {
             .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/{code}")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('currencies:delete')")
+    public Mono<ResponseEntity<Void>> delete(@PathVariable String code) {
+        return currencyCommand.delete(code)
+            .then(Mono.just(ResponseEntity.noContent().build()));
+    }
+
     private CurrencyResponse toResponse(Currency c) {
         return new CurrencyResponse(c.getCode(), c.getName(), c.getSymbol(), c.isActive());
     }

@@ -2,6 +2,7 @@
 
 import { cn } from '@/presentation/shared/lib/utils';
 import { TableHead, TableHeader, TableRow } from '../ui/table';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import type { Column, TableAction } from './GenericTable';
 
 interface SortIconProps { active: boolean; direction?: 'asc' | 'desc'; }
@@ -40,12 +41,14 @@ export function GenericTableHeader<T>({
       <TableRow className="border-b-0 bg-muted/30 hover:bg-transparent">
         {selectable && (
           <TableHead className="w-10 text-center">
-            <input
-              type="checkbox" checked={!!isAllSelected}
-              ref={(el) => { if (el) el.indeterminate = !!isIndeterminate; }}
-              onChange={onToggleAll} title="Seleccionar todos"
-              className="h-4 w-4 cursor-pointer rounded border-gray-300"
-            />
+            <TooltipWrapper content="Seleccionar todos">
+              <input
+                type="checkbox" checked={!!isAllSelected}
+                ref={(el) => { if (el) el.indeterminate = !!isIndeterminate; }}
+                onChange={onToggleAll}
+                className="h-4 w-4 cursor-pointer rounded border-gray-300"
+              />
+            </TooltipWrapper>
           </TableHead>
         )}
         {columns.map((col) => (

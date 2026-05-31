@@ -33,8 +33,19 @@ public class CurrencyRepositoryAdapter implements CurrencyRepositoryPort {
     }
 
     @Override
+    public Mono<Void> deleteByCode(String code) {
+        return r2dbc.deleteById(code);
+    }
+
+    @Override
     public Mono<Currency> save(Currency currency) {
-        return r2dbc.save(toEntity(currency)).map(this::toDomain);
+        var entity = toEntity(currency);
+        return r2dbc.existsById(entity.getCode())
+            .flatMap(exists -> {
+                entity.setNew(!exists);
+                return r2dbc.save(entity);
+            })
+            .map(this::toDomain);
     }
 
     private Currency toDomain(CurrencyEntity e) {

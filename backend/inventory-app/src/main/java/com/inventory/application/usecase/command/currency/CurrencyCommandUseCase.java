@@ -1,5 +1,6 @@
 package com.inventory.application.usecase.command.currency;
 
+import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.currency.Currency;
 import com.inventory.domain.ports.in.currency.CurrencyCommandPort;
 import com.inventory.domain.ports.out.CurrencyRepositoryPort;
@@ -31,5 +32,12 @@ public class CurrencyCommandUseCase implements CurrencyCommandPort {
                 Currency updated = new Currency(existing.getCode(), newName, newSymbol, active, existing.getCreatedAt());
                 return repository.save(updated);
             });
+    }
+
+    @Override
+    public Mono<Void> delete(String code) {
+        return repository.findByCode(code.toUpperCase())
+            .switchIfEmpty(Mono.error(new NotFoundException("Moneda no encontrada: " + code)))
+            .flatMap(existing -> repository.deleteByCode(existing.getCode()));
     }
 }

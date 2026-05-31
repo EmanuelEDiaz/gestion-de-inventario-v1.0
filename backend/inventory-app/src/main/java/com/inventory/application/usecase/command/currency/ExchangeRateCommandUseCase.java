@@ -1,5 +1,6 @@
 package com.inventory.application.usecase.command.currency;
 
+import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
 import com.inventory.domain.model.currency.ExchangeRate;
 import com.inventory.domain.ports.in.currency.ExchangeRateCommandPort;
@@ -22,15 +23,23 @@ public class ExchangeRateCommandUseCase implements ExchangeRateCommandPort {
     public Mono<ExchangeRate> create(CreateExchangeRateCommand command) {
         ExchangeRate.RateType rateType = parseRateType(command.rateType());
 
-        ExchangeRate entity = ExchangeRate.create(
-            command.baseCode(),
-            command.quoteCode(),
-            command.rate(),
-            rateType,
-            command.validFrom(),
-            command.createdBy()
-        );
-        return repository.save(entity);
+        return repository.existsByPair(command.baseCode(), command.quoteCode())
+            .flatMap(exists -> {
+                if (exists) {
+                    return Mono.error(new ConflictException(
+                        "Ya existe una tasa para el par " + command.baseCode() + "/" + command.quoteCode()
+                    ));
+                }
+                ExchangeRate entity = ExchangeRate.create(
+                    command.baseCode(),
+                    command.quoteCode(),
+                    command.rate(),
+                    rateType,
+                    command.validFrom(),
+                    command.createdBy()
+                );
+                return repository.save(entity);
+            });
     }
 
     @Override

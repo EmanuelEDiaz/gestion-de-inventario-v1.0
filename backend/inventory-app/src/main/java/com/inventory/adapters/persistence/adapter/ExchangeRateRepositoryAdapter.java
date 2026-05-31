@@ -55,6 +55,16 @@ public class ExchangeRateRepositoryAdapter implements ExchangeRateRepository {
         return r2dbc.deleteById(id);
     }
 
+    @Override
+    public Mono<Boolean> existsByPair(String baseCode, String quoteCode) {
+        return r2dbc.existsByPair(baseCode, quoteCode);
+    }
+
+    @Override
+    public Mono<Boolean> existsByBaseCodeAndQuoteCode(String baseCode, String quoteCode) {
+        return r2dbc.existsByBaseCodeAndQuoteCode(baseCode, quoteCode);
+    }
+
     private ExchangeRate toDomain(ExchangeRateEntity e) {
         return new ExchangeRate(
             e.getId(), e.getBaseCode(), e.getQuoteCode(), e.getRate(),

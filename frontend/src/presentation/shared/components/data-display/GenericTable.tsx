@@ -10,6 +10,7 @@ import { GenericTableHeader } from './GenericTableHeader';
 import { GenericTableBody } from './GenericTableBody';
 import { useTableSelection } from '@/presentation/shared/hooks/ui/useTableSelection';
 import { ConfirmDialog } from '@/presentation/shared/components/ui/ConfirmDialog';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 
 export interface Column<T> {
   key: string;
@@ -144,35 +145,40 @@ export function GenericTable<T extends { id: string }>({
     <div className={cn('relative w-full space-y-2', className)}>
       {selectable && selectedIds.size > 0 && (
         <div className="flex flex-col gap-2 rounded-lg border border-muted bg-muted/30 p-3 sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:py-2">
-          <span className="text-sm text-muted-foreground" title="Cantidad de filas seleccionadas">
-            {selectedIds.size} seleccionado(s)
-          </span>
+          <TooltipWrapper content="Cantidad de filas seleccionadas">
+            <span className="text-sm text-muted-foreground">
+              {selectedIds.size} seleccionado(s)
+            </span>
+          </TooltipWrapper>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
             {bulkActions?.map((ba, i) => (
-              <Button key={i}
-                variant={ba.variant ?? 'default'} size="sm"
-                onClick={() => handleBulkClick(ba)}
-                disabled={ba.disabled?.(selectedIds)}
-                className="w-full min-h-[44px] sm:w-auto sm:min-h-0"
-                title={ba.label}>
-                {ba.icon && <ba.icon className="mr-1 h-4 w-4" />}
-                {ba.label}
-              </Button>
+              <TooltipWrapper key={i} content={ba.label}>
+                <Button
+                  variant={ba.variant ?? 'default'} size="sm"
+                  onClick={() => handleBulkClick(ba)}
+                  disabled={ba.disabled?.(selectedIds)}
+                  className="w-full min-h-[44px] sm:w-auto sm:min-h-0">
+                  {ba.icon && <ba.icon className="mr-1 h-4 w-4" />}
+                  {ba.label}
+                </Button>
+              </TooltipWrapper>
             ))}
             {onDeleteSelected && (
-              <Button variant="destructive" size="sm"
-                onClick={handleDeleteSelected}
-                className="w-full min-h-[44px] sm:w-auto sm:min-h-0"
-                title="Eliminar los elementos seleccionados">
-                <Trash2 className="mr-1 h-4 w-4" />
-                Eliminar
-              </Button>
+              <TooltipWrapper content="Eliminar los elementos seleccionados">
+                <Button variant="destructive" size="sm"
+                  onClick={handleDeleteSelected}
+                  className="w-full min-h-[44px] sm:w-auto sm:min-h-0">
+                  <Trash2 className="mr-1 h-4 w-4" />
+                  Eliminar
+                </Button>
+              </TooltipWrapper>
             )}
-            <Button variant="ghost" size="sm" onClick={clearSelection}
-              className="w-full min-h-[44px] sm:w-auto sm:min-h-0"
-              title="Cancelar selección">
-              Cancelar
-            </Button>
+            <TooltipWrapper content="Cancelar selección">
+              <Button variant="ghost" size="sm" onClick={clearSelection}
+                className="w-full min-h-[44px] sm:w-auto sm:min-h-0">
+                Cancelar
+              </Button>
+            </TooltipWrapper>
           </div>
         </div>
       )}

@@ -9,6 +9,8 @@ public interface CurrencyCommandPort {
 
     Mono<Currency> update(String code, UpdateCurrencyCommand command);
 
+    Mono<Void> delete(String code);
+
     // ===== Command Records =====
 
     record CreateCurrencyCommand(

@@ -20,4 +20,8 @@ public interface ExchangeRateRepository {
     Mono<ExchangeRate> save(ExchangeRate exchangeRate);
 
     Mono<Void> deleteById(UUID id);
+
+    Mono<Boolean> existsByPair(String baseCode, String quoteCode);
+
+    Mono<Boolean> existsByBaseCodeAndQuoteCode(String baseCode, String quoteCode);
 }

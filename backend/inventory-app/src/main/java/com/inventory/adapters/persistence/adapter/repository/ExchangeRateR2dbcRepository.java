@@ -15,4 +15,9 @@ public interface ExchangeRateR2dbcRepository extends ReactiveCrudRepository<Exch
 
     @Query("SELECT * FROM exchange_rates WHERE base_code = :baseCode AND quote_code = :quoteCode ORDER BY valid_from DESC LIMIT 1")
     Mono<ExchangeRateEntity> findLatest(String baseCode, String quoteCode);
+
+    @Query("SELECT EXISTS(SELECT 1 FROM exchange_rates WHERE (base_code = :a AND quote_code = :b) OR (base_code = :b AND quote_code = :a))")
+    Mono<Boolean> existsByPair(String a, String b);
+
+    Mono<Boolean> existsByBaseCodeAndQuoteCode(String baseCode, String quoteCode);
 }

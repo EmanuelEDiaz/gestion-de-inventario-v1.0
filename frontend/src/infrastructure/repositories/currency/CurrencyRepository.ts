@@ -36,6 +36,13 @@ export class CurrencyRepository implements ICurrencyRepository {
     const response = await apiClient.patch<Currency>(`${this.basePath}/${code}`, data, { headers });
     return response.data;
   }
+
+  async delete(code: string): Promise<void> {
+    if (!isOnline()) {
+      throw new Error('Requiere conexión a internet para eliminar monedas');
+    }
+    await apiClient.delete(`${this.basePath}/${code}`);
+  }
 }
 
 export const currencyRepository = new CurrencyRepository();

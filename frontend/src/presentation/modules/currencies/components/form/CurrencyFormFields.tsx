@@ -1,20 +1,49 @@
 'use client';
 
-import { useState } from 'react';
-import type { CreateCurrencyInput } from '@/core/currency/entities/currency';
-import { Button } from '@/presentation/shared/components/ui/Button';
-import { Input } from '@/presentation/shared/components/ui/Input';
+import { useState, useMemo } from 'react';
+import type { CreateCurrencyInput, Currency } from '@/core/currency/entities/currency';
+import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
 
 interface CurrencyFormFieldsProps {
+  initialData?: Currency;
+  initialValues?: Partial<CreateCurrencyInput>;
   onSubmit: (data: CreateCurrencyInput) => void;
   isSubmitting: boolean;
   onCancel: () => void;
 }
 
-export function CurrencyFormFields({ onSubmit, isSubmitting, onCancel }: CurrencyFormFieldsProps) {
-  const [code, setCode] = useState('');
-  const [name, setName] = useState('');
-  const [symbol, setSymbol] = useState('');
+export function CurrencyFormFields({ initialData, initialValues, onSubmit, isSubmitting, onCancel }: CurrencyFormFieldsProps) {
+  const isEditing = !!initialData;
+
+  const [code, setCode] = useState(initialData?.code ?? initialValues?.code ?? '');
+  const [name, setName] = useState(initialData?.name ?? initialValues?.name ?? '');
+  const [symbol, setSymbol] = useState(initialData?.symbol ?? initialValues?.symbol ?? '');
+
+  const values = { code, name, symbol };
+  const onChange = (field: string, value: string) => {
+    if (field === 'code') setCode(value.toUpperCase());
+    else if (field === 'name') setName(value);
+    else if (field === 'symbol') setSymbol(value);
+  };
+
+  const fieldConfigs = useMemo(() => [
+    {
+      name: 'code', label: 'Código ISO', type: 'text' as const, required: true,
+      placeholder: 'USD', maxLength: 3, disabled: isEditing,
+      hint: 'Código ISO de 3 letras',
+      hintDescription: 'Ej: CUP, USD, EUR. No se puede modificar después de crear.',
+    },
+    {
+      name: 'name', label: 'Nombre', type: 'text' as const, required: true,
+      placeholder: 'Dólar estadounidense',
+      hint: 'Nombre completo de la moneda',
+    },
+    {
+      name: 'symbol', label: 'Símbolo', type: 'text' as const,
+      placeholder: '$', maxLength: 5,
+      hint: 'Símbolo que se muestra junto a los montos',
+    },
+  ], [isEditing]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,51 +51,19 @@ export function CurrencyFormFields({ onSubmit, isSubmitting, onCancel }: Currenc
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
-        <div className="space-y-1">
-          <label htmlFor="code" className="text-sm font-medium">Código ISO</label>
-          <Input
-            id="code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="USD"
-            maxLength={3}
-            required
-            title="Código ISO de 3 letras (ej: CUP, USD, EUR)"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="name" className="text-sm font-medium">Nombre</label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Dólar estadounidense"
-            required
-            title="Nombre completo de la moneda"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="symbol" className="text-sm font-medium">Símbolo</label>
-          <Input
-            id="symbol"
-            value={symbol}
-            onChange={(e) => setSymbol(e.target.value)}
-            placeholder="$"
-            maxLength={5}
-            title="Símbolo que se muestra junto a los montos"
-          />
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : 'Crear Moneda'}
-        </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-      </div>
-    </form>
+    <EntityForm
+      title={isEditing ? 'Editar Moneda' : 'Nueva Moneda'}
+      fields={fieldConfigs}
+      values={values}
+      onChange={onChange}
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+      isSubmitting={isSubmitting}
+      isEditing={isEditing}
+      submitLabel={isEditing ? 'Actualizar Moneda' : 'Crear Moneda'}
+      submitLoadingLabel={isEditing ? 'Actualizando...' : 'Guardando...'}
+      initialValues={isEditing ? undefined : initialValues}
+      storageKey="currency-create"
+    />
   );
 }

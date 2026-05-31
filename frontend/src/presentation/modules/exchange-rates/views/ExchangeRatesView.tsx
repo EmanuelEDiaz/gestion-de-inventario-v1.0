@@ -45,11 +45,11 @@ export function ExchangeRatesView() {
   }, [rates, search, filters]);
 
   const COLUMNS: Column<ExchangeRate>[] = [
-    { key: 'baseCode', label: 'Par', render: (_, r) => <span className="font-mono font-medium" title="Par de monedas">{r.baseCode}/{r.quoteCode}</span> },
-    { key: 'rate', label: 'Tasa', render: (_, r) => <span className="font-mono" title="Tasa de cambio">{r.rate.toFixed(4)}</span> },
-    { key: 'rateType', label: 'Tipo', render: (_, r) => <span title="Tipo de tasa">{RATE_TYPE_LABELS[r.rateType]}</span> },
-    { key: 'validFrom', label: 'Válida desde', render: (_, r) => <span title="Fecha desde la que aplica">{new Date(r.validFrom).toLocaleDateString('es')}</span> },
-    { key: 'createdAt', label: 'Creada', render: (_, r) => <span title="Fecha de registro">{new Date(r.createdAt).toLocaleDateString('es')}</span> },
+    { key: 'baseCode', label: 'Par', render: (_, r) => <TooltipWrapper content="Par de monedas"><span className="font-mono font-medium">{r.baseCode}/{r.quoteCode}</span></TooltipWrapper> },
+    { key: 'rate', label: 'Tasa', render: (_, r) => <TooltipWrapper content="Tasa de cambio"><span className="font-mono">{r.rate.toFixed(4)}</span></TooltipWrapper> },
+    { key: 'rateType', label: 'Tipo', render: (_, r) => <TooltipWrapper content="Tipo de tasa"><span>{RATE_TYPE_LABELS[r.rateType]}</span></TooltipWrapper> },
+    { key: 'validFrom', label: 'Válida desde', render: (_, r) => <TooltipWrapper content="Fecha desde la que aplica"><span>{new Date(r.validFrom).toLocaleDateString('es')}</span></TooltipWrapper> },
+    { key: 'createdAt', label: 'Creada', render: (_, r) => <TooltipWrapper content="Fecha de registro"><span>{new Date(r.createdAt).toLocaleDateString('es')}</span></TooltipWrapper> },
   ];
 
   const actions = useMemo<TableAction<ExchangeRate>[]>(() => [
@@ -75,7 +75,7 @@ export function ExchangeRatesView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Tasas de Cambio" description="Historial de tasas de cambio entre monedas"
-        actions={!showForm && !editingRate && <TooltipWrapper content="Crear nueva tasa de cambio"><Button size="sm" onClick={() => setShowForm(true)} title="Registrar nueva tasa de cambio">+ Nueva Tasa</Button></TooltipWrapper>}
+        actions={!showForm && !editingRate && <TooltipWrapper content="Crear nueva tasa de cambio"><Button size="sm" onClick={() => setShowForm(true)}>+ Nueva Tasa</Button></TooltipWrapper>}
       />
       {(showForm || editingRate) && (
         <ExchangeRateFormFields

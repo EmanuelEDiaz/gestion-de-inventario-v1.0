@@ -13,4 +13,6 @@ public interface CurrencyRepositoryPort {
     Mono<Currency> findByCode(String code);
 
     Mono<Currency> save(Currency currency);
+
+    Mono<Void> deleteByCode(String code);
 }
