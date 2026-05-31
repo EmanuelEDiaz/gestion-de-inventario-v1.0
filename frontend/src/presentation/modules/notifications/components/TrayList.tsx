@@ -17,33 +17,34 @@ export function TrayList({ activeTab, onTabChange, onCompose }: TrayListProps) {
   return (
     <>
       <div className="flex items-center border-b border-gray-100 px-1 shrink-0">
-        <button
-          onClick={() => onTabChange('SYSTEM')}
-          title="Ver notificaciones del sistema"
-          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-            activeTab === 'SYSTEM'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Sistema
-        </button>
-        <button
-          onClick={() => onTabChange('USER')}
-          title="Ver mensajes de otros usuarios"
-          className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-            activeTab === 'USER'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Mensajes
-        </button>
+        <TooltipWrapper content="Ver notificaciones del sistema">
+          <button
+            onClick={() => onTabChange('SYSTEM')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'SYSTEM'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Sistema
+          </button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Ver mensajes de otros usuarios">
+          <button
+            onClick={() => onTabChange('USER')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'USER'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Mensajes
+          </button>
+        </TooltipWrapper>
         {activeTab === 'USER' && (
           <TooltipWrapper content="Redactar nuevo mensaje" side="bottom">
             <button
               onClick={onCompose}
-              title="Redactar nuevo mensaje"
               className="ml-auto mr-1 rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-primary transition-colors"
               aria-label="Redactar mensaje"
             >

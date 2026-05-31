@@ -2,7 +2,7 @@ import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 
 export function usePermission() {
   const user = useAuthStore((s) => s.user);
-  const permissions = new Set(user?.role?.permissions?.map((p) => p.code) ?? []);
+  const permissions = new Set(user?.role?.permissions?.map((p) => typeof p === 'string' ? p : p.code) ?? []);
 
   return {
     /** Verifica si el usuario tiene TODOS los permisos especificados */

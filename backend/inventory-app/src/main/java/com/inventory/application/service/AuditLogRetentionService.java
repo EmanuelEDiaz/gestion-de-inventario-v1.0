@@ -23,7 +23,7 @@ public class AuditLogRetentionService {
         this.db = db;
     }
 
-    @Scheduled(cron = "0 3 * * 0")
+    @Scheduled(cron = "0 0 3 * * 0")
     public void archiveOldLogs() {
         settings.getInt("audit.retention-days-hot", 90)
             .flatMap(days -> archiveInBatches(Instant.now().minus(days, ChronoUnit.DAYS)))
@@ -37,7 +37,7 @@ public class AuditLogRetentionService {
             .then();
     }
 
-    @Scheduled(cron = "0 4 * * 0")
+    @Scheduled(cron = "0 0 4 * * 0")
     public void deleteOldArchive() {
         settings.getInt("audit.retention-days-archive", 365)
             .flatMap(days -> deleteArchiveInBatches(Instant.now().minus(days, ChronoUnit.DAYS)))

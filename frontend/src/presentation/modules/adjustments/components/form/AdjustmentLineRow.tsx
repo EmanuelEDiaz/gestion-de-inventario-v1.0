@@ -4,6 +4,7 @@ import type { Product } from '@/core/product/entities/product';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
 import { Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 
 interface AdjustmentLineInput {
   productId: string;
@@ -40,9 +41,11 @@ export function AdjustmentLineRow({ line, index, products, onUpdate, onRemove, i
         {index === 0 && <label className="text-xs text-muted-foreground">Conteo</label>}
         <Input type="number" min="0" value={line.countedQty} onChange={(e) => onUpdate(index, 'countedQty', e.target.value)} required title="Cantidad contada" />
       </div>
-      <button type="button" onClick={() => onRemove(index)} className="p-2 text-red-500 hover:text-red-700" title="Eliminar" disabled={isOnlyLine}>
-        <Trash2 className="h-4 w-4" />
-      </button>
+      <TooltipWrapper content="Eliminar línea">
+        <button type="button" onClick={() => onRemove(index)} className="p-2 text-red-500 hover:text-red-700" disabled={isOnlyLine}>
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </TooltipWrapper>
     </div>
   );
 }

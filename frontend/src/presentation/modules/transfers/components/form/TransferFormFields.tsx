@@ -5,7 +5,7 @@ import type { CreateTransferRequest } from '@/core/transfer/entities/transfer';
 import type { Warehouse } from '@/core/warehouse/entities/warehouse';
 import type { Product } from '@/core/product/entities/product';
 import { useReferenceData } from '@/presentation/shared/hooks/api/useReferenceData';
-import { Button } from '@/presentation/shared/components/ui/Button';
+import { Button, TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Textarea } from '@/presentation/shared/components/form/Textarea';
 import { TransferOriginFields } from './TransferOriginFields';
 import { TransferDestinationFields } from './TransferDestinationFields';
@@ -63,8 +63,12 @@ export function TransferFormFields({ onSubmit, isSubmitting, onCancel }: Transfe
         <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." rows={2} />
       </div>
       <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creando...' : 'Crear Transferencia'}</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
+        <TooltipWrapper content="Crear nueva transferencia de inventario">
+          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creando...' : 'Crear Transferencia'}</Button>
+        </TooltipWrapper>
+        <TooltipWrapper content="Cancelar y volver">
+          <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
+        </TooltipWrapper>
       </div>
     </form>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, forwardRef, useRef, memo, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import {
   useFloating,
   useHover,
@@ -126,66 +126,65 @@ interface TooltipProps {
   copyText?: string;
 }
 
-const Tooltip = memo(
-  forwardRef<HTMLSpanElement, TooltipProps>(function Tooltip(
-    { content, description, variant = 'default', children, placement = 'top', delay = 300, className, sectionIcon, sectionName, copyText },
-    ref
-  ) {
-    const [isOpen, setIsOpen] = useState(false);
-    const floatingRef = useRef<HTMLDivElement>(null);
-    const { refs, floatingStyles, context } = useFloating({
-      open: isOpen,
-      onOpenChange: setIsOpen,
-      placement,
-      middleware: [
-        offset(8),
-        flip({ fallbackAxisSideDirection: 'start' }),
-        shift({ padding: 8 }),
-      ],
-      whileElementsMounted: autoUpdate,
-    });
+const Tooltip = memo(function Tooltip({
+  content, description, variant = 'default', children, placement = 'top', delay = 300, className, sectionIcon, sectionName, copyText,
+}: TooltipProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const referenceRef = useRef<HTMLSpanElement>(null);
+  const floatingRef = useRef<HTMLDivElement>(null);
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    placement,
+    middleware: [
+      offset(8),
+      flip({ fallbackAxisSideDirection: 'start' }),
+      shift({ padding: 8 }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
 
-    useEffect(() => {
-      if (floatingRef.current) refs.setFloating(floatingRef.current);
-    }, [isOpen, refs]);
+  useEffect(() => {
+    if (referenceRef.current) refs.setReference(referenceRef.current);
+    if (floatingRef.current) refs.setFloating(floatingRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
-    const hover   = useHover(context, { move: false, delay: { open: delay, close: 0 } });
-    const focus   = useFocus(context);
-    const dismiss = useDismiss(context);
-    const role    = useRole(context, { role: 'tooltip' });
+  const hover   = useHover(context, { move: false, delay: { open: delay, close: 0 } });
+  const focus   = useFocus(context);
+  const dismiss = useDismiss(context);
+  const role    = useRole(context, { role: 'tooltip' });
 
-    const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss, role]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss, role]);
 
-    const isRich = Boolean(description) || (variant && variant !== 'default');
+  const isRich = Boolean(description) || (variant && variant !== 'default');
 
-    return (
-      <>
-        <span ref={ref} {...getReferenceProps()}>
-          {children}
-        </span>
-        {isOpen &&
-          createPortal(
-            <div
-              ref={floatingRef}
-              className={cn(
-                'z-50 rounded-lg shadow-xl ring-1 ring-white/10',
-                'animate-in fade-in-0 zoom-in-95 duration-150',
-                isRich
-                  ? 'max-w-[220px] bg-gray-900/95 px-3.5 py-2.5 text-sm text-white'
-                  : 'max-w-xs bg-gray-900/95 px-2.5 py-1.5 text-xs text-white',
-                className
-              )}
-              style={floatingStyles}
-              {...getFloatingProps()}
-            >
-              <TooltipBody content={content} description={description} variant={variant} sectionIcon={sectionIcon} sectionName={sectionName} copyText={copyText} />
-            </div>,
-            document.body
-          )}
-      </>
-    );
-  })
-);
+  return (
+    <>
+      <span ref={referenceRef} {...getReferenceProps()}>
+        {children}
+      </span>
+      {isOpen &&
+        createPortal(
+          <div
+            ref={floatingRef}
+            className={cn(
+              'z-50 rounded-lg shadow-xl ring-1 ring-white/10',
+              isRich
+                ? 'max-w-[220px] bg-gray-900/95 px-3.5 py-2.5 text-sm text-white'
+                : 'max-w-xs bg-gray-900/95 px-2.5 py-1.5 text-xs text-white',
+              className
+            )}
+            style={floatingStyles}
+            {...getFloatingProps()}
+          >
+            <TooltipBody content={content} description={description} variant={variant} sectionIcon={sectionIcon} sectionName={sectionName} copyText={copyText} />
+          </div>,
+          document.body
+        )}
+    </>
+  );
+});
 
 // ─── TooltipWrapper ───────────────────────────────────────────────────────────
 

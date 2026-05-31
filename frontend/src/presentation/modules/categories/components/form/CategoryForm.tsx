@@ -4,7 +4,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { Category, CreateCategoryData } from '@/core/category/entities/category';
-import { Button } from '@/presentation/shared/components/ui';
+import { Button, TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Input } from '@/presentation/shared/components/ui';
 import { FormField } from '@/presentation/shared/components/form/FormField';
 import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
@@ -96,17 +96,23 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
         />
       </div>
       <div className="mt-4 flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancelar
-        </Button>
-        {!editingCategory && (
-          <Button type="submit" variant="outline" onClick={() => setShouldContinue(true)}>
-            Crear y Continuar
+        <TooltipWrapper content="Cancelar y volver">
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancelar
           </Button>
+        </TooltipWrapper>
+        {!editingCategory && (
+          <TooltipWrapper content="Guardar y continuar editando">
+            <Button type="submit" variant="outline" onClick={() => setShouldContinue(true)}>
+              Crear y Continuar
+            </Button>
+          </TooltipWrapper>
         )}
-        <Button type="submit">
-          {editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
-        </Button>
+        <TooltipWrapper content={editingCategory ? 'Guardar cambios de la categoría' : 'Crear nueva categoría'}>
+          <Button type="submit">
+            {editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
+          </Button>
+        </TooltipWrapper>
       </div>
     </form>
   );

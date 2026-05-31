@@ -15,11 +15,12 @@ export function StockBalanceCard({ balance, onClick }: StockBalanceCardProps) {
   const isLowStock = balance.available <= 0;
 
   return (
-    <Card
-      variant={isLowStock ? 'destructive' : 'default'}
-      className="cursor-pointer"
-      onClick={onClick}
-    >
+    <TooltipWrapper content="Ver detalle del producto">
+      <Card
+        variant={isLowStock ? 'destructive' : 'default'}
+        className="cursor-pointer"
+        onClick={onClick}
+      >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
           <div>
@@ -67,5 +68,6 @@ export function StockBalanceCard({ balance, onClick }: StockBalanceCardProps) {
         )}
       </CardContent>
     </Card>
+    </TooltipWrapper>
   );
 }

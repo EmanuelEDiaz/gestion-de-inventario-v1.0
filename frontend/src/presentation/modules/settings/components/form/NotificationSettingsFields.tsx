@@ -6,6 +6,7 @@ import { DEFAULT_UI_PREFS } from '@/core/settings/entities/app-settings';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
+import { LabelWithHint } from '@/presentation/shared/components/form/LabelWithHint';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 const UI_PREFS_KEY = 'ui_preferences';
@@ -55,7 +56,9 @@ export function NotificationSettingsFields() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="maxProductPages" className="text-sm font-medium">Máx. páginas de productos en memoria</label>
+          <LabelWithHint htmlFor="maxProductPages" label="Máx. páginas de productos en memoria"
+            hint="Número de páginas de productos que se mantienen en caché local"
+            hintDescription="Un valor más alto mejora la navegación pero consume más memoria. Por defecto: 20." />
           <Input id="maxProductPages" type="number" min={1} max={50}
             value={uiPrefs.maxProductPages}
             onChange={(e) => setUiPrefs((prev) => ({ ...prev, maxProductPages: Number(e.target.value) }))}
@@ -64,7 +67,9 @@ export function NotificationSettingsFields() {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="searchDebounceMs" className="text-sm font-medium">Retardo de búsqueda (ms)</label>
+          <LabelWithHint htmlFor="searchDebounceMs" label="Retardo de búsqueda (ms)"
+            hint="Milisegundos de espera antes de ejecutar una búsqueda al escribir"
+            hintDescription="Un valor más alto reduce peticiones pero hace la búsqueda menos sensible. 300ms es lo recomendado." />
           <Input id="searchDebounceMs" type="number" min={100} max={2000} step={100}
             value={uiPrefs.searchDebounceMs}
             onChange={(e) => setUiPrefs((prev) => ({ ...prev, searchDebounceMs: Number(e.target.value) }))}

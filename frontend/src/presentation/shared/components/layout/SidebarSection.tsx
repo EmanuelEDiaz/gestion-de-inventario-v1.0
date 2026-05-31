@@ -4,7 +4,7 @@ import { ExpandCircleDown } from '@material-symbols-svg/react';
 import { cn } from '@/presentation/shared/lib/utils';
 import type { NavItem } from './SidebarNavItem';
 import { SidebarNavItem } from './SidebarNavItem';
-import { SidebarTooltip } from './SidebarTooltip';
+import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 
 interface SidebarSectionProps {
   title: string;
@@ -66,9 +66,9 @@ export function SidebarSection({
   return (
     <li className="mb-2">
       {isCollapsed ? (
-        <SidebarTooltip label={title} description={description}>
+        <TooltipWrapper content={title} description={description} side="right">
           {sectionButton}
-        </SidebarTooltip>
+        </TooltipWrapper>
       ) : (
         sectionButton
       )}
@@ -77,9 +77,9 @@ export function SidebarSection({
           {items.map((item) => (
             <li key={item.href}>
               {isCollapsed ? (
-                <SidebarTooltip label={item.label} description={item.description}>
+                <TooltipWrapper content={item.label} description={item.description} side="right">
                   <SidebarNavItem item={item} isCollapsed={isCollapsed} />
-                </SidebarTooltip>
+                </TooltipWrapper>
               ) : (
                 <SidebarNavItem item={item} isCollapsed={isCollapsed} />
               )}

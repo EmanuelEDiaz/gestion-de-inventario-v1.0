@@ -30,7 +30,9 @@ export function InboxFilterBar({ selectedCount, unreadCount, onMarkSelected, onD
               <Delete className="h-4 w-4" /><span>Eliminar</span>
             </button>
           </TooltipWrapper>
-          <button onClick={onClearSelection} className="text-gray-400 hover:text-gray-700 px-1">✕</button>
+          <TooltipWrapper content="Cancelar selección">
+            <button onClick={onClearSelection} className="text-gray-400 hover:text-gray-700 px-1">✕</button>
+          </TooltipWrapper>
         </div>
       )}
 

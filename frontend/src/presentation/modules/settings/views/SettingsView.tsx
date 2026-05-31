@@ -1,10 +1,10 @@
 'use client';
 
 import { useSettingsController } from '../hooks/useSettingsController';
-import { useSystemSettingsController } from '../hooks/useSystemSettingsController';
 import { SettingsFormFields } from '../components/form/SettingsFormFields';
 import { NotificationPreferencesView } from './NotificationPreferencesView';
 import { SystemSettingsView } from './SystemSettingsView';
+import { MapSettingsPanel } from '../components/MapSettingsPanel';
 import {
   Tabs, TabsList, TabsTrigger, TabsContent,
 } from '@/presentation/shared/components/ui/tabs';
@@ -27,6 +27,7 @@ export function SettingsView() {
       <TabsList>
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="notificaciones">Notificaciones</TabsTrigger>
+        <TabsTrigger value="mapas">Mapas</TabsTrigger>
         {isAdmin && <TabsTrigger value="sistema">Sistema</TabsTrigger>}
       </TabsList>
 
@@ -48,6 +49,17 @@ export function SettingsView() {
           </CardHeader>
           <CardContent>
             <NotificationPreferencesView />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="mapas">
+        <Card>
+          <CardHeader>
+            <CardTitle>Mapas Offline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MapSettingsPanel />
           </CardContent>
         </Card>
       </TabsContent>

@@ -6,6 +6,10 @@ import { COST_METHOD_LABELS } from '@/core/settings/entities/app-settings';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Input } from '@/presentation/shared/components/ui/Input';
+import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import type { ComboboxOption } from '@/presentation/shared/components/form/ComboboxSelect';
+import { LabelWithHint } from '@/presentation/shared/components/form/LabelWithHint';
+import { useCurrenciesController } from '@/presentation/modules/currencies/hooks/useCurrenciesController';
 import { SystemSettingsFields } from './SystemSettingsFields';
 
 const COST_METHODS: CostMethod[] = ['STANDARD', 'WAC', 'FIFO'];
@@ -31,6 +35,13 @@ export function GeneralSettingsFields({ settings, onSubmit, isSubmitting }: Gene
     setLowStockThreshold(settings.lowStockThresholdDefault?.toString() ?? '');
   }, [settings]);
 
+  const { currencies, isLoading } = useCurrenciesController();
+
+  const currencyOptions: ComboboxOption[] = currencies.map(c => ({
+    value: c.code,
+    label: c.symbol ? `${c.code} - ${c.name} (${c.symbol})` : `${c.code} - ${c.name}`,
+  }));
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -55,20 +66,25 @@ export function GeneralSettingsFields({ settings, onSubmit, isSubmitting }: Gene
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="companyName" className="text-sm font-medium">Nombre de la empresa</label>
+          <LabelWithHint htmlFor="companyName" label="Nombre de la empresa"
+            hint="Nombre que aparece en reportes, facturas y documentos generados por el sistema" />
           <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Mi Empresa S.A." maxLength={200} />
           <p className="text-xs text-muted-foreground">Aparece en reportes y documentos generados por el sistema.</p>
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="currencyCode" className="text-sm font-medium">Moneda predeterminada</label>
-          <Input id="currencyCode" value={defaultCurrencyCode}
-            onChange={(e) => setDefaultCurrencyCode(e.target.value.toUpperCase())} placeholder="CUP" maxLength={3} className="w-28" />
-          <p className="text-xs text-muted-foreground">Código ISO 4217 de 3 letras (ej. CUP, USD, EUR).</p>
+          <LabelWithHint htmlFor="currencyCode" label="Moneda predeterminada"
+            hint="Moneda base para precios, reportes financieros y operaciones del sistema" />
+          <ComboboxSelect value={defaultCurrencyCode}
+            onChange={setDefaultCurrencyCode} placeholder="Selecciona una moneda"
+            options={currencyOptions} disabled={isLoading} className="w-full sm:w-72" />
+          <p className="text-xs text-muted-foreground">Moneda por defecto para precios y reportes.</p>
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">Método de costeo predeterminado</p>
+          <LabelWithHint label="Método de costeo predeterminado"
+            hint="Define cómo se calcula el costo de los productos al salir del inventario"
+            hintDescription="Standard: costo fijo | WAC: promedio ponderado | FIFO: primera entrada, primera salida" />
           <div className="space-y-2">
             {COST_METHODS.map((method) => (
               <label key={method} className="flex items-center gap-2 cursor-pointer">
@@ -81,7 +97,8 @@ export function GeneralSettingsFields({ settings, onSubmit, isSubmitting }: Gene
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="lowStock" className="text-sm font-medium">Umbral de stock bajo (predeterminado)</label>
+          <LabelWithHint htmlFor="lowStock" label="Umbral de stock bajo (predeterminado)"
+            hint="Cantidad mínima de existencias antes de generar una alerta de stock bajo para productos nuevos" />
           <Input id="lowStock" type="number" min={0} value={lowStockThreshold}
             onChange={(e) => setLowStockThreshold(e.target.value)} placeholder="10" className="w-32" />
           <p className="text-xs text-muted-foreground">Cantidad mínima antes de generar alertas de stock bajo en productos.</p>

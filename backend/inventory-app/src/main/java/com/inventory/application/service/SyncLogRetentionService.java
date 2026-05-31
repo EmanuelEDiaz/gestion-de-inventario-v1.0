@@ -34,7 +34,7 @@ public class SyncLogRetentionService {
         this.importJobRepository = importJobRepository;
     }
 
-    @Scheduled(cron = "0 2 * * *")
+    @Scheduled(cron = "0 0 2 * * *")
     public void cleanupSyncLog() {
         settings.getInt("sync.retention-days", 30)
             .flatMap(days -> deleteInBatches(Instant.now().minus(days, ChronoUnit.DAYS)))
@@ -42,7 +42,7 @@ public class SyncLogRetentionService {
             .subscribe();
     }
 
-    @Scheduled(cron = "0 3 * * *")
+    @Scheduled(cron = "0 0 3 * * *")
     public void cleanupIdempotencyKeys() {
         idempotencyRepository.deleteOlderThan(Instant.now().minus(2, ChronoUnit.DAYS))
             .doOnSuccess(ignore -> log.info("Limpiadas claves de idempotencia con más de 2 días"))
@@ -50,7 +50,7 @@ public class SyncLogRetentionService {
             .subscribe();
     }
 
-    @Scheduled(cron = "0 4 * * *")
+    @Scheduled(cron = "0 0 4 * * *")
     public void cleanupImportJobs() {
         settings.getInt("import.retention-days", 7)
             .flatMap(days -> importJobRepository.deleteCompletedOlderThan(
