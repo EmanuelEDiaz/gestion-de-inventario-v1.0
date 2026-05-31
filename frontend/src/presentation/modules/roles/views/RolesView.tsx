@@ -30,6 +30,16 @@ const COLUMNS: Column<Role>[] = [
       </TooltipWrapper>
     ),
   },
+  {
+    key: 'isActive', label: 'Estado',
+    render: (_, r) => (
+      <TooltipWrapper content={r.isActive ? 'Rol activo' : 'Rol inactivo'}>
+        <span className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${r.isActive ? statusColors.active : statusColors.inactive}`}>
+          {r.isActive ? 'Activo' : 'Inactivo'}
+        </span>
+      </TooltipWrapper>
+    ),
+  },
 ];
 
 export function RolesView() {
@@ -59,7 +69,6 @@ export function RolesView() {
     {
       icon: Pencil, title: 'Editar rol',
       onClick: setEditingRole,
-      hidden: (r) => r.isSystem,
     },
     {
       icon: Trash2, title: 'Eliminar rol',
