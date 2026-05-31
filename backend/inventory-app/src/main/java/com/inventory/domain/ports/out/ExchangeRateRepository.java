@@ -18,4 +18,6 @@ public interface ExchangeRateRepository {
     Mono<ExchangeRate> findLatest(String baseCode, String quoteCode);
 
     Mono<ExchangeRate> save(ExchangeRate exchangeRate);
+
+    Mono<Void> deleteById(UUID id);
 }

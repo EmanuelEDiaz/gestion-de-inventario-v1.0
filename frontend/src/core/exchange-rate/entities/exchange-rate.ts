@@ -19,6 +19,12 @@ export interface CreateExchangeRateInput {
   validFrom: string;
 }
 
+export interface UpdateExchangeRateInput {
+  rate: number;
+  rateType: RateType;
+  validFrom: string;
+}
+
 export interface ExchangeRateFilter {
   baseCode?: string;
   quoteCode?: string;

@@ -1,6 +1,8 @@
 package com.inventory.adapters.persistence.adapter.entity;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -9,7 +11,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Table("exchange_rates")
-public class ExchangeRateEntity {
+public class ExchangeRateEntity implements Persistable<UUID> {
 
     @Id
     private UUID id;
@@ -34,6 +36,9 @@ public class ExchangeRateEntity {
 
     @Column("created_at")
     private Instant createdAt;
+
+    @Transient
+    private boolean isNew = true;
 
     public ExchangeRateEntity() {}
 
@@ -66,4 +71,8 @@ public class ExchangeRateEntity {
     public void setValidFrom(Instant v)      { this.validFrom = v; }
     public void setCreatedBy(UUID v)         { this.createdBy = v; }
     public void setCreatedAt(Instant v)      { this.createdAt = v; }
+
+    @Override
+    public boolean isNew() { return isNew; }
+    public void setNew(boolean isNew) { this.isNew = isNew; }
 }

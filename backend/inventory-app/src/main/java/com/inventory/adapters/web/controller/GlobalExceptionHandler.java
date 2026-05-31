@@ -166,6 +166,24 @@ public class GlobalExceptionHandler {
                 .body(problem));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleIllegalArgument(
+            IllegalArgumentException ex, ServerWebExchange exchange) {
+        log.warn("Invalid argument: {}", ex.getMessage());
+
+        ProblemDetail problem = ProblemDetail.of(
+                "urn:inventory:error:invalid-argument",
+                HttpStatus.BAD_REQUEST.value(),
+                "Solicitud inválida",
+                ex.getMessage(),
+                exchange.getRequest().getPath().value()
+        );
+
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .header("Content-Type", "application/problem+json")
+                .body(problem));
+    }
+
     @ExceptionHandler(DomainException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleDomainException(
             DomainException ex, ServerWebExchange exchange) {

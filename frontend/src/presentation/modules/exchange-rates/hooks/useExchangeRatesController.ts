@@ -5,12 +5,16 @@ import { exchangeRateRepository } from '@/infrastructure/repositories/exchange-r
 import {
   GetExchangeRatesUseCase,
   CreateExchangeRateUseCase,
+  UpdateExchangeRateUseCase,
+  DeleteExchangeRateUseCase,
 } from '@/core/exchange-rate/use-cases';
-import type { CreateExchangeRateInput, ExchangeRateFilter } from '@/core/exchange-rate/entities/exchange-rate';
+import type { CreateExchangeRateInput, UpdateExchangeRateInput, ExchangeRateFilter } from '@/core/exchange-rate/entities/exchange-rate';
 import { toast } from 'sonner';
 
 const getRates = new GetExchangeRatesUseCase(exchangeRateRepository);
 const createRate = new CreateExchangeRateUseCase(exchangeRateRepository);
+const updateRate = new UpdateExchangeRateUseCase(exchangeRateRepository);
+const deleteRate = new DeleteExchangeRateUseCase(exchangeRateRepository);
 
 export function useExchangeRatesController(filter?: ExchangeRateFilter) {
   const queryClient = useQueryClient();
@@ -29,11 +33,34 @@ export function useExchangeRatesController(filter?: ExchangeRateFilter) {
     onError: (error: Error) => toast.error(error.message || 'Error al crear tasa'),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateExchangeRateInput }) =>
+      updateRate.execute(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exchange-rates'] });
+      toast.success('Tasa de cambio actualizada');
+    },
+    onError: (error: Error) => toast.error(error.message || 'Error al actualizar tasa'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteRate.execute(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exchange-rates'] });
+      toast.success('Tasa de cambio eliminada');
+    },
+    onError: (error: Error) => toast.error(error.message || 'Error al eliminar tasa'),
+  });
+
   return {
     rates: query.data ?? [],
     isLoading: query.isLoading,
     error: query.error?.message ?? null,
     create: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
+    update: updateMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
+    remove: deleteMutation.mutateAsync,
+    isDeleting: deleteMutation.isPending,
   };
 }

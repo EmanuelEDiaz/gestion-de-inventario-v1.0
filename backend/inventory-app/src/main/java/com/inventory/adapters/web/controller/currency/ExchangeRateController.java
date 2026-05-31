@@ -2,6 +2,7 @@ package com.inventory.adapters.web.controller.currency;
 
 import com.inventory.adapters.web.dto.currency.CreateExchangeRateRequest;
 import com.inventory.adapters.web.dto.currency.ExchangeRateResponse;
+import com.inventory.adapters.web.dto.currency.UpdateExchangeRateRequest;
 import com.inventory.domain.model.currency.ExchangeRate;
 import com.inventory.domain.ports.in.currency.ExchangeRateCommandPort;
 import com.inventory.domain.ports.in.currency.ExchangeRateQueryPort;
@@ -61,6 +62,25 @@ public class ExchangeRateController {
         );
         return exchangeRateCommand.create(command)
             .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved)));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') || hasAuthority('exchange_rates:manage')")
+    public Mono<ResponseEntity<ExchangeRateResponse>> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateExchangeRateRequest request) {
+        var command = new ExchangeRateCommandPort.UpdateExchangeRateCommand(
+            request.rate(), request.rateType(), request.validFrom()
+        );
+        return exchangeRateCommand.update(id, command)
+            .map(r -> ResponseEntity.ok(toResponse(r)));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') || hasAuthority('exchange_rates:manage')")
+    public Mono<ResponseEntity<Void>> delete(@PathVariable UUID id) {
+        return exchangeRateCommand.delete(id)
+            .then(Mono.just(ResponseEntity.noContent().build()));
     }
 
     private ExchangeRateResponse toResponse(ExchangeRate r) {

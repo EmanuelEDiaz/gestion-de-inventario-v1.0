@@ -44,6 +44,11 @@ public class ExchangeRateRepositoryAdapter implements ExchangeRateRepository {
         return r2dbc.save(toEntity(er)).map(this::toDomain);
     }
 
+    @Override
+    public Mono<Void> deleteById(UUID id) {
+        return r2dbc.deleteById(id);
+    }
+
     private ExchangeRate toDomain(ExchangeRateEntity e) {
         return new ExchangeRate(
             e.getId(), e.getBaseCode(), e.getQuoteCode(), e.getRate(),

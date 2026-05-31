@@ -1,6 +1,6 @@
 import { apiClient } from '@/infrastructure/api/client';
 import type { IExchangeRateRepository } from '@/core/exchange-rate/ports/IExchangeRateRepository';
-import type { ExchangeRate, CreateExchangeRateInput, ExchangeRateFilter } from '@/core/exchange-rate/entities/exchange-rate';
+import type { ExchangeRate, CreateExchangeRateInput, UpdateExchangeRateInput, ExchangeRateFilter } from '@/core/exchange-rate/entities/exchange-rate';
 import { readWithCache, isOnline } from '@/infrastructure/storage/networkAwareUtils';
 import { getCachedExchangeRates } from '@/infrastructure/storage/db';
 
@@ -44,6 +44,21 @@ export class ExchangeRateRepository implements IExchangeRateRepository {
     }
     const response = await apiClient.post<ExchangeRate>(this.basePath, data);
     return response.data;
+  }
+
+  async update(id: string, data: UpdateExchangeRateInput): Promise<ExchangeRate> {
+    if (!isOnline()) {
+      throw new Error('Requiere conexión a internet para actualizar tasas de cambio');
+    }
+    const response = await apiClient.put<ExchangeRate>(`${this.basePath}/${id}`, data);
+    return response.data;
+  }
+
+  async delete(id: string): Promise<void> {
+    if (!isOnline()) {
+      throw new Error('Requiere conexión a internet para eliminar tasas de cambio');
+    }
+    await apiClient.delete(`${this.basePath}/${id}`);
   }
 }
 

@@ -26,6 +26,7 @@ public class ExchangeRate {
                         Instant validFrom, UUID createdBy, Instant createdAt) {
         if (baseCode == null || baseCode.isBlank()) throw new IllegalArgumentException("baseCode is required");
         if (quoteCode == null || quoteCode.isBlank()) throw new IllegalArgumentException("quoteCode is required");
+        if (baseCode.equalsIgnoreCase(quoteCode)) throw new IllegalArgumentException("baseCode and quoteCode must be different");
         if (rate == null || rate.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("rate must be > 0");
         this.id        = id;
         this.baseCode  = baseCode.toUpperCase();
@@ -41,6 +42,10 @@ public class ExchangeRate {
                                       RateType rateType, Instant validFrom, UUID createdBy) {
         return new ExchangeRate(UUID.randomUUID(), baseCode, quoteCode, rate, rateType,
                 validFrom, createdBy, Instant.now());
+    }
+
+    public ExchangeRate withRate(BigDecimal newRate, RateType newRateType, Instant newValidFrom) {
+        return new ExchangeRate(id, baseCode, quoteCode, newRate, newRateType, newValidFrom, createdBy, createdAt);
     }
 
     public UUID getId()         { return id; }

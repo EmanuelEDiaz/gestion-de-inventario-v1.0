@@ -11,6 +11,10 @@ public interface ExchangeRateCommandPort {
 
     Mono<ExchangeRate> create(CreateExchangeRateCommand command);
 
+    Mono<ExchangeRate> update(UUID id, UpdateExchangeRateCommand command);
+
+    Mono<Void> delete(UUID id);
+
     // ===== Command Records =====
 
     record CreateExchangeRateCommand(
@@ -20,5 +24,11 @@ public interface ExchangeRateCommandPort {
         String rateType,
         Instant validFrom,
         UUID createdBy
+    ) {}
+
+    record UpdateExchangeRateCommand(
+        BigDecimal rate,
+        String rateType,
+        Instant validFrom
     ) {}
 }
