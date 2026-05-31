@@ -28,6 +28,12 @@ export function useRoleActions() {
     onError: (e: Error) => toast.error(e.message || 'Error al desactivar rol'),
   });
 
+  const reactivate = useMutation({
+    mutationFn: (id: string) => roleRepository.reactivate(id),
+    onSuccess: () => { invalidate(); toast.success('Rol activado'); },
+    onError: (e: Error) => toast.error(e.message || 'Error al activar rol'),
+  });
+
   const remove = useMutation({
     mutationFn: (id: string) => roleRepository.remove(id),
     onSuccess: () => { invalidate(); toast.success('Rol eliminado'); },
@@ -44,6 +50,7 @@ export function useRoleActions() {
     create: create.mutateAsync,
     update: update.mutateAsync,
     deactivate: deactivate.mutateAsync,
+    reactivate: reactivate.mutateAsync,
     remove: remove.mutateAsync,
     removeMany: removeMany.mutateAsync,
     isCreating: create.isPending,

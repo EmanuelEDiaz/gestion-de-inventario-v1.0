@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Pencil, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
+import { Pencil, Power, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { useRoles } from '../hooks/useRoles';
 import { useRoleActions } from '../hooks/useRoleActions';
 import { RoleFormFields } from '../components/RoleFormFields';
@@ -44,7 +44,7 @@ const COLUMNS: Column<Role>[] = [
 
 export function RolesView() {
   const { data: roles = [], isLoading, error } = useRoles();
-  const { create, update, remove, removeMany, isCreating, isUpdating } = useRoleActions();
+  const { create, update, deactivate, reactivate, remove, removeMany, isCreating, isUpdating } = useRoleActions();
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState('');
@@ -80,11 +80,20 @@ export function RolesView() {
       onClick: setEditingRole,
     },
     {
+      icon: Power, title: 'Activar/Desactivar rol',
+      confirmMessage: (r) => r.isActive
+        ? `¿Estás seguro de desactivar el rol ${r.name}?`
+        : `¿Estás seguro de activar el rol ${r.name}?`,
+      onClick: (r) => r.isActive ? deactivate(r.id) : reactivate(r.id),
+      hidden: (r) => r.isSystem,
+    },
+    {
       icon: Trash2, title: 'Eliminar rol',
       confirmMessage: (r) => `¿Estás seguro de eliminar el rol ${r.name}? Esta acción no se puede deshacer.`,
       onClick: (r) => remove(r.id),
+      hidden: (r) => r.isSystem,
     },
-  ], [remove]);
+  ], [deactivate, reactivate, remove]);
 
   const bulkActions = useMemo<BulkAction<Role>[]>(() => [
     {

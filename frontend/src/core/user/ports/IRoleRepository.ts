@@ -6,6 +6,7 @@ export interface IRoleRepository {
   create(data: CreateRoleData): Promise<Role>;
   update(id: string, data: UpdateRoleData): Promise<Role>;
   deactivate(id: string): Promise<void>;
+  reactivate(id: string): Promise<void>;
   remove(id: string): Promise<void>;
   removeMany(ids: string[]): Promise<void>;
 }

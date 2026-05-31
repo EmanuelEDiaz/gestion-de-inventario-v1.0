@@ -33,6 +33,10 @@ export class RoleRepository implements IRoleRepository {
     await apiClient.delete(`${this.basePath}/${id}`);
   }
 
+  async reactivate(id: string): Promise<void> {
+    await apiClient.post(`${this.basePath}/${id}/reactivate`);
+  }
+
   async remove(id: string): Promise<void> {
     await apiClient.delete(`${this.basePath}/${id}`);
   }

@@ -20,7 +20,7 @@ public class RoleQueryUseCase implements RoleQueryPort {
 
     @Override
     public Flux<Role> findAll() {
-        return roleRepository.findAllActive();
+        return roleRepository.findAll();
     }
 
     @Override

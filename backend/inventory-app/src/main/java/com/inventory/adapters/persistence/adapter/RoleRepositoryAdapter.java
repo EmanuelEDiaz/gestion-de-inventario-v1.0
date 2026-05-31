@@ -53,6 +53,13 @@ public class RoleRepositoryAdapter implements RoleRepositoryPort {
     }
     
     @Override
+    public Flux<Role> findAll() {
+        return roleRepository.findAll()
+                .flatMap(this::loadRoleWithPermissions)
+                .map(mapper::toDomain);
+    }
+
+    @Override
     public Flux<Role> findAllActive() {
         return roleRepository.findByIsActiveTrue()
                 .flatMap(this::loadRoleWithPermissions)

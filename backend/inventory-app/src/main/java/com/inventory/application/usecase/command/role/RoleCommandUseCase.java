@@ -68,4 +68,22 @@ public class RoleCommandUseCase implements RoleCommandPort {
                 })
                 .then();
     }
+
+    @Override
+    public Mono<Void> reactivateRole(UUID id) {
+        return roleRepository.findById(id)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Rol no encontrado: " + id)))
+                .flatMap(existing -> {
+                    if (existing.isSystem()) {
+                        return Mono.error(new IllegalArgumentException("No se pueden reactivar roles de sistema"));
+                    }
+                    Role reactivated = new Role(
+                            existing.getId(), existing.getCode(), existing.getName(),
+                            existing.getDescription(), false, true,
+                            existing.getPermissions(), existing.getCreatedAt(), Instant.now()
+                    );
+                    return roleRepository.save(reactivated);
+                })
+                .then();
+    }
 }

@@ -24,6 +24,11 @@ public interface RoleRepositoryPort {
     Mono<Role> findByCode(String code);
     
     /**
+     * Obtiene todos los roles con sus permisos.
+     */
+    Flux<Role> findAll();
+
+    /**
      * Obtiene todos los roles activos con sus permisos.
      */
     Flux<Role> findAllActive();

@@ -71,6 +71,12 @@ public class RoleController {
             .thenReturn(ResponseEntity.<Void>noContent().build());
     }
 
+    @PostMapping("/{id}/reactivate")
+    public Mono<ResponseEntity<Void>> reactivate(@PathVariable UUID id) {
+        return roleCommand.reactivateRole(id)
+            .thenReturn(ResponseEntity.<Void>ok().build());
+    }
+
     private RoleResponse toResponse(Role role) {
         List<PermissionResponse> perms = role.getPermissions().stream()
             .map(p -> new PermissionResponse(p.getId(), p.getCode(), p.getName(), p.getCategory()))
