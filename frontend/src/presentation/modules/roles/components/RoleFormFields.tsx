@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Role, CreateRoleData, UpdateRoleData } from '@/core/user/entities/user';
 import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
 import { PermissionGroupSelector } from './PermissionGroupSelector';
@@ -24,6 +24,28 @@ export function RoleFormFields({ initialData, initialValues, onSubmit, isSubmitt
   const [selectedPermIds, setSelectedPermIds] = useState<string[]>(
     initialData?.permissions.map((p) => p.id) ?? initialValues?.permissionIds ?? []
   );
+
+  const prefillPermsRef = useRef(false);
+
+  useEffect(() => {
+    if (isEditing) return;
+    if (prefillPermsRef.current) return;
+    try {
+      const saved = localStorage.getItem('role-create-permissions');
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        if (parsed.length > 0) {
+          setSelectedPermIds(parsed);
+          prefillPermsRef.current = true;
+          return;
+        }
+      }
+    } catch {}
+    if (allPerms.length > 0) {
+      setSelectedPermIds(allPerms.map((p) => p.id));
+      prefillPermsRef.current = true;
+    }
+  }, [isEditing, allPerms]);
 
   const values = { code, name, description };
   const onChange = (field: string, value: string) => {
@@ -54,6 +76,7 @@ export function RoleFormFields({ initialData, initialValues, onSubmit, isSubmitt
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isEditing) {
+      try { localStorage.setItem('role-create-permissions', JSON.stringify(selectedPermIds)); } catch {}
       onSubmit({ code: code.toUpperCase(), name, description: description || undefined, permissionIds: selectedPermIds } satisfies CreateRoleData);
     } else {
       onSubmit({ name, description: description || undefined, permissionIds: selectedPermIds } satisfies UpdateRoleData);

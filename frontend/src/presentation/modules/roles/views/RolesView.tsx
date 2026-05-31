@@ -108,7 +108,6 @@ export function RolesView() {
       {(showCreate || editingRole) && (
         <RoleFormFields
           initialData={editingRole ?? undefined}
-          initialValues={editingRole ? undefined : { code: '', name: '', description: '', permissionIds: [] }}
           onSubmit={editingRole ? handleUpdate : handleCreate}
           isSubmitting={editingRole ? isUpdating : isCreating}
           onCancel={() => { setShowCreate(false); setEditingRole(null); }}
