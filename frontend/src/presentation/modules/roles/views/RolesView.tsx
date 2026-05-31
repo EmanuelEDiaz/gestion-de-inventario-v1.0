@@ -50,6 +50,15 @@ export function RolesView() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  const createInitialValues = useMemo<Partial<CreateRoleData> | undefined>(() => {
+    if (editingRole) return undefined;
+    if (roles.length > 0) {
+      const r = roles[0];
+      return { code: r.code, name: r.name, description: r.description ?? undefined };
+    }
+    return undefined;
+  }, [editingRole, roles]);
+
   const filteredRoles = useMemo(() => {
     let result = roles;
     if (search) {
@@ -108,6 +117,7 @@ export function RolesView() {
       {(showCreate || editingRole) && (
         <RoleFormFields
           initialData={editingRole ?? undefined}
+          initialValues={editingRole ? undefined : createInitialValues}
           onSubmit={editingRole ? handleUpdate : handleCreate}
           isSubmitting={editingRole ? isUpdating : isCreating}
           onCancel={() => { setShowCreate(false); setEditingRole(null); }}
