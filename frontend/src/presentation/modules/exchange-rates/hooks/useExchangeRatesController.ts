@@ -9,7 +9,7 @@ import {
   DeleteExchangeRateUseCase,
 } from '@/core/exchange-rate/use-cases';
 import type { CreateExchangeRateInput, UpdateExchangeRateInput, ExchangeRateFilter } from '@/core/exchange-rate/entities/exchange-rate';
-import { toast } from 'sonner';
+import { toast } from '@/presentation/shared/components/ui/toast';
 
 const getRates = new GetExchangeRatesUseCase(exchangeRateRepository);
 const createRate = new CreateExchangeRateUseCase(exchangeRateRepository);
@@ -52,6 +52,15 @@ export function useExchangeRatesController(filter?: ExchangeRateFilter) {
     onError: (error: Error) => toast.error(error.message || 'Error al eliminar tasa'),
   });
 
+  const deleteManyMutation = useMutation({
+    mutationFn: (ids: string[]) => Promise.all(ids.map((id) => deleteRate.execute(id))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exchange-rates'] });
+      toast.success('Tasas de cambio eliminadas');
+    },
+    onError: (error: Error) => toast.error(error.message || 'Error al eliminar tasas'),
+  });
+
   return {
     rates: query.data ?? [],
     isLoading: query.isLoading,
@@ -62,5 +71,7 @@ export function useExchangeRatesController(filter?: ExchangeRateFilter) {
     isUpdating: updateMutation.isPending,
     remove: deleteMutation.mutateAsync,
     isDeleting: deleteMutation.isPending,
+    removeMany: deleteManyMutation.mutateAsync,
+    isDeletingMany: deleteManyMutation.isPending,
   };
 }

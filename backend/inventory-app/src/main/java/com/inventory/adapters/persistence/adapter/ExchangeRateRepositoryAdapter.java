@@ -41,7 +41,13 @@ public class ExchangeRateRepositoryAdapter implements ExchangeRateRepository {
 
     @Override
     public Mono<ExchangeRate> save(ExchangeRate er) {
-        return r2dbc.save(toEntity(er)).map(this::toDomain);
+        var entity = toEntity(er);
+        return r2dbc.existsById(entity.getId())
+            .flatMap(exists -> {
+                entity.setNew(!exists);
+                return r2dbc.save(entity);
+            })
+            .map(this::toDomain);
     }
 
     @Override

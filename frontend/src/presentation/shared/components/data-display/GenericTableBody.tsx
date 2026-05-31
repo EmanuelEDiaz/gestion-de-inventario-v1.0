@@ -44,7 +44,7 @@ export function GenericTableBody<T extends { id: string }>({
             </TableCell>
           )}
           {columns.map((col) => (
-            <TableCell key={col.key} className={cn('px-4 py-3.5 text-sm', col.className)}>
+            <TableCell key={col.key} className={cn('px-4 py-3.5 text-sm text-center', col.className)}>
               {col.render ? col.render(getValue(row, col.key), row) : String(getValue(row, col.key) ?? '-')}
             </TableCell>
           ))}

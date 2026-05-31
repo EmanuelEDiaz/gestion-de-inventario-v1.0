@@ -50,7 +50,8 @@ export function CategoriesView() {
 
   const actions: TableAction<Category>[] = [
     { icon: Pencil, title: 'Editar categoría', onClick: openForm },
-    { icon: Trash2, title: 'Eliminar categoría', onClick: deleteCategory },
+    { icon: Trash2, title: 'Eliminar categoría', onClick: deleteCategory,
+      confirmMessage: (r) => `¿Estás seguro de eliminar la categoría "${r.name}"? Las subcategorías también se eliminarán.` },
   ];
 
   return (

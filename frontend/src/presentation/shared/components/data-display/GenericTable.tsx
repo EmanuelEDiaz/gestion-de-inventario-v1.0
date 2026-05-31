@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { SvgIcon } from '@/presentation/shared/components/ui/icon-mapping';
 import { Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { cn } from '@/presentation/shared/lib/utils';
@@ -9,6 +9,7 @@ import { Button } from '../ui/Button';
 import { GenericTableHeader } from './GenericTableHeader';
 import { GenericTableBody } from './GenericTableBody';
 import { useTableSelection } from '@/presentation/shared/hooks/ui/useTableSelection';
+import { ConfirmDialog } from '@/presentation/shared/components/ui/ConfirmDialog';
 
 export interface Column<T> {
   key: string;
@@ -24,6 +25,7 @@ export interface TableAction<T> {
   onClick?: (row: T) => void;
   href?: (row: T) => string;
   hidden?: (row: T) => boolean;
+  confirmMessage?: string | ((row: T) => string);
 }
 
 export interface BulkAction<T> {
@@ -32,6 +34,7 @@ export interface BulkAction<T> {
   icon?: React.ComponentType<{ className?: string }>;
   onClick: (ids: string[]) => void | Promise<void>;
   disabled?: (selectedIds: Set<string>) => boolean;
+  confirmMessage?: string | ((count: number) => string);
 }
 
 export interface GenericTableProps<T> {
@@ -59,9 +62,75 @@ export function GenericTable<T extends { id: string }>({
   const { selectedIds, toggleOne, toggleAll, clearSelection, isAllSelected, isIndeterminate } =
     useTableSelection(allIds);
 
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string;
+    description: string;
+    variant?: 'default' | 'destructive';
+    onConfirm: () => void;
+  } | null>(null);
+
   useEffect(() => {
     onSelectionChange?.([...selectedIds]);
   }, [selectedIds, onSelectionChange]);
+
+  const wrappedActions = useMemo(() => actions.map((action) => {
+    if (!action.confirmMessage || !action.onClick) return action;
+
+    return {
+      ...action,
+      onClick: (row: T) => {
+        const message = typeof action.confirmMessage === 'function'
+          ? action.confirmMessage(row)
+          : action.confirmMessage;
+        setPendingConfirm({
+          title: 'Confirmar acción',
+          description: message,
+          variant: action.title?.toLowerCase().includes('eliminar') ? 'destructive' as const : undefined,
+          onConfirm: () => {
+            action.onClick!(row);
+            setPendingConfirm(null);
+          },
+        });
+      },
+    };
+  }), [actions]);
+
+  const handleBulkClick = (bulkAction: BulkAction<T>) => {
+    const ids = [...selectedIds];
+    if (bulkAction.confirmMessage) {
+      const message = typeof bulkAction.confirmMessage === 'function'
+        ? bulkAction.confirmMessage(ids.length)
+        : bulkAction.confirmMessage;
+      setPendingConfirm({
+        title: 'Confirmar acción',
+        description: message,
+        variant: bulkAction.variant === 'destructive' ? 'destructive' as const : undefined,
+        onConfirm: () => {
+          bulkAction.onClick(ids);
+          clearSelection();
+          setPendingConfirm(null);
+        },
+      });
+    } else {
+      bulkAction.onClick(ids);
+      clearSelection();
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (!onDeleteSelected) return;
+    const ids = [...selectedIds];
+    setPendingConfirm({
+      title: 'Eliminar elementos',
+      description: `¿Estás seguro de eliminar ${ids.length} elemento(s)? Esta acción no se puede deshacer.`,
+      variant: 'destructive',
+      onConfirm: () => {
+        onDeleteSelected(ids);
+        clearSelection();
+        setPendingConfirm(null);
+      },
+    });
+  };
 
   if (data.length === 0) {
     return (
@@ -79,20 +148,20 @@ export function GenericTable<T extends { id: string }>({
             {selectedIds.size} seleccionado(s)
           </span>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-            {bulkActions?.map((action, i) => (
+            {bulkActions?.map((ba, i) => (
               <Button key={i}
-                variant={action.variant ?? 'default'} size="sm"
-                onClick={() => { action.onClick([...selectedIds]); clearSelection(); }}
-                disabled={action.disabled?.(selectedIds)}
+                variant={ba.variant ?? 'default'} size="sm"
+                onClick={() => handleBulkClick(ba)}
+                disabled={ba.disabled?.(selectedIds)}
                 className="w-full min-h-[44px] sm:w-auto sm:min-h-0"
-                title={action.label}>
-                {action.icon && <action.icon className="mr-1 h-4 w-4" />}
-                {action.label}
+                title={ba.label}>
+                {ba.icon && <ba.icon className="mr-1 h-4 w-4" />}
+                {ba.label}
               </Button>
             ))}
             {onDeleteSelected && (
               <Button variant="destructive" size="sm"
-                onClick={() => { onDeleteSelected([...selectedIds]); clearSelection(); }}
+                onClick={handleDeleteSelected}
                 className="w-full min-h-[44px] sm:w-auto sm:min-h-0"
                 title="Eliminar los elementos seleccionados">
                 <Trash2 className="mr-1 h-4 w-4" />
@@ -115,11 +184,21 @@ export function GenericTable<T extends { id: string }>({
             onToggleAll={toggleAll} onSort={onSort} sortKey={sortKey} sortDirection={sortDirection}
           />
           <GenericTableBody
-            data={data} columns={columns} actions={actions} selectable={selectable}
+            data={data} columns={columns} actions={wrappedActions} selectable={selectable}
             selectedIds={selectedIds} onToggleOne={toggleOne} onRowClick={onRowClick}
           />
         </Table>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingConfirm}
+        title={pendingConfirm?.title ?? ''}
+        description={pendingConfirm?.description ?? ''}
+        confirmLabel="Confirmar"
+        variant={pendingConfirm?.variant}
+        onConfirm={() => pendingConfirm?.onConfirm()}
+        onCancel={() => setPendingConfirm(null)}
+      />
     </div>
   );
 }
