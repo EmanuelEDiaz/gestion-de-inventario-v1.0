@@ -214,6 +214,7 @@ export function EntityForm({
               type={field.type}
               value={value}
               onChange={(e) => handleChange(e.target.value)}
+              onFocus={(e) => e.target.select()}
               placeholder={field.placeholder}
               required={field.required}
               maxLength={field.maxLength}
