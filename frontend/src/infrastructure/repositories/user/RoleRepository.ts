@@ -38,7 +38,7 @@ export class RoleRepository implements IRoleRepository {
   }
 
   async remove(id: string): Promise<void> {
-    await apiClient.delete(`${this.basePath}/${id}`);
+    await apiClient.delete(`${this.basePath}/${id}/force`);
   }
 
   async removeMany(ids: string[]): Promise<void> {

@@ -79,6 +79,15 @@ public class RoleRepositoryAdapter implements RoleRepositoryPort {
     }
     
     @Override
+    public Mono<Void> deleteById(UUID id) {
+        return databaseClient
+                .sql("DELETE FROM role_permissions WHERE role_id = :id")
+                .bind("id", id)
+                .then()
+                .then(roleRepository.deleteById(id));
+    }
+
+    @Override
     public Mono<Role> saveWithPermissions(Role role, Set<UUID> permissionIds) {
         return roleRepository.save(mapper.toEntity(role))
                 .flatMap(saved -> replacePermissions(saved.getId(), permissionIds)

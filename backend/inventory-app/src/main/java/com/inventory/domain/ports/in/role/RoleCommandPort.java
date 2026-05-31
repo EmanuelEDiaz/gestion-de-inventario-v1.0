@@ -16,6 +16,8 @@ public interface RoleCommandPort {
 
     Mono<Void> reactivateRole(UUID id);
 
+    Mono<Void> deleteRole(UUID id);
+
     // ===== Command Records =====
 
     record CreateRoleCommand(

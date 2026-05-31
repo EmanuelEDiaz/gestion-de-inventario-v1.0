@@ -86,4 +86,16 @@ public class RoleCommandUseCase implements RoleCommandPort {
                 })
                 .then();
     }
+
+    @Override
+    public Mono<Void> deleteRole(UUID id) {
+        return roleRepository.findById(id)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Rol no encontrado: " + id)))
+                .flatMap(existing -> {
+                    if (existing.isSystem()) {
+                        return Mono.error(new IllegalArgumentException("No se pueden eliminar roles de sistema"));
+                    }
+                    return roleRepository.deleteById(id);
+                });
+    }
 }

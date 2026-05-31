@@ -71,6 +71,12 @@ public class RoleController {
             .thenReturn(ResponseEntity.<Void>noContent().build());
     }
 
+    @DeleteMapping("/{id}/force")
+    public Mono<ResponseEntity<Void>> deletePermanently(@PathVariable UUID id) {
+        return roleCommand.deleteRole(id)
+            .thenReturn(ResponseEntity.<Void>noContent().build());
+    }
+
     @PostMapping("/{id}/reactivate")
     public Mono<ResponseEntity<Void>> reactivate(@PathVariable UUID id) {
         return roleCommand.reactivateRole(id)

@@ -47,4 +47,9 @@ public interface RoleRepositoryPort {
      * Verifica si existe un rol con el código dado.
      */
     Mono<Boolean> existsByCode(String code);
+
+    /**
+     * Elimina un rol permanentemente de la base de datos (hard delete).
+     */
+    Mono<Void> deleteById(UUID id);
 }
