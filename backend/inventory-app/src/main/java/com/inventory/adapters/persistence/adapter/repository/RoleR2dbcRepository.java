@@ -19,4 +19,6 @@ public interface RoleR2dbcRepository extends R2dbcRepository<RoleEntity, UUID> {
     Flux<RoleEntity> findByIsActiveTrue();
     
     Mono<Boolean> existsByCode(String code);
+
+    Mono<Boolean> existsByCodeAndIsActiveTrue(String code);
 }

@@ -68,7 +68,7 @@ public class RoleRepositoryAdapter implements RoleRepositoryPort {
     
     @Override
     public Mono<Boolean> existsByCode(String code) {
-        return roleRepository.existsByCode(code);
+        return roleRepository.existsByCodeAndIsActiveTrue(code);
     }
     
     @Override
