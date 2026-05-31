@@ -74,7 +74,6 @@ export function RolesView() {
       icon: Trash2, title: 'Eliminar rol',
       confirmMessage: (r) => `¿Estás seguro de eliminar el rol ${r.name}? Esta acción no se puede deshacer.`,
       onClick: (r) => remove(r.id),
-      hidden: (r) => r.isSystem,
     },
   ], [remove]);
 
