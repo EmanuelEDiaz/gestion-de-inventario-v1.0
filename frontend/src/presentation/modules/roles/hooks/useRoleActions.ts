@@ -28,12 +28,27 @@ export function useRoleActions() {
     onError: (e: Error) => toast.error(e.message || 'Error al desactivar rol'),
   });
 
+  const remove = useMutation({
+    mutationFn: (id: string) => roleRepository.remove(id),
+    onSuccess: () => { invalidate(); toast.success('Rol eliminado'); },
+    onError: (e: Error) => toast.error(e.message || 'Error al eliminar rol'),
+  });
+
+  const removeMany = useMutation({
+    mutationFn: (ids: string[]) => roleRepository.removeMany(ids),
+    onSuccess: () => { invalidate(); toast.success('Roles eliminados'); },
+    onError: (e: Error) => toast.error(e.message || 'Error al eliminar roles'),
+  });
+
   return {
     create: create.mutateAsync,
     update: update.mutateAsync,
     deactivate: deactivate.mutateAsync,
+    remove: remove.mutateAsync,
+    removeMany: removeMany.mutateAsync,
     isCreating: create.isPending,
     isUpdating: update.isPending,
     isDeactivating: deactivate.isPending,
+    isRemoving: remove.isPending,
   };
 }

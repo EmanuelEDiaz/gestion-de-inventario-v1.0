@@ -32,6 +32,14 @@ export class RoleRepository implements IRoleRepository {
   async deactivate(id: string): Promise<void> {
     await apiClient.delete(`${this.basePath}/${id}`);
   }
+
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`${this.basePath}/${id}`);
+  }
+
+  async removeMany(ids: string[]): Promise<void> {
+    await Promise.all(ids.map((id) => apiClient.delete(`${this.basePath}/${id}`)));
+  }
 }
 
 export class PermissionRepository implements IPermissionRepository {

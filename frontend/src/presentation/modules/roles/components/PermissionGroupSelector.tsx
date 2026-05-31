@@ -53,7 +53,7 @@ export function PermissionGroupSelector({ allPermissions, selectedIds, onChange 
             </div>
             <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
               {perms.map((p) => (
-                <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer" title={p.name}>
+                <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedIds.includes(p.id)}
