@@ -41,17 +41,22 @@ export class ProductRepository implements IProductRepository {
     return urlParams.toString();
   }
 
-  async getAll(filters?: ProductFilters): Promise<PaginatedResponse<Product>> {
+  async getAllPaginated(filters?: ProductFilters): Promise<PaginatedResponse<Product>> {
     return readWithCache(
       async () => {
         const params = new URLSearchParams();
         if (filters?.search) params.append('search', filters.search);
         if (filters?.categoryId) params.append('categoryId', filters.categoryId);
         if (filters?.status) params.append('status', filters.status);
+        if (filters?.minPrice !== undefined) params.append('minPrice', filters.minPrice.toString());
+        if (filters?.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
+        if (filters?.unitOfMeasure) params.append('unitOfMeasure', filters.unitOfMeasure);
+        if (filters?.sortBy) params.append('sortBy', filters.sortBy);
+        if (filters?.sortAsc !== undefined) params.append('sortAsc', filters.sortAsc.toString());
         if (filters?.page !== undefined) params.append('page', filters.page.toString());
         if (filters?.size !== undefined) params.append('size', filters.size.toString());
         const query = params.toString();
-        const url = query ? `${this.basePath}?${query}` : this.basePath;
+        const url = `${this.basePath}/paginated?${query}`;
         const response = await apiClient.get<PaginatedResponse<Product>>(url);
         return response.data;
       },

@@ -40,6 +40,9 @@ public class UserEntity {
     
     @Column("updated_at")
     private Instant updatedAt;
+
+    @Column("preferences")
+    private String preferences;
     
     /**
      * Rol asociado al usuario (cargado manualmente).
@@ -52,6 +55,7 @@ public class UserEntity {
     public UserEntity(UUID id, String username, String passwordHash, String displayName, 
                       String email, UUID roleId, boolean isActive, 
                       Instant createdAt, Instant updatedAt) {
+        this.preferences = "{}";
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
@@ -92,4 +96,7 @@ public class UserEntity {
     
     public RoleEntity getRole() { return role; }
     public void setRole(RoleEntity role) { this.role = role; }
+
+    public String getPreferences() { return preferences; }
+    public void setPreferences(String preferences) { this.preferences = preferences; }
 }

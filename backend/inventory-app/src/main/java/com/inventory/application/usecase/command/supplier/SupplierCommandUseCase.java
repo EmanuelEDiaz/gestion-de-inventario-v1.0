@@ -1,10 +1,9 @@
 package com.inventory.application.usecase.command.supplier;
 
+import com.inventory.application.shared.AuditLogger;
 import com.inventory.application.shared.AuditSerializer;
-import com.inventory.domain.model.audit.AuditLog;
 import com.inventory.domain.model.supplier.Supplier;
 import com.inventory.domain.ports.in.supplier.SupplierCommandPort;
-import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.SupplierRepository;
 import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
@@ -17,16 +16,16 @@ import java.util.UUID;
 public class SupplierCommandUseCase implements SupplierCommandPort {
 
     private final SupplierRepository supplierRepository;
-    private final AuditLogRepository auditLogRepository;
+    private final AuditLogger auditLogger;
     private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
 
     public SupplierCommandUseCase(SupplierRepository supplierRepository,
-                                  AuditLogRepository auditLogRepository,
+                                  AuditLogger auditLogger,
                                   SyncLogWriterPort syncLogWriter,
                                   AuditSerializer auditSerializer) {
         this.supplierRepository = supplierRepository;
-        this.auditLogRepository = auditLogRepository;
+        this.auditLogger = auditLogger;
         this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
@@ -69,15 +68,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
         }
 
         return supplierRepository.save(supplier)
-            .flatMap(saved -> {
-                AuditLog log = AuditLog.create(
-                    userId, "SUPPLIER", saved.getId(), "CREATE",
-                    null, auditSerializer.toJson(saved), null
-                );
-                return auditLogRepository.save(log)
-                    .then(syncLogWriter.log("SUPPLIER", saved.getId(), "CREATE", saved, null))
-                    .thenReturn(saved);
-            });
+            .flatMap(saved -> auditLogger.log(userId, "SUPPLIER", saved.getId(), "CREATE", null, auditSerializer.toJsonTruncated(saved))
+                .then(syncLogWriter.log("SUPPLIER", saved.getId(), "CREATE", saved, null))
+                .thenReturn(saved));
     }
 
     @Override
@@ -85,7 +78,7 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
         return supplierRepository.findById(id)
             .switchIfEmpty(Mono.error(new IllegalArgumentException("Supplier not found: " + id)))
             .flatMap(existing -> {
-                String beforeJson = auditSerializer.toJson(existing);
+                String beforeJson = auditSerializer.toJsonTruncated(existing);
                 Supplier updated = existing.update(
                     command.code(),
                     command.name(),
@@ -104,15 +97,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
                     command.longitude()
                 );
                 return supplierRepository.save(updated)
-                    .flatMap(saved -> {
-                        AuditLog log = AuditLog.create(
-                            userId, "SUPPLIER", id, "UPDATE",
-                            beforeJson, auditSerializer.toJson(saved), null
-                        );
-                        return auditLogRepository.save(log)
-                            .then(syncLogWriter.log("SUPPLIER", id, "UPDATE", saved, null))
-                            .thenReturn(saved);
-                    });
+                    .flatMap(saved -> auditLogger.log(userId, "SUPPLIER", id, "UPDATE", beforeJson, auditSerializer.toJsonTruncated(saved))
+                        .then(syncLogWriter.log("SUPPLIER", id, "UPDATE", saved, null))
+                        .thenReturn(saved));
             });
     }
 
@@ -121,12 +108,8 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
         return supplierRepository.findById(id)
             .switchIfEmpty(Mono.error(new IllegalArgumentException("Supplier not found: " + id)))
             .flatMap(existing -> {
-                String beforeJson = auditSerializer.toJson(existing);
-                AuditLog log = AuditLog.create(
-                    userId, "SUPPLIER", id, "DELETE",
-                    beforeJson, null, null
-                );
-                return auditLogRepository.save(log)
+                String beforeJson = auditSerializer.toJsonTruncated(existing);
+                return auditLogger.log(userId, "SUPPLIER", id, "DELETE", beforeJson, null)
                     .then(supplierRepository.deleteById(id))
                     .then(syncLogWriter.log("SUPPLIER", id, "DELETE", existing, null));
             });
@@ -145,15 +128,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
             .flatMap(existing -> {
                 Supplier activated = existing.activate();
                 return supplierRepository.save(activated)
-                    .flatMap(saved -> {
-                        AuditLog log = AuditLog.create(
-                            userId, "SUPPLIER", id, "ACTIVATE",
-                            null, auditSerializer.toJson(saved), null
-                        );
-                        return auditLogRepository.save(log)
-                            .then(syncLogWriter.log("SUPPLIER", id, "ACTIVATE", saved, null))
-                            .thenReturn(saved);
-                    });
+                    .flatMap(saved -> auditLogger.log(userId, "SUPPLIER", id, "ACTIVATE", null, auditSerializer.toJsonTruncated(saved))
+                        .then(syncLogWriter.log("SUPPLIER", id, "ACTIVATE", saved, null))
+                        .thenReturn(saved));
             });
     }
 
@@ -164,15 +141,9 @@ public class SupplierCommandUseCase implements SupplierCommandPort {
             .flatMap(existing -> {
                 Supplier deactivated = existing.deactivate();
                 return supplierRepository.save(deactivated)
-                    .flatMap(saved -> {
-                        AuditLog log = AuditLog.create(
-                            userId, "SUPPLIER", id, "DEACTIVATE",
-                            null, auditSerializer.toJson(saved), null
-                        );
-                        return auditLogRepository.save(log)
-                            .then(syncLogWriter.log("SUPPLIER", id, "DEACTIVATE", saved, null))
-                            .thenReturn(saved);
-                    });
+                    .flatMap(saved -> auditLogger.log(userId, "SUPPLIER", id, "DEACTIVATE", null, auditSerializer.toJsonTruncated(saved))
+                        .then(syncLogWriter.log("SUPPLIER", id, "DEACTIVATE", saved, null))
+                        .thenReturn(saved));
             });
     }
 }

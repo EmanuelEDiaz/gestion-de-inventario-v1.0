@@ -1,5 +1,8 @@
 package com.inventory.adapters.web.controller.user;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.inventory.adapters.persistence.adapter.repository.UserR2dbcRepository;
 import com.inventory.adapters.web.dto.user.ChangePasswordRequest;
 import com.inventory.adapters.web.dto.user.CreateUserRequest;
 import com.inventory.adapters.web.dto.role.PermissionResponse;
@@ -15,11 +18,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -30,13 +36,19 @@ public class UserController {
     private final AdminUserQueryPort userQuery;
     private final AdminUserCommandPort userCommand;
     private final UserImageService userImageService;
+    private final UserR2dbcRepository userRepository;
+    private final ObjectMapper objectMapper;
 
     public UserController(AdminUserQueryPort userQuery,
                           AdminUserCommandPort userCommand,
-                          UserImageService userImageService) {
+                          UserImageService userImageService,
+                          UserR2dbcRepository userRepository,
+                          ObjectMapper objectMapper) {
         this.userQuery   = userQuery;
         this.userCommand = userCommand;
         this.userImageService = userImageService;
+        this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -80,6 +92,34 @@ public class UserController {
             .thenReturn(ResponseEntity.<Void>noContent().build());
     }
 
+    @GetMapping("/me/preferences")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<ResponseEntity<Map<String, Object>>> getMyPreferences(
+            @AuthenticationPrincipal UserDetails user) {
+        UUID userId = extractUserId(user);
+        if (userId == null) return Mono.just(ResponseEntity.badRequest().build());
+        return userRepository.findById(userId)
+            .map(entity -> parsePreferences(entity.getPreferences()))
+            .defaultIfEmpty(ResponseEntity.ok(Map.of()));
+    }
+
+    @PutMapping("/me/preferences")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<ResponseEntity<Void>> updateMyPreferences(
+            @RequestBody Map<String, Object> preferences,
+            @AuthenticationPrincipal UserDetails user) {
+        UUID userId = extractUserId(user);
+        if (userId == null) return Mono.just(ResponseEntity.badRequest().build());
+        try {
+            String json = objectMapper.writeValueAsString(preferences);
+            return userRepository.updatePreferences(userId, json)
+                .map(count -> ResponseEntity.ok().<Void>build())
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+        } catch (JsonProcessingException e) {
+            return Mono.just(ResponseEntity.badRequest().build());
+        }
+    }
+
     @PatchMapping("/{id}/password")
     public Mono<ResponseEntity<Void>> changePassword(
             @PathVariable UUID id,
@@ -103,6 +143,24 @@ public class UserController {
             toRoleResponse(u.getRole()),
             u.isActive(), avatarUrl, u.getCreatedAt(), u.getUpdatedAt()
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    private ResponseEntity<Map<String, Object>> parsePreferences(String json) {
+        try {
+            return ResponseEntity.ok(objectMapper.readValue(json, Map.class));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of());
+        }
+    }
+
+    private UUID extractUserId(UserDetails user) {
+        if (user == null) return null;
+        try {
+            return UUID.fromString(user.getUsername());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private RoleResponse toRoleResponse(Role role) {

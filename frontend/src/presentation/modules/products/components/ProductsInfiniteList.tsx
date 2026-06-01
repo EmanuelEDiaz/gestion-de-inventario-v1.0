@@ -1,16 +1,14 @@
 'use client';
 
 import { useCallback } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/presentation/shared/components/ui';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
-import { useInfiniteProducts } from '../hooks/useInfiniteProducts';
+import { usePaginatedProducts } from '../hooks/usePaginatedProducts';
 import { ProductTable } from './table/ProductTable';
 import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
-import { useSort } from '@/presentation/shared/hooks/ui/useSort';
-import { InfiniteListFooter } from './InfiniteListFooter';
 
 interface ProductsInfiniteListProps {
   maxPages?: number;
@@ -22,15 +20,16 @@ interface ProductsInfiniteListProps {
   unitOfMeasure?: string;
 }
 
-export function ProductsInfiniteList({ maxPages = 20, search, categoryId, status, minPrice, maxPrice, unitOfMeasure }: ProductsInfiniteListProps) {
-  const { sortKey, sortDirection, handleSort } = useSort();
-  const filterParams = { search, categoryId, status, minPrice, maxPrice, unitOfMeasure, sortBy: sortKey, sortAsc: sortDirection === 'asc' };
-  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteProducts({ maxPages, ...filterParams });
-  const products = data?.pages.flatMap((page) => page.items) ?? [];
+export function ProductsInfiniteList({ search, categoryId, status, minPrice, maxPrice, unitOfMeasure }: ProductsInfiniteListProps) {
+  const { products, totalElements, totalPages, page, setPage, isLoading, isError, refetch, pageSize } = usePaginatedProducts({
+    search, categoryId, status, minPrice, maxPrice, unitOfMeasure,
+  });
+
   const handleDeleteSuccess = useCallback(() => refetch(), [refetch]);
   const handleDeleteSelected = useCallback(async (ids: string[]) => {
     try {
       await productRepository.deleteAll(ids);
+      toast.success('Productos eliminados correctamente');
       refetch();
     } catch {
       toast.error('Error al eliminar productos');
@@ -50,10 +49,18 @@ export function ProductsInfiniteList({ maxPages = 20, search, categoryId, status
       {products.length === 0 ? (
         <EmptyState message="No hay productos registrados con los filtros aplicados" />
       ) : (
-        <>
-          <ProductTable products={products} sortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} onDeleteSuccess={handleDeleteSuccess} onDeleteSelected={handleDeleteSelected} />
-          <InfiniteListFooter hasNextPage={hasNextPage} isFetchingNextPage={isFetchingNextPage} onLoadMore={() => fetchNextPage()} productsLength={products.length} />
-        </>
+        <ProductTable
+          products={products}
+          onDeleteSuccess={handleDeleteSuccess}
+          onDeleteSelected={handleDeleteSelected}
+          pagination={{
+            page,
+            totalPages,
+            totalElements,
+            pageSize,
+            onPageChange: setPage,
+          }}
+        />
       )}
     </div>
   );

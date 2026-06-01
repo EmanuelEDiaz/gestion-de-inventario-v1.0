@@ -1,16 +1,17 @@
 package com.inventory.application.usecase.command.product;
 
+import com.inventory.application.shared.AuditLogger;
 import com.inventory.application.shared.AuditSerializer;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.audit.AuditLog;
 import com.inventory.domain.model.product.Product;
 import com.inventory.domain.ports.in.product.ProductCommandPort;
-import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;
 import com.inventory.domain.ports.out.SyncLogWriterPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,16 +28,17 @@ public class ProductCommandUseCase implements ProductCommandPort {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final AuditLogRepository auditLogRepository;
+    private final AuditLogger auditLogger;
     private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
+    private static final Logger log = LoggerFactory.getLogger(ProductCommandUseCase.class);
 
     public ProductCommandUseCase(ProductRepository productRepository, CategoryRepository categoryRepository,
-                                  AuditLogRepository auditLogRepository, SyncLogWriterPort syncLogWriter,
+                                  AuditLogger auditLogger, SyncLogWriterPort syncLogWriter,
                                   AuditSerializer auditSerializer) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
-        this.auditLogRepository = auditLogRepository;
+        this.auditLogger = auditLogger;
         this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
@@ -68,10 +70,17 @@ public class ProductCommandUseCase implements ProductCommandPort {
                 );
                 return productRepository.save(product);
             }))
-            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
-                userId, "Product", saved.getId(), "CREATE",
-                null, auditSerializer.toJsonTruncated(saved), null))
+            .flatMap(saved -> auditLogger.log(userId, "Product", saved.getId(), "CREATE",
+                null, auditSerializer.toJsonTruncated(saved))
+                .onErrorResume(e -> {
+                    log.warn("Audit log failed for product {}: {}", saved.getId(), e.getMessage());
+                    return Mono.empty();
+                })
                 .then(syncLogWriter.log("PRODUCT", saved.getId(), "CREATE", saved, null))
+                .onErrorResume(e -> {
+                    log.warn("Sync log failed for product {}: {}", saved.getId(), e.getMessage());
+                    return Mono.empty();
+                })
                 .thenReturn(saved));
     }
 
@@ -98,10 +107,17 @@ public class ProductCommandUseCase implements ProductCommandPort {
                 }
                 Product finalUpdated = updated;
                 return productRepository.save(finalUpdated)
-                    .flatMap(saved -> auditLogRepository.save(AuditLog.create(
-                        userId, "Product", saved.getId(), "UPDATE",
-                        auditSerializer.toJsonTruncated(existing), auditSerializer.toJsonTruncated(saved), null))
+                    .flatMap(saved -> auditLogger.log(userId, "Product", saved.getId(), "UPDATE",
+                        auditSerializer.toJsonTruncated(existing), auditSerializer.toJsonTruncated(saved))
+                        .onErrorResume(e -> {
+                            log.warn("Audit log failed for product {}: {}", saved.getId(), e.getMessage());
+                            return Mono.empty();
+                        })
                         .then(syncLogWriter.log("PRODUCT", saved.getId(), "UPDATE", saved, null))
+                        .onErrorResume(e -> {
+                            log.warn("Sync log failed for product {}: {}", saved.getId(), e.getMessage());
+                            return Mono.empty();
+                        })
                         .thenReturn(saved));
             });
     }
@@ -112,10 +128,17 @@ public class ProductCommandUseCase implements ProductCommandPort {
             .switchIfEmpty(Mono.error(new NotFoundException("Producto", id.toString())))
             .map(Product::archive)
             .flatMap(productRepository::save)
-            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
-                userId, "Product", saved.getId(), "ARCHIVE",
-                null, auditSerializer.toJsonTruncated(saved), null))
+            .flatMap(saved -> auditLogger.log(userId, "Product", saved.getId(), "ARCHIVE",
+                null, auditSerializer.toJsonTruncated(saved))
+                .onErrorResume(e -> {
+                    log.warn("Audit log failed for product {}: {}", saved.getId(), e.getMessage());
+                    return Mono.empty();
+                })
                 .then(syncLogWriter.log("PRODUCT", saved.getId(), "ARCHIVE", saved, null))
+                .onErrorResume(e -> {
+                    log.warn("Sync log failed for product {}: {}", saved.getId(), e.getMessage());
+                    return Mono.empty();
+                })
                 .thenReturn(saved));
     }
 
@@ -125,10 +148,17 @@ public class ProductCommandUseCase implements ProductCommandPort {
             .switchIfEmpty(Mono.error(new NotFoundException("Producto", id.toString())))
             .map(Product::activate)
             .flatMap(productRepository::save)
-            .flatMap(saved -> auditLogRepository.save(AuditLog.create(
-                userId, "Product", saved.getId(), "ACTIVATE",
-                null, auditSerializer.toJsonTruncated(saved), null))
+            .flatMap(saved -> auditLogger.log(userId, "Product", saved.getId(), "ACTIVATE",
+                null, auditSerializer.toJsonTruncated(saved))
+                .onErrorResume(e -> {
+                    log.warn("Audit log failed for product {}: {}", saved.getId(), e.getMessage());
+                    return Mono.empty();
+                })
                 .then(syncLogWriter.log("PRODUCT", saved.getId(), "ACTIVATE", saved, null))
+                .onErrorResume(e -> {
+                    log.warn("Sync log failed for product {}: {}", saved.getId(), e.getMessage());
+                    return Mono.empty();
+                })
                 .thenReturn(saved));
     }
 
@@ -136,11 +166,18 @@ public class ProductCommandUseCase implements ProductCommandPort {
     public Mono<Void> delete(UUID id, UUID userId) {
         return productRepository.findById(id)
             .switchIfEmpty(Mono.error(new NotFoundException("Producto", id.toString())))
-            .flatMap(existing -> auditLogRepository.save(AuditLog.create(
-                userId, "Product", existing.getId(), "DELETE",
-                auditSerializer.toJsonTruncated(existing), null, null))
+            .flatMap(existing -> auditLogger.log(userId, "Product", existing.getId(), "DELETE",
+                auditSerializer.toJsonTruncated(existing), null)
+                .onErrorResume(e -> {
+                    log.warn("Audit log failed for product {}: {}", existing.getId(), e.getMessage());
+                    return Mono.empty();
+                })
                 .then(productRepository.deleteById(id))
-                .then(syncLogWriter.log("PRODUCT", existing.getId(), "DELETE", existing, null)));
+                .then(syncLogWriter.log("PRODUCT", existing.getId(), "DELETE", existing, null))
+                .onErrorResume(e -> {
+                    log.warn("Sync log failed for product {}: {}", existing.getId(), e.getMessage());
+                    return Mono.empty();
+                }));
     }
 
     @Override

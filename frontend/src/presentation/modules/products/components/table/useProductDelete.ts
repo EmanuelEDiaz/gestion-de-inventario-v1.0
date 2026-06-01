@@ -1,29 +1,16 @@
 'use client';
 
-import { useCallback } from 'react';
-import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from '@/presentation/shared/components/ui';
 import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
-import type { Product } from '@/core/product/entities/product';
 
-interface UseProductDeleteOptions {
-  onDeleteSuccess?: () => void;
-}
-
-export function useProductDelete({ onDeleteSuccess }: UseProductDeleteOptions = {}) {
-  const handleDelete = useCallback((product: Product) => {
-    if (!confirm(`¿Estás seguro de eliminar el producto "${product.name}"?`)) {
-      return;
-    }
-
-    productRepository.delete(product.id)
-      .then(() => {
-        toast.success('Producto eliminado correctamente');
-        onDeleteSuccess?.();
-      })
-      .catch(() => {
-        toast.error('Error al eliminar el producto');
-      });
-  }, [onDeleteSuccess]);
-
-  return { handleDelete };
+export function useProductDeleteMutation(onSuccess?: () => void) {
+  return useMutation({
+    mutationFn: (id: string) => productRepository.delete(id),
+    onSuccess: () => {
+      toast.success('Producto eliminado correctamente');
+      onSuccess?.();
+    },
+    onError: (error: Error) => toast.error(error),
+  });
 }

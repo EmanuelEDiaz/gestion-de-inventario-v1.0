@@ -4,10 +4,9 @@ import com.inventory.application.shared.AuditSerializer;
 import com.inventory.domain.errors.BadRequestException;
 import com.inventory.domain.errors.ConflictException;
 import com.inventory.domain.errors.NotFoundException;
-import com.inventory.domain.model.audit.AuditLog;
+import com.inventory.application.shared.AuditLogger;
 import com.inventory.domain.model.category.Category;
 import com.inventory.domain.ports.in.category.CategoryCommandPort;
-import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
@@ -24,16 +23,16 @@ import java.util.UUID;
 public class CategoryCommandUseCase implements CategoryCommandPort {
 
     private final CategoryRepository categoryRepository;
-    private final AuditLogRepository auditLogRepository;
+    private final AuditLogger auditLogger;
     private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
 
     public CategoryCommandUseCase(CategoryRepository categoryRepository,
-                                  AuditLogRepository auditLogRepository,
+                                  AuditLogger auditLogger,
                                   SyncLogWriterPort syncLogWriter,
                                   AuditSerializer auditSerializer) {
         this.categoryRepository = categoryRepository;
-        this.auditLogRepository = auditLogRepository;
+        this.auditLogger = auditLogger;
         this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
@@ -44,8 +43,7 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
             .then(createCategory(command))
             .flatMap(saved -> {
                 String afterData = auditSerializer.toJsonTruncated(saved);
-                AuditLog auditLog = AuditLog.create(userId, "CATEGORY", saved.getId(), "CREATE", null, afterData, null);
-                return auditLogRepository.save(auditLog)
+                return auditLogger.log(userId, "CATEGORY", saved.getId(), "CREATE", null, afterData)
                     .then(syncLogWriter.log("CATEGORY", saved.getId(), "CREATE", saved, null))
                     .thenReturn(saved);
             });
@@ -95,8 +93,7 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
                 return categoryRepository.save(toSave)
                     .flatMap(saved -> {
                         String afterData = auditSerializer.toJsonTruncated(saved);
-                        AuditLog auditLog = AuditLog.create(userId, "CATEGORY", id, "UPDATE", beforeData, afterData, null);
-                        return auditLogRepository.save(auditLog)
+                        return auditLogger.log(userId, "CATEGORY", id, "UPDATE", beforeData, afterData)
                             .then(syncLogWriter.log("CATEGORY", id, "UPDATE", saved, null))
                             .thenReturn(saved);
                     });
@@ -113,8 +110,7 @@ public class CategoryCommandUseCase implements CategoryCommandPort {
                         return Mono.error(new ConflictException("No se puede eliminar una categoría con productos asociados"));
                     }
                     String beforeData = auditSerializer.toJsonTruncated(category);
-                    AuditLog auditLog = AuditLog.create(userId, "CATEGORY", id, "DELETE", beforeData, null, null);
-                    return auditLogRepository.save(auditLog)
+                    return auditLogger.log(userId, "CATEGORY", id, "DELETE", beforeData, null)
                         .then(categoryRepository.deleteById(id))
                         .then(syncLogWriter.log("CATEGORY", id, "DELETE", category, null));
                 }));

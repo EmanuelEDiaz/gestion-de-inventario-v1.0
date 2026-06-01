@@ -1,6 +1,7 @@
 'use client';
 
 import { Toaster as SonnerToaster, toast as sonnerToast } from 'sonner';
+import { getErrorMessage } from '@/infrastructure/api/client';
 import { ToastContent } from './ToastContent';
 import type { ToastVariant } from './ToastIcons';
 
@@ -43,6 +44,11 @@ const DEFAULT_DURATIONS: Record<ToastVariant, number> = {
   info: 4000,
 };
 
+function resolveTitle(titleOrError: string | Error): string {
+  if (typeof titleOrError === 'string') return titleOrError;
+  return getErrorMessage(titleOrError);
+}
+
 function showToast(variant: ToastVariant, title: string, options?: ToastOptions) {
   const duration = options?.duration ?? DEFAULT_DURATIONS[variant];
   sonnerToast.custom(
@@ -63,7 +69,7 @@ function showToast(variant: ToastVariant, title: string, options?: ToastOptions)
 }
 
 export const toast = {
-  error: (title: string, options?: ToastOptions) => showToast('error', title, options),
+  error: (titleOrError: string | Error, options?: ToastOptions) => showToast('error', resolveTitle(titleOrError), options),
   success: (title: string, options?: ToastOptions) => showToast('success', title, options),
   warning: (title: string, options?: ToastOptions) => showToast('warning', title, options),
   info: (title: string, options?: ToastOptions) => showToast('info', title, options),

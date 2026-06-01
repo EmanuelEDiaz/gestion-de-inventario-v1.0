@@ -27,7 +27,7 @@ export function PosView() {
   useEffect(() => {
     Promise.all([
       warehouseRepo.getAll().catch(() => [] as Warehouse[]),
-      productRepo.getAll().then((r) => r.content || []).catch(() => [] as Product[]),
+      productRepo.getAllPaginated().then((r) => r.content || []).catch(() => [] as Product[]),
     ]).then(([ws, ps]) => {
       setWarehouses(ws);
       setProducts(ps);

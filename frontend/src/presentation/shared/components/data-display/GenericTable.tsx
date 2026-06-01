@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { SvgIcon } from '@/presentation/shared/components/ui/icon-mapping';
 import { Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { cn } from '@/presentation/shared/lib/utils';
@@ -8,6 +8,7 @@ import { Table } from '../ui/table';
 import { Button } from '../ui/Button';
 import { GenericTableHeader } from './GenericTableHeader';
 import { GenericTableBody } from './GenericTableBody';
+import { PaginationControls } from './PaginationControls';
 import { useTableSelection } from '@/presentation/shared/hooks/ui/useTableSelection';
 import { ConfirmDialog } from '@/presentation/shared/components/ui/ConfirmDialog';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
@@ -29,7 +30,7 @@ export interface TableAction<T> {
   confirmMessage?: string | ((row: T) => string);
 }
 
-export interface BulkAction<T> {
+export interface BulkAction {
   label: string;
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost';
   icon?: React.ComponentType<{ className?: string }>;
@@ -50,14 +51,22 @@ export interface GenericTableProps<T> {
   onRowClick?: (row: T) => void;
   selectable?: boolean;
   onDeleteSelected?: (ids: string[]) => void;
-  bulkActions?: BulkAction<T>[];
+  bulkActions?: BulkAction[];
   onSelectionChange?: (ids: string[]) => void;
+  pagination?: {
+    page: number;
+    totalPages: number;
+    totalElements: number;
+    onPageChange: (page: number) => void;
+    pageSize: number;
+  };
 }
 
 export function GenericTable<T extends { id: string }>({
   data, columns, actions = [], onSort, sortKey, sortDirection,
   emptyMessage = 'No hay datos para mostrar', className, onRowClick,
   selectable = false, onDeleteSelected, bulkActions, onSelectionChange,
+  pagination,
 }: GenericTableProps<T>) {
   const allIds = data.map((r) => r.id);
   const { selectedIds, toggleOne, toggleAll, clearSelection, isAllSelected, isIndeterminate } =
@@ -96,7 +105,7 @@ export function GenericTable<T extends { id: string }>({
     };
   }), [actions]);
 
-  const handleBulkClick = (bulkAction: BulkAction<T>) => {
+  const handleBulkClick = (bulkAction: BulkAction) => {
     const ids = [...selectedIds];
     if (bulkAction.confirmMessage) {
       const message = typeof bulkAction.confirmMessage === 'function'
@@ -205,6 +214,15 @@ export function GenericTable<T extends { id: string }>({
         onConfirm={() => pendingConfirm?.onConfirm()}
         onCancel={() => setPendingConfirm(null)}
       />
+      {pagination && (
+        <PaginationControls
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          totalElements={pagination.totalElements}
+          onPageChange={pagination.onPageChange}
+          pageSize={pagination.pageSize}
+        />
+      )}
     </div>
   );
 }

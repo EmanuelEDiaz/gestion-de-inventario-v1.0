@@ -18,6 +18,9 @@ public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEn
     @Query("SELECT * FROM products WHERE status = 'ACTIVE' ORDER BY name")
     Flux<ProductEntity> findAllActive();
 
+    @Query("SELECT * FROM products ORDER BY name")
+    Flux<ProductEntity> findAllOrdered();
+
     Flux<ProductEntity> findByCategoryId(UUID categoryId);
 
     Flux<ProductEntity> findByStatus(String status);
@@ -47,15 +50,34 @@ public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEn
            "AND (:maxPrice IS NULL OR sale_price <= :maxPrice) " +
            "AND (:unitOfMeasure IS NULL OR unit_of_measure = :unitOfMeasure) " +
            "ORDER BY " +
-           "CASE WHEN :sortAsc THEN LOWER(:sortBy) END ASC, " +
-           "CASE WHEN NOT :sortAsc THEN LOWER(:sortBy) END DESC " +
+           "CASE WHEN :sortBy = 'name' AND :sortAsc THEN LOWER(name) END ASC, " +
+           "CASE WHEN :sortBy = 'name' AND NOT :sortAsc THEN LOWER(name) END DESC, " +
+           "CASE WHEN :sortBy = 'sku' AND :sortAsc THEN LOWER(sku) END ASC, " +
+           "CASE WHEN :sortBy = 'sku' AND NOT :sortAsc THEN LOWER(sku) END DESC, " +
+           "CASE WHEN :sortBy = 'barcode' AND :sortAsc THEN barcode END ASC, " +
+           "CASE WHEN :sortBy = 'barcode' AND NOT :sortAsc THEN barcode END DESC, " +
+           "CASE WHEN :sortBy = 'sale_price' AND :sortAsc THEN sale_price END ASC, " +
+           "CASE WHEN :sortBy = 'sale_price' AND NOT :sortAsc THEN sale_price END DESC, " +
+           "CASE WHEN :sortBy = 'standard_cost' AND :sortAsc THEN standard_cost END ASC, " +
+           "CASE WHEN :sortBy = 'standard_cost' AND NOT :sortAsc THEN standard_cost END DESC, " +
+           "CASE WHEN :sortBy = 'reorder_point' AND :sortAsc THEN reorder_point END ASC, " +
+           "CASE WHEN :sortBy = 'reorder_point' AND NOT :sortAsc THEN reorder_point END DESC, " +
+           "CASE WHEN :sortBy = 'tax_rate' AND :sortAsc THEN tax_rate END ASC, " +
+           "CASE WHEN :sortBy = 'tax_rate' AND NOT :sortAsc THEN tax_rate END DESC, " +
+           "CASE WHEN :sortBy = 'created_at' AND :sortAsc THEN created_at END ASC, " +
+           "CASE WHEN :sortBy = 'created_at' AND NOT :sortAsc THEN created_at END DESC, " +
+           "CASE WHEN :sortBy = 'updated_at' AND :sortAsc THEN updated_at END ASC, " +
+           "CASE WHEN :sortBy = 'updated_at' AND NOT :sortAsc THEN updated_at END DESC, " +
+           "CASE WHEN :sortBy = 'status' AND :sortAsc THEN status END ASC, " +
+           "CASE WHEN :sortBy = 'status' AND NOT :sortAsc THEN status END DESC, " +
+           "LOWER(name) ASC, id ASC " +
            "LIMIT :size OFFSET :offset")
     Flux<ProductEntity> findWithFilter(String search, UUID categoryId, String status,
                                         BigDecimal minPrice, BigDecimal maxPrice, String unitOfMeasure,
                                         String sortBy, boolean sortAsc, int offset, int size);
 
     @Query("SELECT * FROM products WHERE " +
-           "(:cursor IS NULL OR id > :cursor::uuid) " +
+           "(:cursorName IS NULL OR (LOWER(name) > LOWER(:cursorName) OR (LOWER(name) = LOWER(:cursorName) AND id > :cursorId::uuid))) " +
            "AND (:status IS NULL OR status = :status) " +
            "AND (:search IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(sku) LIKE LOWER(CONCAT('%', :search, '%'))) " +
@@ -64,13 +86,32 @@ public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEn
            "AND (:maxPrice IS NULL OR sale_price <= :maxPrice) " +
            "AND (:unitOfMeasure IS NULL OR unit_of_measure = :unitOfMeasure) " +
            "ORDER BY " +
-           "CASE WHEN :sortAsc THEN LOWER(:sortBy) END ASC, " +
-           "CASE WHEN NOT :sortAsc THEN LOWER(:sortBy) END DESC " +
+           "CASE WHEN :sortBy = 'name' AND :sortAsc THEN LOWER(name) END ASC, " +
+           "CASE WHEN :sortBy = 'name' AND NOT :sortAsc THEN LOWER(name) END DESC, " +
+           "CASE WHEN :sortBy = 'sku' AND :sortAsc THEN LOWER(sku) END ASC, " +
+           "CASE WHEN :sortBy = 'sku' AND NOT :sortAsc THEN LOWER(sku) END DESC, " +
+           "CASE WHEN :sortBy = 'barcode' AND :sortAsc THEN barcode END ASC, " +
+           "CASE WHEN :sortBy = 'barcode' AND NOT :sortAsc THEN barcode END DESC, " +
+           "CASE WHEN :sortBy = 'sale_price' AND :sortAsc THEN sale_price END ASC, " +
+           "CASE WHEN :sortBy = 'sale_price' AND NOT :sortAsc THEN sale_price END DESC, " +
+           "CASE WHEN :sortBy = 'standard_cost' AND :sortAsc THEN standard_cost END ASC, " +
+           "CASE WHEN :sortBy = 'standard_cost' AND NOT :sortAsc THEN standard_cost END DESC, " +
+           "CASE WHEN :sortBy = 'reorder_point' AND :sortAsc THEN reorder_point END ASC, " +
+           "CASE WHEN :sortBy = 'reorder_point' AND NOT :sortAsc THEN reorder_point END DESC, " +
+           "CASE WHEN :sortBy = 'tax_rate' AND :sortAsc THEN tax_rate END ASC, " +
+           "CASE WHEN :sortBy = 'tax_rate' AND NOT :sortAsc THEN tax_rate END DESC, " +
+           "CASE WHEN :sortBy = 'created_at' AND :sortAsc THEN created_at END ASC, " +
+           "CASE WHEN :sortBy = 'created_at' AND NOT :sortAsc THEN created_at END DESC, " +
+           "CASE WHEN :sortBy = 'updated_at' AND :sortAsc THEN updated_at END ASC, " +
+           "CASE WHEN :sortBy = 'updated_at' AND NOT :sortAsc THEN updated_at END DESC, " +
+           "CASE WHEN :sortBy = 'status' AND :sortAsc THEN status END ASC, " +
+           "CASE WHEN :sortBy = 'status' AND NOT :sortAsc THEN status END DESC, " +
+           "LOWER(name) ASC, id ASC " +
            "LIMIT :size")
-    Flux<ProductEntity> findWithCursorAndFilter(String cursor, int size, String status,
-                                                String search, UUID categoryId,
-                                                BigDecimal minPrice, BigDecimal maxPrice, String unitOfMeasure,
-                                                String sortBy, boolean sortAsc);
+    Flux<ProductEntity> findWithCursorAndFilter(String cursorName, UUID cursorId, int size, String status,
+                                                 String search, UUID categoryId,
+                                                 BigDecimal minPrice, BigDecimal maxPrice, String unitOfMeasure,
+                                                 String sortBy, boolean sortAsc);
 
     @org.springframework.data.r2dbc.repository.Modifying
     @Query("UPDATE products SET main_image = :filePath, updated_at = NOW() WHERE id = :productId")

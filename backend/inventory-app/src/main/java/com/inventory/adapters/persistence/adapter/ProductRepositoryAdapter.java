@@ -45,7 +45,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
 
     @Override
     public Flux<Product> findAll() {
-        return r2dbcRepository.findAll()
+        return r2dbcRepository.findAllOrdered()
             .map(mapper::toDomain);
     }
 
@@ -82,8 +82,19 @@ public class ProductRepositoryAdapter implements ProductRepository {
 
     @Override
     public Flux<Product> findAllWithCursor(String cursor, ProductFilter filter, boolean activeOnly) {
+        String cursorName = null;
+        UUID cursorId = null;
+        if (cursor != null && !cursor.isEmpty()) {
+            String[] parts = cursor.split("\\|", 2);
+            if (parts.length == 2) {
+                cursorName = parts[0];
+                cursorId = UUID.fromString(parts[1]);
+            } else {
+                cursorId = UUID.fromString(cursor);
+            }
+        }
         return r2dbcRepository.findWithCursorAndFilter(
-                cursor,
+                cursorName, cursorId,
                 filter.getSize(),
                 activeOnly ? "ACTIVE" : null,
                 filter.getSearch(),
@@ -99,9 +110,6 @@ public class ProductRepositoryAdapter implements ProductRepository {
 
     @Override
     public Flux<Product> findAllFiltered(ProductFilter filter, boolean activeOnly) {
-        if (filter.isEmpty()) {
-            return activeOnly ? findAllActive() : findAll();
-        }
         return r2dbcRepository.findWithFilter(
                 filter.getSearch(),
                 filter.getCategoryId(),

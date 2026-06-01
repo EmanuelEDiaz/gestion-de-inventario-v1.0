@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,7 +29,7 @@ public class AuditLogController {
     }
 
     @GetMapping
-    public Flux<AuditLogResponse> getAll(
+    public Mono<ResponseEntity<List<AuditLogResponse>>> getAll(
             @RequestParam(required = false) String entityType,
             @RequestParam(required = false) UUID actorId,
             @RequestParam(required = false) String action,
@@ -38,7 +39,11 @@ public class AuditLogController {
             @RequestParam(defaultValue = "20") int size) {
         var criteria = new AuditLogSearchCriteria(
             entityType, actorId, action, fromDate, toDate, page, Math.min(size, 100));
-        return queryUseCase.search(criteria).map(mapper::toResponse);
+        return queryUseCase.search(criteria).map(mapper::toResponse).collectList()
+            .zipWith(queryUseCase.countSearch(criteria))
+            .map(tuple -> ResponseEntity.ok()
+                .header("x-total-count", String.valueOf(tuple.getT2()))
+                .body(tuple.getT1()));
     }
 
     @GetMapping("/{id}")

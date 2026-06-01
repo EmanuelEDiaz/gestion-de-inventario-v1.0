@@ -1,69 +1,63 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { UiPreferences } from '@/core/settings/entities/app-settings';
 import { DEFAULT_UI_PREFS } from '@/core/settings/entities/app-settings';
+import { userPreferencesRepository } from '@/infrastructure/repositories/user/UserPreferencesRepository';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { LabelWithHint } from '@/presentation/shared/components/form/LabelWithHint';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
-const UI_PREFS_KEY = 'ui_preferences';
-
-function loadUiPrefs(): UiPreferences {
-  if (typeof window === 'undefined') return DEFAULT_UI_PREFS;
-  try {
-    const stored = localStorage.getItem(UI_PREFS_KEY);
-    if (stored) return { ...DEFAULT_UI_PREFS, ...JSON.parse(stored) };
-  } catch {
-    // ignore
-  }
-  return DEFAULT_UI_PREFS;
-}
-
-function saveUiPrefs(prefs: UiPreferences): void {
-  try {
-    localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
-  } catch {
-    // ignore
-  }
-}
-
 export function NotificationSettingsFields() {
-  const [uiPrefs, setUiPrefs] = useState<UiPreferences>(DEFAULT_UI_PREFS);
+  const [maxProductPages, setMaxProductPages] = useState(DEFAULT_UI_PREFS.maxProductPages);
+  const [searchDebounceMs, setSearchDebounceMs] = useState(DEFAULT_UI_PREFS.searchDebounceMs);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setUiPrefs(loadUiPrefs());
+    userPreferencesRepository.get().then((prefs) => {
+      setMaxProductPages(prefs.maxProductPages);
+      setSearchDebounceMs(prefs.searchDebounceMs);
+      setLoading(false);
+    });
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    saveUiPrefs(uiPrefs);
-    toast.success('Preferencias guardadas', {
-      description: 'Las preferencias de interfaz se guardaron localmente.',
-    });
+    try {
+      await userPreferencesRepository.update({
+        maxProductPages,
+        searchDebounceMs,
+      });
+      toast.success('Preferencias guardadas', {
+        description: 'Las preferencias de interfaz se guardaron en el servidor.',
+      });
+    } catch {
+      toast.error('Error al guardar preferencias');
+    }
   };
+
+  if (loading) return null;
 
   return (
     <section>
       <div className="mb-4">
         <h3 className="text-base font-semibold">Preferencias de interfaz</h3>
         <p className="text-sm text-muted-foreground">
-          Estas preferencias se guardan solo en este navegador y no afectan a otros usuarios.
+          Estas preferencias se guardan en el servidor y persisten entre sesiones y dispositivos.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <LabelWithHint htmlFor="maxProductPages" label="Máx. páginas de productos en memoria"
-            hint="Número de páginas de productos que se mantienen en caché local"
-            hintDescription="Un valor más alto mejora la navegación pero consume más memoria. Por defecto: 20." />
-          <Input id="maxProductPages" type="number" min={1} max={50}
-            value={uiPrefs.maxProductPages}
-            onChange={(e) => setUiPrefs((prev) => ({ ...prev, maxProductPages: Number(e.target.value) }))}
+          <LabelWithHint htmlFor="maxProductPages" label="Artículos por página"
+            hint="Cantidad de artículos que se muestran en cada página de listados"
+            hintDescription="Un valor más alto muestra más artículos por página. Por defecto: 20." />
+          <Input id="maxProductPages" type="number" min={5} max={100}
+            value={maxProductPages}
+            onChange={(e) => setMaxProductPages(Number(e.target.value))}
             placeholder="20" className="w-24" />
-          <p className="text-xs text-muted-foreground">Cantidad de páginas a mantener en caché local (afecta rendimiento). Por defecto: 20.</p>
+          <p className="text-xs text-muted-foreground">Artículos por página en listados (5-100). Por defecto: 20.</p>
         </div>
 
         <div className="space-y-2">
@@ -71,8 +65,8 @@ export function NotificationSettingsFields() {
             hint="Milisegundos de espera antes de ejecutar una búsqueda al escribir"
             hintDescription="Un valor más alto reduce peticiones pero hace la búsqueda menos sensible. 300ms es lo recomendado." />
           <Input id="searchDebounceMs" type="number" min={100} max={2000} step={100}
-            value={uiPrefs.searchDebounceMs}
-            onChange={(e) => setUiPrefs((prev) => ({ ...prev, searchDebounceMs: Number(e.target.value) }))}
+            value={searchDebounceMs}
+            onChange={(e) => setSearchDebounceMs(Number(e.target.value))}
             placeholder="300" className="w-24" />
           <p className="text-xs text-muted-foreground">Tiempo de espera antes de ejecutar búsquedas. 300ms es lo recomendado.</p>
         </div>

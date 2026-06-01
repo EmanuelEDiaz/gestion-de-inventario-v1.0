@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -249,6 +250,24 @@ public class GlobalExceptionHandler {
         );
 
         return Mono.just(ResponseEntity.status(status)
+                .header("Content-Type", "application/problem+json")
+                .body(problem));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleDataIntegrity(
+            DataIntegrityViolationException ex, ServerWebExchange exchange) {
+        log.warn("Data integrity violation: {}", ex.getMessage());
+
+        ProblemDetail problem = ProblemDetail.of(
+                "urn:inventory:error:constraint-violation",
+                HttpStatus.CONFLICT.value(),
+                "Conflicto de integridad",
+                "No se puede eliminar el registro porque tiene datos asociados en el sistema (movimientos de inventario, ventas, etc.). Archive el producto en su lugar.",
+                exchange.getRequest().getPath().value()
+        );
+
+        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT)
                 .header("Content-Type", "application/problem+json")
                 .body(problem));
     }

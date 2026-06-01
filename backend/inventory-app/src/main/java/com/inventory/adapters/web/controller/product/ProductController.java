@@ -80,7 +80,7 @@ public class ProductController {
             .collectList()
             .flatMap(items -> {
                 String nextCursor = items.size() == effectiveSize && !items.isEmpty() 
-                    ? items.get(items.size() - 1).getId().toString() 
+                    ? items.get(items.size() - 1).getName() + "|" + items.get(items.size() - 1).getId().toString()
                     : null;
                 return enrichAllWithCategory(items)
                     .collectList()
@@ -88,9 +88,62 @@ public class ProductController {
             });
     }
 
+    @GetMapping("/paginated")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('products:read')")
+    public Mono<PaginatedProductResponse> getAllPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "false") boolean activeOnly,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String unitOfMeasure,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "true") boolean sortAsc) {
+        
+        int effectiveSize = Math.min(size, MAX_PAGE_SIZE);
+        
+        Product.ProductStatus productStatus = status != null 
+            ? Product.ProductStatus.valueOf(status.toUpperCase()) 
+            : null;
+        
+        ProductFilter filter = new ProductFilter(
+            search, categoryId, productStatus,
+            minPrice, maxPrice, unitOfMeasure,
+            sortBy, sortAsc, page, effectiveSize
+        );
+        
+        Mono<List<ProductResponse>> items = productQuery.findAllFiltered(filter, activeOnly)
+            .collectList()
+            .flatMap(list -> Flux.fromIterable(list).flatMap(this::enrichWithCategory).collectList());
+
+        Mono<Long> totalElements = activeOnly 
+            ? productQuery.countByStatus(Product.ProductStatus.ACTIVE) 
+            : productQuery.count();
+
+        return Mono.zip(items, totalElements)
+            .map(tuple -> new PaginatedProductResponse(
+                tuple.getT1(),
+                tuple.getT2(),
+                (int) Math.ceil((double) tuple.getT2() / effectiveSize),
+                effectiveSize,
+                page
+            ));
+    }
+
     record ProductsPageResponse(
         List<ProductResponse> items,
         String nextCursor
+    ) {}
+
+    record PaginatedProductResponse(
+        List<ProductResponse> content,
+        long totalElements,
+        int totalPages,
+        int size,
+        int number
     ) {}
 
     @GetMapping("/search")

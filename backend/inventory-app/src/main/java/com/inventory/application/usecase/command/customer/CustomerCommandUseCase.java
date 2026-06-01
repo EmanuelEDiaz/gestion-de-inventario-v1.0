@@ -1,10 +1,9 @@
 package com.inventory.application.usecase.command.customer;
 
+import com.inventory.application.shared.AuditLogger;
 import com.inventory.application.shared.AuditSerializer;
-import com.inventory.domain.model.audit.AuditLog;
 import com.inventory.domain.model.customer.Customer;
 import com.inventory.domain.ports.in.customer.CustomerCommandPort;
-import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.CustomerRepository;
 import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
@@ -17,16 +16,16 @@ import java.util.UUID;
 public class CustomerCommandUseCase implements CustomerCommandPort {
     
     private final CustomerRepository customerRepository;
-    private final AuditLogRepository auditLogRepository;
+    private final AuditLogger auditLogger;
     private final SyncLogWriterPort syncLogWriter;
     private final AuditSerializer auditSerializer;
     
     public CustomerCommandUseCase(CustomerRepository customerRepository,
-                                  AuditLogRepository auditLogRepository,
+                                  AuditLogger auditLogger,
                                   SyncLogWriterPort syncLogWriter,
                                   AuditSerializer auditSerializer) {
         this.customerRepository = customerRepository;
-        this.auditLogRepository = auditLogRepository;
+        this.auditLogger = auditLogger;
         this.syncLogWriter = syncLogWriter;
         this.auditSerializer = auditSerializer;
     }
@@ -67,15 +66,9 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
             );
         }
         return customerRepository.save(customer)
-            .flatMap(c -> {
-                AuditLog log = AuditLog.create(
-                    userId, "CUSTOMER", c.getId(), "CREATE",
-                    null, auditSerializer.toJson(c), null
-                );
-                return auditLogRepository.save(log)
-                    .then(syncLogWriter.log("CUSTOMER", c.getId(), "CREATE", c, null))
-                    .thenReturn(c);
-            });
+            .flatMap(c -> auditLogger.log(userId, "CUSTOMER", c.getId(), "CREATE", null, auditSerializer.toJsonTruncated(c))
+                .then(syncLogWriter.log("CUSTOMER", c.getId(), "CREATE", c, null))
+                .thenReturn(c));
     }
     
     @Override
@@ -83,7 +76,7 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
         return customerRepository.findById(id)
             .switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found: " + id)))
             .flatMap(existing -> {
-                String beforeJson = auditSerializer.toJson(existing);
+                String beforeJson = auditSerializer.toJsonTruncated(existing);
                 Customer updated = existing.update(
                     command.code(),
                     command.name(),
@@ -101,15 +94,9 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
                     command.longitude()
                 );
                 return customerRepository.save(updated)
-                    .flatMap(c -> {
-                        AuditLog log = AuditLog.create(
-                            userId, "CUSTOMER", c.getId(), "UPDATE",
-                            beforeJson, auditSerializer.toJson(c), null
-                        );
-                        return auditLogRepository.save(log)
-                            .then(syncLogWriter.log("CUSTOMER", c.getId(), "UPDATE", c, null))
-                            .thenReturn(c);
-                    });
+                    .flatMap(c -> auditLogger.log(userId, "CUSTOMER", c.getId(), "UPDATE", beforeJson, auditSerializer.toJsonTruncated(c))
+                        .then(syncLogWriter.log("CUSTOMER", c.getId(), "UPDATE", c, null))
+                        .thenReturn(c));
             });
     }
     
@@ -117,15 +104,9 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
     public Mono<Void> delete(UUID id, UUID userId) {
         return customerRepository.findById(id)
             .switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found: " + id)))
-            .flatMap(existing -> {
-                AuditLog log = AuditLog.create(
-                    userId, "CUSTOMER", id, "DELETE",
-                    auditSerializer.toJson(existing), null, null
-                );
-                return auditLogRepository.save(log)
-                    .then(customerRepository.deleteById(id))
-                    .then(syncLogWriter.log("CUSTOMER", id, "DELETE", existing, null));
-            });
+            .flatMap(existing -> auditLogger.log(userId, "CUSTOMER", id, "DELETE", auditSerializer.toJsonTruncated(existing), null)
+                .then(customerRepository.deleteById(id))
+                .then(syncLogWriter.log("CUSTOMER", id, "DELETE", existing, null)));
     }
     
     @Override
@@ -140,15 +121,9 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
             .switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found: " + id)))
             .map(Customer::activate)
             .flatMap(c -> customerRepository.save(c)
-                .flatMap(saved -> {
-                    AuditLog log = AuditLog.create(
-                        userId, "CUSTOMER", saved.getId(), "ACTIVATE",
-                        null, auditSerializer.toJson(saved), null
-                    );
-                    return auditLogRepository.save(log)
-                        .then(syncLogWriter.log("CUSTOMER", saved.getId(), "ACTIVATE", saved, null))
-                        .thenReturn(saved);
-                }));
+                .flatMap(saved -> auditLogger.log(userId, "CUSTOMER", saved.getId(), "ACTIVATE", null, auditSerializer.toJsonTruncated(saved))
+                    .then(syncLogWriter.log("CUSTOMER", saved.getId(), "ACTIVATE", saved, null))
+                    .thenReturn(saved)));
     }
     
     @Override
@@ -157,14 +132,8 @@ public class CustomerCommandUseCase implements CustomerCommandPort {
             .switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found: " + id)))
             .map(Customer::deactivate)
             .flatMap(c -> customerRepository.save(c)
-                .flatMap(saved -> {
-                    AuditLog log = AuditLog.create(
-                        userId, "CUSTOMER", saved.getId(), "DEACTIVATE",
-                        null, auditSerializer.toJson(saved), null
-                    );
-                    return auditLogRepository.save(log)
-                        .then(syncLogWriter.log("CUSTOMER", saved.getId(), "DEACTIVATE", saved, null))
-                        .thenReturn(saved);
-                }));
+                .flatMap(saved -> auditLogger.log(userId, "CUSTOMER", saved.getId(), "DEACTIVATE", null, auditSerializer.toJsonTruncated(saved))
+                    .then(syncLogWriter.log("CUSTOMER", saved.getId(), "DEACTIVATE", saved, null))
+                    .thenReturn(saved)));
     }
 }

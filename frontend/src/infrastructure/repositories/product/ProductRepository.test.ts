@@ -34,9 +34,9 @@ describe('ProductRepository', () => {
 
       vi.mocked(apiClient.get).mockResolvedValue(mockResponse);
 
-      const result = await repository.getAll({ search: 'test', page: 0, size: 20 });
+      const result = await repository.getAllPaginated({ search: 'test', page: 0, size: 20 });
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products?search=test&page=0&size=20');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products/paginated?search=test&page=0&size=20');
       expect(result.content).toHaveLength(1);
       expect(result.totalElements).toBe(1);
     });
@@ -54,9 +54,9 @@ describe('ProductRepository', () => {
 
       vi.mocked(apiClient.get).mockResolvedValue(mockResponse);
 
-      const result = await repository.getAll();
+      const result = await repository.getAllPaginated();
 
-      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/products/paginated');
       expect(result.content).toHaveLength(0);
     });
   });

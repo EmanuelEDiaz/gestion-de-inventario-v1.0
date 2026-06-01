@@ -46,6 +46,11 @@ public class ProductQueryUseCase implements ProductQueryPort {
     }
 
     @Override
+    public Flux<Product> findAllFiltered(ProductFilter filter, boolean activeOnly) {
+        return productRepository.findAllFiltered(filter, activeOnly);
+    }
+
+    @Override
     public Flux<Product> findAllWithCursor(String cursor, ProductFilter filter, boolean activeOnly) {
         return productRepository.findAllWithCursor(cursor, filter, activeOnly);
     }

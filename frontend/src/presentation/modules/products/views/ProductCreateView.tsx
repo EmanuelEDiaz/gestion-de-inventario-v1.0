@@ -1,14 +1,12 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
+import { TooltipHint, TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Sparkles } from '@/presentation/shared/components/ui/icon-mapping';
-import { Button } from '@/presentation/shared/components/ui';
-import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
-import { Card } from '@/presentation/shared/components/ui/card';
-import { toast } from '@/presentation/shared/components/ui/toast';
+import { toast } from '@/presentation/shared/components/ui';
+import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { ProductFormFields, type ProductFormData } from '../components/form/ProductFormFields';
 import { ProductCreateImageCarousel } from '../components/ProductCreateImageCarousel';
 import { useCategories } from '../hooks/useCategories';
@@ -17,19 +15,7 @@ import { productRepository } from '@/infrastructure/repositories/product/Product
 import { productImageApi } from '@/infrastructure/api/image-upload-api';
 import type { CreateProductData } from '@/core/product/entities/product';
 
-const INITIAL_FORM_DATA: ProductFormData = {
-  name: '',
-  sku: '',
-  barcode: '',
-  description: '',
-  categoryId: '',
-  standardCost: '',
-  salePrice: '',
-  reorderPoint: '',
-  taxRate: '0',
-  unitOfMeasure: 'UNIT',
-};
-
+const STORAGE_KEY = 'product-create';
 const createProductUseCase = new CreateProductUseCase(productRepository);
 
 export function ProductCreateView() {
@@ -37,103 +23,107 @@ export function ProductCreateView() {
   const searchParams = useSearchParams();
   const prefillId = searchParams.get('prefillFrom');
 
-  const [formData, setFormData] = useState<ProductFormData>(INITIAL_FORM_DATA);
   const [files, setFiles] = useState<File[]>([]);
   const [primaryIndex, setPrimaryIndex] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { data: categories = [] } = useCategories(true);
 
-  const { data: template } = useQuery({
+  const { data: template, isLoading: isLoadingTemplate } = useQuery({
     queryKey: ['product', prefillId],
     queryFn: () => productRepository.getById(prefillId!),
     enabled: !!prefillId,
   });
 
-  useEffect(() => {
-    if (template) {
-      setFormData({
-        name: template.name || '',
-        sku: template.sku || '',
-        barcode: template.barcode || '',
-        description: template.description || '',
-        categoryId: template.categoryId || '',
-        standardCost: template.standardCost?.toString() || '',
-        salePrice: template.salePrice?.toString() || '',
-        reorderPoint: template.reorderPoint?.toString() || '',
-        taxRate: template.taxRate?.toString() || '0',
-        unitOfMeasure: template.unitOfMeasure || 'UNIT',
-      });
+  const initialData: Partial<ProductFormData> = {
+    name: 'Aceite de Motor 5W-30',
+    sku: 'ACE-5W30-1L',
+    barcode: '7501234567890',
+    description: 'Aceite de motor multigrado 5W-30 para motor a gasolina. Presentación de 1 litro.',
+    standardCost: '150.00',
+    salePrice: '220.00',
+    reorderPoint: '10',
+    taxRate: '16',
+    unitOfMeasure: 'UNIT',
+  };
+
+  const initialValues = template ? {
+    name: template.name,
+    sku: template.sku ?? '',
+    barcode: template.barcode ?? '',
+    description: template.description ?? '',
+    categoryId: template.categoryId ?? '',
+    standardCost: template.standardCost?.toString() ?? '',
+    salePrice: template.salePrice?.toString() ?? '',
+    reorderPoint: template.reorderPoint?.toString() ?? '',
+    taxRate: template.taxRate?.toString() ?? '0',
+    unitOfMeasure: template.unitOfMeasure ?? 'UNIT',
+  } : undefined;
+
+  const uploadImages = useCallback(async (productId: string) => {
+    if (files.length === 0) return;
+    const primaryImage = files[primaryIndex];
+    const secondaryImages = files.filter((_, index) => index !== primaryIndex);
+    if (primaryImage) {
+      await productImageApi.upload(productId, primaryImage, true);
     }
-  }, [template]);
+    for (const image of secondaryImages) {
+      await productImageApi.upload(productId, image, false);
+    }
+  }, [files, primaryIndex]);
 
-  const handleFieldChange = useCallback((field: keyof ProductFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const handleSubmit = useCallback(async (data: ProductFormData) => {
+    const payload: CreateProductData = {
+      name: data.name, sku: data.sku || undefined,
+      barcode: data.barcode || undefined, description: data.description || undefined,
+      categoryId: data.categoryId || undefined,
+      standardCost: data.standardCost ? parseFloat(data.standardCost) : undefined,
+      salePrice: data.salePrice ? parseFloat(data.salePrice) : undefined,
+      reorderPoint: data.reorderPoint ? parseFloat(data.reorderPoint) : undefined,
+      taxRate: data.taxRate ? parseFloat(data.taxRate) : 0,
+      unitOfMeasure: data.unitOfMeasure,
+    };
+    const product = await createProductUseCase.execute(payload);
+    await uploadImages(product.id);
+    toast.success('Producto creado correctamente');
+    router.push('/products');
+  }, [uploadImages, router]);
 
-  const saveProduct = useCallback(
-    async (createAndContinue = false) => {
-      setIsSaving(true);
-      setError(null);
-      try {
-        const payload: CreateProductData = {
-          name: formData.name,
-          sku: formData.sku || undefined,
-          barcode: formData.barcode || undefined,
-          description: formData.description || undefined,
-          categoryId: formData.categoryId || undefined,
-          standardCost: formData.standardCost ? parseFloat(formData.standardCost) : undefined,
-          salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
-          reorderPoint: formData.reorderPoint ? parseFloat(formData.reorderPoint) : undefined,
-          taxRate: formData.taxRate ? parseFloat(formData.taxRate) : 0,
-          unitOfMeasure: formData.unitOfMeasure,
-        };
-        const product = await createProductUseCase.execute(payload);
+  const handleContinue = useCallback(async (data: ProductFormData) => {
+    const payload: CreateProductData = {
+      name: data.name, sku: data.sku || undefined,
+      barcode: data.barcode || undefined, description: data.description || undefined,
+      categoryId: data.categoryId || undefined,
+      standardCost: data.standardCost ? parseFloat(data.standardCost) : undefined,
+      salePrice: data.salePrice ? parseFloat(data.salePrice) : undefined,
+      reorderPoint: data.reorderPoint ? parseFloat(data.reorderPoint) : undefined,
+      taxRate: data.taxRate ? parseFloat(data.taxRate) : 0,
+      unitOfMeasure: data.unitOfMeasure,
+    };
+    const product = await createProductUseCase.execute(payload);
+    await uploadImages(product.id);
+    setFiles([]);
+    setPrimaryIndex(0);
+    toast.success('Producto creado. Puedes seguir agregando.');
+  }, [uploadImages]);
 
-        if (files.length > 0) {
-          const primaryImage = files[primaryIndex];
-          const secondaryImages = files.filter((_, index) => index !== primaryIndex);
-          if (primaryImage) {
-            await productImageApi.upload(product.id, primaryImage, true);
-          }
-          for (const image of secondaryImages) {
-            await productImageApi.upload(product.id, image, false);
-          }
-        }
+  if (prefillId && isLoadingTemplate) return <LoadingSpinner />;
 
-        if (createAndContinue) {
-          setFormData((prev) => ({
-            ...INITIAL_FORM_DATA,
-            categoryId: prev.categoryId,
-            unitOfMeasure: prev.unitOfMeasure,
-          }));
-          setFiles([]);
-          setPrimaryIndex(0);
-          toast.success('Producto creado. Puedes seguir agregando.');
-        } else {
-          router.push('/products');
-        }
-      } catch (err: unknown) {
-        const message =
-          err && typeof err === 'object' && 'response' in err
-            ? (err as { response?: { status: number } }).response?.status === 409
-              ? 'Ya existe un producto con ese SKU o código de barras'
-              : 'Error al crear el producto'
-            : 'Error al crear el producto';
-        setError(message);
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    [files, formData, primaryIndex, router]
-  );
-
-  const onSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      saveProduct(false);
-    },
-    [saveProduct]
+  const afterFields = (
+    <div className="col-span-full">
+      <label className="mb-2 block text-sm font-medium text-gray-900">
+        <span className="inline-flex items-center gap-1">
+          Imágenes del Producto
+          <TooltipHint title="Imágenes del producto" description="Hasta 8 fotos en formato JPG, PNG o WebP (máximo 5MB cada una). La primera imagen seleccionada se usará como principal en el catálogo." />
+        </span>
+      </label>
+      <ProductCreateImageCarousel
+        files={files}
+        primaryIndex={primaryIndex}
+        onChange={(nextFiles, nextPrimary) => {
+          setFiles(nextFiles);
+          setPrimaryIndex(nextPrimary);
+        }}
+      />
+    </div>
   );
 
   return (
@@ -146,40 +136,17 @@ export function ProductCreateView() {
         <p className="mt-1 text-blue-50">Completa datos e imágenes: hasta 8 fotos con una principal para tu catálogo.</p>
       </div>
 
-      {error && <AlertMessage message={error} onDismiss={() => setError(null)} />}
-
-      <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl">
-        <form onSubmit={onSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-            <ProductFormFields data={formData} categories={categories} onChange={handleFieldChange} />
-            <ProductCreateImageCarousel
-              files={files}
-              primaryIndex={primaryIndex}
-              onChange={(nextFiles, nextPrimary) => {
-                setFiles(nextFiles);
-                setPrimaryIndex(nextPrimary);
-              }}
-            />
-          </div>
-          <div className="flex justify-end gap-4 border-t pt-6">
-            <TooltipWrapper content="Cancelar creación del producto" side="top">
-              <Button type="button" variant="secondary" onClick={() => router.back()}>
-                Cancelar
-              </Button>
-            </TooltipWrapper>
-            <TooltipWrapper content="Crear producto y continuar agregando más" side="top">
-              <Button type="button" variant="outline" disabled={isSaving} onClick={() => saveProduct(true)}>
-                {isSaving ? 'Guardando...' : 'Crear y Continuar'}
-              </Button>
-            </TooltipWrapper>
-            <TooltipWrapper content="Guardar producto y subir sus imágenes" side="top">
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? 'Guardando...' : 'Crear Producto'}
-              </Button>
-            </TooltipWrapper>
-          </div>
-        </form>
-      </Card>
+      <ProductFormFields
+        key={prefillId || 'create'}
+        categories={categories}
+        initialData={initialData}
+        initialValues={initialValues}
+        storageKey={prefillId ? undefined : STORAGE_KEY}
+        onSubmit={handleSubmit}
+        onContinue={handleContinue}
+        onCancel={() => router.back()}
+        afterFields={afterFields}
+      />
     </div>
   );
 }

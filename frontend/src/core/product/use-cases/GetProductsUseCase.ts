@@ -10,6 +10,6 @@ export class GetProductsUseCase {
   constructor(private readonly productRepo: IProductRepository) {}
 
   async execute(filters?: ProductFilters): Promise<PaginatedResponse<Product>> {
-    return this.productRepo.getAll(filters);
+    return this.productRepo.getAllPaginated(filters);
   }
 }
