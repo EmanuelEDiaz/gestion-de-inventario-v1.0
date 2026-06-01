@@ -1,13 +1,7 @@
-/**
- * CategoryForm - Inline form for create/edit category
- */
-
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Category, CreateCategoryData } from '@/core/category/entities/category';
-import { Button, TooltipWrapper } from '@/presentation/shared/components/ui';
-import { Input } from '@/presentation/shared/components/ui';
-import { FormField } from '@/presentation/shared/components/form/FormField';
-import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSelect';
+import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
+import type { EntityFormField } from '@/presentation/shared/components/form/EntityForm';
 
 interface CategoryFormProps {
   categories: Category[];
@@ -18,43 +12,19 @@ interface CategoryFormProps {
 }
 
 export function CategoryForm({ categories, editingCategory, onSubmit, onContinue, onCancel }: CategoryFormProps) {
-  const [shouldContinue, setShouldContinue] = useState(false);
-  const [formData, setFormData] = useState({
+  const [values, setValues] = useState({
     name: '',
     parentId: '',
     sortOrder: '0',
   });
 
   useEffect(() => {
-    if (editingCategory) {
-      setFormData({
-        name: editingCategory.name,
-        parentId: editingCategory.parentId ?? '',
-        sortOrder: editingCategory.sortOrder.toString(),
-      });
-    } else {
-      setFormData({ name: '', parentId: '', sortOrder: '0' });
-    }
+    setValues({
+      name: editingCategory?.name ?? '',
+      parentId: editingCategory?.parentId ?? '',
+      sortOrder: (editingCategory?.sortOrder ?? 0).toString(),
+    });
   }, [editingCategory]);
-
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      const data = {
-        name: formData.name,
-        parentId: formData.parentId || undefined,
-        sortOrder: parseInt(formData.sortOrder) || 0,
-      };
-      if (shouldContinue && onContinue) {
-        setFormData({ name: '', parentId: '', sortOrder: '0' });
-        setShouldContinue(false);
-        onContinue(data);
-      } else {
-        onSubmit(data);
-      }
-    },
-    [formData, onSubmit, shouldContinue, onContinue]
-  );
 
   const parentOptions = useMemo(
     () => categories
@@ -66,54 +36,63 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
     [categories, editingCategory?.id]
   );
 
+  const fields: EntityFormField[] = useMemo(() => [
+    {
+      name: 'name',
+      label: 'Nombre',
+      type: 'text',
+      required: true,
+      placeholder: 'Nombre de la categoría',
+      validate: (v) => !v.trim() ? 'El nombre es obligatorio' : undefined,
+    },
+    {
+      name: 'parentId',
+      label: 'Categoría Padre',
+      type: 'select',
+      placeholder: 'Ninguna (raíz)',
+      options: parentOptions,
+    },
+    {
+      name: 'sortOrder',
+      label: 'Orden',
+      type: 'number',
+      placeholder: '0',
+    },
+  ], [parentOptions]);
+
+  const handleChange = useCallback((name: string, value: string) => {
+    setValues((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const buildData = useCallback((): CreateCategoryData => ({
+    name: values.name,
+    parentId: values.parentId || undefined,
+    sortOrder: parseInt(values.sortOrder) || 0,
+  }), [values]);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(buildData());
+  }, [buildData, onSubmit]);
+
+  const handleContinue = useCallback(() => {
+    if (!onContinue) return;
+    onContinue(buildData());
+    setValues({ name: '', parentId: '', sortOrder: '0' });
+  }, [onContinue, buildData]);
+
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow">
-      <h2 className="mb-4 font-semibold text-gray-900">
-        {editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}
-      </h2>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Input
-          label="Nombre"
-          value={formData.name}
-          onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-          required
-          placeholder="Nombre de la categoría"
-        />
-        <FormField label="Categoría Padre">
-          <ComboboxSelect
-            value={formData.parentId}
-            onChange={(val) => setFormData((p) => ({ ...p, parentId: val }))}
-            options={parentOptions}
-            placeholder="Ninguna (raíz)"
-            searchPlaceholder="Buscar categoría..."
-          />
-        </FormField>
-        <Input
-          label="Orden"
-          type="number"
-          value={formData.sortOrder}
-          onChange={(e) => setFormData((p) => ({ ...p, sortOrder: e.target.value }))}
-        />
-      </div>
-      <div className="mt-4 flex justify-end gap-2">
-        <TooltipWrapper content="Cancelar y volver">
-          <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancelar
-          </Button>
-        </TooltipWrapper>
-        {!editingCategory && (
-          <TooltipWrapper content="Guardar y continuar editando">
-            <Button type="submit" variant="outline" onClick={() => setShouldContinue(true)}>
-              Crear y Continuar
-            </Button>
-          </TooltipWrapper>
-        )}
-        <TooltipWrapper content={editingCategory ? 'Guardar cambios de la categoría' : 'Crear nueva categoría'}>
-          <Button type="submit">
-            {editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
-          </Button>
-        </TooltipWrapper>
-      </div>
-    </form>
+    <EntityForm
+      title={editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}
+      fields={fields}
+      values={values}
+      onChange={handleChange}
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+      onContinue={onContinue ? handleContinue : undefined}
+      isEditing={!!editingCategory}
+      submitLabel={editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
+      continueLabel="Crear y Continuar"
+    />
   );
 }
