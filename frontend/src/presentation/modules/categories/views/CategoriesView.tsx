@@ -1,9 +1,12 @@
 'use client';
 
+import { useState, useMemo, useCallback } from 'react';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Pencil, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
+import { FilterBar } from '@/presentation/shared/components/ui/FilterBar';
+import type { FilterDef } from '@/presentation/shared/components/ui/FilterBar';
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { LoadingOverlay } from '@/presentation/shared/components/form/LoadingSpinner';
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
@@ -22,6 +25,7 @@ const COLUMNS: Column<Category>[] = [
   {
     key: 'name',
     label: 'Nombre',
+    className: 'text-left',
     render: (_, row) => (
       <span style={{ paddingLeft: `${row.level * 1.25}rem` }} title={`Ruta: ${row.path}`}>
         {row.level > 0 && <span className="text-gray-400 mr-1">└─</span>}
@@ -41,12 +45,40 @@ const COLUMNS: Column<Category>[] = [
   },
 ];
 
+const filterDefs: FilterDef[] = [
+  { key: 'status', label: 'Estado', type: 'select',
+    options: [
+      { value: 'active', label: 'Activa' },
+      { value: 'inactive', label: 'Inactiva' },
+    ] },
+];
+
 export function CategoriesView() {
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const {
     categories, isLoading, error, showForm, editingCategory,
     openForm, closeForm, saveCategory, deleteCategory, deleteManyCategories, clearError, refresh,
   } = useCategoriesController();
+
+  const handleFilterChange = useCallback((key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const filteredCategories = useMemo(() => {
+    let result = categories;
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((c) => c.name.toLowerCase().includes(q));
+    }
+    if (filterValues.status === 'active') {
+      result = result.filter((c) => c.active);
+    } else if (filterValues.status === 'inactive') {
+      result = result.filter((c) => !c.active);
+    }
+    return result;
+  }, [categories, search, filterValues.status]);
 
   const actions: TableAction<Category>[] = [
     { icon: Pencil, title: 'Editar categoría', onClick: openForm },
@@ -75,11 +107,24 @@ export function CategoriesView() {
       )}
       {isLoading && <LoadingOverlay />}
       {!isLoading && (
-        <GenericTable
-          data={categories} columns={COLUMNS} actions={actions}
-          selectable onDeleteSelected={deleteManyCategories}
-          emptyMessage="No hay categorías registradas"
-        />
+        <>
+          <FilterBar
+            searchPlaceholder="Buscar por nombre..."
+            onSearch={setSearch}
+            filters={filterDefs}
+            filterValues={filterValues}
+            onFilterChange={handleFilterChange}
+          />
+          <GenericTable
+            data={filteredCategories} columns={COLUMNS} actions={actions}
+            selectable onDeleteSelected={deleteManyCategories}
+            emptyMessage={
+              search || filterValues.status
+                ? 'No se encontraron categorías con los filtros aplicados'
+                : 'No hay categorías registradas'
+            }
+          />
+        </>
       )}
     </div>
   );
