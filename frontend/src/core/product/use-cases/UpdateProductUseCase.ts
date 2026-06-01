@@ -11,15 +11,15 @@ export class UpdateProductUseCase {
       if (!data.name.trim()) throw new ProductValidationError('El nombre del producto es requerido');
       if (data.name.length > 200) throw new ProductValidationError('El nombre no puede exceder 200 caracteres');
     }
-    if (data.sku !== undefined && data.sku.length > 50) {
+    if (data.sku !== undefined && data.sku != null && data.sku.length > 50) {
       throw new ProductValidationError('El SKU no puede exceder 50 caracteres');
     }
-    if (data.barcode !== undefined) {
+    if (data.barcode !== undefined && data.barcode != null) {
       if (data.barcode.length > 50) throw new ProductValidationError('El código de barras no puede exceder 50 caracteres');
-      if (data.barcode && !/^\d+$/.test(data.barcode)) throw new ProductValidationError('El código de barras debe contener solo números');
-      if (data.barcode && data.barcode.length < 8) throw new ProductValidationError('El código de barras debe tener al menos 8 dígitos');
+      if (!/^\d+$/.test(data.barcode)) throw new ProductValidationError('El código de barras debe contener solo números');
+      if (data.barcode.length < 8) throw new ProductValidationError('El código de barras debe tener al menos 8 dígitos');
     }
-    if (data.description !== undefined && data.description.length > 2000) {
+    if (data.description !== undefined && data.description != null && data.description.length > 2000) {
       throw new ProductValidationError('La descripción no puede exceder 2000 caracteres');
     }
     if (data.standardCost != null && data.standardCost < 0) {

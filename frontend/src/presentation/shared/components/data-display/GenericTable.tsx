@@ -91,7 +91,7 @@ export function GenericTable<T extends { id: string }>({
       onClick: (row: T) => {
         const message = typeof action.confirmMessage === 'function'
           ? action.confirmMessage(row)
-          : action.confirmMessage;
+          : action.confirmMessage ?? '';
         setPendingConfirm({
           title: 'Confirmar acción',
           description: message,
@@ -110,7 +110,7 @@ export function GenericTable<T extends { id: string }>({
     if (bulkAction.confirmMessage) {
       const message = typeof bulkAction.confirmMessage === 'function'
         ? bulkAction.confirmMessage(ids.length)
-        : bulkAction.confirmMessage;
+        : bulkAction.confirmMessage ?? '';
       setPendingConfirm({
         title: 'Confirmar acción',
         description: message,

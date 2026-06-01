@@ -33,12 +33,13 @@ public class AuditLogController {
             @RequestParam(required = false) String entityType,
             @RequestParam(required = false) UUID actorId,
             @RequestParam(required = false) String action,
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant toDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         var criteria = new AuditLogSearchCriteria(
-            entityType, actorId, action, fromDate, toDate, page, Math.min(size, 100));
+            entityType, actorId, action, search, fromDate, toDate, page, Math.min(size, 100));
         return queryUseCase.search(criteria).map(mapper::toResponse).collectList()
             .zipWith(queryUseCase.countSearch(criteria))
             .map(tuple -> ResponseEntity.ok()

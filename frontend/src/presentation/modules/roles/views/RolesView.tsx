@@ -95,7 +95,7 @@ export function RolesView() {
     },
   ], [deactivate, reactivate, remove]);
 
-  const bulkActions = useMemo<BulkAction<Role>[]>(() => [
+  const bulkActions = useMemo<BulkAction[]>(() => [
     {
       label: 'Eliminar seleccionados',
       variant: 'destructive',

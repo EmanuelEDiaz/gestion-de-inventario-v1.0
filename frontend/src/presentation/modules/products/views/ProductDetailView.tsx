@@ -10,7 +10,7 @@ import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpi
 import { AlertMessage } from '@/presentation/shared/components/feedback/AlertMessage';
 import { ProductInfoSection } from './ProductInfoSection';
 import { ProductStatsSection } from './ProductStatsSection';
-import { ProductHistorySection } from './ProductHistorySection';
+
 
 type Tab = 'info' | 'images';
 
@@ -63,9 +63,7 @@ export function ProductDetailView({ productId, onBack }: ProductDetailViewProps)
         <CardContent>
           {tab === 'info' && <ProductStatsSection product={product} />}
           {tab === 'images' && (
-            <ProductHistorySection>
-              <ProductImageGallery productId={productId} editable={false} />
-            </ProductHistorySection>
+            <ProductImageGallery productId={productId} editable={false} />
           )}
         </CardContent>
       </Card>

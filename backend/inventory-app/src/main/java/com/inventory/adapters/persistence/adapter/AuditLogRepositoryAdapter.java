@@ -60,10 +60,12 @@ public class AuditLogRepositoryAdapter implements AuditLogRepository {
     @Override
     public Flux<AuditLogSearchItem> search(AuditLogSearchCriteria criteria) {
         int offset = criteria.size() * criteria.page();
+        String searchStr = criteria.search() != null && !criteria.search().isBlank() ? criteria.search() : null;
         return r2dbcRepository.search(
             criteria.entityType(),
             criteria.actorId() != null ? criteria.actorId().toString() : null,
             criteria.action(),
+            searchStr,
             criteria.fromDate(),
             criteria.toDate(),
             criteria.size(),
@@ -73,10 +75,12 @@ public class AuditLogRepositoryAdapter implements AuditLogRepository {
 
     @Override
     public Mono<Long> countSearch(AuditLogSearchCriteria criteria) {
+        String searchStr = criteria.search() != null && !criteria.search().isBlank() ? criteria.search() : null;
         return r2dbcRepository.countSearch(
             criteria.entityType(),
             criteria.actorId() != null ? criteria.actorId().toString() : null,
             criteria.action(),
+            searchStr,
             criteria.fromDate(),
             criteria.toDate()
         );

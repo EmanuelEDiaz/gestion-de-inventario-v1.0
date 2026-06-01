@@ -22,11 +22,14 @@ public interface AuditLogR2dbcRepository extends ReactiveCrudRepository<AuditLog
           AND (:action IS NULL OR al.action = :action)
           AND (:fromDate IS NULL OR al.created_at >= :fromDate)
           AND (:toDate IS NULL OR al.created_at <= :toDate)
+          AND (:search IS NULL OR LOWER(u.display_name) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(al.entity_type) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(al.action) LIKE LOWER(CONCAT('%', :search, '%')))
         ORDER BY al.created_at DESC
         LIMIT :size OFFSET :offset
         """)
     Flux<AuditLogEntity> search(
-        String entityType, String actorId, String action,
+        String entityType, String actorId, String action, String search,
         Instant fromDate, Instant toDate, int size, int offset);
 
     @Query("""
@@ -37,9 +40,12 @@ public interface AuditLogR2dbcRepository extends ReactiveCrudRepository<AuditLog
           AND (:action IS NULL OR al.action = :action)
           AND (:fromDate IS NULL OR al.created_at >= :fromDate)
           AND (:toDate IS NULL OR al.created_at <= :toDate)
+          AND (:search IS NULL OR LOWER(u.display_name) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(al.entity_type) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR LOWER(al.action) LIKE LOWER(CONCAT('%', :search, '%')))
         """)
     Mono<Long> countSearch(
-        String entityType, String actorId, String action,
+        String entityType, String actorId, String action, String search,
         Instant fromDate, Instant toDate);
 
     @Query("""

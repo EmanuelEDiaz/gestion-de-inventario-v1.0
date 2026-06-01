@@ -8,6 +8,7 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { FilterBar } from '@/presentation/shared/components/ui/FilterBar';
 import type { FilterDef } from '@/presentation/shared/components/ui/FilterBar';
 import { ProductsInfiniteList } from '../components/ProductsInfiniteList';
+import type { ProductStatus, UnitOfMeasure } from '@/core/product/entities/product';
 import { useCategories } from '../hooks/useCategories';
 
 export function ProductsListView() {
@@ -45,10 +46,10 @@ export function ProductsListView() {
   const filterParams = useMemo(() => ({
     search: search || undefined,
     categoryId: filterValues.categoryId || undefined,
-    status: filterValues.status || undefined,
+    status: (filterValues.status || undefined) as ProductStatus | undefined,
     minPrice: filterValues.minPrice ? parseFloat(filterValues.minPrice) : undefined,
     maxPrice: filterValues.maxPrice ? parseFloat(filterValues.maxPrice) : undefined,
-    unitOfMeasure: filterValues.unitOfMeasure || undefined,
+    unitOfMeasure: (filterValues.unitOfMeasure || undefined) as UnitOfMeasure | undefined,
   }), [search, filterValues]);
 
   return (

@@ -55,10 +55,10 @@ public class ExchangeRateController {
     public Mono<ResponseEntity<ExchangeRateResponse>> create(
             @Valid @RequestBody CreateExchangeRateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        // createdBy will be resolved from security context in a real implementation
+        UUID userId = extractUserId(userDetails);
         var command = new ExchangeRateCommandPort.CreateExchangeRateCommand(
             request.baseCode(), request.quoteCode(), request.rate(),
-            request.rateType(), request.validFrom(), null
+            request.rateType(), request.validFrom(), userId
         );
         return exchangeRateCommand.create(command)
             .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved)));
@@ -68,18 +68,21 @@ public class ExchangeRateController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') || hasAuthority('exchange_rates:manage')")
     public Mono<ResponseEntity<ExchangeRateResponse>> update(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateExchangeRateRequest request) {
+            @Valid @RequestBody UpdateExchangeRateRequest request,
+            @AuthenticationPrincipal UserDetails user) {
         var command = new ExchangeRateCommandPort.UpdateExchangeRateCommand(
             request.rate(), request.rateType(), request.validFrom()
         );
-        return exchangeRateCommand.update(id, command)
+        return exchangeRateCommand.update(id, command, extractUserId(user))
             .map(r -> ResponseEntity.ok(toResponse(r)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') || hasAuthority('exchange_rates:manage')")
-    public Mono<ResponseEntity<Void>> delete(@PathVariable UUID id) {
-        return exchangeRateCommand.delete(id)
+    public Mono<ResponseEntity<Void>> delete(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails user) {
+        return exchangeRateCommand.delete(id, extractUserId(user))
             .then(Mono.just(ResponseEntity.noContent().build()));
     }
 
@@ -88,5 +91,14 @@ public class ExchangeRateController {
             r.getId(), r.getBaseCode(), r.getQuoteCode(), r.getRate(),
             r.getRateType().name(), r.getValidFrom(), r.getCreatedBy(), r.getCreatedAt()
         );
+    }
+
+    private UUID extractUserId(UserDetails user) {
+        if (user == null) return null;
+        try {
+            return UUID.fromString(user.getUsername());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

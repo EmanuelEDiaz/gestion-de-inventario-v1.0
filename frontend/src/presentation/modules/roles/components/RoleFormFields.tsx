@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Role, CreateRoleData, UpdateRoleData } from '@/core/user/entities/user';
 import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
 import { PermissionGroupSelector } from './PermissionGroupSelector';
+import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 import { usePermissions } from '../hooks/usePermissions';
 
 interface RoleFormFieldsProps {
@@ -59,17 +60,19 @@ export function RoleFormFields({ initialData, initialValues, onSubmit, isSubmitt
       name: 'code', label: 'Código', type: 'text' as const, required: true,
       placeholder: 'CUSTOM_ROLE', maxLength: 50, disabled: isEditing,
       hint: 'Identificador único del rol',
-      hintDescription: 'Solo mayúsculas, números y guiones bajos. No se puede modificar después de crear.',
+      hintDescription: 'Solo mayúsculas, números y guiones bajos. Se usa internamente para verificar permisos. No se puede modificar después de crear el rol.',
     },
     {
       name: 'name', label: 'Nombre', type: 'text' as const, required: true,
       placeholder: 'Rol personalizado',
       hint: 'Nombre legible del rol',
+      hintDescription: 'Nombre visible para los usuarios. Se muestra en listados, filtros y perfiles.',
     },
     {
       name: 'description', label: 'Descripción', type: 'text' as const,
       placeholder: 'Descripción breve del rol',
       hint: 'Descripción opcional del rol',
+      hintDescription: 'Texto breve que explica el propósito del rol. Máximo 200 caracteres.',
     },
   ], [isEditing]);
 
@@ -100,7 +103,15 @@ export function RoleFormFields({ initialData, initialValues, onSubmit, isSubmitt
       storageKey="role-create"
       afterFields={
         <div className="space-y-1">
-          <label className="text-sm font-medium">Permisos</label>
+          <label className="text-sm font-medium">
+            <span className="inline-flex items-center gap-1">
+              Permisos
+              <TooltipHint
+                title="Selección de permisos"
+                description="Define los permisos específicos que tendrá este rol. Los permisos están agrupados por categoría para facilitar su gestión."
+              />
+            </span>
+          </label>
           <PermissionGroupSelector
             allPermissions={allPerms}
             selectedIds={selectedPermIds}

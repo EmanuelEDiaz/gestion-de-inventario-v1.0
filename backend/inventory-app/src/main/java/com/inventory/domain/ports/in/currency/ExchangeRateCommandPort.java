@@ -11,9 +11,9 @@ public interface ExchangeRateCommandPort {
 
     Mono<ExchangeRate> create(CreateExchangeRateCommand command);
 
-    Mono<ExchangeRate> update(UUID id, UpdateExchangeRateCommand command);
+    Mono<ExchangeRate> update(UUID id, UpdateExchangeRateCommand command, java.util.UUID userId);
 
-    Mono<Void> delete(UUID id);
+    Mono<Void> delete(UUID id, java.util.UUID userId);
 
     // ===== Command Records =====
 

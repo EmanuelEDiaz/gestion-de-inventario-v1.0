@@ -43,6 +43,8 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
       type: 'text',
       required: true,
       placeholder: 'Nombre de la categoría',
+      hint: 'Nombre de la categoría',
+      hintDescription: 'Máximo 100 caracteres. Se muestra en listados, filtros y breadcrumbs.',
       validate: (v) => !v.trim() ? 'El nombre es obligatorio' : undefined,
     },
     {
@@ -50,6 +52,8 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
       label: 'Categoría Padre',
       type: 'select',
       placeholder: 'Ninguna (raíz)',
+      hint: 'Jerarquía',
+      hintDescription: 'Si se selecciona una categoría padre, esta categoría será una subcategoría. Las categorías pueden tener hasta 3 niveles de anidación.',
       options: parentOptions,
     },
     {
@@ -57,6 +61,8 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
       label: 'Orden',
       type: 'number',
       placeholder: '0',
+      hint: 'Orden de visualización',
+      hintDescription: 'Número que determina la posición en listados. Menor número = mayor prioridad. Si no se especifica, se asigna 0.',
     },
   ], [parentOptions]);
 

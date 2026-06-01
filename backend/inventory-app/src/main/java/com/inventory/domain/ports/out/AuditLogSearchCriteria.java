@@ -7,6 +7,7 @@ public record AuditLogSearchCriteria(
     String entityType,
     UUID actorId,
     String action,
+    String search,
     Instant fromDate,
     Instant toDate,
     int page,

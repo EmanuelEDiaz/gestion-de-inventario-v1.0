@@ -5,11 +5,11 @@ import reactor.core.publisher.Mono;
 
 public interface CurrencyCommandPort {
 
-    Mono<Currency> create(CreateCurrencyCommand command);
+    Mono<Currency> create(CreateCurrencyCommand command, java.util.UUID userId);
 
-    Mono<Currency> update(String code, UpdateCurrencyCommand command);
+    Mono<Currency> update(String code, UpdateCurrencyCommand command, java.util.UUID userId);
 
-    Mono<Void> delete(String code);
+    Mono<Void> delete(String code, java.util.UUID userId);
 
     // ===== Command Records =====
 

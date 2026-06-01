@@ -4,14 +4,15 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { userPreferencesRepository } from '@/infrastructure/repositories/user/UserPreferencesRepository';
+import type { ProductStatus, UnitOfMeasure } from '@/core/product/entities/product';
 
 export interface UsePaginatedProductsOptions {
   search?: string;
   categoryId?: string;
-  status?: string;
+  status?: ProductStatus;
   minPrice?: number;
   maxPrice?: number;
-  unitOfMeasure?: string;
+  unitOfMeasure?: UnitOfMeasure;
 }
 
 export function usePaginatedProducts(options: UsePaginatedProductsOptions = {}) {

@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { toast } from '@/presentation/shared/components/ui';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { usePaginatedProducts } from '../hooks/usePaginatedProducts';
+import type { ProductStatus, UnitOfMeasure } from '@/core/product/entities/product';
 import { ProductTable } from './table/ProductTable';
 import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { Button } from '@/presentation/shared/components/ui/Button';
@@ -14,10 +15,10 @@ interface ProductsInfiniteListProps {
   maxPages?: number;
   search?: string;
   categoryId?: string;
-  status?: string;
+  status?: ProductStatus;
   minPrice?: number;
   maxPrice?: number;
-  unitOfMeasure?: string;
+  unitOfMeasure?: UnitOfMeasure;
 }
 
 export function ProductsInfiniteList({ search, categoryId, status, minPrice, maxPrice, unitOfMeasure }: ProductsInfiniteListProps) {

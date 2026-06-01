@@ -94,7 +94,7 @@ export function CurrenciesView() {
     },
   ], [currencies, update, remove]);
 
-  const bulkActions = useMemo<BulkAction<CurrencyRow>[]>(() => [
+  const bulkActions = useMemo<BulkAction[]>(() => [
     {
       label: 'Habilitar seleccionadas',
       variant: 'default',
