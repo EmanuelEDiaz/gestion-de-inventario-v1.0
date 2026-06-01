@@ -13,14 +13,14 @@ interface CategoryFormProps {
 
 export function CategoryForm({ categories, editingCategory, onSubmit, onContinue, onCancel }: CategoryFormProps) {
   const [values, setValues] = useState({
-    name: '',
-    parentId: '',
-    sortOrder: '0',
+    name: editingCategory?.name ?? 'Nueva Categoría',
+    parentId: editingCategory?.parentId ?? '',
+    sortOrder: (editingCategory?.sortOrder ?? 0).toString(),
   });
 
   useEffect(() => {
     setValues({
-      name: editingCategory?.name ?? '',
+      name: editingCategory?.name ?? 'Nueva Categoría',
       parentId: editingCategory?.parentId ?? '',
       sortOrder: (editingCategory?.sortOrder ?? 0).toString(),
     });
