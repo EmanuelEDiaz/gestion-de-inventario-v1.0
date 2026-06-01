@@ -7,6 +7,7 @@ import com.inventory.domain.model.audit.AuditLog;
 import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.AuditLogSearchCriteria;
 import com.inventory.domain.ports.out.AuditLogSearchItem;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,17 +19,42 @@ public class AuditLogRepositoryAdapter implements AuditLogRepository {
 
     private final AuditLogR2dbcRepository r2dbcRepository;
     private final AuditLogPersistenceMapper mapper;
+    private final DatabaseClient databaseClient;
 
     public AuditLogRepositoryAdapter(AuditLogR2dbcRepository r2dbcRepository,
-                                      AuditLogPersistenceMapper mapper) {
+                                      AuditLogPersistenceMapper mapper,
+                                      DatabaseClient databaseClient) {
         this.r2dbcRepository = r2dbcRepository;
         this.mapper = mapper;
+        this.databaseClient = databaseClient;
     }
 
     @Override
     public Mono<Void> save(AuditLog log) {
-        AuditLogEntity entity = mapper.toEntity(log);
-        return r2dbcRepository.save(entity).then();
+        var spec = databaseClient.sql("""
+            INSERT INTO audit_log (id, actor_id, entity_type, entity_id, action, before_data, after_data, ip_address, created_at)
+            VALUES (:id, :actorId, :entityType, :entityId, :action, CAST(:beforeData AS jsonb), CAST(:afterData AS jsonb), :ipAddress, :createdAt)
+            """)
+            .bind("id", log.getId())
+            .bind("actorId", log.getActorId())
+            .bind("entityType", log.getEntityType())
+            .bind("entityId", log.getEntityId())
+            .bind("action", log.getAction())
+            .bind("ipAddress", log.getIpAddress() != null ? log.getIpAddress() : "")
+            .bind("createdAt", log.getCreatedAt());
+
+        if (log.getBeforeData() != null) {
+            spec = spec.bind("beforeData", log.getBeforeData());
+        } else {
+            spec = spec.bindNull("beforeData", String.class);
+        }
+        if (log.getAfterData() != null) {
+            spec = spec.bind("afterData", log.getAfterData());
+        } else {
+            spec = spec.bindNull("afterData", String.class);
+        }
+
+        return spec.then();
     }
 
     @Override
