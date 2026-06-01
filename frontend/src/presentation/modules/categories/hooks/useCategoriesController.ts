@@ -70,21 +70,18 @@ export function useCategoriesController() {
     try {
       await saveCategoryUseCase.execute(data, state.editingCategory?.id);
       await queryClient.invalidateQueries({ queryKey: ['categories'] });
+      await fetchCategories();
       closeForm();
-      fetchCategories();
     } catch {
       setState((prev) => ({ ...prev, error: 'Error al guardar la categoría' }));
     }
   }, [state.editingCategory, closeForm, fetchCategories, queryClient]);
 
   const deleteCategory = useCallback(async (category: Category) => {
-    if (!confirm(`¿Estás seguro de eliminar la categoría "${category.name}"?`)) {
-      return;
-    }
     try {
       await deleteCategoryUseCase.execute(category.id);
       await queryClient.invalidateQueries({ queryKey: ['categories'] });
-      fetchCategories();
+      await fetchCategories();
     } catch (err: unknown) {
       const message = getDeleteErrorMessage(err);
       setState((prev) => ({ ...prev, error: message }));
@@ -92,11 +89,10 @@ export function useCategoriesController() {
   }, [fetchCategories, queryClient]);
 
   const deleteManyCategories = useCallback(async (ids: string[]) => {
-    if (!confirm(`¿Eliminar ${ids.length} categoría(s) seleccionadas?`)) return;
     try {
       await categoryRepository.deleteAll(ids);
       await queryClient.invalidateQueries({ queryKey: ['categories'] });
-      fetchCategories();
+      await fetchCategories();
     } catch {
       setState((prev) => ({ ...prev, error: 'Error al eliminar las categorías seleccionadas' }));
     }
