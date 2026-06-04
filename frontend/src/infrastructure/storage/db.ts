@@ -23,6 +23,7 @@ export interface OutboxEntry {
   action: string;
   payload: unknown;
   status: 'pending' | 'syncing' | 'accepted' | 'rejected';
+  priority: number;
   retryCount: number;
   maxRetries: number;
   nextRetryAt: number;
@@ -185,6 +186,7 @@ interface InventoryDB extends DBSchema {
       'by-status': string;
       'by-created': number;
       'by-status-priority': [string, number];
+      'by-priority': number;
     };
   };
   syncMeta: {
@@ -610,7 +612,10 @@ export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
 
         const outboxStore = transaction.objectStore('outbox');
         if (!outboxStore.indexNames.contains('by-status-priority')) {
-          outboxStore.createIndex('by-status-priority', ['syncStatus', 'priority'], { unique: false });
+          outboxStore.createIndex('by-status-priority', ['status', 'priority'], { unique: false });
+        }
+        if (!outboxStore.indexNames.contains('by-priority')) {
+          outboxStore.createIndex('by-priority', 'priority', { unique: false });
         }
       }
     },
@@ -709,6 +714,24 @@ export async function destroyPersistence(): Promise<void> {
     document.cookie = 'access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
   } catch {
     // Cookie cleanup is best-effort
+  }
+}
+
+/**
+ * Helper: ejecuta una escritura en caché local de forma tolerante a fallos.
+ * El caché es una optimización (P5: la fuente de verdad es el servidor para
+ * escrituras exitosas); un fallo de IDB no debe revertir la operación del usuario.
+ * Se loguea como warn para diagnóstico sin interrumpir el flujo.
+ */
+export async function safeCacheWrite(
+  operation: () => Promise<unknown>,
+  context: string,
+): Promise<void> {
+  try {
+    await operation();
+  } catch (error) {
+    const { appLogger } = await import('@/infrastructure/logging/appLogger');
+    appLogger.warn(`Cache write-back failed: ${context}`, error);
   }
 }
 

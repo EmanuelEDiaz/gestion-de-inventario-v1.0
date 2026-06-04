@@ -1,3 +1,9 @@
+/**
+ * Reportes computados servidor-side (timeline, top products, profit summary).
+ * Por diseño requieren agregaciones que el cliente no puede reproducir offline de forma eficiente.
+ * Si el servidor está apagado (P4), los gráficos mostrarán el último valor cacheado o estado vacío.
+ * Para soporte offline completo, considerar precomputar snapshots en IDB tras cada sync (Fase D).
+ */
 import { apiClient } from '@/infrastructure/api/client';
 import type { IDashboardMetricsRepository } from '@/core/dashboard/ports/IDashboardMetricsRepository';
 import type { SalesTimelinePoint, TopProductEntry, TopCustomerEntry, ProfitSummary, InventoryValue } from '@/core/dashboard/entities/recharts-types';

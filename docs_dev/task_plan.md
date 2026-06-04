@@ -1,8 +1,78 @@
 # Plan: Arreglar Carga Inicial + Mapa Offline + Sync
 
-> Created: 2026-06-02 | Refined v5.2 — fixed geo endpoints (NO /api/v1/geo-regions, real: /api/v1/geo/*), fixed customer repo reference (NO localCustomerRepository.ts, real: CustomerRepository.ts), added DashboardRepository compute-from-local detail, added dependency verification table with codebase audit, incorporated evaluation findings | Canonical a partir de 2026-06-04
+> Created: 2026-06-02 | Refined v5.3 — Principios Rectores P1–P5 (cero internet, dispositivo ligero, offline indefinido, servidor apagable, sync no destructivo); eliminada contradicción `map_tiles`/`precache_routes` como fases del loader (ahora son background tasks en `backgroundTasksStore`); `ready_complete` ahora derivado (no se setea); SHA-256 obligatorio en Web Worker (P2); AbortSignal.timeout en fetches a mapa (P4) | Canonical a partir de 2026-06-04
 >
 > ⚠️ **Este documento es canónico**: refleja fielmente lo implementado hasta la fecha. Otros archivos en `docs_dev/` son planes temporales. No modificar `task_plan.md` sin actualizar también el código para que coincida.
+
+## Principios Rectores No Negociables (P1–P5)
+
+> ⚠️ Estos principios están **por encima de cualquier objetivo, fase o decisión de diseño**. Si una optimización, feature o refactor los viola, **se descarta la optimización, no el principio**. Toda subfase, ADR o decisión de implementación debe verificar cumplimiento de P1–P5 antes de marcarse como completada.
+
+### P1. Cero internet en runtime
+
+La aplicación **NO hace fetch de servicios externos** (CDNs, fonts.googleapis, mapas online, analytics, telemetría, etc.) en ningún momento después del login inicial. Todo asset — imágenes, fuentes, sprites, estilos, tiles de mapa, binarios — se sirve desde:
+
+- `localhost:8080` (backend Spring Boot) — asumiendo el servidor está accesible en LAN
+- Archivos locales del navegador: SW cache (Serwist), IndexedDB, OPFS, precache estático
+
+**Implicación arquitectónica**: ningún `<link rel="stylesheet" href="https://...">`, ningún `import()` de dominio externo, ningún `navigator.serviceWorker` que hable con hosts remotos. Cualquier nueva dependencia debe servirse desde `/public` o empaquetarse con `pnpm`.
+
+### P2. Dispositivo ligero (no sobrecargar)
+
+La aplicación **NO debe**:
+
+- Acumular memoria: todo `URL.createObjectURL(blob)` se revoca en cleanup; todo `setInterval`/`setTimeout` se limpia al desmontar; todo event listener se desuscribe
+- Bloquear el hilo principal: operaciones >100ms van a Web Worker (SHA-256, parseo JSON grande, etc.) o se difieren a `requestIdleCallback`
+- Ejecutar tareas en background que consuman CPU cuando el dispositivo está en batería baja, tab oculta, o el usuario está activo. La background scheduler usa `navigator.getBattery()` + `document.visibilityState` para pausar
+- Cargar bundles grandes en el boot: MapLibre (~500KB gz) y similares se cargan con `next/dynamic({ ssr: false })` solo al navegar a la vista correspondiente
+
+**Implicación para el loader**: la app alcanza `ready_partial` tan pronto como el **core dataset mínimo** (warehouses + products + stockBalances) está en IDB. Las background tasks (verificación de mapa, precache de shell, image prefetch) **NO bloquean la UI ni la transición a `ready_partial`**. El usuario puede trabajar antes de que terminen.
+
+### P3. Trabajo offline indefinido
+
+Una vez alcanzada `ready_partial`, **no hay más transiciones de fase del loader que dependan de red**. El usuario puede:
+
+- Crear ventas, compras, transferencias, ajustes → outbox local en IDB
+- Consultar reportes sobre datos cacheados
+- Navegar entre módulos
+- Cerrar y abrir el navegador (los datos persisten en IDB + OPFS)
+- Dejar la app cerrada por días o semanas
+
+Los datos persisten en IDB + OPFS. El outbox crece, pero solo se purga cuando hay sincronización exitosa. La cuota de almacenamiento es el único límite práctico.
+
+**Implicación para arquitectura**: ninguna feature core puede tener como precondición `navigator.onLine === true` o `await apiClient.get(...)` síncrono. Toda lectura es local-first. Toda escritura es local-first + outbox encolado.
+
+### P4. Servidor puede apagarse o suspenderse
+
+El backend Spring Boot puede:
+
+- Apagarse (`systemctl stop`, no disponible, en mantenimiento)
+- Suspenderse (`hibernate`, sleep, contenedor Docker pausado)
+- Desconectarse de la red (WiFi caído, cable desconectado)
+
+En todos los casos:
+
+- La sesión local (`local-authenticated`) **NO se invalida automáticamente**
+- Los datos cacheados en IDB **siguen accesibles** sin degradación
+- El `server-session-expired` banner **solo aparece** cuando el usuario **intenta sincronizar** y el refresh falla con 401. No se destruye la sesión por silencio de red
+- El modo lectura es **siempre 100% offline**
+- El modo escritura (outbox) **acumula localmente** sin límite de tiempo
+
+**Implicación para sync**: el `SyncService` no asume servidor vivo. Si `fetch` falla por red o timeout, registra en `appLogger` y sigue. Solo `401` (token revocado) destruye la sesión local.
+
+### P5. Sync unidireccional al reconectar, no destructivo
+
+Cuando el servidor vuelve (después de horas, días, semanas), el usuario inicia sync manualmente desde Settings o desde el badge. El sync:
+
+- Drena outbox en orden de prioridad: **Tipo B (ventas confirmadas, transferencias cerradas, ajustes) > Tipo A (CRUD normal)**
+- Conflictos van al `CorruptionRepairCenter` / `SyncConflictResolver` para resolución manual campo-por-campo
+- **NUNCA merge silencioso**: si `clientVersion !== serverVersion`, siempre al `ConflictResolver`
+- **NUNCA sync destructivo**: el `SyncService` no borra datos locales sin confirmación explícita del usuario
+- Mide progreso: el `CacheProgressBar` muestra "X de Y operaciones pendientes" durante el drain
+
+**Implicación para outbox**: cada entrada guarda `clientVersion` (entidad leída), `payload` (cambios a aplicar), `createdAt`, `priority`, `entityType`, `entityId`. Sin esta información, la entrada **no se procesa** — va a `corruptionQueue` para inspección.
+
+---
 
 ## Objetivos del Plan
 
@@ -65,6 +135,7 @@
 
 > ⚠️ Estas reglas consolidan CLAUDE.md, AGENTS.md, copilot-instructions.md y la auditoría del codebase. Son vinculantes para toda implementación en este plan.
 
+- **🏛️ Principios Rectores P1–P5 son ley suprema**: ver sección "Principios Rectores No Negociables" arriba (cero internet, dispositivo ligero, offline indefinido, servidor apagable, sync no destructivo). Si una feature o subfase los viola, **se descarta la feature, no el principio**. Antes de marcar cualquier subfase como completada, verificar cumplimiento de P1–P5.
 - **Una fase a la vez**: ejecutar → verificar → preguntar al usuario si continuar
 - **Commit por fase**: cada fase termina con `git add . && git commit -m '<tipo>(<scope>): <mensaje>'` siguiendo conventional commits
 - **Skills por fase**: cargar la skill indicada al inicio de cada fase antes de tocar código
@@ -329,7 +400,7 @@ Implementar con validadores TypeScript explícitos por DTO (no `any`, no Zod si 
 
 ### Coordinación de Scheduler Global
 
-Las tablas de backpressure listan concurrencias máximas, pero no definen quién cede cuando dos procesos pesados coinciden (ej: map_tiles descargando PMTiles a OPFS mientras catalog sync escribe IDB).
+Las tablas de backpressure listan concurrencias máximas, pero no definen quién cede cuando dos procesos pesados coinciden (ej: descarga de PMTiles desde StoragePanel escribiendo OPFS mientras catalog sync escribe IDB).
 
 **Reglas de coordinación:**
 
@@ -533,7 +604,7 @@ Al detectar `DB_VERSION` nueva:
 | Core dataset sufficiency | crítica | `rehydrate_local` | Continuar descarga completa |
 | Chunk journal consistency | diagnóstica | `rehydrate_local` | Reparar/reintentar según política de resume |
 | SW registration state | diagnóstica | `sw_precache` | Continuar sin precache |
-| OPFS availability | diagnóstica | `map_tiles` | `degraded` — mapa offline |
+| OPFS availability | diagnóstica | `map_verify` (bg task) | `degraded` — mapa offline |
 | geoIndex integrity | diagnóstica | post-`ready_partial` (carga separada) | `degraded` — geocoder offline |
 | Token/server session refresh | diagnóstica (lectura), crítica (sync) | reconnect | Mantener lectura local, bloquear sync, banner persistente |
 
@@ -593,9 +664,9 @@ Todo error capturado debe incluir un `errorCode` visible en detalles expandibles
 | `rehydrate_local` | Journal corrupto, sin core dataset | Fatal | `ErrorState`: "No se pudieron restaurar datos locales" + reintentar | Reintentar | Sí antes de fallar |
 | `warehouses/products/stock` sin core | Error de descarga | Fatal | `ErrorState`: "Error descargando {entidad}" + botón reintentar + detalles | Reintentar / ver diagnóstico | Sí (3 intentos) |
 | `warehouses/products/stock` con core | Error de refresh | Degradado | Banner amarillo: "Actualización de {entidad} falló. Usando datos anteriores." + botón reintentar | Continuar / reintentar | Sí (3 intentos) |
-| `map_tiles` | OPFS/checksum falló | Degradado | `MapStatusOverlay` "Mapa no disponible" + banner + enlace a Settings | Ir a Configuración → StoragePanel | No (manual desde Settings) |
+| `map_verify` (bg task) | OPFS/checksum falló | Degradado | `MapStatusOverlay` "Mapa no disponible" + banner + enlace a Settings | Ir a Configuración → StoragePanel | No (manual desde Settings) |
 | `geoIndex` | Carga falló | Degradado | Búsqueda deshabilitada + banner "Búsqueda offline no disponible" | Reindexar / reintentar | Manual |
-| `precache_routes` | Shell route fetch falló | Casi sin impacto | No toast visible. Solo `appLogger.warn` | Ninguna | No |
+| `precache_routes` (bg task) | Shell route fetch falló | Casi sin impacto | No toast visible. Solo `appLogger.warn`. La app sigue 100% funcional (P4: servidor apagable). | Ninguna | No (best-effort, se reintenta en próximo boot con servidor vivo) |
 | Auth reconnect | Refresh falla | Degradado | Banner persistente "Sesión expirada" + botón "Iniciar sesión" | Iniciar sesión / seguir local | No |
 | `blocked` IDB | Otra pestaña bloquea upgrade | Potencial fatal | Banner/dialog: "Otra pestaña bloquea actualización. Recarga las otras pestañas." | Recargar pestañas | No |
 
@@ -637,7 +708,7 @@ Todo error capturado debe incluir un `errorCode` visible en detalles expandibles
 ### Fallback visual por módulo
 - **Mapa** si no está descargado: mostrar `MapStatusOverlay` "Mapa no disponible. Descargar desde Configuración" con enlace a StoragePanel. No bloquear el resto de la app.
 - **Búsqueda geográfica** si `geoIndex` falló: el mapa sigue renderizando, la búsqueda muestra "Búsqueda no disponible offline".
-- **precache_routes** si falló: no mostrar error al usuario. Solo log interno.
+- **`precache_routes` (bg task) si falló**: no mostrar error al usuario. Solo log interno. La app sigue 100% funcional (P4: servidor apagable). Se reintenta en próximo boot con servidor vivo.
 
 ---
 
@@ -776,9 +847,12 @@ La app entra en `ready_partial` si el **core dataset** (warehouses + products + 
 ## Estados del Loader (separados)
 
 ```typescript
-// Fase técnica del proceso de boot
-// ⚠️ image_prefetch NO es fase del loader — es tarea de background que corre
-// después de ready_partial con concurrencia 2 y prioridad baja. No bloquea UI.
+// Fase técnica del proceso de boot.
+// ⚠️ Solo fases de boot síncronas con la UI. Background tasks (map_tiles verify,
+// precache_routes, image_prefetch) NO viven aquí — viven en backgroundTasksStore.
+// Razones: (1) por P1, no podemos hacer fetch de mapa en boot si el servidor está
+// apagado; (2) por P2, no bloqueamos ready_partial; (3) por P3, el usuario empieza
+// a trabajar YA cuando core dataset está en IDB.
 type LoadPhase =
   | 'idle'
   | 'quota'
@@ -793,16 +867,17 @@ type LoadPhase =
   | 'customer_debts'
   | 'stock'
   | 'customers'
-  | 'suppliers'
-  | 'map_tiles'
-  | 'precache_routes';
+  | 'suppliers';
 
-// Estado funcional para la UI
+// Estado funcional para la UI.
+// ready_complete es derivado: ready_partial && (background tasks todas en done/failed).
+// NO se "setea" desde el loader — se computa desde un selector que lee backgroundTasksStore.
+// La UI usa ready_complete solo para badge informativo ("todo listo"), nunca para gating.
 type AppAvailability =
   | 'blocking'       // carga inicial, app no usable
   | 'ready_partial'  // core dataset listo, app usable
-  | 'ready_complete' // todo descargado
-  | 'degraded'       // errores no fatales (mapa, precache)
+  | 'ready_complete' // derivado: ready_partial + background tasks terminadas
+  | 'degraded'       // errores no fatales (mapa, precache, catálogo secundario stale)
   | 'error';         // error fatal
 ```
 
@@ -817,15 +892,23 @@ idle → quota → sw_precache → db_open ─── (geoIndex se carga post-rea
   │
       └─ [sin cache / cache insuficiente] → blocking
 
-            ┌─ [core] ───────────────────────── [background, no bloquean ready_partial] ─┐
-            │ warehouses → products → stock     categories → currencies → exchange_rates │
-            │         ↓                         → customer_debts → customers → suppliers │
-            │    ready_partial ◄───────────────────────────────────────────────────────────┘
-            │         ↓
-            │         ├─ image_prefetch ──── background task, concurrencia 2, suspende si hidden/batería baja
-            │         ├─ map_tiles ───────── solo verificación checksum (non-fatal)
-            │         └─ precache_routes ─── shell routes (credentials: 'omit'), non-fatal
-            │         └─ ready_complete ◄─── ambas deben terminar (background counter 0→2)
+            ┌─ [core, fases del loader] ───── [background, viven en backgroundTasksStore, NO bloquean ready_partial] ─┐
+            │ warehouses → products → stock   categories → currencies → exchange_rates                                   │
+            │         ↓                       → customer_debts → customers → suppliers                                   │
+            │    ready_partial ◄─────────────────────────────────────────────────────────────────────────────────────────┘
+            │         │
+            │         │  (el loader no espera por esto)
+            │         ▼
+            │   [backgroundTasksStore — concurrencia 1, suspende si hidden/batería baja, sin internet = no-op]
+            │     ├─ map_verify ──── verifica checksum cuba.pmtiles en OPFS (non-fatal, non-blocking)
+            │     ├─ precache_routes ── 6 shell routes via SW, credentials: 'omit' (non-fatal, non-blocking)
+            │     └─ image_prefetch ── thumbnails primeros 50 imágenes, concurrencia 2 (non-fatal, non-blocking)
+            │
+            └─ ready_complete = derivado: ready_partial && todas las background tasks
+                                 en {done, failed}. NO se "alcanza" como fase — se computa.
+                                 Si el servidor está apagado (P4), map_verify y precache_routes
+                                 pueden quedarse pending indefinidamente; ready_complete no se
+                                 computa, pero la app sigue 100% usable en ready_partial.
 ```
 
 ### Detalle de fase `quota`
@@ -903,15 +986,14 @@ Política general:
 
 | Fase | Nombre | Estado |
 |------|--------|--------|
-| **A** | Fundaciones offline — IDB v5 + store refactor + appLogger + fix endpoint | ❌ Pendiente |
+| **A** | Fundaciones offline — IDB v5 + store refactor + appLogger + fix endpoint | ✅ Completado |
 | **B** | Integridad de descarga — DownloadQueueService + validación DTO | ❌ Pendiente |
-| **C** | Loader robusto — phase/availability split + rehydrate_local + map_tiles + precache_routes + backgroundTasksStore | ❌ Pendiente |
+| **C** | Loader robusto — phase/availability split + rehydrate_local + backgroundTasksStore (map_verify, precache_routes, image_prefetch) | ❌ Pendiente |
 | **D** | Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token | ❌ Pendiente |
 | **E** | Mapa/GPS — MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado + FileSystemResource | ❌ Pendiente |
-| **F** | Verificación end-to-end | ❌ Pendiente |
+| **F** | Verificación end-to-end (incluye checklist P1–P5) | ❌ Pendiente |
 | **G** | Estrategia de imágenes offline — OPFS + imageIndex + useImageCache + OfflineImage + backend | ❌ Pendiente |
 | **H** | Doc & Code Cleanup — eliminar código/documentación muerta, consolidar docs/ y docs_dev/, actualizar README | ❌ Pendiente |
-| **I** | Mantenimiento local — MaintenanceService + pruning automático + alarmas cuota | ❌ Pendiente |
 | **I** | Mantenimiento local — MaintenanceService + pruning automático + alarmas cuota | ❌ Pendiente |
 
 ---
@@ -1001,19 +1083,22 @@ login → auth → startLoading()
   │     customer_debts (50%)
   │
   ├─ stock (52%)                ← ready_partial tras stock completado
-  │     └─ [ready_partial] ← App usable
+  │     └─ [ready_partial] ← App usable (P2, P3)
   │
   ├─ customers (58%)
   ├─ suppliers (62%)
-  │     └─ [ready_complete si no hay map_tiles ni precache pendientes]
+  │     └─ (no espera nada — ver background tasks abajo)
   │
-  ├─ [background tasks, no bloquean availability]:
-  │     ├─ image_prefetch ──→ background: thumbnails primeros 50 imágenes
-  │     │                       [suspende si hidden, batería baja, no bloquea]
-  │     ├─ map_tiles ───────→ solo verificación checksum (non-fatal)
-  │     ├─ map_tiles ──→ solo verificación checksum (non-fatal)
-  │     └─ precache_routes ──→ 6 shell routes, credentials: 'omit' (non-fatal)
-  │     └─ [ready_complete] ← ambas background tasks completadas (counter 0→2)
+  ├─ [background tasks — viven en backgroundTasksStore, NO son fases del loader,
+  │    NO afectan progress 0-100% del CacheProgressBar]:
+  │     ├─ map_verify ────────→ verifica checksum cuba.pmtiles en OPFS (non-fatal)
+  │     ├─ precache_routes ───→ 6 shell routes via SW, credentials: 'omit' (non-fatal)
+  │     └─ image_prefetch ────→ thumbnails primeros 50 imágenes (non-fatal, baja prioridad)
+  │
+  └─ [ready_complete] ◄── derivado: ready_partial && backgroundTasksStore.allTerminated()
+                          Puede no computarse si el servidor está apagado (P4) — la app
+                          sigue 100% usable en ready_partial. ready_complete es solo badge
+                          informativo en el Header.
 ```
 
 ---
@@ -1029,18 +1114,20 @@ login → auth → startLoading()
 **Archivo**: `frontend/src/core/loading/appLoaderStore.ts`
 
 ```typescript
+// ⚠️ map_tiles y precache_routes NO son fases del loader — son background tasks
+// registradas en backgroundTasksStore. Ver sección "Estados del Loader (separados)"
+// arriba para la justificación (P1/P2/P3: no internet en boot, no bloquear UI,
+// trabajo offline indefinido).
 export type LoadPhase =
   | 'idle' | 'quota' | 'sw_precache' | 'db_open'
   | 'rehydrate_local'   // 🆕
   | 'warehouses' | 'categories' | 'products'
-  | 'customers' | 'suppliers' | 'stock'
-  | 'map_tiles'
-  | 'precache_routes';
+  | 'customers' | 'suppliers' | 'stock';
 
 export type AppAvailability =
   | 'blocking'
   | 'ready_partial'
-  | 'ready_complete'
+  | 'ready_complete'   // derivado: no se setea — se computa
   | 'degraded'
   | 'error';
 
@@ -1053,9 +1140,8 @@ export interface AppLoaderState {
   subProgress: number;
   subTotal: number;
   // 🗑️ isComplete eliminado — redundante: availability === 'ready_complete' lo cubre
-  // Background task counter: map_tiles (verify) + precache_routes = 2 tasks
-  backgroundCompleted: number;   // cuántas background tasks han terminado
-  backgroundTotal: number;       // total de background tasks (2: map_tiles + precache_routes)
+  // 🗑️ backgroundCompleted / backgroundTotal eliminados — el progreso de background
+  // tasks vive en backgroundTasksStore. El loader NO trackea ni bloquea por bg tasks.
   error: string | null;
   swCompleted: number;
   swTotal: number;
@@ -1063,7 +1149,7 @@ export interface AppLoaderState {
 }
 ```
 
-Agregar acciones `setAvailability()` y `setPhase()`. Eliminar `totalSteps` de `AppLoaderState` e `initialState`. Verificar con grep que ningún componente lo consuma.
+Agregar acciones `setAvailability()` y `setPhase()`. **NO** agregar `setReadyComplete()` — `ready_complete` es derivado (selector sobre `availability === 'ready_partial' && backgroundTasksStore.allTerminated()`). Eliminar `totalSteps` de `AppLoaderState` e `initialState`. Verificar con grep que ningún componente lo consuma.
 
 > ⚠️ **Idempotencia de `startLoading()`: prevenir concurrencia desde múltiples renders.** Si React re-renderiza el componente que llama `startLoading()` antes de que termine el boot (ej: Strict Mode doble-mount en dev, navegación rápida, o doble efecto por dependencias), el loader puede iniciarse dos veces — duplicando descargas, corrompiendo el journal de chunks, y causando transiciones de fase inconsistentes.
 >
@@ -1089,6 +1175,10 @@ Agregar acciones `setAvailability()` y `setPhase()`. Eliminar `totalSteps` de `A
 ### A.2 — PHASE_WEIGHTS y PHASE_LABELS actualizados
 
 ```typescript
+// ⚠️ map_tiles y precache_routes NO están aquí — son background tasks, no fases.
+// Ver backgroundTasksStore para su tracking. El progress 0-100% del loader solo
+// refleja fases síncronas del boot, no tareas que pueden seguir indefinidamente
+// (o nunca terminar si el servidor está apagado — P4).
 const PHASE_WEIGHTS: Record<LoadPhase, number> = {
   idle: 0, quota: 2, sw_precache: 10, db_open: 15,
   rehydrate_local: 18,
@@ -1098,15 +1188,15 @@ const PHASE_WEIGHTS: Record<LoadPhase, number> = {
   currencies: 46,              // catálogos secundarios (corren en background post-ready_partial)
   exchange_rates: 48,
   customer_debts: 50,
-  stock: 52,                   ← ready_partial (core: warehouses+products+stock completos)
+  stock: 52,                   // ← ready_partial (core: warehouses+products+stock completos)
   customers: 58,
   suppliers: 62,
-  map_tiles: 85,
-  precache_routes: 90,
 };
 
 // ⚠️ image_prefetch NO tiene weight — no es fase del loader.
 // Corre como background task después de ready_partial.
+// ⚠️ map_tiles (verify) y precache_routes NO tienen weight — tampoco son fases.
+// Viven en backgroundTasksStore. Pueden no completarse nunca (P4: servidor apagado).
 // ⚠️ categories, currencies, exchange_rates, customer_debts se cargan EN PARALELO
 // después de products pero ANTES de ready_partial si hay ancho de banda.
 // No bloquean la transición a ready_partial — si alguna falla, solo degradan.
@@ -2103,14 +2193,14 @@ cd backend/inventory-app && mvn compile -q
 
 ---
 
-## Fase C — Loader robusto: phase/availability split + rehydrate_local + map_tiles + precache_routes
+## Fase C — Loader robusto: phase/availability split + rehydrate_local + backgroundTasksStore
 
 > **Skills**: `senior-frontend`, `web-performance-optimization`, `hexagonal-architecture`
-> **Objetivo**: Implementar la máquina de estados separada (phase + availability), fase `rehydrate_local` para arranque instantáneo desde cache, y las fases non-fatal `map_tiles` + `precache_routes`.
+> **Objetivo**: Implementar la máquina de estados separada (phase + availability), fase `rehydrate_local` para arranque instantáneo desde cache, y las **background tasks** `map_verify` + `precache_routes` + `image_prefetch` (NO son fases del loader — viven en `backgroundTasksStore`). `ready_complete` es derivado.
 
 ### C.1 — `appLoaderStore.ts`: implementar separación
 
-Usar la estructura definida en A.1. Acciones `setPhase()` y `setAvailability()` separadas.
+Usar la estructura definida en A.1. Acciones `setPhase()` y `setAvailability()` separadas. **NO** agregar `setReadyComplete()` — `ready_complete` se computa vía el selector `useReadyComplete()` que combina `availability === 'ready_partial' && backgroundTasksStore.allTerminated() && !backgroundTasksStore.anyRunning()`.
 
 **Transiciones clave:**
 
@@ -2119,15 +2209,14 @@ Usar la estructura definida en A.1. Acciones `setPhase()` y `setAvailability()` 
 setPhase('stock');
 // ... después de stock exitoso:
 setAvailability('ready_partial');
-
-// map_tiles + precache_routes corren en background después de ready_partial
-// Al terminar precache_routes:
-setAvailability('ready_complete');
+// En este momento, useAppLoader.ts dispara useBackgroundTasks.startAll([...])
+// El loader NO espera por las background tasks. NO llama setAvailability('ready_complete').
+// `ready_complete` se COMPUTA via el selector useReadyComplete().
 
 // Si error fatal:
 setAvailability('error');
 
-// Si error non-fatal (mapa, precache):
+// Si error non-fatal (mapa, precache, catálogo secundario):
 setAvailability('degraded');
 // La UI muestra "App lista (con algunas limitaciones)"
 ```
@@ -2187,7 +2276,11 @@ useEffect(() => {
         setSubStep('Cargando datos locales...');
         setAvailability('ready_partial');
         // Background tasks inmediatas (no bloquean UI):
-        prefetchImagesBackground(setSubStep, setSubProgress);  // image_prefetch
+        // ⚠️ NO pasar setSubStep/setSubProgress — esas son del loader, no de bg tasks.
+        // Las background tasks reportan su progreso via backgroundTasksStore (ver C.7.5).
+        void prefetchImagesBackground();
+        // Las background tasks map_verify y precache_routes se disparan desde el hook
+        // useAppLoader post-`ready_partial` via useBackgroundTasks.startAll([...]) (C.5).
         // sync fresco se lanza desde el hook de sync, no desde el loader
       } else {
         setSubStep(`${productCount > 0 ? 'Actualizando' : 'Descargando'} productos...`);
@@ -2322,56 +2415,80 @@ useEffect(() => {
 
 > Estos tres efectos son **non-fatal**: si fallan, la app continúa sin esos datos offline. `availability` se degrada a `degraded` solo si el error persiste. Las monedas, tasas y deudas no bloquean `ready_partial`.
 
-### C.5 — `useAppLoader.ts`: effects para `map_tiles` + `precache_routes`
+### C.5 — Background tasks: `map_verify` + `precache_routes` + `image_prefetch` (no fases del loader)
 
+> ⚠️ **Cambio arquitectónico mayor**: `map_tiles` y `precache_routes` **NO son fases del loader**. Son background tasks que viven en `backgroundTasksStore` y corren **post-`ready_partial`**, sin bloquear la UI ni transicionar `phase`. Esto refleja P1 (sin internet en boot), P2 (no bloquear UI), P3 (offline indefinido), P4 (servidor puede estar apagado).
+>
 > ⚠️ **sw_precache**: antes de cualquier fase que dependa del SW, esperar `navigator.serviceWorker.ready` (no solo `.register()`) antes de enviar `START_PRECACHING`. Serwist tiene `clientsClaim: true` pero hay race condition entre registro y control.
 
-**`map_tiles`** — solo verificación de integridad (la descarga es desde StoragePanel):
+**Disparador de background tasks** (en `useAppLoader.ts`, post-`ready_partial`):
 
 ```typescript
-// ⚠️ map_tiles ya NO transiciona a precache_routes via setPhase.
-// Ambas son background tasks post-ready_partial que se ejecutan concurrentemente.
-// El contador de background tasks vive en appLoaderStore:
-//   backgroundCompleted: number (0-2, incrementa al finalizar cada una)
-//   backgroundTotal: 2
-//   Al llegar backgroundCompleted === backgroundTotal → setAvailability('ready_complete')
+// Las background tasks se disparan al alcanzar ready_partial, no transicionan phase.
+// Usan backgroundTasksStore.startTask/updateTask/completeTask/failTask — NO setSubStep.
+// El selector `useBackgroundTasks` (en C.7.5) controla concurrencia y pause on hidden.
+import { useBackgroundTasks } from '@/core/loading/backgroundTasksStore';
 
 useEffect(() => {
-  if (store.phase !== 'map_tiles') return;
+  if (store.availability !== 'ready_partial') return;
+  if (store.phase !== 'idle' && store.phase !== 'stock') return; // ya estamos post-stock
   (async () => {
-    try {
-      const meta = await getMapMeta(); // desde syncMeta
-      const root = await navigator.storage.getDirectory();
-      if (meta?.installedAt) {
-        const exists = await root.getFileHandle('cuba.pmtiles', { create: false }).then(() => true).catch(() => false);
-        if (exists) {
-          // Verificar checksum
-          const file = await (await root.getFileHandle('cuba.pmtiles')).getFile();
-          const buf = await file.arrayBuffer();
-          const hashBuf = await crypto.subtle.digest('SHA-256', buf);
-          const hex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
-          if (`sha256:${hex}` !== meta.checksum) {
-            appLogger.warn('[AppLoader] map checksum mismatch, marcando degraded');
-            setAvailability('degraded');
-          } else {
-            setSubStep('Mapa verificado');
-          }
-        } else {
-          appLogger.info('[AppLoader] mapa no descargado — disponible desde Settings');
-        }
-      } else {
-        appLogger.info('[AppLoader] mapa no descargado — disponible desde Settings');
-      }
-    } catch { /* non-fatal */ }
-    finally {
-      setPhase('precache_routes');
-      store.backgroundCompleted++;
-      if (store.backgroundCompleted >= store.backgroundTotal) {
-        setAvailability('ready_complete');
-      }
-    }
+    // Set phase a idle para que no se vuelva a disparar (one-shot)
+    setPhase('idle');
+    // Lanzar las 3 background tasks concurrentemente. Cada una se auto-pausa si:
+    //   - document.hidden
+    //   - navigator.getBattery()?.level < 0.2 && !charging
+    //   - cuota OPFS > 95%
+    await useBackgroundTasks.getState().startAll([
+      () => verifyMapBackground(),         // map_verify
+      () => precacheOfflineRoute(),         // precache_routes
+      () => prefetchImagesBackground(),     // image_prefetch
+    ]);
   })();
-}, [store.phase, setPhase, setAvailability, setSubStep]);
+}, [store.availability, store.phase, setPhase]);
+```
+
+**`map_verify`** — solo verificación de integridad (la descarga es desde StoragePanel):
+
+```typescript
+// Background task: verifica checksum de cuba.pmtiles en OPFS. Non-fatal, non-blocking.
+// Por P1+P4: si getMapMeta() falla (servidor apagado), la task termina en 'skipped' —
+// la app sigue 100% funcional en ready_partial. Por P2: el SHA-256 va a Web Worker.
+async function verifyMapBackground(): Promise<void> {
+  const { startTask, completeTask, failTask, skipTask } = useBackgroundTasks.getState();
+  startTask('map_verify', 'Verificando integridad del mapa...', 1);
+
+  try {
+    const meta = await getMapMeta();  // desde syncMeta; falla si servidor apagado (P4)
+    if (!meta?.installedAt) {
+      appLogger.info('[map_verify] mapa no descargado — disponible desde Settings');
+      skipTask('map_verify', 'not_downloaded');
+      return;
+    }
+    const root = await navigator.storage.getDirectory();
+    const exists = await root.getFileHandle('cuba.pmtiles', { create: false })
+      .then(() => true).catch(() => false);
+    if (!exists) {
+      appLogger.info('[map_verify] OPFS entry ausente — disponible desde Settings');
+      skipTask('map_verify', 'opfs_missing');
+      return;
+    }
+    // SHA-256 en Web Worker (P2: no bloquear main thread)
+    const file = await (await root.getFileHandle('cuba.pmtiles')).getFile();
+    const buf = await file.arrayBuffer();
+    const hash = await computeSHA256InWorker(buf);  // ver B.5
+    if (`sha256:${hash}` !== meta.checksum) {
+      appLogger.warn('[map_verify] checksum mismatch — marcando degraded');
+      useAppLoaderStore.getState().setAvailability('degraded');
+      failTask('map_verify', 'checksum_mismatch');
+      return;
+    }
+    completeTask('map_verify');
+  } catch (err) {
+    appLogger.warn('[map_verify] non-fatal', err);
+    failTask('map_verify', String(err));
+  }
+}
 ```
 
 **`precache_routes`** — cachear SOLO la ruta offline `/~offline`. **NO cachear rutas autenticadas** (`/dashboard`, `/products`, etc.) aunque se envíen con `credentials: 'omit'`, porque:
@@ -2380,31 +2497,34 @@ useEffect(() => {
 3. La navegación se sirve desde IDB + TanStack Query, nunca desde SW cache
 
 ```typescript
-useEffect(() => {
-  if (store.phase !== 'precache_routes') return;
-  (async () => {
-    try {
-      // Solo cachear la página offline — el resto de la navegación viene de IDB
-      const OFFLINE_ROUTE = '/~offline';
-      await fetch(OFFLINE_ROUTE);
-      store.backgroundCompleted++;
-      if (store.backgroundCompleted >= store.backgroundTotal) {
-        setAvailability('ready_complete');
-      }
-    } catch (err) {
-      appLogger.warn('[AppLoader] precache_routes non-fatal', err);
-      store.backgroundCompleted++;
-    }
-  })();
-}, [store.phase, setPhase, setAvailability]);
+// Background task: precache solo la página offline fallback. Non-fatal, non-blocking.
+// Por P1: no cachea HTML autenticado (riesgo de 302/401 stale). Por P4: si el fetch
+// falla (servidor apagado), la task termina en 'failed' pero la app sigue funcionando.
+async function precacheOfflineRoute(): Promise<void> {
+  const { startTask, completeTask, failTask } = useBackgroundTasks.getState();
+  const OFFLINE_ROUTE = '/~offline';
+  startTask('precache_routes', 'Precacheando ruta offline...', 1);
+
+  try {
+    const res = await fetch(OFFLINE_ROUTE, { credentials: 'omit', cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    completeTask('precache_routes');
+  } catch (err) {
+    // P4: si servidor apagado, la task falla pero NO degradamos availability.
+    // La página offline se cachea en otra oportunidad cuando el servidor vuelva.
+    appLogger.warn('[precache_routes] non-fatal (servidor posiblemente apagado)', err);
+    failTask('precache_routes', String(err));
+  }
+}
 ```
 
 > ⚠️ Cambios importantes a `precache_routes`:
 > 1. **Solo `/~offline`** — no cachear ninguna ruta autenticada aunque se envíe con `credentials: 'omit'`. La shell autenticada requiere sesión para mostrar layout correcto. Cualquier 302/401 que se cachee dejaría la app en estado inconsistente.
-> 2. **NO transiciona a `ready_complete`** — `precache_routes` corre como background task post-ready_partial. `ready_complete` lo alcanza el store cuando todas las background tasks finalizan.
+> 2. **NO transiciona a `ready_complete`** — `ready_complete` se computa como derivado: `ready_partial && backgroundTasksStore.allTerminated()`. Ver C.7.5.
 > 3. **La estrategia del SW** debe ser `NetworkOnly` para rutas autenticadas — nunca servirlas desde cache.
 > 4. **NO usa `setSubStep`/`setSubProgress`** — reporta progreso via `backgroundTasksStore`.
-> 5. **Estrategia de offline fallback para navegación**: Cuando el usuario recarga la página en una ruta autenticada (ej: `/dashboard`, `/products`) estando offline, el SW debe interceptar el `fetch` de tipo `navigate` y responder con `/~offline` si la red falla. Esto evita que el navegador muestre su página de error genérica ("No internet"). Implementar en el fetch handler del SW:
+> 5. **Por P4**: si el fetch falla (servidor apagado), la task va a `failed` y `availability` NO se degrada. La app sigue 100% funcional. La precache se reintenta en la próxima oportunidad (otro boot con servidor vivo, sync manual, etc.).
+> 6. **Estrategia de offline fallback para navegación**: Cuando el usuario recarga la página en una ruta autenticada (ej: `/dashboard`, `/products`) estando offline, el SW debe interceptar el `fetch` de tipo `navigate` y responder con `/~offline` si la red falla. Esto evita que el navegador muestre su página de error genérica ("No internet"). Implementar en el fetch handler del SW:
 >    ```typescript
 >    // En sw.ts (serwist worker), agregar al fetch listener:
 >    self.addEventListener('fetch', (event: FetchEvent) => {
@@ -2430,12 +2550,16 @@ useEffect(() => {
 
 **Archivo**: `frontend/src/presentation/shared/components/network-status/CacheProgressBar.tsx`
 
-- PHASE_ORDER se actualiza con `rehydrate_local` y las nuevas fases (image_prefetch es background task, no tiene weight ni phase)
-- `backgroundCompleted` / `backgroundTotal` cuentan las background tasks (map_tiles + precache_routes)
-- La UI del progreso usa `phase` para la barra y `backgroundCompleted` para determinar ready_complete
+- PHASE_ORDER se actualiza con `rehydrate_local` y las nuevas fases. **No incluye** `map_tiles`, `precache_routes`, `image_prefetch` — son background tasks, no fases del loader. Ver C.7.5 para su UI.
+- **NO consume** `backgroundCompleted` / `backgroundTotal` — esos campos ya no existen en `AppLoaderState`. Las background tasks se renderizan en su propio componente (ver C.7.5).
+- La barra de progreso **0–100%** solo refleja fases síncronas del boot, en `phase`. Va de `quota` (2%) hasta `suppliers` (62%). No se "estira" esperando bg tasks.
 - El mensaje principal usa `availability`:
-  - `blocking` → muestra barra + fase actual (hasta stock)
-  - `ready_partial` → banner colapsable "App lista — puedes descargar el mapa desde Configuración"
+  - `blocking` → muestra barra + fase actual (hasta stock → `ready_partial` a 52%)
+  - `ready_partial` → banner colapsable "App lista — puedes descargar el mapa desde Configuración". El usuario puede empezar a trabajar.
+  - `ready_complete` → derivado: badge "Todo listo" en el Header. **NO es obligatorio** — la app funciona en `ready_partial` sin esto.
+  - `degraded` → banner persistente con detalles (qué falló: mapa, precache, catálogo)
+  - `error` → error screen con opción "Reintentar"
+- Por **P2 (dispositivo ligero)**: el componente se auto-pausa (no re-renderiza) cuando `document.hidden`. El progreso de fondo se reanuda al volver.
   - **Colapsable**: El banner en modo `ready_partial` debe ser colapsable (no ocupar espacio completo). Mostrar mini-barra de progreso discreta en el header (junto al icono de sync). `CacheProgressBar` se reduce a un badge en la barra de navegación con tooltip "Descargando recursos secundarios...". No mostrar banner full-width que ocupe espacio vertical.
   - `ready_complete` → "Todo listo" con check verde + tooltip con detalle de background tasks completadas
   - `degraded` → "App lista (con algunas limitaciones)" + detalle expandible de qué falló
@@ -2455,7 +2579,7 @@ Panel de diagnóstico accesible solo con `?debug=1` o desde settings avanzados. 
 | **Session** | SessionState, última sync exitosa, count outbox pendiente |
 | **Auditoría** | Resultado de última auditoría de boot (crítica/diagnóstica) |
 | **Mapa** | Instalado?, checksum, versión local vs servidor |
-| **Background tasks** | backgroundCompleted / backgroundTotal |
+| **Background tasks** | Lista de `BackgroundTaskId` con status (`done` / `running` / `failed` / `skipped`), progress y error. Por P4: si servidor apagado, las tasks quedan en `running` hasta que el AbortSignal timeout las lleve a `failed` (ver C.7.5). |
 
 **Acciones**: Botón "Ejecutar diagnóstico local" → corre auditoría completa y muestra resultado en `Dialog`. Botón "Forzar resync" → reinicia sync completo.
 
@@ -2465,34 +2589,62 @@ Panel de diagnóstico accesible solo con `?debug=1` o desde settings avanzados. 
 
 **Archivo**: `frontend/src/core/loading/backgroundTasksStore.ts`
 
-Store Zustand independiente del loader principal para evitar contaminación de progreso:
+Store Zustand independiente del loader principal. Es el **único mecanismo** para trackear background tasks. Las fases `map_tiles` y `precache_routes` **ya no existen** en `LoadPhase` — el loader solo conoce fases síncronas; este store conoce tareas asíncronas que corren tras `ready_partial` sin bloquear la UI.
 
 ```typescript
+// IDs canónicos de background tasks. Cada task tiene su propio estado y label.
+// ⚠️ El loader principal (AppLoaderStore) NO conoce estos IDs. La única conexión
+// entre ambos stores es el selector derivado `useReadyComplete` (ver abajo).
+export type BackgroundTaskId =
+  | 'image_prefetch'      // thumbnails primeros 50 productos (Fase G)
+  | 'precache_routes'     // solo /~offline (Fase C)
+  | 'map_verify'          // SHA-256 checksum de cuba.pmtiles (Fase C)
+  | 'catalog_refresh';    // refresca catálogos secundarios stale (Fase C.8)
+
 export interface BackgroundTaskProgress {
-  id: string;                          // 'image_prefetch' | 'precache_routes' | 'map_verify' | 'catalog_refresh'
+  id: BackgroundTaskId;
   label: string;                       // texto descriptivo (ej: 'Precargando imágenes...')
   completed: number;
   total: number;
-  status: 'running' | 'done' | 'failed' | 'idle';
-  error?: string;
+  status: 'idle' | 'running' | 'done' | 'failed' | 'skipped';
+  error?: string;                      // populated cuando status === 'failed' | 'skipped'
+  startedAt?: number;
+  finishedAt?: number;
 }
 
 export interface BackgroundTasksState {
-  tasks: Record<string, BackgroundTaskProgress>;
-  startTask: (id: string, label: string, total: number) => void;
-  updateTask: (id: string, completed: number) => void;
-  failTask: (id: string, error: string) => void;
-  completeTask: (id: string) => void;
-  resetTask: (id: string) => void;
+  tasks: Record<BackgroundTaskId, BackgroundTaskProgress>;
+  // Mutators
+  startTask: (id: BackgroundTaskId, label: string, total: number) => void;
+  updateTask: (id: BackgroundTaskId, completed: number) => void;
+  completeTask: (id: BackgroundTaskId) => void;
+  failTask: (id: BackgroundTaskId, error: string) => void;
+  skipTask: (id: BackgroundTaskId, reason: string) => void;  // P1+P4: no hay red, no hay datos
+  resetTask: (id: BackgroundTaskId) => void;
+  // Lifecycle
+  startAll: (runners: Array<() => Promise<void>>) => Promise<void>;  // orquesta concurrentes
+  // Selectors
+  allTerminated: () => boolean;   // todas las tasks en {done, failed, skipped}
+  anyRunning: () => boolean;
 }
+
+// Selector derivado para ready_complete — el ÚNICO lugar que lo computa.
+// ready_complete = ready_partial && allTerminated() && !anyRunning()
+export const useReadyComplete = () => {
+  const availability = useAppLoaderStore((s) => s.availability);
+  const allTerminated = useBackgroundTasks((s) => s.allTerminated());
+  const anyRunning = useBackgroundTasks((s) => s.anyRunning());
+  return availability === 'ready_partial' && allTerminated && !anyRunning;
+};
 ```
 
-**Reglas**:
-- `image_prefetch` y `precache_routes` usan este store, NO `setSubStep`/`setSubProgress` del loader
-- `map_tiles` (verify) también reporta aquí su progreso (checksum verification)
-- `CacheProgressBar` **NO** muestra progreso de background tasks — solo un badge en icono sync
-- `HealthPanel` (C.7) sí muestra el detalle completo de backgroundTasksStore
-- `ready_complete` se computa desde `appLoaderStore.backgroundCompleted === backgroundTotal`, no desde aquí
+**Reglas** (vinculantes — cualquier desviación requiere discusión previa):
+- **Único mecanismo**: tareas como `map_verify`, `precache_routes`, `image_prefetch`, `catalog_refresh` reportan progreso **exclusivamente** aquí. NUNCA llaman `setSubStep` / `setSubProgress` / `setPhase` del `AppLoaderStore`.
+- **El loader no espera**: `CacheProgressBar` muestra fases síncronas (0–62%). Las bg tasks aparecen en su propio componente `<BackgroundTasksBadge>` en el Header (icono con dot, tooltip con detalle).
+- **`HealthPanel` (C.7)** muestra el detalle completo de `backgroundTasksStore`.
+- **`ready_complete` es derivado**: computado por el selector `useReadyComplete()`. NO se setea con `setAvailability('ready_complete')` desde el loader.
+- **Por P4 (servidor apagado)**: `precache_routes` y `map_verify` pueden quedarse en `running` indefinidamente si el `fetch` está colgado. El scheduler (ver `startAll`) debe usar `AbortSignal.timeout(5000)` en cada fetch para que la task termine en `failed` rápido, dejando a `anyRunning()` en `false` para que `useReadyComplete` retorne `true` aunque sea con failures.
+- **Por P2 (no sobrecargar)**: el scheduler pausa las tasks si `document.hidden` o batería baja. Al volver, las resumes. Una task en `running` que se pausa no se considera `terminated` — `allTerminated` requiere status `done` | `failed` | `skipped`.
 
 ### C.8 — Background refresh de catálogos post `ready_partial`
 
@@ -2525,7 +2677,7 @@ export interface BackgroundTasksState {
    ```
 3. **Progreso en UI**: No mostrar banner. Solo badge discreto en icono de sync (tooltip: "Actualizando catálogos..."). Si falla → `appLogger.warn` + badge "Algunos datos pueden no estar actualizados". No `Banner` — el usuario ya tiene datos usables.
 4. **Si falla parcialmente**: No degrada `availability`. El catálogo fallido mantiene su versión local hasta el próximo intento (1h después o en próxima conexión detectada).
-5. **No bloquear ready_complete**: `pullCatalogsIfStale()` no cuenta como background task. Corre independientemente de `map_tiles`/`precache_routes`. `ready_complete` se alcanza cuando las 2 background tasks del loader terminan, independientemente del estado de estos refrescos.
+5. **No bloquear ready_complete**: `pullCatalogsIfStale()` no cuenta como background task registrada en `backgroundTasksStore`. Corre independientemente de `map_verify`/`precache_routes`/`image_prefetch`. `ready_complete` se computa derivado de las **3 background tasks** registradas, independientemente del estado de estos refrescos.
 
 **Archivo**: `frontend/src/presentation/shared/hooks/storage/useSyncStatus.ts`
 
@@ -2538,7 +2690,7 @@ export interface BackgroundTasksState {
 
 ### 🧠 Nota: OPFS en Main Thread vs Worker
 
-El MVP descarga/escribe PMTiles en **main thread** usando OPFS `createWritable()` + streaming. Esto es aceptable para el tamaño actual (~60-100MB). **Si el archivo PMTiles crece o se observan bloqueos perceptibles durante escritura/copia**, mover el pipeline de `map_tiles` a **Web Worker** usando `FileSystemFileHandle.createSyncAccessHandle()` (solo disponible en Worker). Dejar nota en el código y en ADR como mejora prioritaria post-MVP.
+El MVP descarga/escribe PMTiles en **main thread** usando OPFS `createWritable()` + streaming. Esto es aceptable para el tamaño actual (~60-100MB). **Si el archivo PMTiles crece o se observan bloqueos perceptibles durante escritura/copia**, mover el pipeline de descarga de PMTiles (StoragePanel) y la background task `map_verify` (SHA-256) a **Web Worker** usando `FileSystemFileHandle.createSyncAccessHandle()` (solo disponible en Worker). Dejar nota en el código y en ADR como mejora prioritaria post-MVP.
 
 ### 🧠 Nota: iOS Safari — OPFS limitado
 
@@ -3091,7 +3243,7 @@ cd backend/inventory-app && mvn compile -q
 >
 > ⚠️ **Bundle size**: MapLibre GL JS ~500KB gzipped (~1.5MB sin comprimir) — es la librería más pesada del frontend. Se maneja exclusivamente con `next/dynamic` y `{ ssr: false }` para que no impacte el bundle inicial del servidor. El chunk de mapa se carga solo cuando el usuario navega a una vista que contiene un componente de mapa. No hay alternativa más ligera para mapas vectoriales offline con soporte de PMTiles nativo. Leaflet + plugins similares tendrían tamaño comparable o mayor si se suma `leaflet.vectorgrid` + `pmtiles`. Este tamaño está aceptado en el budget del proyecto.
 
-> ⚠️ **Cambio arquitectónico clave**: `map_tiles` phase durante el boot solo **verifica** si el mapa ya está descargado en OPFS. La **descarga** del PMTiles se hace desde el **StoragePanel** en Settings, bajo demanda del usuario. Esto evita consumir ancho de banda/tiempo de boot y da control al usuario sobre cuándo descargar ~80-150MB.
+> ⚠️ **Cambio arquitectónico clave**: la verificación de integridad del mapa (background task `map_verify` en `backgroundTasksStore`) corre **post-`ready_partial`** sin bloquear la UI. La **descarga** del PMTiles se hace desde el **StoragePanel** en Settings, bajo demanda del usuario. Esto evita consumir ancho de banda/tiempo de boot y da control al usuario sobre cuándo descargar ~80-150MB. Por P4 (servidor apagable), si el PMTiles no está en OPFS y el servidor está apagado, la task se queda en `running` hasta que el AbortSignal.timeout(3000) la cancela — la app sigue 100% funcional.
 
 ### E.1 — Fuente de tiles de Cuba + servidor
 
@@ -3590,10 +3742,10 @@ interface MapMarker {
 
 ### E.13 — Descarga de mapa desde Settings (StoragePanel)
 
-**Cambio crítico**: la descarga del PMTiles **NO ocurre durante `map_tiles` boot phase**. En su lugar:
+**Cambio crítico**: la descarga del PMTiles **NO ocurre durante el boot** (era una fase `map_tiles` del loader, ahora eliminada). En su lugar:
 
-1. `map_tiles` phase en boot solo verifica si OPFS contiene `cuba.pmtiles` con checksum válido
-2. Si no existe o está corrupto → `availability = 'degraded'`, `MapStatusOverlay` muestra "Mapa no disponible. Descargar desde Configuración"
+1. La verificación de integridad corre como background task `map_verify` en `backgroundTasksStore` **post-`ready_partial`**. Solo verifica si OPFS contiene `cuba.pmtiles` con checksum válido.
+2. Si no existe o está corrupto → la app sigue en `ready_partial` (no degrada automáticamente a `degraded` por mapa faltante, ya que la ausencia de mapa es estado normal hasta que el usuario decida descargar). `MapStatusOverlay` muestra "Mapa no disponible. Descargar desde Configuración" solo si el usuario navega a una vista de mapa.
 3. Desde **StoragePanel** (Settings), el usuario puede:
     - Ver estado del mapa (instalado?, versión, tamaño, checksum, fecha)
     - Pulsar "Descargar mapa" que inicia el flujo de streaming OPFS
@@ -3602,11 +3754,11 @@ interface MapMarker {
 4. La descarga usa el mismo streaming OPFS definido en E.14
 
 > ⚠️ **¿Primer arranque auto o manual? Regla definitiva**:
-> - **Primer arranque** (sin PMTiles local): `map_tiles` phase intenta descargar automáticamente en background (non-fatal usando `downloadMapToOPFS`). Si la descarga automática falla (ej: servidor de mapa no responde, red lenta), NO bloquea boot — la app sigue en `ready_partial`/`degraded` y el usuario puede reintentar manualmente desde StoragePanel.
-> - **Arranques posteriores** (PMTiles existe localmente): `map_tiles` solo verifica checksum. No descarga automática.
-> - **Descarga manual** desde StoragePanel: siempre sobrescribe con confirmación previa. Si hay descarga automática en curso, el botón manual muestra "Descarga en progreso...".
-> - **Regla**: La descarga automática en primer arranque es **best-effort, non-blocking, non-fatal**. Si falla, no hay impacto en availability más allá de `degraded` por mapa faltante.
-> - **Coordinación con `isMapDownloading`**: Antes de cualquier descarga automática (primer arranque) o manual, verificar `schedulerState.isMapDownloading === false`. Si ya está activo (otra tab descargando o descarga previa en curso), saltar el intento. La descarga automática de primer arranque solo se inicia si `isMapDownloading === false` y respeta el mismo mutex que la descarga manual.
+> - **Primer arranque** (sin PMTiles local): el boot **NO** intenta descarga automática. La app arranca en `ready_partial` sin mapa. El usuario descarga desde StoragePanel cuando quiera. Esto respeta P1 (sin internet obligatorio), P2 (no saturar boot con 80-150MB), P3 (usuario offline indefinido puede decidir después), P4 (servidor apagable: si está apagado, ni lo intenta).
+> - **Arranques posteriores** (PMTiles existe localmente): `map_verify` (background task) solo verifica checksum contra syncMeta. No descarga automática.
+> - **Descarga manual** desde StoragePanel: siempre sobrescribe con confirmación previa. Si hay descarga en curso, el botón muestra "Descarga en progreso...".
+> - **Regla**: NO hay descarga automática de primer arranque. El mapa es opt-in. La app funciona 100% sin él.
+> - **Coordinación con `isMapDownloading`**: Antes de cualquier descarga manual, verificar `schedulerState.isMapDownloading === false`. Si ya está activo (otra tab descargando), saltar el intento. La descarga manual solo se inicia si `isMapDownloading === false`.
 
 **⚠️ Mutex de descarga**: Antes de iniciar cualquier descarga (boot o manual), verificar el flag global `isMapDownloading: boolean` en Zustand store. Si está activo, mostrar "Descarga en progreso..." en el botón y no iniciar nueva descarga. Esto evita conflicto entre StoragePanel manual y cualquier intento de descarga desde boot. El flag se setea al iniciar y se limpia al terminar (éxito o error).
 
@@ -3682,45 +3834,80 @@ async function downloadMapToOPFS(onProgress: (pct: number) => void): Promise<voi
 
 > ⚠️ `FileSystemWritableFileStream` no tiene `rename()`. El fallback de copiar el archivo temporal al definitivo duplica temporalmente el espacio usado. Para PMTiles de ~100MB, asegurar ~200MB libres durante la descarga.
 
-### E.15 — Fase `map_tiles` en boot (solo verificación)
+### E.15 — Background task `map_verify` (verificación de integridad post-boot)
 
-La fase `map_tiles` en `useAppLoader.ts` cambia de "descargar" a "verificar":
+> ⚠️ **Cambio arquitectónico mayor**: `map_tiles` **ya NO es fase del loader**. Es la background task `map_verify` registrada en `backgroundTasksStore`. La verificación de integridad corre **post-`ready_partial`** sin bloquear la UI. Justificación: P1 (sin internet en boot si servidor apagado), P2 (SHA-256 en Web Worker, no en main thread), P3 (offline indefinido), P4 (servidor apagable).
+
+**Lógica de verificación** (implementada en `C.5` como `verifyMapBackground()`):
 
 ```typescript
-useEffect(() => {
-  if (store.phase !== 'map_tiles') return;
-  (async () => {
+// Esta función vive en C.5 (background task) — se referencia aquí para que E tenga
+// visibilidad del contrato. NO duplicar implementación; C.5 es la fuente única.
+async function verifyMapBackground(): Promise<void> {
+  const { startTask, completeTask, failTask, skipTask } = useBackgroundTasks.getState();
+  startTask('map_verify', 'Verificando integridad del mapa...', 1);
+
+  try {
+    const meta = await getMapMeta();  // desde syncMeta; falla si servidor apagado (P4)
+    if (!meta?.installedAt) {
+      skipTask('map_verify', 'not_downloaded');  // P1+P4: sin red, sin acción
+      return;
+    }
+    const root = await navigator.storage.getDirectory();
+    const exists = await root.getFileHandle('cuba.pmtiles', { create: false })
+      .then(() => true).catch(() => false);
+    if (!exists) {
+      skipTask('map_verify', 'opfs_missing');
+      return;
+    }
+
+    // P2: SHA-256 en Web Worker (ver B.5 para computeSHA256InWorker)
+    const file = await (await root.getFileHandle('cuba.pmtiles')).getFile();
+    const buf = await file.arrayBuffer();
+    const clientHash = await computeSHA256InWorker(buf);
+    if (`sha256:${clientHash}` !== meta.clientChecksum) {
+      appLogger.warn('[map_verify] checksum local mismatch — corrupto');
+      useAppLoaderStore.getState().setAvailability('degraded');
+      failTask('map_verify', 'corrupted');
+      return;
+    }
+
+    // E.18: detectar nueva versión en servidor (best-effort, P1: si falla, skip)
     try {
-      const meta = await getMapMeta(); // desde syncMeta
-      const root = await navigator.storage.getDirectory();
-      const exists = meta?.installedAt && await root
-        .getFileHandle('cuba.pmtiles', { create: false }).then(() => true).catch(() => false);
-      if (exists) {
-        // Verificar checksum contra metadata guardada y servidor
-        const serverMetaRes = await fetch('/api/v1/maps/cuba.pmtiles.meta.json').catch(() => null);
-        const serverMeta = serverMetaRes?.ok ? await serverMetaRes.json() as { sha256: string } : null;
-        if (serverMeta && serverMeta.sha256 !== meta.checksum) {
-          appLogger.info('[AppLoader] nueva versión de mapa disponible, marcar stale');
-          // No marcar degraded — solo badge "Nueva versión disponible" en StoragePanel
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);  // P4: timeout corto
+      const serverMetaRes = await fetch('/api/v1/maps/cuba.pmtiles.meta.json', {
+        signal: controller.signal,
+        cache: 'no-store',
+      }).finally(() => clearTimeout(timeout));
+      if (serverMetaRes.ok) {
+        const serverMeta = await serverMetaRes.json() as { sha256: string; version: string };
+        if (serverMeta.sha256 !== meta.serverChecksum) {
+          // Hay versión nueva — NO degradamos availability, NO re-descargamos.
+          // Solo flag para StoragePanel mostrar "Nueva versión disponible".
+          // El usuario decide cuándo actualizar (ver E.18: actualización manual).
+          await db.put('syncMeta', { ...meta, serverNewer: true, latestKnownVersion: serverMeta.version });
         }
-        // Verificar integridad del archivo local
-        const file = await (await root.getFileHandle('cuba.pmtiles')).getFile();
-        const buf = await file.arrayBuffer();
-        const hashBuf = await crypto.subtle.digest('SHA-256', buf);
-        const hex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
-        if (`sha256:${hex}` !== meta.checksum) {
-          appLogger.warn('[AppLoader] map checksum mismatch, archivo corrupto');
-          setAvailability('degraded');
-        }
-      } else {
-        appLogger.info('[AppLoader] mapa no descargado — disponible desde Settings');
-        // No marcar degraded aquí solo por mapa faltante — es acción manual
       }
-    } catch { /* non-fatal */ }
-    finally { setPhase('precache_routes'); }
-  })();
-}, [store.phase, setPhase, setAvailability, setSubStep]);
+    } catch {
+      // P4: servidor apagado, no actualizamos la metadata. Queda con serverNewer=false.
+    }
+
+    completeTask('map_verify');
+  } catch (err) {
+    appLogger.warn('[map_verify] non-fatal', err);
+    failTask('map_verify', String(err));
+  }
+}
 ```
+
+**Diferencias vs versión vieja** (la que llamaba `setPhase('precache_routes')` en `finally`):
+- **NO llama `setPhase`** — el loader no se entera. `phase` puede ser `idle` u otra fase del boot. La task es completamente aislada.
+- **NO llama `setSubStep` / `setSubProgress`** — todo el progreso se reporta via `backgroundTasksStore`.
+- **NO marca `ready_complete`** — es un campo derivado (ver `useReadyComplete` en C.7.5).
+- **Por P1+P4**: usa `skipTask` cuando no hay datos que verificar (mapa no descargado, servidor apagado). Esto evita que la task se quede en `running` indefinidamente.
+- **Por P4**: el `fetch` al `.meta.json` tiene `AbortSignal.timeout(3000)` para no colgar si el servidor está apagado.
+- **Por P2**: el SHA-256 se computa en Web Worker via `computeSHA256InWorker(buf)` (ver B.5). En main thread bloquearía la UI ~1-3s para 100MB.
 
 ### E.16 — `next.config.ts`: headers para assets de mapa
 
@@ -3795,22 +3982,23 @@ interface MapMetadata {
 }
 ```
 
-**Flujo en `map_tiles` (boot)**:
-1. Fetch `/maps/cuba.pmtiles.meta.json`
+**Flujo en `map_verify` (background task post-`ready_partial`)**:
+1. Fetch `/maps/cuba.pmtiles.meta.json` (con `AbortSignal.timeout(3000)` por P4)
 2. Comparar `serverChecksum` vs metadata guardada en `syncMeta`
-3. Si `serverChecksum !== clientChecksum` → metadata marcada como `stale` (no borrar, solo notificar)
-4. Si `opfsFileExists('cuba.pmtiles')` pero **no hay metadata** → re-descargar (archivo huérfano = corrupción implícita)
+3. Si `serverChecksum !== clientChecksum` → metadata marcada como `stale` (no borrar, solo notificar en `syncMeta.serverNewer = true`)
+4. Si `opfsFileExists('cuba.pmtiles')` pero **no hay metadata** → marcar como huérfano en `syncMeta`. La re-descarga se ofrece al usuario desde StoragePanel (no automática).
 5. Si hay versión nueva disponible → badge/banner: "Nueva versión de mapa disponible" + enlace a StoragePanel
+6. Si todo OK → `completeTask('map_verify')`. Si falla → `failTask('map_verify', error)`. Si servidor apagado → `skipTask('map_verify', 'server_offline')` (P1+P4).
 
 **No forzar re-descarga automática** — el usuario decide desde StoragePanel cuándo actualizar. El PMTiles es grande (~80-150MB), la actualización es manual como la descarga inicial.
 
 ### E.19 — Notas de rendimiento SHA-256 en archivos grandes
 
 Para PMTiles de ~100-200MB, `crypto.subtle.digest('SHA-256', arrayBuffer)` en **main thread** puede tardar ~1-3s. Esto afecta:
-- `map_tiles` boot phase (verificación de checksum) → aceptable, no bloquea UI porque corre después de `ready_partial`
-- `StoragePanel` post-descarga (validación) → aceptable, el usuario ve "Verificando integridad..." en progreso
+- `map_verify` (background task) → SHA-256 vía Web Worker (B.5: `computeSHA256InWorker`). No bloquea main thread (P2).
+- `StoragePanel` post-descarga (validación) → aceptable, el usuario ve "Verificando integridad..." en progreso. Si se observa jank, mover a Worker.
 
-**Mejora futura documentada**: Mover `crypto.subtle.digest` a Web Worker si la verificación causa jank perceptible en dispositivos de gama baja. Usar `FileSystemSyncAccessHandle` en Worker para evitar cargar el archivo completo en memoria.
+**Implementación P2 obligatoria**: `computeSHA256InWorker(buf)` se invoca desde `verifyMapBackground()` (C.5) y desde `downloadMapToOPFS()` (E.14). El worker recibe `ArrayBuffer`, computa `sha256:${hex}`, retorna el string. Worker usa `FileSystemSyncAccessHandle` cuando está disponible (Chrome, Firefox, Safari 17+) para no cargar el archivo completo en memoria.
 
 ### E.20 — Mapa: responsabilidades por servidor
 
@@ -4244,6 +4432,46 @@ cd backend/inventory-app && mvn compile -q
 
 ### F.1 — Checklist de verificación
 
+#### Verificación de Principios Rectores (P1–P5) — bloqueante
+
+```
+□ P1. Cero internet en runtime
+  □ DevTools → Network → Disable cache. Cargar app. Confirmar que no hay requests a CDNs/dominios externos
+  □ pnpm depcheck no reporta dependencias que carguen desde internet
+  □ pnpm-lock.yaml inspeccionado: ninguna URL apunta a registry externa en runtime
+  □ grep -r "https://" frontend/src/{core,presentation,app} no retorna URLs de assets (solo API base)
+  □ Service Worker configurado para NO hacer fetch a hosts externos
+
+□ P2. Dispositivo ligero
+  □ DevTools → Performance → Memory. Sesión de 1h: no hay acumulación de ObjectURLs
+  □ DevTools → Performance → Main thread. Ningún task >100ms durante navegación normal
+  □ Document.hidden + batería baja: background tasks se pausan automáticamente (verificar con DevTools sensors)
+  □ Bundle analyzer: MapLibre chunk separado, no en main bundle
+  □ Cold start con cache local: < 2s en desktop medio (Budgets)
+
+□ P3. Trabajo offline indefinido
+  □ Apagar servidor. Recargar app (F5). La app abre en ready_partial con datos cacheados
+  □ Crear venta offline → outbox la guarda. Recargar app → venta sigue en outbox
+  □ Dejar app cerrada 24h → al abrir, sigue funcionando con datos cacheados
+  □ Outbox crece sin límite mientras no haya sync (verificar con db.count('outbox'))
+
+□ P4. Servidor puede apagarse
+  □ Apagar servidor después de login. La sesión local NO se invalida
+  □ Banner "Sesión expiró" NO aparece automáticamente — solo si el usuario intenta sync y recibe 401
+  □ Modo lectura funciona 100% sin servidor (consultar productos, clientes, etc.)
+  □ NetworkMode 'offline' persiste correctamente entre reloads
+  □ Si hay fetch pendiente al servidor apagado, AbortSignal.timeout(5000) lo cancela (no cuelga la UI)
+
+□ P5. Sync no destructivo
+  □ Outbox guarda clientVersion, payload, createdAt, priority, entityType, entityId
+  □ Sync drena Tipo B antes que Tipo A
+  □ Conflicto de versión → SyncConflictResolver con FieldDiffTable, NUNCA merge silencioso
+  □ Sync NO borra datos locales sin confirmación explícita
+  □ NetworkMode 'online' tras estar 'offline' → sync drena automáticamente, pero con confirmación visual
+```
+
+#### Verificación de features
+
 ```
 □ IDB v5: DevTools → Application → IndexedDB → inventory-offline, version 5
 □ Stores: products (>0), warehouses, categories, customers, suppliers, stockBalances (>0)
@@ -4261,8 +4489,9 @@ cd backend/inventory-app && mvn compile -q
     □ Búsqueda geográfica funciona offline
     □ Navegación shell funciona (solo /~offline precacheadas, el resto desde IDB)
 □ rehydrate_local: ready_partial si warehouses > 0 && products > 0 && stockBalances > 0 (categories no bloquean)
-□ ready_complete: app usable ANTES de que termine map_tiles
-□ degraded: si mapa falla, app sigue usable
+□ ready_partial: app usable ANTES de que termine `map_verify` (background task en backgroundTasksStore, no fase del loader)
+□ ready_complete: derivado de `availability === 'ready_partial' && backgroundTasksStore.allTerminated()`. NO se setea.
+□ degraded: si `map_verify` falla checksum, app sigue usable (banner persistente)
 □ Simular conflicto: 2 tabs, editar mismo producto → FieldDiffTable visible
 □ Simular corrupción: interceptar response → JSON malformado → CorruptionRepairCenter
 □ Log viewer visible en development (bottom-right)
@@ -4293,14 +4522,15 @@ cd backend/inventory-app && mvn compile -q
     □ Cancelable en curso
     □ Checksum validado contra /maps/cuba.pmtiles.sha256
     □ Metadata guardada en syncMeta post-descarga
-□ map_tiles phase en boot solo verifica (no descarga)
+□ map_verify background task (no fase del loader) verifica SHA-256 contra syncMeta (no descarga)
 □ SW precache de /maps/style.json, fonts, sprites
 □ Backend endpoints para persistir marcadores/anotaciones de mapa
 □ mapMarkers / mapAnnotations stores en IDB con sync Tipo A
 □ /maps/cuba.pmtiles.meta.json existe con version, sha256, sizeBytes, updatedAt
-□ map_tiles verifica version contra server: si serverChecksum !== clientChecksum → banner "Nueva versión disponible"
+□ map_verify chequea version contra server: si serverChecksum !== clientChecksum → banner "Nueva versión disponible" (sin re-descarga)
 □ Si OPFS tiene cuba.pmtiles pero no metadata → marcado como huérfano → re-descargar
-□ SHA-256 de archivo completo (~1-3s) no bloquea UI (corre post-ready_partial)
+□ SHA-256 de archivo completo (~1-3s) corre en Web Worker (B.5), no bloquea main thread (P2)
+□ map_verify usa AbortSignal.timeout(3000) para el fetch a .meta.json (P4: servidor apagable)
 □ Tabla de responsabilidades: Next.js sirve /maps/, Spring Boot sirve imágenes
 □ ImageResolver resuelve /api/v1/.../images/... desde OPFS offline
 □ useImageUrl hook revoca ObjectURLs correctamente en cleanup
@@ -4742,12 +4972,13 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 
 ---
 
-### Nuevos archivos (31)
+### Nuevos archivos (32)
 
 | Archivo | Fase | Propósito |
 |---------|------|-----------|
 | `src/core/loading/types/corruption.ts` | A | Schema CorruptionEntry |
 | `src/core/loading/types/download-chunk.ts` | A | Schema DownloadChunk (+ userId) |
+| `src/core/loading/backgroundTasksStore.ts` | C | **Único** mecanismo para trackear background tasks (`image_prefetch`, `precache_routes`, `map_verify`, `catalog_refresh`). `ready_complete` se computa desde aquí. |
 | `src/infrastructure/logging/appLogger.ts` | A | Logger wrapper + buffer+flush+truncado |
 | `src/presentation/shared/components/debug/AppLogViewer.tsx` | A | Log viewer (dev only) |
 | `src/infrastructure/storage/DownloadQueueService.ts` | B | Cola controlada + SHA-256 + quarantine |
@@ -4795,10 +5026,10 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 
 | Archivo | Fases | Cambio |
 |---------|-------|--------|
-| `src/core/loading/appLoaderStore.ts` | A, C | Phase/availability split; `rehydrate_local`; eliminar `totalSteps`; `map_tiles`, `precache_routes`, `degraded`; +flag `isMapDownloading` |
+| `src/core/loading/appLoaderStore.ts` | A, C | Phase/availability split; `rehydrate_local`; eliminar `totalSteps`, `backgroundCompleted`, `backgroundTotal`; `LoadPhase` ya NO incluye `map_tiles`/`precache_routes`; +flag `isMapDownloading` (en schedulerState, no en este store); `ready_complete` es derivado (no se setea) |
 | `src/infrastructure/storage/db.ts` | A | v4→v5: imageIndex (reemplaza imageCache), by-sale-date, by-occurred-at, corruptionQueue, downloadChunks, appLogs, geoIndex (schema) + 4 console.error → appLogger |
-| `src/presentation/shared/hooks/storage/useAppLoader.ts` | A, B, C | Fix endpoint + DownloadQueueService + rehydrate_local + image_prefetch effect + effects map_tiles (solo verificación) /precache_routes + appLogger |
-| `src/presentation/shared/components/network-status/CacheProgressBar.tsx` | C | Adaptado a phase/availability; ready_partial vs ready_complete vs degraded |
+| `src/presentation/shared/hooks/storage/useAppLoader.ts` | A, B, C | Fix endpoint + DownloadQueueService + rehydrate_local + dispara `startAll` de background tasks post-`ready_partial` (NO effects para `map_tiles`/`precache_routes` como fases) + appLogger |
+| `src/presentation/shared/components/network-status/CacheProgressBar.tsx` | C | Adaptado a phase/availability. NO muestra progreso de background tasks (eso va en `<BackgroundTasksBadge>` del Header). `backgroundCompleted`/`backgroundTotal` ya no existen. |
 | `src/presentation/modules/sync/components/SyncConflictResolver.tsx` | D | FieldDiffTable con diff campo a campo |
 | `src/presentation/shared/hooks/storage/useAuthStore.ts` | A | 5 console.error → appLogger.error; +SET_USER_CONTEXT postMessage al SW en login/logout; +listener SW_UPDATED con chequeo outbox pendiente |
 | `src/presentation/shared/hooks/storage/useSyncStatus.ts` | A | 1 console.error → appLogger.error |
@@ -4856,8 +5087,8 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 
 > Los archivos Leaflet (`OfflineMap.tsx`, `CubaTileManager.ts`, `CubaGeoSearchAdapter.ts`) se eliminan en Fase H.1 — ya no son heredados.
 
-**Total**: 34 nuevos + 53 modificados + 3 eliminados + 1 heredado = 91 archivos.
-- **Nuevos**: 31 originales + `MaintenanceService.ts` + `useMaintenance.ts` + `backgroundTasksStore.ts` = 34
+**Total**: 32 nuevos + 53 modificados + 3 eliminados + 1 heredado = 89 archivos.
+- **Nuevos**: 30 originales + `MaintenanceService.ts` + `useMaintenance.ts` + `backgroundTasksStore.ts` = 32
 - **Modificados**: 50 originales + `application.yml` (app.maps.location) + `syncService.ts` (lock + maintenance call) + `useAppLoader.ts` (maintenance call) = 53
 
 ---

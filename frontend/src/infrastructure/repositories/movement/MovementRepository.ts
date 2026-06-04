@@ -1,77 +1,55 @@
-import { apiClient } from '@/infrastructure/api/client';
 import { IMovementRepository } from '@/core/movement/ports/IMovementRepository';
 import { InventoryMovement, MovementFilter } from '@/core/movement/entities/inventory-movement';
-import { readWithCache } from '@/infrastructure/storage/networkAwareUtils';
-import { getCachedMovements } from '@/infrastructure/storage/db';
+import { getDB } from '@/infrastructure/storage/db';
+
+type CachedMovementRow = {
+  id: string;
+  productId: string;
+  warehouseId: string;
+  type: string;
+  quantity: number;
+  reference: string;
+  cachedAt: number;
+};
+
+function applyFilter(items: CachedMovementRow[], filter?: MovementFilter): CachedMovementRow[] {
+  if (!filter) return items;
+  return items.filter((m) => {
+    if (filter.warehouseId && m.warehouseId !== filter.warehouseId) return false;
+    if (filter.productId && m.productId !== filter.productId) return false;
+    if (filter.movementType && m.type !== filter.movementType) return false;
+    if (filter.sourceDocType && !m.reference.startsWith(filter.sourceDocType)) return false;
+    return true;
+  });
+}
 
 export class MovementRepository implements IMovementRepository {
-  private basePath = '/api/v1/movements';
-
   async getById(id: string): Promise<InventoryMovement | null> {
-    return readWithCache(
-      async () => {
-        try {
-          const response = await apiClient.get<InventoryMovement>(`${this.basePath}/${id}`);
-          return response.data;
-        } catch {
-          return null;
-        }
-      },
-      async () => {
-        const movements = await getCachedMovements();
-        const movement = movements.find(m => m.id === id);
-        return movement as unknown as InventoryMovement ?? null;
-      },
-    );
+    const db = await getDB();
+    const cached = (await db.get('movements', id)) as CachedMovementRow | undefined;
+    return (cached ?? null) as unknown as InventoryMovement | null;
   }
 
   async getAll(filter?: MovementFilter): Promise<InventoryMovement[]> {
-    return readWithCache(
-      async () => {
-        const response = await apiClient.get<InventoryMovement[]>(this.basePath, { params: filter });
-        return response.data;
-      },
-      async () => getCachedMovements() as unknown as InventoryMovement[],
-    );
+    const db = await getDB();
+    const all = (await db.getAll('movements')) as CachedMovementRow[];
+    return applyFilter(all, filter) as unknown as InventoryMovement[];
   }
 
   async getByWarehouseAndProduct(warehouseId: string, productId: string): Promise<InventoryMovement[]> {
-    return readWithCache(
-      async () => {
-        const response = await apiClient.get<InventoryMovement[]>(`${this.basePath}/warehouse/${warehouseId}/product/${productId}`);
-        return response.data;
-      },
-      async () => {
-        const movements = await getCachedMovements();
-        return movements.filter(m => m.warehouseId === warehouseId && m.productId === productId) as unknown as InventoryMovement[];
-      },
-    );
+    const db = await getDB();
+    const all = (await db.getAll('movements')) as CachedMovementRow[];
+    return all.filter((m) => m.warehouseId === warehouseId && m.productId === productId) as unknown as InventoryMovement[];
   }
 
   async getByDocument(docType: string, docId: string): Promise<InventoryMovement[]> {
-    return readWithCache(
-      async () => {
-        const response = await apiClient.get<InventoryMovement[]>(`${this.basePath}/document/${docType}/${docId}`);
-        return response.data;
-      },
-      async () => {
-        const movements = await getCachedMovements();
-        return movements.filter(m => m.reference === `${docType}/${docId}`) as unknown as InventoryMovement[];
-      },
-    );
+    const db = await getDB();
+    const all = (await db.getAll('movements')) as CachedMovementRow[];
+    return all.filter((m) => m.reference === `${docType}/${docId}`) as unknown as InventoryMovement[];
   }
 
   async count(filter?: MovementFilter): Promise<number> {
-    return readWithCache(
-      async () => {
-        const response = await apiClient.get<number>(`${this.basePath}/count`, { params: filter });
-        return response.data;
-      },
-      async () => {
-        const movements = await getCachedMovements();
-        return movements.length;
-      },
-    );
+    return applyFilter((await (await getDB()).getAll('movements')) as CachedMovementRow[], filter).length;
   }
 }
 

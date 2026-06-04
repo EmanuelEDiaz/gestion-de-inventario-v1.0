@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useAppLoaderStore, getPhaseProgress, type LoadPhase, type AppAvailability } from '@/core/loading/appLoaderStore';
+import { useAppLoaderStore, getPhaseProgress, type LoadPhase } from '@/core/loading/appLoaderStore';
 
 export interface StorageUsage {
   usageBytes: number;
@@ -79,7 +79,7 @@ export function useCacheProgress(): CacheProgress {
   const step = useAppLoaderStore((s) => s.step);
   const availability = useAppLoaderStore((s) => s.availability);
 
-  const isComplete: boolean = availability === 'ready_complete' || availability === 'ready_partial';
+  const isComplete: boolean = availability === 'ready_partial';
 
   const appPhase: CacheProgress['phase'] = phase === 'error' ? 'error'
     : isComplete ? 'ready'
@@ -102,7 +102,7 @@ export function useCacheProgress(): CacheProgress {
     progress: effectiveProgress,
     currentStep: step,
     storageUsage: DEFAULT_USAGE,
-    isAppReady: availability === 'ready_complete',
+    isAppReady: availability === 'ready_partial',
     modules: loadedPhases,
     overallPercent: effectiveProgress,
     isComplete,

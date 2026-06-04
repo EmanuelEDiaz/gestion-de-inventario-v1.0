@@ -15,7 +15,10 @@ import {
 } from '@/infrastructure/storage/db';
 import { apiClient } from '@/infrastructure/api/client';
 import { getStorageUsage } from './useCacheProgress';
-import { setIdbReady } from '@/infrastructure/logging/appLogger';
+import { setIdbReady, appLogger } from '@/infrastructure/logging/appLogger';
+
+const FETCH_TIMEOUT_MS = 5_000;
+const PAGE_SIZE = 100;
 
 let bootInProgress = false;
 
@@ -25,40 +28,77 @@ function extractItems(raw: unknown, store: string): Record<string, unknown>[] {
   if (r?.content && Array.isArray(r.content)) return r.content as Record<string, unknown>[];
   if (r?.data && Array.isArray(r.data)) return r.data as Record<string, unknown>[];
   const embedded = r._embedded as Record<string, unknown> | undefined;
-  if (embedded?.[store] && Array.isArray(embedded[store])) return embedded[store] as Record<string, unknown>[];
+  if (embedded) {
+    for (const key of Object.keys(embedded)) {
+      const v = embedded[key];
+      if (Array.isArray(v)) return v as Record<string, unknown>[];
+    }
+    if (embedded[store] && Array.isArray(embedded[store])) {
+      return embedded[store] as Record<string, unknown>[];
+    }
+    const singular = store.replace(/s$/, '');
+    if (embedded[singular] && Array.isArray(embedded[singular])) {
+      return embedded[singular] as Record<string, unknown>[];
+    }
+  }
   return [];
 }
 
 async function fetchPaginated(
   endpoint: string,
   store: string,
-  pageSize: number,
   onProgress?: (page: number, total: number) => void,
 ): Promise<void> {
   let page = 0;
   let hasMore = true;
   while (hasMore) {
-    const res = await apiClient.get<{ content?: Record<string, unknown>[]; totalPages?: number }>(
-      `${endpoint}?page=${page}&size=${pageSize}`,
-    );
-    const data = res.data as { content?: Record<string, unknown>[]; totalPages?: number };
-    const items = (data.content ?? []).map((item) => ({ ...item, cachedAt: Date.now() }));
-    if (items.length > 0) {
-      await cacheStoreData(store, items);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await apiClient.get<{ content?: Record<string, unknown>[]; totalPages?: number }>(
+        `${endpoint}?page=${page}&size=${PAGE_SIZE}`,
+        { signal: controller.signal },
+      );
+      const data = res.data as { content?: Record<string, unknown>[]; totalPages?: number };
+      const items = (data.content ?? []).map((item) => ({ ...item, cachedAt: Date.now() }));
+      if (items.length > 0) {
+        await cacheStoreData(store, items);
+      }
+      hasMore = page + 1 < (data.totalPages ?? 0);
+      page++;
+      onProgress?.(page, data.totalPages ?? 0);
+    } finally {
+      clearTimeout(timer);
     }
-    hasMore = page + 1 < (data.totalPages ?? 0);
-    page++;
-    onProgress?.(page, data.totalPages ?? 0);
   }
 }
 
 async function fetchAll(endpoint: string, store: string): Promise<void> {
-  const res = await apiClient.get<Record<string, unknown>[] | Record<string, unknown>>(endpoint);
-  const items = extractItems(res.data, store).map(
-    (item: Record<string, unknown>) => ({ ...item, cachedAt: Date.now() }),
-  );
-  if (items.length > 0) {
-    await cacheStoreData(store, items);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await apiClient.get<Record<string, unknown>[] | Record<string, unknown>>(
+      endpoint,
+      { signal: controller.signal },
+    );
+    const items = extractItems(res.data, store).map(
+      (item: Record<string, unknown>) => ({ ...item, cachedAt: Date.now() }),
+    );
+    if (items.length > 0) {
+      await cacheStoreData(store, items);
+    }
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function loadCatalogOptional(endpoint: string, store: string, label: string): Promise<void> {
+  try {
+    const count = await getCachedCount(store);
+    if (count > 0) return;
+    await fetchAll(endpoint, store);
+  } catch (err) {
+    appLogger.warn(`[AppLoader] ${label} non-fatal`, err);
   }
 }
 
@@ -132,9 +172,7 @@ export function useAppLoader() {
           setPhase('warehouses');
         }
       } catch (err) {
-        import('@/infrastructure/logging/appLogger').then(m =>
-          m.appLogger.error('[AppLoader] rehydrate_local falló, forzando descarga completa', err),
-        );
+        appLogger.error('[AppLoader] rehydrate_local falló, forzando descarga completa', err);
         setPhase('warehouses');
       }
     })();
@@ -160,7 +198,7 @@ export function useAppLoader() {
       try {
         const count = await getCachedCount('products');
         if (count > 0) { setPhase('categories'); return; }
-        await fetchPaginated('/api/v1/products/paginated', 'products', 100,
+        await fetchPaginated('/api/v1/products/paginated', 'products',
           (page, total) => {
             setSubStep(`página ${page}/${total}`);
             setSubProgress(page, total);
@@ -190,51 +228,27 @@ export function useAppLoader() {
   useEffect(() => {
     if (store.phase !== 'currencies') return;
     (async () => {
-      try {
-        setSubStep('Descargando monedas...');
-        const count = await getCachedCount('currencies');
-        if (count === 0) await fetchAll('/api/v1/currencies', 'currencies');
-        setPhase('exchange_rates');
-      } catch (err) {
-        import('@/infrastructure/logging/appLogger').then(m =>
-          m.appLogger.warn('[AppLoader] currencies non-fatal', err),
-        );
-        setPhase('exchange_rates');
-      }
+      setSubStep('Descargando monedas...');
+      await loadCatalogOptional('/api/v1/currencies', 'currencies', 'currencies');
+      setPhase('exchange_rates');
     })();
   }, [store.phase, setPhase, setSubStep]);
 
   useEffect(() => {
     if (store.phase !== 'exchange_rates') return;
     (async () => {
-      try {
-        setSubStep('Descargando tasas de cambio...');
-        const count = await getCachedCount('exchangeRates');
-        if (count === 0) await fetchAll('/api/v1/exchange-rates', 'exchangeRates');
-        setPhase('customer_debts');
-      } catch (err) {
-        import('@/infrastructure/logging/appLogger').then(m =>
-          m.appLogger.warn('[AppLoader] exchange_rates non-fatal', err),
-        );
-        setPhase('customer_debts');
-      }
+      setSubStep('Descargando tasas de cambio...');
+      await loadCatalogOptional('/api/v1/exchange-rates', 'exchangeRates', 'exchange_rates');
+      setPhase('customer_debts');
     })();
   }, [store.phase, setPhase, setSubStep]);
 
   useEffect(() => {
     if (store.phase !== 'customer_debts') return;
     (async () => {
-      try {
-        setSubStep('Descargando deudas...');
-        const count = await getCachedCount('customerDebts');
-        if (count === 0) await fetchAll('/api/v1/customer-debts', 'customerDebts');
-        setPhase('stock');
-      } catch (err) {
-        import('@/infrastructure/logging/appLogger').then(m =>
-          m.appLogger.warn('[AppLoader] customer_debts non-fatal', err),
-        );
-        setPhase('stock');
-      }
+      setSubStep('Descargando deudas...');
+      await loadCatalogOptional('/api/v1/customer-debts', 'customerDebts', 'customer_debts');
+      setPhase('stock');
     })();
   }, [store.phase, setPhase, setSubStep]);
 
@@ -256,51 +270,20 @@ export function useAppLoader() {
   useEffect(() => {
     if (store.phase !== 'customers') return;
     (async () => {
-      try {
-        setSubStep('Descargando clientes...');
-        const count = await getCachedCount('customers');
-        if (count === 0) await fetchAll('/api/v1/customers', 'customers');
-        setPhase('suppliers');
-      } catch (err) {
-        import('@/infrastructure/logging/appLogger').then(m =>
-          m.appLogger.warn('[AppLoader] customers non-fatal', err),
-        );
-        setPhase('suppliers');
-      }
+      setSubStep('Descargando clientes...');
+      await loadCatalogOptional('/api/v1/customers', 'customers', 'customers');
+      setPhase('suppliers');
     })();
   }, [store.phase, setPhase, setSubStep]);
 
   useEffect(() => {
     if (store.phase !== 'suppliers') return;
     (async () => {
-      try {
-        setSubStep('Descargando proveedores...');
-        const count = await getCachedCount('suppliers');
-        if (count === 0) await fetchAll('/api/v1/suppliers', 'suppliers');
-        setPhase('precache_routes');
-      } catch (err) {
-        import('@/infrastructure/logging/appLogger').then(m =>
-          m.appLogger.warn('[AppLoader] suppliers non-fatal', err),
-        );
-        setPhase('precache_routes');
-      }
+      setSubStep('Descargando proveedores...');
+      await loadCatalogOptional('/api/v1/suppliers', 'suppliers', 'suppliers');
+      setPhase('idle');
     })();
   }, [store.phase, setPhase, setSubStep]);
-
-  useEffect(() => {
-    if (store.phase !== 'precache_routes') return;
-    (async () => {
-      try {
-        setSubStep('Precargando rutas...');
-        setAvailability('ready_complete');
-      } catch (err) {
-        import('@/infrastructure/logging/appLogger').then(m =>
-          m.appLogger.warn('[AppLoader] precache_routes non-fatal', err),
-        );
-        setAvailability('ready_complete');
-      }
-    })();
-  }, [store.phase, setPhase, setAvailability, setSubStep]);
 
   const startLoading = useCallback(() => {
     if (bootInProgress) return;
@@ -318,3 +301,5 @@ export function useAppLoader() {
     phaseLabel: getPhaseLabel(store.phase),
   };
 }
+
+export type { LoadPhase, AppAvailability };

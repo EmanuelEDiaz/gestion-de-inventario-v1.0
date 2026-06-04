@@ -1,3 +1,10 @@
+/**
+ * @deprecated desde v5.3 — repositorios migrados a local-first puro. Eliminar tras un sprint sin usos.
+ *   - `isOnline()` → usar `getNetworkMode()` directamente
+ *   - `readWithCache()` → leer directo de IDB con `getDB().getAll(store)`
+ *   - `writeWithOutbox()` → patrón inline try/catch + `addToOutbox()` (ver Repository base)
+ *   - `readCachedByEntityType()` → eliminar, cada repo conoce su store
+ */
 import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 import {
   getCachedProducts, getCachedProduct, cacheProducts,

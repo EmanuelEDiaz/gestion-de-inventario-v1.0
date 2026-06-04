@@ -17,7 +17,7 @@ describe('GetProductsUseCase', () => {
     };
 
     const mockRepo = {
-      getAll: vi.fn().mockResolvedValue(mockResponse),
+      getAllPaginated: vi.fn().mockResolvedValue(mockResponse),
       getById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -29,7 +29,7 @@ describe('GetProductsUseCase', () => {
 
     expect(result.content).toHaveLength(2);
     expect(result.totalElements).toBe(2);
-    expect(mockRepo.getAll).toHaveBeenCalledWith({ page: 0, size: 20 });
+    expect(mockRepo.getAllPaginated).toHaveBeenCalledWith({ page: 0, size: 20 });
   });
 
   it('should pass filters to repository', async () => {
@@ -42,7 +42,7 @@ describe('GetProductsUseCase', () => {
     };
 
     const mockRepo = {
-      getAll: vi.fn().mockResolvedValue(mockResponse),
+      getAllPaginated: vi.fn().mockResolvedValue(mockResponse),
       getById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -52,7 +52,7 @@ describe('GetProductsUseCase', () => {
     const useCase = new GetProductsUseCase(mockRepo);
     await useCase.execute({ search: 'test', status: 'ACTIVE', page: 1, size: 10 });
 
-    expect(mockRepo.getAll).toHaveBeenCalledWith({
+    expect(mockRepo.getAllPaginated).toHaveBeenCalledWith({
       search: 'test',
       status: 'ACTIVE',
       page: 1,
@@ -70,7 +70,7 @@ describe('GetProductsUseCase', () => {
     };
 
     const mockRepo = {
-      getAll: vi.fn().mockResolvedValue(mockResponse),
+      getAllPaginated: vi.fn().mockResolvedValue(mockResponse),
       getById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -80,7 +80,7 @@ describe('GetProductsUseCase', () => {
     const useCase = new GetProductsUseCase(mockRepo);
     const result = await useCase.execute();
 
-    expect(mockRepo.getAll).toHaveBeenCalledWith(undefined);
+    expect(mockRepo.getAllPaginated).toHaveBeenCalledWith(undefined);
     expect(result.content).toHaveLength(0);
   });
 });

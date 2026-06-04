@@ -13,12 +13,24 @@ export class OfflineQueueFullError extends Error {
   }
 }
 
+export type OutboxPriority = 0 | 1;
+
+export function priorityForEntityType(entityType: string): OutboxPriority {
+  const critical = new Set([
+    'SALE',
+    'TRANSFER',
+    'ADJUSTMENT',
+  ]);
+  return critical.has(entityType.toUpperCase()) ? 1 : 0;
+}
+
 export async function addToOutbox(entry: {
   operationId: string;
   entityType: string;
   entityId: string;
   action: string;
   payload: unknown;
+  priority?: OutboxPriority;
   maxRetries?: number;
   expiresAt?: number;
 }): Promise<void> {
@@ -34,6 +46,7 @@ export async function addToOutbox(entry: {
     action: entry.action,
     payload: entry.payload,
     status: 'pending',
+    priority: entry.priority ?? priorityForEntityType(entry.entityType),
     retryCount: 0,
     maxRetries: entry.maxRetries ?? 5,
     nextRetryAt: Date.now(),
@@ -45,9 +58,14 @@ export async function addToOutbox(entry: {
 
 export async function getPendingOutbox(): Promise<OutboxEntry[]> {
   const db = await getDB();
-  const all = await db.getAllFromIndex('outbox', 'by-created');
+  const all = await db.getAllFromIndex('outbox', 'by-priority');
   const now = Date.now();
-  return all.filter((e) => e.status === 'pending' && e.nextRetryAt <= now);
+  return all
+    .filter((e) => e.status === 'pending' && e.nextRetryAt <= now)
+    .sort((a, b) => {
+      if (b.priority !== a.priority) return b.priority - a.priority;
+      return a.createdAt - b.createdAt;
+    });
 }
 
 export async function removeFromOutbox(id: number): Promise<void> {
@@ -128,6 +146,7 @@ export async function retryDeadLetter(operationId: string): Promise<void> {
     action: deadEntry.action,
     payload: deadEntry.payload,
     status: 'pending',
+    priority: priorityForEntityType(deadEntry.entityType),
     retryCount: 0,
     maxRetries: 5,
     nextRetryAt: Date.now(),

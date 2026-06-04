@@ -40,7 +40,6 @@ function safeSerialize(ctx: unknown): string | undefined {
 async function flushToIDB(): Promise<void> {
   if (buffer.length === 0) return;
   const batch = buffer.splice(0, buffer.length);
-  if (!isDev) return;
   if (!idbReady) return;
   try {
     const { openDB } = await import('idb');
@@ -100,17 +99,30 @@ function getDeviceId(): string {
   return id;
 }
 
-function log(level: LogLevel, message: string, context?: unknown) {
+function log(level: LogLevel, message: string, errOrContext?: unknown, ctx?: Record<string, unknown>) {
+  let finalContext: Record<string, unknown> | undefined;
+  if (errOrContext instanceof Error) {
+    finalContext = {
+      ...ctx,
+      errorName: errOrContext.name,
+      errorMessage: errOrContext.message,
+      stack: errOrContext.stack,
+    };
+  } else if (errOrContext !== undefined) {
+    finalContext = { ...(errOrContext as Record<string, unknown>), ...ctx };
+  } else if (ctx !== undefined) {
+    finalContext = ctx;
+  }
   const entry: LogEntry = {
     level,
     message,
-    context: safeSerialize(context),
+    context: safeSerialize(finalContext),
     timestamp: Date.now(),
     deviceId: getDeviceId(),
   };
   buffer.push(entry);
   if (buffer.length > MAX_MEMORY) buffer.shift();
-  if (isDev) console[level](`[${level.toUpperCase()}] ${message}`, context ?? '');
+  if (isDev) console[level](`[${level.toUpperCase()}] ${message}`, finalContext ?? '');
   scheduleFlush();
 }
 
@@ -118,7 +130,7 @@ export const appLogger = {
   debug: (msg: string, ctx?: unknown) => log('debug', msg, ctx),
   info: (msg: string, ctx?: unknown) => log('info', msg, ctx),
   warn: (msg: string, ctx?: unknown) => log('warn', msg, ctx),
-  error: (msg: string, ctx?: unknown) => log('error', msg, ctx),
+  error: (msg: string, err?: unknown, ctx?: Record<string, unknown>) => log('error', msg, err, ctx),
   getLogs: () => [...buffer],
   clearLogs: () => { buffer.length = 0; },
   flush: flushToIDB,

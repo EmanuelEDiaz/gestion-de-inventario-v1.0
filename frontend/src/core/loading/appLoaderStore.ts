@@ -15,8 +15,6 @@ export type LoadPhase =
   | 'stock'
   | 'customers'
   | 'suppliers'
-  | 'map_tiles'
-  | 'precache_routes'
   | 'error';
 
 export type AppAvailability =
@@ -37,8 +35,6 @@ export interface AppLoaderState {
   error: string | null;
   swCompleted: number;
   swTotal: number;
-  backgroundCompleted: number;
-  backgroundTotal: number;
   showSwUpdateBanner: boolean;
 }
 
@@ -50,7 +46,6 @@ export interface AppLoaderActions {
   setSubStep: (subStep: string) => void;
   setSubProgress: (current: number, total: number) => void;
   setSWProgress: (completed: number, total: number) => void;
-  setBackgroundProgress: (completed: number, total: number) => void;
   setShowSwUpdateBanner: (show: boolean) => void;
   setError: (error: string) => void;
   reset: () => void;
@@ -72,8 +67,6 @@ const PHASE_WEIGHTS: Record<LoadPhase, number> = {
   stock: 52,
   customers: 58,
   suppliers: 62,
-  map_tiles: 85,
-  precache_routes: 90,
   error: 0,
 };
 
@@ -92,8 +85,6 @@ const PHASE_LABELS: Record<LoadPhase, string> = {
   stock: 'Descargando existencias',
   customers: 'Descargando clientes',
   suppliers: 'Descargando proveedores',
-  map_tiles: 'Verificando mapa',
-  precache_routes: 'Precargando rutas',
   error: 'Error',
 };
 
@@ -128,8 +119,6 @@ const initialState: AppLoaderState = {
   error: null,
   swCompleted: 0,
   swTotal: 0,
-  backgroundCompleted: 0,
-  backgroundTotal: 0,
   showSwUpdateBanner: false,
 };
 
@@ -158,8 +147,6 @@ export const useAppLoaderStore = create<AppLoaderState & AppLoaderActions>()((se
 
   setSWProgress: (completed, total) => set({ swCompleted: completed, swTotal: total }),
 
-  setBackgroundProgress: (completed, total) => set({ backgroundCompleted: completed, backgroundTotal: total }),
-
   setShowSwUpdateBanner: (show) => set({ showSwUpdateBanner: show }),
 
   setError: (error) => set({ phase: 'error', availability: 'error', error, step: error }),
@@ -178,8 +165,6 @@ export const useAppLoaderStore = create<AppLoaderState & AppLoaderActions>()((se
       error: null,
       swCompleted: 0,
       swTotal: 0,
-      backgroundCompleted: 0,
-      backgroundTotal: 0,
       showSwUpdateBanner: false,
     }),
 }));

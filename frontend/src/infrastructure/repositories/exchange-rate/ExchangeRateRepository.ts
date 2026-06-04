@@ -1,64 +1,89 @@
 import { apiClient } from '@/infrastructure/api/client';
 import type { IExchangeRateRepository } from '@/core/exchange-rate/ports/IExchangeRateRepository';
 import type { ExchangeRate, CreateExchangeRateInput, UpdateExchangeRateInput, ExchangeRateFilter } from '@/core/exchange-rate/entities/exchange-rate';
-import { readWithCache, isOnline } from '@/infrastructure/storage/networkAwareUtils';
-import { getCachedExchangeRates } from '@/infrastructure/storage/db';
+import { addToOutbox } from '@/infrastructure/storage/outbox';
+import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
+import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 
 export class ExchangeRateRepository implements IExchangeRateRepository {
   private readonly basePath = '/api/v1/exchange-rates';
 
-  async getAll(filter?: ExchangeRateFilter): Promise<ExchangeRate[]> {
-    return readWithCache(
-      async () => {
-        const response = await apiClient.get<ExchangeRate[]>(this.basePath, { params: filter });
-        return response.data;
-      },
-      async () => getCachedExchangeRates() as unknown as ExchangeRate[],
-    );
+  async getAll(_filter?: ExchangeRateFilter): Promise<ExchangeRate[]> {
+    const db = await getDB();
+    return (await db.getAll('exchangeRates')) as unknown as ExchangeRate[];
   }
 
   async getLatest(baseCode: string, quoteCode: string): Promise<ExchangeRate | null> {
-    return readWithCache(
-      async () => {
-        try {
-          const response = await apiClient.get<ExchangeRate>(`${this.basePath}/latest`, {
-            params: { baseCode, quoteCode },
-          });
-          return response.data;
-        } catch {
-          return null;
-        }
-      },
-      async () => {
-        const rates = await getCachedExchangeRates();
-        return rates.find(
-          (r) => r.fromCurrency === baseCode && r.toCurrency === quoteCode,
-        ) as unknown as ExchangeRate ?? null;
-      },
-    );
+    const db = await getDB();
+    const all = (await db.getAll('exchangeRates')) as Array<{ fromCurrency: string; toCurrency: string; rate: number }>;
+    const match = all.find((r) => r.fromCurrency === baseCode && r.toCurrency === quoteCode);
+    if (!match) return null;
+    return { ...match, id: `${baseCode}-${quoteCode}`, baseCode, quoteCode, rateType: 'MARKET', validFrom: '', createdBy: null, createdAt: '' } as unknown as ExchangeRate;
   }
 
   async create(data: CreateExchangeRateInput): Promise<ExchangeRate> {
-    if (!isOnline()) {
-      throw new Error('Requiere conexión a internet para crear tasas de cambio');
+    const id = `temp_${crypto.randomUUID()}`;
+    const mode = getNetworkMode();
+    if (mode === 'online-direct' || mode === 'online-degraded') {
+      try {
+        const response = await apiClient.post<ExchangeRate>(this.basePath, data);
+        await safeCacheWrite(async () => {
+          const db = await getDB();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless
+          await db.put('exchangeRates', { ...response.data, cachedAt: Date.now() } as any);
+        }, 'ExchangeRateRepository.create');
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
     }
-    const response = await apiClient.post<ExchangeRate>(this.basePath, data);
-    return response.data;
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'EXCHANGE_RATE', entityId: id,
+      action: 'CREATE', payload: data,
+    });
+    return { id, ...data } as unknown as ExchangeRate;
   }
 
   async update(id: string, data: UpdateExchangeRateInput): Promise<ExchangeRate> {
-    if (!isOnline()) {
-      throw new Error('Requiere conexión a internet para actualizar tasas de cambio');
+    const mode = getNetworkMode();
+    if (mode === 'online-direct' || mode === 'online-degraded') {
+      try {
+        const response = await apiClient.put<ExchangeRate>(`${this.basePath}/${id}`, data);
+        await safeCacheWrite(async () => {
+          const db = await getDB();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless
+          await db.put('exchangeRates', { ...response.data, cachedAt: Date.now() } as any);
+        }, 'ExchangeRateRepository.update');
+        return response.data;
+      } catch {
+        // fall through to outbox
+      }
     }
-    const response = await apiClient.put<ExchangeRate>(`${this.basePath}/${id}`, data);
-    return response.data;
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'EXCHANGE_RATE', entityId: id,
+      action: 'UPDATE', payload: { id, ...data },
+    });
+    return { id, ...data } as unknown as ExchangeRate;
   }
 
   async delete(id: string): Promise<void> {
-    if (!isOnline()) {
-      throw new Error('Requiere conexión a internet para eliminar tasas de cambio');
+    const mode = getNetworkMode();
+    if (mode === 'online-direct' || mode === 'online-degraded') {
+      try {
+        await apiClient.delete(`${this.basePath}/${id}`);
+        await safeCacheWrite(async () => {
+          const db = await getDB();
+          await db.delete('exchangeRates', id);
+        }, 'ExchangeRateRepository.delete');
+        return;
+      } catch {
+        // fall through to outbox
+      }
     }
-    await apiClient.delete(`${this.basePath}/${id}`);
+    await addToOutbox({
+      operationId: crypto.randomUUID(), entityType: 'EXCHANGE_RATE', entityId: id,
+      action: 'DELETE', payload: { id },
+    });
   }
 }
 
