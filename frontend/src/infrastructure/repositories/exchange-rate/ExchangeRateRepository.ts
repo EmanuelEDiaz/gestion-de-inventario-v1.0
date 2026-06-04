@@ -15,10 +15,10 @@ export class ExchangeRateRepository implements IExchangeRateRepository {
 
   async getLatest(baseCode: string, quoteCode: string): Promise<ExchangeRate | null> {
     const db = await getDB();
-    const all = (await db.getAll('exchangeRates')) as Array<{ fromCurrency: string; toCurrency: string; rate: number }>;
-    const match = all.find((r) => r.fromCurrency === baseCode && r.toCurrency === quoteCode);
+    const all = (await db.getAll('exchangeRates')) as Array<{ baseCode: string; quoteCode: string; rate: number }>;
+    const match = all.find((r) => r.baseCode === baseCode && r.quoteCode === quoteCode);
     if (!match) return null;
-    return { ...match, id: `${baseCode}-${quoteCode}`, baseCode, quoteCode, rateType: 'MARKET', validFrom: '', createdBy: null, createdAt: '' } as unknown as ExchangeRate;
+    return { ...match, id: `${baseCode}-${quoteCode}`, rateType: 'MARKET', validFrom: '', createdBy: null, createdAt: '' } as unknown as ExchangeRate;
   }
 
   async create(data: CreateExchangeRateInput): Promise<ExchangeRate> {

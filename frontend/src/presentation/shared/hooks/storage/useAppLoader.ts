@@ -156,7 +156,7 @@ export function useAppLoader() {
     if (store.phase !== 'rehydrate_local') return;
     (async () => {
       try {
-        const db = await import('idb').then((idb) => idb.openDB('inventory-offline', 5));
+        const db = await import('idb').then((idb) => idb.openDB('inventory-offline', 6));
         const [warehouseCount, productCount, stockCount] = await Promise.all([
           db.count('warehouses'),
           db.count('products'),
@@ -198,7 +198,7 @@ export function useAppLoader() {
       try {
         const count = await getCachedCount('products');
         if (count > 0) { setPhase('categories'); return; }
-        await fetchPaginated('/api/v1/products/paginated', 'products',
+        await fetchPaginated('/api/v1/products', 'products',
           (page, total) => {
             setSubStep(`página ${page}/${total}`);
             setSubProgress(page, total);
@@ -247,7 +247,7 @@ export function useAppLoader() {
     if (store.phase !== 'customer_debts') return;
     (async () => {
       setSubStep('Descargando deudas...');
-      await loadCatalogOptional('/api/v1/customer-debts', 'customerDebts', 'customer_debts');
+        await loadCatalogOptional('/api/v1/debts', 'customerDebts', 'customer_debts');
       setPhase('stock');
     })();
   }, [store.phase, setPhase, setSubStep]);

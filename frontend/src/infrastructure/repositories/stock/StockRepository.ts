@@ -6,7 +6,7 @@ type CachedStockRow = {
   id: string;
   warehouseId: string;
   productId: string;
-  quantity: number;
+  onHand: number;
   cachedAt: number;
 };
 
@@ -15,7 +15,7 @@ function applyFilter(items: CachedStockRow[], filter?: StockFilter): CachedStock
   return items.filter((b) => {
     if (filter.warehouseId && b.warehouseId !== filter.warehouseId) return false;
     if (filter.productId && b.productId !== filter.productId) return false;
-    if (filter.outOfStock && b.quantity > 0) return false;
+    if (filter.outOfStock && b.onHand > 0) return false;
     return true;
   });
 }
@@ -40,7 +40,7 @@ export class StockRepository implements IStockRepository {
       const reorderByProduct = new Map(products.map((p) => [p.id, p.reorderPoint]));
       filtered = filtered.filter((b) => {
         const rp = reorderByProduct.get(b.productId);
-        return rp != null && b.quantity <= rp;
+        return rp != null && b.onHand <= rp;
       });
     }
     return filtered as unknown as StockBalance[];
@@ -68,9 +68,9 @@ export class StockRepository implements IStockRepository {
     return all
       .filter((b) => {
         const rp = reorderByProduct.get(b.productId);
-        return rp != null && b.quantity <= rp;
+        return rp != null && b.onHand <= rp;
       })
-      .map((b) => ({ ...b, quantity: b.quantity } as unknown as StockBalance));
+      .map((b) => ({ ...b, onHand: b.onHand } as unknown as StockBalance));
   }
 }
 

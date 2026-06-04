@@ -16,10 +16,10 @@ export class DashboardRepository implements IDashboardRepository {
     let lowStockCount = 0;
     let outOfStockCount = 0;
     for (const balance of stockBalances) {
-      if (balance.quantity <= 0) outOfStockCount++;
+      if (balance.onHand <= 0) outOfStockCount++;
       else {
         const product = products.find(p => p.id === balance.productId) as { reorderPoint?: number | null } | undefined;
-        if (product?.reorderPoint != null && balance.quantity <= product.reorderPoint) lowStockCount++;
+        if (product?.reorderPoint != null && balance.onHand <= product.reorderPoint) lowStockCount++;
       }
     }
 
@@ -58,7 +58,7 @@ export class DashboardRepository implements IDashboardRepository {
 
       if (!product) continue;
       if (product.reorderPoint == null) continue;
-      if (balance.quantity > product.reorderPoint) continue;
+      if (balance.onHand > product.reorderPoint) continue;
 
       results.push({
         productId: balance.productId,
@@ -66,7 +66,7 @@ export class DashboardRepository implements IDashboardRepository {
         productSku: product.sku ?? '',
         warehouseId: balance.warehouseId,
         warehouseName: warehouseNameMap.get(balance.warehouseId),
-        onHand: balance.quantity,
+        onHand: balance.onHand,
         reorderPoint: product.reorderPoint,
       });
     }

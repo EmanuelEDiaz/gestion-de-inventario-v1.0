@@ -43,7 +43,7 @@ async function flushToIDB(): Promise<void> {
   if (!idbReady) return;
   try {
     const { openDB } = await import('idb');
-    const db: IDBPDatabase<unknown> = await openDB('inventory-offline', 5);
+    const db: IDBPDatabase<unknown> = await openDB('inventory-offline', 6);
     const tx = db.transaction('appLogs', 'readwrite');
     const batchStore = tx.objectStore('appLogs');
     for (const entry of batch) await batchStore.add(entry);

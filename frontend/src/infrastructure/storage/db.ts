@@ -3,7 +3,7 @@ import type { Product } from '@/core/product/entities/product';
 
 const MAX_OUTBOX_ENTRIES = 500;
 const DB_NAME = 'inventory-offline';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const DB_OPEN_TIMEOUT = 5_000;
 
 const BACKOFF_DELAYS = [30_000, 120_000, 480_000, 1_920_000, 7_200_000];
@@ -46,63 +46,117 @@ export interface DeadLetterEntry {
   userNotified: boolean;
 }
 
-export type CachedProduct = Product & { cachedAt: number };
+export type CachedProduct = Product & {
+  cachedAt?: number;
+  currencyCode?: string;
+  version?: number;
+};
 
 export interface CachedCategory {
   id: string;
+  parentId: string | null;
   name: string;
-  description: string;
-  cachedAt: number;
+  path: string;
+  level: number;
+  sortOrder: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  cachedAt?: number;
 }
 
 export interface CachedWarehouse {
   id: string;
-  name: string;
   code: string;
-  cachedAt: number;
+  name: string;
+  address: string | null;
+  active: boolean;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  cachedAt?: number;
 }
 
 export interface CachedStockBalance {
   id: string;
   warehouseId: string;
   productId: string;
-  quantity: number;
-  cachedAt: number;
+  warehouseName?: string;
+  productName?: string;
+  productSku?: string;
+  onHand: number;
+  reserved?: number;
+  available?: number;
+  avgCost?: number | null;
+  totalValue?: number | null;
+  updatedAt?: string;
+  cachedAt?: number;
 }
 
 export interface CachedCustomer {
   id: string;
+  code: string | null;
   name: string;
-  code: string;
-  email: string;
-  phone: string;
-  cachedAt: number;
+  contactName: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  notes: string | null;
+  active: boolean;
+  province: string | null;
+  municipality: string | null;
+  street: string | null;
+  locality: string | null;
+  zipCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  createdAt: string;
+  updatedAt: string;
+  cachedAt?: number;
   nameLower?: string;
 }
 
 export interface CachedSupplier {
   id: string;
+  code: string | null;
   name: string;
-  code: string;
-  email: string;
-  phone: string;
-  cachedAt: number;
+  contactName: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  notes: string | null;
+  active: boolean;
+  website: string | null;
+  province: string | null;
+  municipality: string | null;
+  street: string | null;
+  locality: string | null;
+  zipCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  createdAt: string;
+  updatedAt: string;
+  cachedAt?: number;
 }
 
 export interface CachedCurrency {
-  id: string;
   code: string;
   name: string;
-  symbol: string;
-  cachedAt: number;
+  symbol: string | null;
+  isActive: boolean;
+  cachedAt?: number;
 }
 
 export interface CachedExchangeRate {
   id: string;
-  fromCurrency: string;
-  toCurrency: string;
+  baseCode: string;
+  quoteCode: string;
   rate: number;
-  cachedAt: number;
+  rateType: string;
+  validFrom: string;
+  createdBy: string | null;
+  createdAt: string;
+  cachedAt?: number;
 }
 
 export interface CachedSale {
@@ -112,7 +166,7 @@ export interface CachedSale {
   customerId: string;
   paymentMode: string;
   status: string;
-  cachedAt: number;
+  cachedAt?: number;
 }
 
 export interface CachedPurchase {
@@ -121,7 +175,7 @@ export interface CachedPurchase {
   total: number;
   supplierId: string;
   status: string;
-  cachedAt: number;
+  cachedAt?: number;
 }
 
 export interface CachedTransfer {
@@ -130,7 +184,7 @@ export interface CachedTransfer {
   fromWarehouseId: string;
   toWarehouseId: string;
   status: string;
-  cachedAt: number;
+  cachedAt?: number;
 }
 
 export interface CachedAdjustment {
@@ -138,7 +192,7 @@ export interface CachedAdjustment {
   adjustmentNumber: string;
   warehouseId: string;
   type: string;
-  cachedAt: number;
+  cachedAt?: number;
 }
 
 export interface CachedReturn {
@@ -147,7 +201,7 @@ export interface CachedReturn {
   total: number;
   customerId: string;
   type: string;
-  cachedAt: number;
+  cachedAt?: number;
 }
 
 export interface CachedMovement {
@@ -157,16 +211,24 @@ export interface CachedMovement {
   type: string;
   quantity: number;
   reference: string;
-  cachedAt: number;
+  cachedAt?: number;
 }
 
 export interface CachedCustomerDebt {
   id: string;
   customerId: string;
-  total: number;
+  saleId: string;
+  originalAmount: number;
   paidAmount: number;
+  pendingAmount: number;
+  currencyCode: string;
   status: string;
-  cachedAt: number;
+  description: string | null;
+  dueDate: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  cachedAt?: number;
 }
 
 export interface CachedNotification {
@@ -175,7 +237,7 @@ export interface CachedNotification {
   title: string;
   body: string;
   read: boolean;
-  cachedAt: number;
+  cachedAt?: number;
 }
 
 interface InventoryDB extends DBSchema {
@@ -616,6 +678,24 @@ export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
         }
         if (!outboxStore.indexNames.contains('by-priority')) {
           outboxStore.createIndex('by-priority', 'priority', { unique: false });
+        }
+      }
+
+      // v5→v6 migration: idempotently ensure corruptionQueue and downloadChunks
+      // stores exist with the exact shape Phase B depends on. The v4→v5 block
+      // already creates them for fresh installs, but pre-B.1 users that
+      // somehow ran the v5 upgrade without the corruption/download stores need
+      // this safety net (FIX-001).
+      if (oldVersion < 6) {
+        if (!db.objectStoreNames.contains('corruptionQueue')) {
+          const cqStore = db.createObjectStore('corruptionQueue', { keyPath: 'id', autoIncrement: true });
+          cqStore.createIndex('by-entity-type', 'entityType', { unique: false });
+          cqStore.createIndex('by-status', 'status', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('downloadChunks')) {
+          const dcStore = db.createObjectStore('downloadChunks', { keyPath: 'chunkKey' });
+          dcStore.createIndex('by-entity', 'entityType', { unique: false });
+          dcStore.createIndex('by-status', 'status', { unique: false });
         }
       }
     },
