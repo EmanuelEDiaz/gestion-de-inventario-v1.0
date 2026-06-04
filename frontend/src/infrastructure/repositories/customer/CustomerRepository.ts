@@ -1,91 +1,48 @@
 import { apiClient } from '@/infrastructure/api/client';
 import type { ICustomerRepository } from '@/core/customer/ports/ICustomerRepository';
 import type { Customer, CreateCustomerData, UpdateCustomerData } from '@/core/customer/entities/customer';
-import { readWithCache } from '@/infrastructure/storage/networkAwareUtils';
 import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB } from '@/infrastructure/storage/db';
+
+function normalize(customer: Customer) {
+  return { ...customer, nameLower: customer.name.toLowerCase(), cachedAt: Date.now() };
+}
 
 export class CustomerRepository implements ICustomerRepository {
   private readonly basePath = '/api/v1/customers';
 
   async findAll(): Promise<Customer[]> {
-    return readWithCache(
-      async () => {
-        const response = await apiClient.get<Customer[]>(this.basePath);
-        return response.data;
-      },
-      async () => {
-        const db = await getDB();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return db.getAll('customers') as any;
-      },
-    );
+    const db = await getDB();
+    return db.getAll('customers') as unknown as Customer[];
   }
 
   async findById(id: string): Promise<Customer | null> {
-    return readWithCache(
-      async () => {
-        try {
-          const response = await apiClient.get<Customer>(`${this.basePath}/${id}`);
-          return response.data;
-        } catch {
-          return null;
-        }
-      },
-      async () => {
-        const db = await getDB();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const cached = await db.get('customers', id) as any;
-        return cached ?? null;
-      },
-    );
+    const db = await getDB();
+    const cached = await db.get('customers', id);
+    return (cached ?? null) as Customer | null;
   }
 
   async findByActive(active: boolean): Promise<Customer[]> {
-    return readWithCache(
-      async () => {
-        const response = await apiClient.get<Customer[]>(`${this.basePath}?active=${active}`);
-        return response.data;
-      },
-      async () => {
-        const db = await getDB();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return db.getAll('customers') as any;
-      },
-    );
+    const db = await getDB();
+    const all = await db.getAll('customers') as unknown as Customer[];
+    return all.filter(c => c.active === active);
   }
 
   async findByCode(code: string): Promise<Customer | null> {
-    return readWithCache(
-      async () => {
-        try {
-          const response = await apiClient.get<Customer>(`${this.basePath}/code/${code}`);
-          return response.data;
-        } catch {
-          return null;
-        }
-      },
-      async () => {
-        const db = await getDB();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const cached = await db.getFromIndex('customers', 'by-code', code) as any;
-        return cached ?? null;
-      },
-    );
+    const db = await getDB();
+    const cached = await db.getFromIndex('customers', 'by-code', code);
+    return (cached ?? null) as Customer | null;
   }
 
   async search(query: string): Promise<Customer[]> {
-    return readWithCache(
-      async () => {
-        const response = await apiClient.get<Customer[]>(`${this.basePath}/search?q=${query}`);
-        return response.data;
-      },
-      async () => {
-        const db = await getDB();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return db.getAll('customers') as any;
-      },
+    const db = await getDB();
+    const all = await db.getAll('customers') as unknown as Customer[];
+    const lower = query.toLowerCase();
+    return all.filter(c =>
+      c.name.toLowerCase().includes(lower) ||
+      (c.code && c.code.toLowerCase().includes(lower)) ||
+      (c.email && c.email.toLowerCase().includes(lower))
     );
   }
 
@@ -93,11 +50,15 @@ export class CustomerRepository implements ICustomerRepository {
     const mode = getNetworkMode();
     if (mode === 'online-direct') {
       const response = await apiClient.post<Customer>(this.basePath, data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless, type mismatch is compile-time only
+      await getDB().then(db => db.put('customers', normalize(response.data) as any));
       return response.data;
     }
     if (mode === 'online-degraded') {
       try {
         const response = await apiClient.post<Customer>(this.basePath, data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless, type mismatch is compile-time only
+        await getDB().then(db => db.put('customers', normalize(response.data) as any));
         return response.data;
       } catch {
         // fall through to outbox
@@ -115,11 +76,15 @@ export class CustomerRepository implements ICustomerRepository {
     const mode = getNetworkMode();
     if (mode === 'online-direct') {
       const response = await apiClient.put<Customer>(`${this.basePath}/${id}`, data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless, type mismatch is compile-time only
+      await getDB().then(db => db.put('customers', normalize(response.data) as any));
       return response.data;
     }
     if (mode === 'online-degraded') {
       try {
         const response = await apiClient.put<Customer>(`${this.basePath}/${id}`, data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless, type mismatch is compile-time only
+        await getDB().then(db => db.put('customers', normalize(response.data) as any));
         return response.data;
       } catch {
         // fall through to outbox
@@ -136,11 +101,15 @@ export class CustomerRepository implements ICustomerRepository {
     const mode = getNetworkMode();
     if (mode === 'online-direct') {
       const response = await apiClient.post<Customer>(`${this.basePath}/${id}/activate`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless
+      await getDB().then(db => db.put('customers', normalize(response.data) as any));
       return response.data;
     }
     if (mode === 'online-degraded') {
       try {
         const response = await apiClient.post<Customer>(`${this.basePath}/${id}/activate`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless
+        await getDB().then(db => db.put('customers', normalize(response.data) as any));
         return response.data;
       } catch {
         // fall through to outbox
@@ -157,11 +126,15 @@ export class CustomerRepository implements ICustomerRepository {
     const mode = getNetworkMode();
     if (mode === 'online-direct') {
       const response = await apiClient.post<Customer>(`${this.basePath}/${id}/deactivate`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless
+      await getDB().then(db => db.put('customers', normalize(response.data) as any));
       return response.data;
     }
     if (mode === 'online-degraded') {
       try {
         const response = await apiClient.post<Customer>(`${this.basePath}/${id}/deactivate`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- IDB is schemaless
+        await getDB().then(db => db.put('customers', normalize(response.data) as any));
         return response.data;
       } catch {
         // fall through to outbox
@@ -178,11 +151,13 @@ export class CustomerRepository implements ICustomerRepository {
     const mode = getNetworkMode();
     if (mode === 'online-direct') {
       await apiClient.delete(`${this.basePath}/${id}`);
+      await getDB().then(db => db.delete('customers', id));
       return;
     }
     if (mode === 'online-degraded') {
       try {
         await apiClient.delete(`${this.basePath}/${id}`);
+        await getDB().then(db => db.delete('customers', id));
         return;
       } catch {
         // fall through to outbox
@@ -198,11 +173,19 @@ export class CustomerRepository implements ICustomerRepository {
     const mode = getNetworkMode();
     if (mode === 'online-direct') {
       await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+      const db = await getDB();
+      const tx = db.transaction('customers', 'readwrite');
+      for (const id of ids) await tx.store.delete(id);
+      await tx.done;
       return;
     }
     if (mode === 'online-degraded') {
       try {
         await apiClient.delete(`${this.basePath}/batch`, { data: ids });
+        const db = await getDB();
+        const tx = db.transaction('customers', 'readwrite');
+        for (const id of ids) await tx.store.delete(id);
+        await tx.done;
         return;
       } catch {
         // fall through to outbox

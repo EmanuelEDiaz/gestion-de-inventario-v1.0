@@ -6,10 +6,11 @@ import { DetailModal } from '@/presentation/shared/components/data-display/Detai
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 import { PageHeader } from '@/presentation/shared/components/data-display/PageHeader';
 import { FilterBar } from '@/presentation/shared/components/ui/FilterBar';
+import { LoadErrorLog } from '../components/LoadErrorLog';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import type { FilterDef } from '@/presentation/shared/components/ui/FilterBar';
 import type { AuditLogEntry } from '@/core/audit/entities/audit-log';
-import { Eye } from '@/presentation/shared/components/ui/icon-mapping';
+import { Eye, AlertCircle, ChevronDown, ChevronRight } from '@/presentation/shared/components/ui/icon-mapping';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 import { formatDate } from '@/presentation/shared/lib/utils';
@@ -68,6 +69,7 @@ export function AuditLogsView() {
   } = useAuditLogsController();
 
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [showIncidents, setShowIncidents] = useState(true);
 
   const handleSearch = useCallback((value: string) => {
     updateFilter({ search: value || undefined });
@@ -148,6 +150,23 @@ export function AuditLogsView() {
         sections={detailSections}
         jsonSections={detailJsonSections}
       />
+
+      {/* Incidencias de carga */}
+      <section>
+        <button
+          onClick={() => setShowIncidents((v) => !v)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-700"
+        >
+          {showIncidents ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <AlertCircle size={16} className="text-red-400" />
+          Incidencias de Carga
+        </button>
+        {showIncidents && (
+          <div className="mt-3">
+            <LoadErrorLog />
+          </div>
+        )}
+      </section>
     </div>
   );
 }

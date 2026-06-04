@@ -29,6 +29,8 @@ public interface ProductQueryPort {
     Flux<Product> search(String query);
 
     Mono<Long> count();
-
+    
     Mono<Long> countByStatus(Product.ProductStatus status);
+    
+    Mono<Long> countFiltered(ProductFilter filter, boolean activeOnly);
 }

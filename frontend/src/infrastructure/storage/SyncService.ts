@@ -1,6 +1,6 @@
 import { apiClient } from '@/infrastructure/api/client';
 import axios from 'axios';
-import { getDB, getSyncMeta, setSyncMeta, getStoreCursor, setStoreCursor, type OutboxEntry } from './db';
+import { getDB, getSyncMeta, setSyncMeta, getStoreCursor, setStoreCursor, batchPut, type OutboxEntry } from './db';
 import { getPendingOutbox, removeFromOutbox, markOutboxEntry, moveToDeadLetter, updateRetry } from './outbox';
 import { getNetworkMode } from './networkStore';
 
@@ -250,12 +250,9 @@ export async function pullCatalogsIfStale(): Promise<void> {
       const items = Array.isArray(response.data)
         ? response.data
         : response.data.content ?? response.data.data ?? response.data._embedded?.[store] ?? [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tx = db.transaction(store as any, 'readwrite');
-      for (const item of items) {
-        await tx.store.put({ ...item, cachedAt: Date.now() });
-      }
-      await tx.done;
+      const now = Date.now();
+      const enriched = items.map((item: Record<string, unknown>) => ({ ...item, cachedAt: now }));
+      await batchPut(store, enriched);
     } catch {}
   }
 

@@ -34,7 +34,7 @@ export function NotificationPanel({ enableSSE = true }: NotificationPanelProps) 
     const userIds = userNotifications.notifications?.filter((n) => !n.read).map((n) => n.id) ?? [];
     const allIds = [...systemIds, ...userIds];
     const promises = allIds.map((id) => systemIds.includes(id) ? systemNotifications.markAsRead(id) : userNotifications.markAsRead(id));
-    try { await Promise.all(promises); } catch (error) { console.error('Error marking all as read:', error); }
+    try { await Promise.all(promises); } catch (error) { import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Error marking all as read', error)); }
   }, [systemNotifications, userNotifications]);
 
   const handleMarkAsRead = useCallback((notificationId: string) => (

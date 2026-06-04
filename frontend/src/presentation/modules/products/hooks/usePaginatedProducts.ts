@@ -16,6 +16,7 @@ export interface UsePaginatedProductsOptions {
 }
 
 export function usePaginatedProducts(options: UsePaginatedProductsOptions = {}) {
+  const { search, categoryId, status, minPrice, maxPrice, unitOfMeasure } = options;
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
 
@@ -23,7 +24,9 @@ export function usePaginatedProducts(options: UsePaginatedProductsOptions = {}) 
     userPreferencesRepository.getMaxProductPages().then(setPageSize);
   }, []);
 
-  const { search, categoryId, status, minPrice, maxPrice, unitOfMeasure } = options;
+  useEffect(() => {
+    setPage(0);
+  }, [search, categoryId, status, minPrice, maxPrice, unitOfMeasure]);
 
   const query = useQuery({
     queryKey: ['products', 'paginated', page, pageSize, search, categoryId, status, minPrice, maxPrice, unitOfMeasure],

@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { getDB, getCachedCount, cacheStoreData, isStale } from '@/infrastructure/storage/db';
-import { getNetworkMode } from '@/infrastructure/storage/networkStore';
-import { apiClient } from '@/infrastructure/api/client';
+import { useMemo } from 'react';
+import { useAppLoaderStore, getPhaseProgress, type LoadPhase, type AppAvailability } from '@/core/loading/appLoaderStore';
 
 export interface StorageUsage {
   usageBytes: number;
@@ -27,19 +25,21 @@ export interface CacheProgress {
   isComplete: boolean;
 }
 
-const FASE_A_LABELS = ['Aplicación', 'Autenticación', 'Bodegas', 'Categorías'] as const;
-const FASE_B = [
-  { label: 'Productos', store: 'products' as const },
-  { label: 'Clientes', store: 'customers' as const },
-  { label: 'Proveedores', store: 'suppliers' as const },
-  { label: 'Stock', store: 'stockBalances' as const },
-] as const;
-
 const DEFAULT_USAGE: StorageUsage = {
   usageBytes: 0, quotaBytes: 0, percentUsed: 0,
   isLow: true, isWarning: false, isCritical: false,
   isSupported: false, readyForOffline: true,
 };
+
+const PHASE_LABELS: { phase: LoadPhase; name: string; store: string }[] = [
+  { phase: 'db_open', name: 'Aplicación', store: 'outbox' },
+  { phase: 'warehouses', name: 'Bodegas', store: 'warehouses' },
+  { phase: 'categories', name: 'Categorías', store: 'categories' },
+  { phase: 'products', name: 'Productos', store: 'products' },
+  { phase: 'customers', name: 'Clientes', store: 'customers' },
+  { phase: 'suppliers', name: 'Proveedores', store: 'suppliers' },
+  { phase: 'stock', name: 'Stock', store: 'stockBalances' },
+];
 
 export function hasValidToken(): boolean {
   if (typeof window === 'undefined') return false;
@@ -73,131 +73,45 @@ export async function getStorageUsage(): Promise<StorageUsage> {
   }
 }
 
-async function fetchPaginated(endpoint: string, store: string, pageSize: number): Promise<void> {
-  let page = 0;
-  let hasMore = true;
-  while (hasMore) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res = await apiClient.get<any>(`${endpoint}?page=${page}&size=${pageSize}`);
-    const data = res.data;
-    const items = (data.content ?? []).map((item: Record<string, unknown>) => ({ ...item, cachedAt: Date.now() }));
-    if (items.length > 0) {
-      await cacheStoreData(store, items);
-    }
-    hasMore = page + 1 < (data.totalPages ?? 0);
-    page++;
-  }
-}
-
-async function fetchAll(endpoint: string, store: string): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const res = await apiClient.get<any>(endpoint);
-  const items = (Array.isArray(res.data) ? res.data : []).map(
-    (item: Record<string, unknown>) => ({ ...item, cachedAt: Date.now() })
-  );
-  if (items.length > 0) {
-    await cacheStoreData(store, items);
-  }
-}
-
 export function useCacheProgress(): CacheProgress {
-  const allStores = [...FASE_A_LABELS.map(l => ({ name: l, store: l === 'Aplicación' ? 'outbox' : l === 'Autenticación' ? 'syncMeta' : l.toLowerCase() })), ...FASE_B.map(m => ({ name: m.label, store: m.store as string }))];
+  const phase = useAppLoaderStore((s) => s.phase);
+  const progress = useAppLoaderStore((s) => s.progress);
+  const step = useAppLoaderStore((s) => s.step);
+  const availability = useAppLoaderStore((s) => s.availability);
 
-  const buildModules = (phase: string, progress: number): CacheModule[] => {
-    const loadedCount = Math.floor((progress / 100) * allStores.length);
-    return allStores.map((s, i) => ({
-      name: s.name, store: s.store,
-      loaded: i < loadedCount || phase === 'ready',
+  const isComplete: boolean = availability === 'ready_complete' || availability === 'ready_partial';
+
+  const appPhase: CacheProgress['phase'] = phase === 'error' ? 'error'
+    : isComplete ? 'ready'
+    : 'loading';
+
+  const effectiveProgress = Math.max(progress, getPhaseProgress(phase));
+
+  const loadedPhases = useMemo(() => {
+    const phaseOrder = PHASE_LABELS.map(p => p.phase);
+    const currentIdx = phaseOrder.indexOf(phase);
+    return PHASE_LABELS.map((p, i) => ({
+      ...p,
+      loaded: i < currentIdx || isComplete || phase === 'error',
       count: 0,
     }));
+  }, [phase, isComplete]);
+
+  return {
+    phase: appPhase,
+    progress: effectiveProgress,
+    currentStep: step,
+    storageUsage: DEFAULT_USAGE,
+    isAppReady: availability === 'ready_complete',
+    modules: loadedPhases,
+    overallPercent: effectiveProgress,
+    isComplete,
   };
-
-  const [st, setSt] = useState<CacheProgress>({
-    phase: 'loading',
-    progress: 0,
-    currentStep: 'Inicializando',
-    storageUsage: DEFAULT_USAGE, isAppReady: false,
-    modules: buildModules('loading', 0),
-    overallPercent: 0, isComplete: false,
-  });
-
-  const phaseBRef = useRef(false);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  const setVal = (upd: Partial<CacheProgress>) => {
-    if (mountedRef.current) setSt(prev => ({ ...prev, ...upd }));
-  };
-
-  useEffect(() => {
-    getNetworkMode();
-
-    (async () => {
-      for (let i = 0; i < FASE_A_LABELS.length; i++) {
-        setVal({ currentStep: FASE_A_LABELS[i] });
-        try {
-          if (i === 0) await getDB();
-          else if (i === 1) hasValidToken();
-          else await getCachedCount(i === 2 ? 'warehouses' : 'categories');
-        } catch {
-          setVal({ phase: 'error' });
-          return;
-        }
-        setVal({ progress: Math.round(((i + 1) / FASE_A_LABELS.length) * 60) });
-      }
-
-      const storageUsage = await getStorageUsage();
-      setVal({ isAppReady: true, storageUsage, progress: 60 });
-
-      if (phaseBRef.current) return;
-      phaseBRef.current = true;
-
-      // Fase B — background data fetch (no await)
-      setVal({ currentStep: 'Productos' });
-      try {
-        const count = await getCachedCount('products');
-        if (count === 0) await fetchPaginated('/api/v1/products', 'products', 200);
-      } catch { /* background, ignore */ }
-      setVal({ progress: 70 });
-
-      setVal({ currentStep: 'Clientes' });
-      try {
-        const count = await getCachedCount('customers');
-        if (count === 0) await fetchAll('/api/v1/customers', 'customers');
-      } catch { /* background, ignore */ }
-      setVal({ progress: 80 });
-
-      setVal({ currentStep: 'Proveedores' });
-      try {
-        const count = await getCachedCount('suppliers');
-        if (count === 0) await fetchAll('/api/v1/suppliers', 'suppliers');
-      } catch { /* background, ignore */ }
-      setVal({ progress: 90 });
-
-      setVal({ currentStep: 'Stock' });
-      try {
-        const count = await getCachedCount('stockBalances');
-        if (count === 0) await fetchAll('/api/v1/stock', 'stockBalances');
-      } catch { /* background, ignore */ }
-      setVal({ progress: 95 });
-
-      const finalUsage = await getStorageUsage();
-      setVal({ phase: 'ready', storageUsage: finalUsage, progress: 100 });
-    })();
-  }, []);
-
-  const overallPercent = st.progress;
-  const modules = buildModules(st.phase, st.progress);
-  const isComplete = st.phase === 'ready';
-
-  return { ...st, overallPercent, modules, isComplete };
 }
 
-export { isStale };
+export function isStale(cachedAt: number, maxAgeMs: number): boolean {
+  return Date.now() - cachedAt > maxAgeMs;
+}
 
 export interface CacheModule {
   name: string;

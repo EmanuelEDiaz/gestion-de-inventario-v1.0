@@ -59,6 +59,8 @@ public interface ProductRepository {
     
     Mono<Long> countByStatus(Product.ProductStatus status);
     
+    Mono<Long> countFiltered(ProductFilter filter, boolean activeOnly);
+    
     Mono<Product> save(Product product);
     
     Mono<Void> updateMainImage(UUID productId, String filePath);

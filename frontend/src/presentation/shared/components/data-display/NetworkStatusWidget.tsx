@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useNetworkHealth } from '@/presentation/shared/hooks/storage/useNetworkHealth';
 import { useSyncStatus } from '@/presentation/shared/hooks/storage/useSyncStatus';
-import { useCacheProgress } from '@/presentation/shared/hooks/storage/useCacheProgress';
+import { useAppLoaderStore } from '@/core/loading/appLoaderStore';
 import { NetworkIcon, getStatusColor, getStatusLabel } from '../network-status/NetworkIcon';
 import { CacheProgressBar } from '../network-status/CacheProgressBar';
 import { SyncProgressBar } from '../network-status/SyncProgressBar';
@@ -13,7 +13,10 @@ export function NetworkStatusWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { backendStatus } = useNetworkHealth();
   const { status: syncStatus, lastSyncAt, pendingCount, sync } = useSyncStatus();
-  const { modules, overallPercent, isComplete } = useCacheProgress();
+  const appPhase = useAppLoaderStore((s) => s.phase);
+  const availability = useAppLoaderStore((s) => s.availability);
+  const progress = useAppLoaderStore((s) => s.progress);
+  const isAppLoading = availability === 'blocking';
 
   const borderColor = getStatusColor(backendStatus, syncStatus, pendingCount);
   const label = getStatusLabel(backendStatus, syncStatus, pendingCount);
@@ -23,11 +26,13 @@ export function NetworkStatusWidget() {
       <button
         onClick={() => setIsExpanded(true)}
         className={`fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg border-2 shadow-lg transition-all hover:scale-105 ${borderColor}`}
-        title={label}
+        title={isAppLoading ? 'Cargando aplicación...' : label}
       >
         <div className="flex flex-col items-center">
           <NetworkIcon backendStatus={backendStatus} syncStatus={syncStatus} pendingCount={pendingCount} size={14} />
-          <span className="text-[8px] font-bold leading-tight text-gray-700">{overallPercent}%</span>
+          <span className="text-[8px] font-bold leading-tight text-gray-700">
+            {isAppLoading ? `${progress}%` : ''}
+          </span>
         </div>
       </button>
     );
@@ -35,7 +40,6 @@ export function NetworkStatusWidget() {
 
   return (
     <div className={`fixed bottom-4 right-4 z-50 w-72 rounded-xl border-2 bg-white shadow-xl ${borderColor}`}>
-      {/* Header */}
       <div className="flex items-center justify-between border-b px-3 py-2">
         <div className="flex items-center gap-2">
           <NetworkIcon backendStatus={backendStatus} syncStatus={syncStatus} pendingCount={pendingCount} />
@@ -49,9 +53,8 @@ export function NetworkStatusWidget() {
         </button>
       </div>
 
-      {/* Content */}
       <div className="space-y-3 p-3">
-        <CacheProgressBar modules={modules} overallPercent={overallPercent} isComplete={isComplete} />
+        <CacheProgressBar />
         <div className="border-t pt-3">
           <SyncProgressBar
             pendingCount={pendingCount}

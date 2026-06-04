@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-import { ServiceWorkerRegistration } from '@/presentation/shared/components/layout/ServiceWorkerRegistration';
+import { SerwistProvider } from "@serwist/turbopack/react";
 import { Toaster } from '@/presentation/shared/components/ui';
 import { Providers } from '@/presentation/shared/components/layout/Providers';
 
@@ -32,9 +32,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>
-          <ServiceWorkerRegistration />
-          <Toaster />
-          {children}
+          <SerwistProvider swUrl="/serwist/sw.js">
+            <Toaster />
+            {children}
+          </SerwistProvider>
         </Providers>
       </body>
     </html>

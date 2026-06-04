@@ -23,7 +23,7 @@ export function PreferencesPanel({ onClose }: PreferencesPanelProps) {
       setSuccessMessage('Preferencias guardadas correctamente');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Error saving preferences', error));
     }
   };
 

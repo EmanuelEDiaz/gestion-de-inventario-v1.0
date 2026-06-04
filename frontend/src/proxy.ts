@@ -14,6 +14,7 @@ const publicPaths = [
   '/favicon.ico',
   '/fonts',
   '/sw.js',
+  '/serwist/',
   '/manifest.json',
   '/icons/',
   '/robots.txt',
@@ -43,6 +44,6 @@ export default function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sw.js|manifest.json|icons|login).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sw.js|serwist|manifest.json|icons|login).*)',
   ],
 };

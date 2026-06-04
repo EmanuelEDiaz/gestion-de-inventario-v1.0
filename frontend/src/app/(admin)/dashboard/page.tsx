@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { useDashboard } from '@/presentation/modules/dashboard/hooks/useDashboard';
@@ -8,11 +9,12 @@ import { useDashboardLayout } from '@/presentation/modules/dashboard/hooks/useDa
 import { DashboardStatsGrid } from '@/presentation/modules/dashboard/components/DashboardStatsGrid';
 import { LowStockList } from '@/presentation/modules/dashboard/components/LowStockList';
 import { ProfitSummaryCards } from '@/presentation/modules/dashboard/components/ProfitSummaryCards';
-import { SalesTimelineChart } from '@/presentation/modules/dashboard/components/SalesTimelineChart';
-import { TopProductsChart } from '@/presentation/modules/dashboard/components/TopProductsChart';
-import { TopCustomersChart } from '@/presentation/modules/dashboard/components/TopCustomersChart';
 import { ChartBuilderModal } from '@/presentation/modules/dashboard/components/ChartBuilderModal';
-import { CustomChartWidget } from '@/presentation/modules/dashboard/components/CustomChartWidget';
+
+const SalesTimelineChart = dynamic(() => import('@/presentation/modules/dashboard/components/SalesTimelineChart').then(m => m.SalesTimelineChart), { ssr: false });
+const TopProductsChart = dynamic(() => import('@/presentation/modules/dashboard/components/TopProductsChart').then(m => m.TopProductsChart), { ssr: false });
+const TopCustomersChart = dynamic(() => import('@/presentation/modules/dashboard/components/TopCustomersChart').then(m => m.TopCustomersChart), { ssr: false });
+const CustomChartWidget = dynamic(() => import('@/presentation/modules/dashboard/components/CustomChartWidget').then(m => m.CustomChartWidget), { ssr: false });
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Plus } from '@/presentation/shared/components/ui/icon-mapping';
 import { formatCurrency } from '@/presentation/shared/lib/utils';

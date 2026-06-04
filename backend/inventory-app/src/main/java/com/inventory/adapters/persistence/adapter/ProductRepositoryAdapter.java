@@ -142,6 +142,18 @@ public class ProductRepositoryAdapter implements ProductRepository {
     }
 
     @Override
+    public Mono<Long> countFiltered(ProductFilter filter, boolean activeOnly) {
+        return r2dbcRepository.countWithFilter(
+            filter.getSearch(),
+            filter.getCategoryId(),
+            activeOnly ? "ACTIVE" : null,
+            filter.getMinPrice(),
+            filter.getMaxPrice(),
+            filter.getUnitOfMeasure()
+        );
+    }
+
+    @Override
     public Mono<Product> save(Product product) {
         return r2dbcRepository.findById(product.getId())
             .flatMap(existing -> {

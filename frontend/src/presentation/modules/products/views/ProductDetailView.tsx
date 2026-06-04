@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
-import { ProductRepository } from '@/infrastructure/repositories/product/ProductRepository';
+import { productRepository } from '@/infrastructure/repositories/product/ProductRepository';
 import { ProductImageGallery } from '../components/ProductImageGallery';
 import { Card, CardContent } from '@/presentation/shared/components/ui/card';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';
@@ -19,8 +19,6 @@ const TAB_LABELS: Record<Tab, string> = {
   images: 'Imágenes',
 };
 
-const repository = new ProductRepository();
-
 interface ProductDetailViewProps {
   productId: string;
   onBack?: () => void;
@@ -30,7 +28,7 @@ export function ProductDetailView({ productId, onBack }: ProductDetailViewProps)
   const [tab, setTab] = useState<Tab>('info');
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => repository.getById(productId),
+    queryFn: () => productRepository.getById(productId),
     enabled: !!productId,
   });
 

@@ -113,6 +113,19 @@ public interface ProductR2dbcRepository extends ReactiveCrudRepository<ProductEn
                                                  BigDecimal minPrice, BigDecimal maxPrice, String unitOfMeasure,
                                                  String sortBy, boolean sortAsc);
 
+    @Query("""
+        SELECT COUNT(*) FROM products WHERE
+        (:search IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :search, '%')) OR
+         LOWER(sku) LIKE LOWER(CONCAT('%', :search, '%'))) AND
+        (:categoryId IS NULL OR category_id = :categoryId) AND
+        (:status IS NULL OR status = :status) AND
+        (:minPrice IS NULL OR sale_price >= :minPrice) AND
+        (:maxPrice IS NULL OR sale_price <= :maxPrice) AND
+        (:unitOfMeasure IS NULL OR unit_of_measure = :unitOfMeasure)
+        """)
+    Mono<Long> countWithFilter(String search, UUID categoryId, String status,
+                                BigDecimal minPrice, BigDecimal maxPrice, String unitOfMeasure);
+
     @org.springframework.data.r2dbc.repository.Modifying
     @Query("UPDATE products SET main_image = :filePath, updated_at = NOW() WHERE id = :productId")
     Mono<Integer> updateMainImage(UUID productId, String filePath);

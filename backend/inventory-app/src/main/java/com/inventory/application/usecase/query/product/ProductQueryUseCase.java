@@ -74,4 +74,9 @@ public class ProductQueryUseCase implements ProductQueryPort {
     public Mono<Long> countByStatus(Product.ProductStatus status) {
         return productRepository.countByStatus(status);
     }
+
+    @Override
+    public Mono<Long> countFiltered(ProductFilter filter, boolean activeOnly) {
+        return productRepository.countFiltered(filter, activeOnly);
+    }
 }

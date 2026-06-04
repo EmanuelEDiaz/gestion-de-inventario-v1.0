@@ -62,7 +62,44 @@ export class ProductRepository implements IProductRepository {
       },
         async () => {
           const items = await getCachedProducts();
-          return { content: items as unknown as Product[], totalElements: items.length, totalPages: 1, size: items.length, number: 0 };
+          let filtered = items as Product[];
+
+          if (filters?.search) {
+            const q = filters.search.toLowerCase();
+            filtered = filtered.filter(p =>
+              p.name?.toLowerCase().includes(q) ||
+              p.sku?.toLowerCase().includes(q) ||
+              p.barcode?.toLowerCase().includes(q)
+            );
+          }
+          if (filters?.categoryId) {
+            filtered = filtered.filter(p => p.categoryId === filters.categoryId);
+          }
+          if (filters?.status) {
+            filtered = filtered.filter(p => p.status === filters.status);
+          }
+          if (filters?.minPrice !== undefined) {
+            filtered = filtered.filter(p => (p.salePrice ?? 0) >= filters.minPrice!);
+          }
+          if (filters?.maxPrice !== undefined) {
+            filtered = filtered.filter(p => (p.salePrice ?? 0) <= filters.maxPrice!);
+          }
+          if (filters?.unitOfMeasure) {
+            filtered = filtered.filter(p => p.unitOfMeasure === filters.unitOfMeasure);
+          }
+
+          const page = filters?.page ?? 0;
+          const size = filters?.size ?? 20;
+          const start = page * size;
+          const paged = filtered.slice(start, start + size);
+
+          return {
+            content: paged,
+            totalElements: filtered.length,
+            totalPages: Math.max(1, Math.ceil(filtered.length / size)),
+            size,
+            number: page,
+          };
         },
     );
   }
@@ -81,7 +118,7 @@ export class ProductRepository implements IProductRepository {
       },
         async () => {
           const items = await getCachedProducts();
-          return { items: items as unknown as Product[], nextCursor: null, hasMore: false };
+          return { items, nextCursor: null, hasMore: false };
         },
     );
   }
@@ -95,7 +132,7 @@ export class ProductRepository implements IProductRepository {
       async () => {
         const cached = await getCachedProduct(id);
         if (!cached) throw new Error('Producto no encontrado en caché offline');
-        return cached as unknown as Product;
+        return cached as Product;
       },
     );
   }
@@ -104,13 +141,13 @@ export class ProductRepository implements IProductRepository {
     const mode = getNetworkMode();
     if (mode === 'online-direct') {
       const response = await apiClient.post<Product>(this.basePath, data);
-      if (response.data) await cacheProducts([response.data as unknown as Parameters<typeof cacheProducts>[0][0]]);
+      if (response.data) await cacheProducts([response.data]);
       return response.data;
     }
     if (mode === 'online-degraded') {
       try {
         const response = await apiClient.post<Product>(this.basePath, data);
-        if (response.data) await cacheProducts([response.data as unknown as Parameters<typeof cacheProducts>[0][0]]);
+        if (response.data) await cacheProducts([response.data]);
         return response.data;
       } catch {
         // fall through to outbox
@@ -128,13 +165,13 @@ export class ProductRepository implements IProductRepository {
     const mode = getNetworkMode();
     if (mode === 'online-direct') {
       const response = await apiClient.put<Product>(`${this.basePath}/${id}`, data);
-      if (response.data) await cacheProducts([response.data as unknown as Parameters<typeof cacheProducts>[0][0]]);
+      if (response.data) await cacheProducts([response.data]);
       return response.data;
     }
     if (mode === 'online-degraded') {
       try {
         const response = await apiClient.put<Product>(`${this.basePath}/${id}`, data);
-        if (response.data) await cacheProducts([response.data as unknown as Parameters<typeof cacheProducts>[0][0]]);
+        if (response.data) await cacheProducts([response.data]);
         return response.data;
       } catch {
         // fall through to outbox

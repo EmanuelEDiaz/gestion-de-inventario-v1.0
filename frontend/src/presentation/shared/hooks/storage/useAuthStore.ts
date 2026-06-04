@@ -34,6 +34,15 @@ const initialState = {
   hasHydrated: false,
 };
 
+function notifySwUserContext(userId: string | null): void {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'SET_USER_CONTEXT',
+      payload: { userId },
+    });
+  }
+}
+
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -55,8 +64,9 @@ export const useAuthStore = create<AuthStore>()(
           try {
             await initPersistence();
           } catch (err) {
-            console.error('Failed to init persistence:', err);
+            import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Failed to init persistence', err));
           }
+          notifySwUserContext(response.user.id);
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Error al iniciar sesión';
           set({ 
@@ -73,14 +83,15 @@ export const useAuthStore = create<AuthStore>()(
         try {
           await authRepository.logout();
         } catch (error) {
-          console.error('Logout error:', error);
+          import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Logout error', error));
         }
         // Destroy all offline persistence (IndexedDB, caches, localStorage)
         try {
           await destroyPersistence();
         } catch (err) {
-          console.error('Failed to destroy persistence:', err);
+          import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Failed to destroy persistence', err));
         }
+        notifySwUserContext(null);
         set({ ...initialState, hasHydrated: true });
       },
       
@@ -100,7 +111,7 @@ export const useAuthStore = create<AuthStore>()(
             isAuthenticated: true,
           });
         } catch (error) {
-          console.error('Token refresh failed:', error);
+          import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Token refresh failed', error));
           set(initialState);
         }
       },
@@ -131,7 +142,7 @@ export const useAuthStore = create<AuthStore>()(
         // Re-init persistence if already authenticated from previous session
         if (state?.isAuthenticated) {
           initPersistence().catch((err) =>
-            console.error('Failed to re-init persistence on rehydrate:', err),
+            import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Failed to re-init persistence on rehydrate', err)),
           );
         }
       },

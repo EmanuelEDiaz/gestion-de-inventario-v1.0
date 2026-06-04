@@ -1,7 +1,6 @@
-import FlexSearch from 'flexsearch';
-import type { Index as FlexSearchIndex } from 'flexsearch';
 import type { IGeoSearchAdapter } from '@/core/maps/ports/IGeoSearchAdapter';
 import type { GeoEntry } from '@/core/maps/entities/map-location';
+import type { Index as FlexSearchIndex } from 'flexsearch';
 import { getDB } from '@/infrastructure/storage/db';
 
 export class CubaGeoSearchAdapter implements IGeoSearchAdapter {
@@ -14,6 +13,7 @@ export class CubaGeoSearchAdapter implements IGeoSearchAdapter {
     if (this.loaded) return;
     this.countryCode = config.countryCode;
     const data = await this.loadGeoIndex(config.geoIndexUrl);
+    const FlexSearch = await import('flexsearch');
     this.index = new FlexSearch.Index({ tokenize: 'forward' });
     data.forEach((entry, i) => this.index!.add(i, `${entry.name} ${entry.parentName ?? ''}`));
     this.entries = data;

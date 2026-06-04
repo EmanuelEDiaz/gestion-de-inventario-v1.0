@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Service
 public class JwtTokenServiceImpl implements JwtTokenService {
     
-    private static final long ACCESS_TOKEN_VALIDITY_SECONDS = 15 * 60; // 15 minutos
+    private static final long ACCESS_TOKEN_VALIDITY_SECONDS = 30 * 24 * 60 * 60; // 30 días (offline-first)
     
     private final SecretKey secretKey;
     

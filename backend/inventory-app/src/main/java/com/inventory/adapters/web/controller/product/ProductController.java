@@ -119,9 +119,7 @@ public class ProductController {
             .collectList()
             .flatMap(list -> Flux.fromIterable(list).flatMap(this::enrichWithCategory).collectList());
 
-        Mono<Long> totalElements = activeOnly 
-            ? productQuery.countByStatus(Product.ProductStatus.ACTIVE) 
-            : productQuery.count();
+        Mono<Long> totalElements = productQuery.countFiltered(filter, activeOnly);
 
         return Mono.zip(items, totalElements)
             .map(tuple -> new PaginatedProductResponse(

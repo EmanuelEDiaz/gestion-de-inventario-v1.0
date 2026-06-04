@@ -5,8 +5,17 @@ import { DashboardMetricsRepository } from '@/infrastructure/repositories/dashbo
 
 const repo = new DashboardMetricsRepository();
 
+const SHARED_CONFIG = {
+  retry: false,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  staleTime: 5 * 60 * 1000,
+  gcTime: 10 * 60 * 1000,
+};
+
 export function useSalesTimeline(fromDate?: string, toDate?: string, granularity = 'month') {
   return useQuery({
+    ...SHARED_CONFIG,
     queryKey: ['sales-timeline', fromDate, toDate, granularity],
     queryFn: () => repo.getSalesTimeline(fromDate, toDate, granularity),
   });
@@ -14,6 +23,7 @@ export function useSalesTimeline(fromDate?: string, toDate?: string, granularity
 
 export function useTopProducts(fromDate?: string, toDate?: string, limit = 10) {
   return useQuery({
+    ...SHARED_CONFIG,
     queryKey: ['top-products', fromDate, toDate, limit],
     queryFn: () => repo.getTopProducts(fromDate, toDate, limit),
   });
@@ -21,6 +31,7 @@ export function useTopProducts(fromDate?: string, toDate?: string, limit = 10) {
 
 export function useTopCustomers(fromDate?: string, toDate?: string, limit = 10) {
   return useQuery({
+    ...SHARED_CONFIG,
     queryKey: ['top-customers', fromDate, toDate, limit],
     queryFn: () => repo.getTopCustomers(fromDate, toDate, limit),
   });
@@ -28,6 +39,7 @@ export function useTopCustomers(fromDate?: string, toDate?: string, limit = 10) 
 
 export function useProfitSummary(fromDate?: string, toDate?: string) {
   return useQuery({
+    ...SHARED_CONFIG,
     queryKey: ['profit-summary', fromDate, toDate],
     queryFn: () => repo.getProfitSummary(fromDate, toDate),
   });
@@ -35,6 +47,7 @@ export function useProfitSummary(fromDate?: string, toDate?: string) {
 
 export function useInventoryValue() {
   return useQuery({
+    ...SHARED_CONFIG,
     queryKey: ['inventory-value'],
     queryFn: () => repo.getInventoryValue(),
   });
