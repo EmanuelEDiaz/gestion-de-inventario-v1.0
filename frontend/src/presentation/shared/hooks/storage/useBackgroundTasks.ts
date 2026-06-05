@@ -86,6 +86,24 @@ export async function verifyMapBackground(): Promise<void> {
       await setMapMeta({ ...meta, clientChecksum: hash });
     }
 
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const metaRes = await fetch('/api/v1/maps/cuba.pmtiles.meta.json', {
+        signal: controller.signal,
+        cache: 'no-store',
+      }).finally(() => clearTimeout(timeout));
+
+      if (metaRes.ok) {
+        const serverMeta = await metaRes.json() as { sha256?: string; version?: string };
+        if (serverMeta.sha256 && serverMeta.sha256 !== meta.serverChecksum) {
+          await setMapMeta({ ...meta, serverNewer: true, latestKnownVersion: serverMeta.version });
+        }
+      }
+    } catch {
+      // P4: servidor apagado, ignorar
+    }
+
     completeTask('map_verify');
   } catch (err) {
     appLogger.warn('[map_verify] non-fatal', { error: err, errorCode: 'ERR_MAP_VERIFY' });

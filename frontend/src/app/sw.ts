@@ -1,5 +1,7 @@
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
+// Map assets in public/maps/ (fonts, sprites, style JSON) are auto-precached
+// by Serwist via __SW_MANIFEST since they're part of the build output.
 import { defaultCache } from "@serwist/turbopack/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { Serwist } from "serwist";

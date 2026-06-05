@@ -56,6 +56,9 @@ public class SecurityConfig {
                         
                         // Media (imágenes): acceso público sin token
                         .pathMatchers("/media/**").permitAll()
+
+                        // Map tiles (PMTiles) - public con Range requests
+                        .pathMatchers("/api/v1/maps/**").permitAll()
                         
                         // OpenAPI/Swagger (solo en desarrollo)
                         .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
@@ -98,7 +101,7 @@ public class SecurityConfig {
         // Cache preflight
         config.setMaxAge(3600L);
         // Headers de respuesta expuestos al cliente (lectura JS)
-        config.setExposedHeaders(List.of("X-Content-Checksum"));
+        config.setExposedHeaders(List.of("X-Content-Checksum", "Accept-Ranges"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

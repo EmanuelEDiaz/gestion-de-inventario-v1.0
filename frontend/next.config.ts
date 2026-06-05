@@ -36,6 +36,12 @@ const nextConfig = withSerwist({
           { key: 'Service-Worker-Allowed', value: '/' },
         ],
       },
+      {
+        source: '/maps/:file*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
     ];
   },
 });

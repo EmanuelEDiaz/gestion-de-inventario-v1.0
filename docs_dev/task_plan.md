@@ -989,8 +989,8 @@ Política general:
 | **A** | Fundaciones offline — IDB v5 + store refactor + appLogger + fix endpoint | ✅ Completado |
 | **B** | Integridad de descarga — DownloadQueueService + validación DTO | ✅ Completado (B.1, B.2, B.3, B.4, B.4.5, B.5) |
 | **C** | Loader robusto — phase/availability split + rehydrate_local + backgroundTasksStore (map_verify, precache_routes, image_prefetch) + HealthPanel + PHASE_ORDER fix | ✅ Completado (C.1–C.8: 02606c0 C.1 bg tasks + 8s timeout, 6cb1508 C.7 HealthPanel, commit final cierre C) |
-| **D** | Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token | ❌ Pendiente |
-| **E** | Mapa/GPS — MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado + FileSystemResource | ❌ Pendiente |
+| **D** | Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token | ✅ Completado |
+| **E** | Mapa/GPS — MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado + FileSystemResource | ✅ Completado |
 | **F** | Verificación end-to-end (incluye checklist P1–P5) | ❌ Pendiente |
 | **G** | Estrategia de imágenes offline — OPFS + imageIndex + useImageCache + OfflineImage + backend | ❌ Pendiente |
 | **H** | Doc & Code Cleanup — eliminar código/documentación muerta, consolidar docs/ y docs_dev/, actualizar README | ❌ Pendiente |
@@ -3269,7 +3269,13 @@ cd backend/inventory-app && mvn compile -q
 
 ---
 
-## Fase E — Mapa/GPS: MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado
+## Fase E — Mapa/GPS: MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado ✅ Completado
+
+> **Estado final 2026-06-05**. Todas las subfases implementadas: E-A (MapController.java con FileSystemResource + Accept-Ranges + SecurityConfig + application.yml maps config), E-B (MapLibreInitializer con pmtiles:// protocol, OPFSTileSource con opfs-pmtiles:// protocol, cuba-map-style.ts con offline layers vectoriales), E-C (MapPreview embebido expandible con Dialog, MapViewer interactivo view/select con GPS + share, MapStatusOverlay con 4 estados), E-D (useGeolocation hook on-demand, MapControls refactorizado sin Leaflet, useGeoSearch con debounce 300ms sobre IDB geoIndex, useGeoIndexLoader post-ready_partial), E-E (StoragePanel con descarga streaming OPFS + barra progreso + checksum SHA-256 + cancelación + delete, map_verify background task mejorada con checksum + detección de versión nueva server), E-G (next.config headers /maps/, SW precache assets mapa).
+> 
+> **Verificación**: `tsc --noEmit` 0 errors, `pnpm test:run` 219/219 pass, `mvn compile -q` 0 errors.
+> 
+> **Próximo**: Fase F (Verificación end-to-end — checklist P1–P5).
 
 > **Skills**: `senior-frontend`, `web-performance-optimization`, `hexagonal-architecture`
 > **Objetivo**: Migrar el stack de mapas de Leaflet a **MapLibre GL JS + PMTiles**. Streaming directo del archivo de mapa a OPFS. Índice offline de búsqueda geográfica **acotado** (país/provincia/municipio/ciudad, SIN calles completas en MVP). Integración GPS. **Descarga de tiles desde Settings** (no durante boot). **Compartir ubicación** con link universal compatible con Google Maps/OSM/Waze. **Persistencia de marcadores/anotaciones en backend**. Criterio de retiro de Leaflet definido.

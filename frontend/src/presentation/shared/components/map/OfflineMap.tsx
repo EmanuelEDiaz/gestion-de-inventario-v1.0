@@ -125,7 +125,13 @@ export function OfflineMap({
         <MapController onInstance={setMapInstance} />
       </LeafletMap>
 
-      {controlsEnabled && <MapControls mapInstance={mapInstance} />}
+      {controlsEnabled && (
+        <MapControls
+          onZoomIn={() => mapInstance?.zoomIn()}
+          onZoomOut={() => mapInstance?.zoomOut()}
+          onLocate={() => mapInstance?.locate()}
+        />
+      )}
     </div>
   );
 }

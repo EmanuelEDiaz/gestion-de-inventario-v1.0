@@ -52,7 +52,11 @@ app:
       secret: ${JWT_SECRET:change-me-in-production-minimum-256-bits-key-here!!}
       access-token-expiration: 900000      # 15 minutos en ms
       refresh-token-expiration: 2592000000  # 30 días en ms
-  
+
+  # Map tiles (PMTiles)
+  maps:
+    location: ${INVENTORY_MAPS_LOCATION:./maps}
+
   # Media storage (imágenes)
   media:
     root: ${INVENTORY_MEDIA_ROOT:./media}
