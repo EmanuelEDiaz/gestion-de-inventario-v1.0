@@ -62,7 +62,7 @@ interface TempIdMapping {
 const MAX_BATCH_SIZE = 50;
 const MAX_RETRIES = 3;
 const CATALOG_TTL = 5 * 60 * 1000;
-const CATALOG_STORES = ['products', 'categories', 'warehouses'] as const;
+const CATALOG_STORES = ['categories', 'currencies', 'exchangeRates', 'customerDebts', 'customers', 'suppliers'] as const;
 const DELTA_STORES = ['products', 'categories', 'customers', 'suppliers', 'stockBalances', 'warehouses'] as const;
 const CONCURRENCY = 3;
 
@@ -246,7 +246,10 @@ export async function pullCatalogsIfStale(): Promise<void> {
 
   for (const store of CATALOG_STORES) {
     try {
-      const response = await apiClient.get(`/api/v1/${store}`);
+      const endpoint = store === 'exchangeRates' ? '/api/v1/exchange-rates'
+        : store === 'customerDebts' ? '/api/v1/debts'
+        : `/api/v1/${store}`;
+      const response = await apiClient.get(endpoint);
       const items = Array.isArray(response.data)
         ? response.data
         : response.data.content ?? response.data.data ?? response.data._embedded?.[store] ?? [];

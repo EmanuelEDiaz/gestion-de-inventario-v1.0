@@ -225,42 +225,57 @@ export function useAppLoader() {
   useEffect(() => {
     if (store.phase !== 'currencies') return;
     (async () => {
-      setSubStep('Descargando monedas...');
-      await loadFlatCatalog({
-        endpoint: '/api/v1/currencies',
-        idbStoreName: 'currencies',
-        schema: currencyResponseSchema,
-        entityLabel: 'monedas',
-      });
-      setPhase('exchange_rates');
+      try {
+        setSubStep('Descargando monedas...');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/currencies',
+          idbStoreName: 'currencies',
+          schema: currencyResponseSchema,
+          entityLabel: 'monedas',
+        });
+        setPhase('exchange_rates');
+      } catch (err) {
+        appLogger.warn('[AppLoader] currencies non-fatal — disponible solo online', { error: err, errorCode: 'ERR_CURRENCIES_LOAD' });
+        setPhase('exchange_rates');
+      }
     })();
   }, [store.phase, setPhase, setSubStep]);
 
   useEffect(() => {
     if (store.phase !== 'exchange_rates') return;
     (async () => {
-      setSubStep('Descargando tasas de cambio...');
-      await loadFlatCatalog({
-        endpoint: '/api/v1/exchange-rates',
-        idbStoreName: 'exchangeRates',
-        schema: exchangeRateResponseSchema,
-        entityLabel: 'tasas de cambio',
-      });
-      setPhase('customer_debts');
+      try {
+        setSubStep('Descargando tasas de cambio...');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/exchange-rates',
+          idbStoreName: 'exchangeRates',
+          schema: exchangeRateResponseSchema,
+          entityLabel: 'tasas de cambio',
+        });
+        setPhase('customer_debts');
+      } catch (err) {
+        appLogger.warn('[AppLoader] exchange_rates non-fatal — tasas no disponibles offline', { error: err, errorCode: 'ERR_EXCHANGE_RATES_LOAD' });
+        setPhase('customer_debts');
+      }
     })();
   }, [store.phase, setPhase, setSubStep]);
 
   useEffect(() => {
     if (store.phase !== 'customer_debts') return;
     (async () => {
-      setSubStep('Descargando deudas...');
-      await loadFlatCatalog({
-        endpoint: '/api/v1/debts',
-        idbStoreName: 'customerDebts',
-        schema: customerDebtResponseSchema,
-        entityLabel: 'deudas de clientes',
-      });
-      setPhase('stock');
+      try {
+        setSubStep('Descargando deudas...');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/debts',
+          idbStoreName: 'customerDebts',
+          schema: customerDebtResponseSchema,
+          entityLabel: 'deudas de clientes',
+        });
+        setPhase('stock');
+      } catch (err) {
+        appLogger.warn('[AppLoader] customer_debts non-fatal — deudas no disponibles offline', { error: err, errorCode: 'ERR_DEBTS_LOAD' });
+        setPhase('stock');
+      }
     })();
   }, [store.phase, setPhase, setSubStep]);
 
@@ -276,6 +291,10 @@ export function useAppLoader() {
           entityLabel: 'existencias',
         });
         setAvailability('ready_partial');
+        if (!bgTasksTriggeredRef.current && store.phase === 'stock') {
+          bgTasksTriggeredRef.current = true;
+          void startBackgroundTasks();
+        }
         setPhase('customers');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al descargar existencias');

@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppLoaderStore } from '@/core/loading/appLoaderStore';
-import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
-import { useSyncStatus } from '@/presentation/shared/hooks/storage/useSyncStatus';
 import { useNetworkStore } from '@/infrastructure/storage/networkStore';
 import { appLogger } from '@/infrastructure/logging/appLogger';
+import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
+import { useSyncStatus } from '@/presentation/shared/hooks/storage/useSyncStatus';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 import { useHealthData } from './useHealthData';
 import { HealthSections, SummaryBanner } from './HealthPanelSections';

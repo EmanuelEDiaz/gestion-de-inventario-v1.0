@@ -344,4 +344,41 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 
 ---
 
-*Documento generado durante preparación de Fase B el 2026-06-04; ampliado con FIX-007/008/009/010 al cierre de B.1, FIX-011 al cierre de B.6, FIX-013 al cierre del cleanup post-Fase B.*
+## FIX-015 — Post-auditoría Fase C: 5 desviaciones corregidas
+
+**Fase de origen**: C (post-auditoría, commit cierre fase)
+
+**Detectado en**: Auditoría Fase C por subagente (2026-06-05), verificando cada subfase contra el plan línea por línea.
+
+**Hallazgos y resoluciones**:
+
+### C.4-001 — Effects sin try/catch
+**Síntoma**: Los 3 efectos `currencies`/`exchange_rates`/`customer_debts` en `useAppLoader.ts` no tenían try/catch. El plan especifica `try/catch` con `appLogger.warn` non-fatal. La protección dependía enteramente de `loadFlatCatalog()` que no lanza, pero errores inesperados (respuesta malformada, error de red en `fetchAllWithIntegrity`) serían promesas rechazadas no capturadas.
+**Resolución**: Agregar `try/catch` con `appLogger.warn` y `errorCode` (`ERR_CURRENCIES_LOAD`, `ERR_EXCHANGE_RATES_LOAD`, `ERR_DEBTS_LOAD`) en los 3 efectos. La transición a siguiente fase ocurre incluso en catch (non-fatal).
+**Archivo**: `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts` (líneas 225-265)
+
+### C.5-002 — Trigger de background tasks retrasado
+**Síntoma**: El plan especifica que las background tasks se disparen inmediatamente después de `stock → ready_partial` (cuando la UI se vuelve usable), antes de `customers`/`suppliers`. El código disparaba solo cuando `phase === 'idle'` (después de que TODAS las fases completaran).
+**Resolución**: Agregar disparador temprano en el effect `stock` inmediatamente después de `setAvailability('ready_partial')`, gated por `bgTasksTriggeredRef.current` y `store.phase === 'stock'`. El disparador original en efecto separado (líneas 314-320) se mantiene como respaldo si el primero no ejecuta.
+**Archivo**: `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts` (stock effect)
+
+### C.6-001 — CacheProgressBar no distinguía ready_partial de ready_complete
+**Síntoma**: El plan especifica comportamientos UI diferentes: `ready_partial` → banner "App lista — puedes descargar el mapa desde Configuración" (colapsable), `ready_complete` → badge "Todo listo" con check verde. El código trataba ambos como `isComplete` con el mismo mensaje.
+**Resolución**: Separar `isReadyPartial` y `isReadyComplete`. `ready_complete` oculta barra de progreso principal, muestra "Todo listo" con check verde. `ready_partial` muestra barra gris (datos cargados) + mensaje "App lista — puedes descargar el mapa desde Configuración" en amber.
+**Archivo**: `frontend/src/presentation/shared/components/network-status/CacheProgressBar.tsx`
+
+### C.7-001 — Import order violation en HealthPanel.tsx
+**Síntoma**: Importaciones `@/presentation/` aparecían antes que `@/infrastructure/`. Regla: external → core → infrastructure → presentation.
+**Resolución**: Reordenar imports: `useNetworkStore` y `appLogger` (infrastructure) antes de `useAuthStore`/`useSyncStatus`/`TooltipHint` (presentation).
+**Archivo**: `frontend/src/presentation/shared/components/storage/HealthPanel.tsx` (líneas 4-9)
+
+### C.8-001 — CATALOG_STORES incompleto
+**Síntoma**: `CATALOG_STORES = ['products', 'categories', 'warehouses']` — solo 3 entidades. El plan especifica 6: `categories`, `currencies`, `exchangeRates`, `customerDebts`, `customers`, `suppliers`. Además faltaba mapeo de nombres IDB → endpoints (ej: `customerDebts` → `/api/v1/debts`, `exchangeRates` → `/api/v1/exchange-rates`).
+**Resolución**: Extender `CATALOG_STORES` a 6 entidades según plan. Agregar mapeo inline en el loop para endpoints no coincidentes (`exchangeRates`, `customerDebts`).
+**Archivo**: `frontend/src/infrastructure/storage/SyncService.ts` (líneas 65, 249-252)
+
+**Verificación post-fix**: `tsc --noEmit` 0 errors, `pnpm test:run` 219/219 pass (39 files).
+
+**Lección**: La subfase C.6 (CacheProgressBar) y C.8 (background refresh) tenían implementaciones parciales que pasaron desapercibidas porque el componente CacheProgressBar no crasheaba visiblemente (solo UX sub-óptimo) y `pullCatalogsIfStale` funcionalmente refrescaba aunque fuera solo 3 stores. Esto refuerza la necesidad de la "auditoría pre-commit" de FIX-011 aplicada también a docs contra código real.
+
+---

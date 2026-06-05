@@ -47,7 +47,9 @@ export function CacheProgressBar() {
   const availability = useAppLoaderStore((s) => s.availability);
   const errorMsg = useAppLoaderStore((s) => s.error);
 
-  const isComplete: boolean = availability === 'ready_complete' || availability === 'ready_partial';
+  const isReadyComplete = availability === 'ready_complete';
+  const isReadyPartial = availability === 'ready_partial';
+  const isFinal = isReadyComplete || isReadyPartial;
 
   const deferredProgress = useDeferredValue(progress);
   const [showDetails, setShowDetails] = useState(false);
@@ -61,19 +63,21 @@ export function CacheProgressBar() {
 
   return (
     <div className="space-y-2">
-      {/* Main progress bar */}
-      <div>
-        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-          <span>App cargada</span>
-          <span className="font-medium">{deferredProgress}%</span>
+      {/* Main progress bar — oculta en ready_complete */}
+      {!isReadyComplete && (
+        <div>
+          <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+            <span>App cargada</span>
+            <span className="font-medium">{deferredProgress}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+            <div
+              className="h-full rounded-full bg-blue-500 transition-all duration-500"
+              style={{ width: `${deferredProgress}%` }}
+            />
+          </div>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-          <div
-            className="h-full rounded-full bg-blue-500 transition-all duration-500"
-            style={{ width: `${deferredProgress}%` }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Detail section: always visible while loading */}
       {!isIdle && (
@@ -81,22 +85,24 @@ export function CacheProgressBar() {
           {/* Header row: icon + label + percent + toggle */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              {isComplete ? (
+              {isReadyComplete ? (
                 <Check size={12} className="text-green-500 shrink-0" />
+              ) : isReadyPartial ? (
+                <Check size={12} className="text-yellow-500 shrink-0" />
               ) : isError ? (
                 <span className="h-2.5 w-2.5 rounded-full bg-red-500 shrink-0" />
               ) : (
                 <Loader2 size={12} className="animate-spin text-blue-500 shrink-0" />
               )}
               <span className="text-[11px] font-medium text-gray-700 truncate">
-                {isComplete ? 'Completado' : isError ? 'Error' : getPhaseLabel(phase)}
+                {isReadyComplete ? 'Todo listo' : isReadyPartial ? 'App lista' : isError ? 'Error' : getPhaseLabel(phase)}
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-[11px] font-medium text-blue-600">
-                {isComplete ? '100%' : isError ? '—' : `${detailPercent}%`}
+                {isFinal ? '100%' : isError ? '—' : `${detailPercent}%`}
               </span>
-              {!isComplete && !isError && (
+              {!isFinal && !isError && (
                 <button
                   onClick={() => setShowDetails((v) => !v)}
                   className="text-gray-400 hover:text-gray-600"
@@ -109,12 +115,12 @@ export function CacheProgressBar() {
           </div>
 
           {/* Sub-step text */}
-          {label && !isComplete && !isError && (
+          {label && !isFinal && !isError && (
             <p className="mt-0.5 text-[10px] text-gray-500 truncate">{label}</p>
           )}
 
           {/* Progress bar for current phase */}
-          {!isComplete && !isError && (
+          {!isFinal && !isError && (
             <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-blue-100">
               <div
                 className="h-full rounded-full bg-blue-500 transition-all duration-300"
@@ -125,8 +131,8 @@ export function CacheProgressBar() {
         </div>
       )}
 
-      {/* Collapsible phase list */}
-      {showDetails && !isComplete && !isError && (
+      {/* Collapsible phase list — solo durante carga */}
+      {showDetails && !isFinal && !isError && (
         <ul className="space-y-1 pl-1">
           {PHASE_ORDER.map((p, idx) => {
             const isCurrent = idx === phaseIndex;
@@ -150,10 +156,17 @@ export function CacheProgressBar() {
         </ul>
       )}
 
-      {/* Completion message */}
-      {isComplete && (
+      {/* ready_complete message */}
+      {isReadyComplete && (
         <p className="text-xs font-medium text-green-600">
-          Seguro desconectarse del servidor
+          Todo listo
+        </p>
+      )}
+
+      {/* ready_partial message */}
+      {isReadyPartial && (
+        <p className="text-xs text-amber-700">
+          App lista — puedes descargar el mapa desde Configuración
         </p>
       )}
 
