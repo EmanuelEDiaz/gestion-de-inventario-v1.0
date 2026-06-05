@@ -1,4 +1,5 @@
 import type { IDBPDatabase } from 'idb';
+import { DB_NAME, DB_VERSION } from '@/infrastructure/storage/db';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -43,7 +44,7 @@ async function flushToIDB(): Promise<void> {
   if (!idbReady) return;
   try {
     const { openDB } = await import('idb');
-    const db: IDBPDatabase<unknown> = await openDB('inventory-offline', 6);
+    const db: IDBPDatabase<unknown> = await openDB(DB_NAME, DB_VERSION);
     const tx = db.transaction('appLogs', 'readwrite');
     const batchStore = tx.objectStore('appLogs');
     for (const entry of batch) await batchStore.add(entry);

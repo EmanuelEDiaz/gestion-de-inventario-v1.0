@@ -47,6 +47,17 @@
 - Skills obligatorias: Cargar `senior-frontend` o `senior-fullstack` antes de código
 - Skills symlinks: Nueva skill → symlink en `.opencode/skills/` → `.claude/skills/<name>`
 
+## Verificación pre-commit (lección FIX-011)
+Antes de `git commit`, ejecutar siempre:
+1. `git status --short` — ver qué cambió
+2. `git diff --stat` — confirmar que los archivos son los esperados
+3. `git log --oneline -5` — revisar el último commit de la fase activa
+4. Comparar el working tree contra el HEAD de la fase: ¿hay archivos que deberían estar restaurados al estado del último commit de fase? (FIX-011 documenta un caso donde el working tree había revocado invariantes de B.1)
+5. `pnpm exec tsc --noEmit` (frontend) y/o `mvn compile -q` (backend) — type-check
+6. `pnpm test:run` (frontend) y/o `mvn test` (backend) — suite completa
+
+Si un archivo del working tree revoca una invariante de un commit de fase previo, hacer `git checkout HEAD -- <archivo>` antes de commitear.
+
 ## Arquitectura
 - Backend hexagonal: `domain → application → adapters` (domain NO depende de Spring/DB/JSON)
 - Frontend hexagonal: `core → infrastructure → presentation` (core NO depende de React/HTTP)

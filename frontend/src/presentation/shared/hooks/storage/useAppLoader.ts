@@ -8,13 +8,6 @@ import {
   type LoadPhase,
   type AppAvailability,
 } from '@/core/loading/appLoaderStore';
-import { useSWPrecacheProgress } from './useSWPrecacheProgress';
-import {
-  initPersistence,
-  getCachedCount,
-  DB_VERSION,
-} from '@/infrastructure/storage/db';
-import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueService';
 import {
   productResponseSchema,
   customerResponseSchema,
@@ -26,8 +19,16 @@ import {
   exchangeRateResponseSchema,
   customerDebtResponseSchema,
 } from '@/core/loading/validators';
-import { getStorageUsage } from './useCacheProgress';
+import {
+  initPersistence,
+  getCachedCount,
+  DB_NAME,
+  DB_VERSION,
+} from '@/infrastructure/storage/db';
+import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueService';
 import { setIdbReady, appLogger } from '@/infrastructure/logging/appLogger';
+import { useSWPrecacheProgress } from './useSWPrecacheProgress';
+import { getStorageUsage } from './useCacheProgress';
 
 const PAGE_SIZE = 100;
 
@@ -111,7 +112,7 @@ export function useAppLoader() {
     if (store.phase !== 'rehydrate_local') return;
     (async () => {
       try {
-        const db = await import('idb').then((idb) => idb.openDB('inventory-offline', DB_VERSION));
+        const db = await import('idb').then((idb) => idb.openDB(DB_NAME, DB_VERSION));
         const [warehouseCount, productCount, stockCount] = await Promise.all([
           db.count('warehouses'),
           db.count('products'),

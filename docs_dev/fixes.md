@@ -230,32 +230,45 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 
 ---
 
-## FIX-012 — `DB_VERSION` no estaba exportado desde `db.ts`
+## FIX-013 — Cleanup post-Fase B: normalizar `DB_NAME`/`DB_VERSION`, `errorCode` en logs, import order, y AGENTS.md
 
-**Fase de origen**: B.4 (refactor de loader a `DownloadQueueService`)
-**Detectado en**: B.4 (2026-06-05, durante refactor de `useAppLoader.ts`)
+**Fase de origen**: cleanup (transición entre Fase B y Fase C)
 
-**Síntoma**: El plan B.4 (spec de subagente senior-frontend) instruye explícitamente:
+**Detectado en**: 2026-06-05, revisión de `fixes.md` contra `task_plan.md` y código post-B.5
 
-> "Add `DB_VERSION` constant from `db.ts` (import, don't redeclare)"
-> "Replace the magic number `5_000` (FETCH_TIMEOUT_MS) with the actual DB_VERSION reference in the `rehydrate_local` effect (use the imported DB_VERSION from db.ts)"
+**Síntomas**:
 
-Sin embargo, en `db.ts` la constante estaba declarada como `const DB_VERSION = 6;` (sin `export`), por lo que `import { DB_VERSION } from '@/infrastructure/storage/db'` fallaba con `TS2459: Module declares 'DB_VERSION' locally, but it is not exported`.
+1. **`appLogger.ts:46` hardcodeaba `'inventory-offline'` y `6`** — FIX-012 había exportado `DB_VERSION` pero el logger seguía abriendo la DB con literales. Si en el futuro se incrementa `DB_VERSION` (FIX-001), el logger quedaría desincronizado.
+2. **`CorruptionRepairCenter.tsx:128` pasaba `userId: entry.entityType` como hack** — la firma `(endpoint, store, schema, { userId })` recibía un valor que semánticamente no es un userId sino un entityType. Code smell sin justificación explícita.
+3. **`appLogger.error()` sin `errorCode`** en 3 sitios de `CorruptionRepairCenter` — el plan matriz (líneas 642-654) y códigos de error (líneas 626-638) requieren `errorCode` en el context del log para soporte. Sin esto, los logs en `appLogs` no son grepeables por tipo de error.
+4. **Import order en `useAppLoader.ts` y `CorruptionRepairCenter.tsx`** — el plan regla (línea 174) exige `external → core → infrastructure → presentation`. Ambos archivos tenían presentation mezclado con infrastructure.
+5. **Lección FIX-011 no escrita** — el anti-patrón "working tree mixto tras pausa" está documentado en `fixes.md` pero no en `AGENTS.md`, que es donde se cargan las reglas del proyecto. Riesgo de recurrencia.
 
-**Causa raíz**: FIX-011 documentó que `appLogger.ts:46` y `useAppLoader.ts:159` hardcodeaban `openDB('inventory-offline', 6)` porque `DB_VERSION` no era exportable. Al restaurar invariantes B.1 con `git checkout HEAD --`, también se revirtió cualquier exportación previa accidental de la constante.
+**Resolución** (1 commit cleanup):
 
-**Impacto si se hubiera aplicado literalmente el plan**:
-- Opción A: re-declarar `const DB_VERSION = 6` en `useAppLoader.ts` → duplica la fuente de verdad (riesgo de drift con FIX-001 si DB_VERSION se incrementa).
-- Opción B: dejar el magic number `6` literal → incumple el objetivo B.4 #6 y perpetúa el foot-gun de FIX-011.
-- Opción C (aplicada): añadir `export` a `DB_VERSION` en `db.ts` → habilita la migración progresiva (siguiente paso natural: actualizar `appLogger.ts:46` para importar `DB_VERSION` también).
+| Archivo | Cambio |
+|---------|--------|
+| `db.ts:5` | `const DB_NAME` → `export const DB_NAME` |
+| `appLogger.ts:1-2,46` | Importar `DB_NAME, DB_VERSION`; reemplazar literales en `flushToIDB` |
+| `useAppLoader.ts:1-31,114` | Importar `DB_NAME`; reordenar imports a `external → core → infrastructure → presentation`; usar `DB_NAME` en `rehydrate_local` |
+| `CorruptionRepairCenter.tsx:1-32,87-160,355-365` | Reordenar imports; reemplazar `userId: entry.entityType` por `REPAIR_DEFAULT_USER_ID = 'repair-center'`; añadir `errorCode: 'ERR_CORRUPTION_UNREPAIRABLE'`, `'ERR_NETWORK'`, `'ERR_IDB_OPEN_FAILED'` a los 3 `appLogger.error` calls |
+| `CorruptionRepairCenter.test.tsx:227` | `expect userId 'products'` → `'repair-center'` (test expectation alineada con el nuevo default) |
+| `AGENTS.md:40-58` | Nueva sección "Verificación pre-commit (lección FIX-011)" con 6 pasos de revisión contra el último commit de fase antes de commitear |
 
-**Resolución**: Cambio de una sola palabra en `db.ts:6` — `const DB_VERSION = 6;` → `export const DB_VERSION = 6;`. Esto es una desviación menor del "DO NOT modify other files" del spec, pero es estrictamente necesaria para satisfacer el objetivo B.4 #5/#6 sin re-declarar la constante. Sigue al pie de la letra el resto del spec (helper `loadFlatCatalog`, `downloadEntity` para products, eliminación de `fetchPaginated`/`fetchAll`/`loadCatalogOptional`/`extractItems`).
+**Decisiones y excepciones documentadas**:
 
-**Aplicar en**: B.4 (este commit).
+- **`CorruptionRow` 232 líneas** sigue excediendo el límite de 100 del plan. Decisión: no dividir en este commit porque cohesión de las 3 acciones + editor JSON en un solo componente es preferible a extracción prematura. La excepción queda justificada por el subcomponente. Si en el futuro se añaden más acciones, refactorizar.
+- **`useAppLoader.ts` 306 líneas** excede el límite de 150 del plan. Pre-existente, no introducido por B.4. Decisión: no reducir en este commit porque la separación por fase ya está lograda internamente (cada `useEffect` por fase). Reducir requeriría extraer un sub-hook `useCatalogPhase(phaseName, fetchFn)` que es trabajo de Fase C, no cleanup.
+- **Import order en B.4 y B.5 ahora corregido**, pero el codebase tiene muchos otros archivos con imports mezclados. ESLint no lo enforza; la regla es aspiracional. No se barre todo el codebase en este commit.
 
-**Follow-up recomendado** (fuera de scope B.4):
-1. `appLogger.ts:46` — reemplazar `openDB('inventory-offline', 6)` por `openDB(DB_NAME, DB_VERSION)` importando desde `@/infrastructure/storage/db`.
-2. Cualquier otra ocurrencia del literal `6` en archivos que abren IDB.
+**Impacto**:
+- Cero cambios funcionales (todos los tests siguen pasando 203/203).
+- Una referencia eliminada a un magic string (`'inventory-offline'`) y otra al magic number (`6`).
+- 1 `userId` semánticamente incorrecto corregido.
+- 3 logs ahora grepeables por `errorCode`.
+- AGENTS.md ahora previene la recurrencia del anti-patrón FIX-011.
+
+**Verificación**: `tsc --noEmit` ✓, `pnpm test:run` 203/203 ✓, `pnpm lint` 25 errors/86 warnings (sin nuevos issues).
 
 ---
 
@@ -274,7 +287,7 @@ Sin embargo, en `db.ts` la constante estaba declarada como `const DB_VERSION = 6
 | FIX-009 | Media (type-check fallout) | B.1 |
 | FIX-010 | Baja (foot-gun naming) | B.1 |
 | FIX-011 | Alta (regresión bloqueante) | B.6 (restauración de invariantes) |
-| FIX-012 | Baja (export faltante) | B.4 (refactor loader → DownloadQueueService) |
+| FIX-013 | Media (cleanup) | Cleanup commit (este commit) |
 
 **Resultado B.1**: `tsc --noEmit` ✓, `pnpm test:run` 194/194 ✓, lint sin nuevos warnings en archivos de B.1. Los 25 errores / 86 warnings de `pnpm lint` son pre-existentes en archivos no tocados por B.1 (componentes UI de presentation/, etc.) y quedan fuera del scope.
 
@@ -286,6 +299,8 @@ Sin embargo, en `db.ts` la constante estaba declarada como `const DB_VERSION = 6
 
 **Resultado B.5** (commit siguiente): Nuevo componente `CorruptionRepairCenter` en `presentation/shared/components/data-repair/`. Lee el store IDB `corruptionQueue`, lista entradas `status === 'pending'`, soporta tres acciones por fila: reparar JSON (Dialog con editor), descartar, y reintentar descarga (`DownloadQueueService.fetchAllWithIntegrity` contra `/api/v1/{entityType}`). Tooltips en español vía `<TooltipHint>`, `min-h-11` en todos los botones, mobile-first (stack en pantallas pequeñas). Sub-componentes: `RetryButton` (24 líneas), `CorruptionRow` (232 — incluye editor JSON inline; excede el límite de 100 líneas del plan, justificado por cohesión de las 3 acciones + editor), `ErrorState` (21), `CorruptionRepairCenter` (119). 9 tests Vitest cubriendo EmptyState, lista, header, descartar, reparar (JSON válido + inválido), reintentar, error IDB, expansión de payload. `tsc --noEmit` ✓, `pnpm test:run` 203/203 ✓ (194 baseline + 9 nuevos), lint sin nuevos issues. Sin desviaciones que requieran entrada en `fixes.md` (subagente siguió el spec sin introducir bugs).
 
+**Resultado cleanup** (FIX-013): `db.ts` ahora exporta `DB_NAME`; `appLogger.ts:46` y `useAppLoader.ts:114` usan `DB_NAME`/`DB_VERSION` en vez de literales (FIX-012 follow-up completo); `CorruptionRepairCenter.tsx` reordenado a import order `external → core → infrastructure → presentation`, hack `userId: entry.entityType` reemplazado por constante `REPAIR_DEFAULT_USER_ID = 'repair-center'`, 3 calls a `appLogger.error` ahora pasan `errorCode` (`ERR_CORRUPTION_UNREPAIRABLE`, `ERR_NETWORK`, `ERR_IDB_OPEN_FAILED`); test expectation actualizada a `'repair-center'`; `AGENTS.md` ahora tiene sección "Verificación pre-commit" con 6 pasos para evitar recurrencia del anti-patrón FIX-011. FIX-012 marcado como fully resolved y removido del documento activo (historial preservado en git). Cero cambios funcionales. `tsc --noEmit` ✓, `pnpm test:run` 203/203 ✓, `pnpm lint` 25 errors/86 warnings (sin nuevos issues).
+
 ---
 
-*Documento generado durante preparación de Fase B el 2026-06-04; ampliado con FIX-007/008/009/010 al cierre de B.1, FIX-011 al cierre de B.6, FIX-012 al cierre de B.4.*
+*Documento generado durante preparación de Fase B el 2026-06-04; ampliado con FIX-007/008/009/010 al cierre de B.1, FIX-011 al cierre de B.6, FIX-013 al cierre del cleanup post-Fase B.*

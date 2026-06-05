@@ -2,7 +2,7 @@ import { openDB, deleteDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Product } from '@/core/product/entities/product';
 
 const MAX_OUTBOX_ENTRIES = 500;
-const DB_NAME = 'inventory-offline';
+export const DB_NAME = 'inventory-offline';
 export const DB_VERSION = 6;
 const DB_OPEN_TIMEOUT = 5_000;
 

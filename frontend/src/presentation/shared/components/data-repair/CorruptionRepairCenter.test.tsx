@@ -224,7 +224,7 @@ describe('CorruptionRepairCenter', () => {
     ).mock.calls[0];
     expect(endpoint).toBe('/api/v1/products');
     expect(store).toBe('products');
-    expect(options).toMatchObject({ userId: 'products' });
+    expect(options).toMatchObject({ userId: 'repair-center' });
   });
 
   it('renders the ErrorState when IDB fails to open', async () => {

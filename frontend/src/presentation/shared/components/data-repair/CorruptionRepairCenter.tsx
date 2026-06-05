@@ -1,6 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { CorruptionEntry } from '@/core/loading/types/corruption';
+import { appLogger } from '@/infrastructure/logging/appLogger';
+import { getDB } from '@/infrastructure/storage/db';
+import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueService';
 import {
   Trash2 as Trash,
   RefreshCw as Refresh,
@@ -10,21 +14,18 @@ import {
   AlertTriangle,
   X,
 } from '@/presentation/shared/components/ui/icon-mapping';
-
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Dialog } from '@/presentation/shared/components/ui/Dialog';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 import { EmptyState } from '@/presentation/shared/components/data-display/EmptyState';
 import { cn } from '@/presentation/shared/lib/utils';
-import { appLogger } from '@/infrastructure/logging/appLogger';
-import { getDB } from '@/infrastructure/storage/db';
-import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueService';
-import type { CorruptionEntry } from '@/core/loading/types/corruption';
 
 export interface CorruptionRepairCenterProps {
   onClose?: () => void;
   userId?: string;
 }
+
+const REPAIR_DEFAULT_USER_ID = 'repair-center';
 
 type ViewState = 'loading' | 'ready' | 'error';
 
@@ -106,12 +107,14 @@ function CorruptionRow({
       await markStatus('discarded');
     } catch (err) {
       appLogger.error('[CorruptionRepairCenter] failed to discard entry', err, {
+        errorCode: 'ERR_CORRUPTION_UNREPAIRABLE',
         entryId: entry.id,
+        entityType: entry.entityType,
       });
     } finally {
       setBusyAction(null);
     }
-  }, [markStatus, entry.id]);
+  }, [markStatus, entry.id, entry.entityType]);
 
   const handleRetryDownload = useCallback(async () => {
     setBusyAction('retry');
@@ -125,7 +128,7 @@ function CorruptionRow({
         // A more strict repair would require looking up the original schema.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (() => ({ safeParse: (v: unknown) => ({ success: true, data: v }) })) as any,
-        { userId: entry.entityType },
+        { userId: REPAIR_DEFAULT_USER_ID },
       );
       setRetryMessage(
         result.ok
@@ -134,8 +137,10 @@ function CorruptionRow({
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      appLogger.warn(
+      appLogger.error(
         `[CorruptionRepairCenter] retry download failed (entryId=${entry.id}, entityType=${entry.entityType}): ${msg}`,
+        err,
+        { errorCode: 'ERR_NETWORK', entryId: entry.id, entityType: entry.entityType },
       );
       setRetryMessage(`Reintento falló: ${msg}`);
     } finally {
@@ -338,7 +343,9 @@ export function CorruptionRepairCenter({ onClose, userId }: CorruptionRepairCent
       setView('ready');
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      appLogger.error('[CorruptionRepairCenter] failed to load entries', err);
+      appLogger.error('[CorruptionRepairCenter] failed to load entries', err, {
+        errorCode: 'ERR_IDB_OPEN_FAILED',
+      });
       setLoadError(msg);
       setView('error');
     }
