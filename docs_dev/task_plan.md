@@ -987,7 +987,7 @@ Política general:
 | Fase | Nombre | Estado |
 |------|--------|--------|
 | **A** | Fundaciones offline — IDB v5 + store refactor + appLogger + fix endpoint | ✅ Completado |
-| **B** | Integridad de descarga — DownloadQueueService + validación DTO | 🚧 En curso (B.1, B.2, B.3, B.4.5 ✅; B.4, B.5 pendientes) |
+| **B** | Integridad de descarga — DownloadQueueService + validación DTO | ✅ Completado (B.1, B.2, B.3, B.4, B.4.5, B.5) |
 | **C** | Loader robusto — phase/availability split + rehydrate_local + backgroundTasksStore (map_verify, precache_routes, image_prefetch) | ❌ Pendiente |
 | **D** | Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token | ❌ Pendiente |
 | **E** | Mapa/GPS — MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado + FileSystemResource | ❌ Pendiente |
@@ -2087,7 +2087,7 @@ record PaginatedProductResponse(
 
 > ⚠️ No crear un DTO genérico `PaginatedResponse<T>` — el backend usa records locales por controller.
 
-### B.4 — Actualizar `useAppLoader.ts` para usar DownloadQueueService
+### B.4 — Actualizar `useAppLoader.ts` para usar DownloadQueueService ✅ Completado (commit e2c7034)
 
 Reemplazar los efectos de `products`, `customers` y `suppliers` para que usen `downloadEntityPaginated` en vez de `fetchAll` simple:
 
@@ -2098,6 +2098,13 @@ Reemplazar los efectos de `products`, `customers` y `suppliers` para que usen `d
 | `suppliers` | 50–500 | Fronterizo — usar si hay presión de red; si no, fetchAll con JSON parse validation es aceptable |
 
 **Regla**: Si `totalPages > 1` o `totalElements > 500`, usar `downloadEntityPaginated` automáticamente. Para conjuntos pequeños (categories < 50, currencies < 50), `fetchAll` directo con validación JSON es suficiente.
+
+**Implementación** (commit e2c7034): los 8 fetches de catálogo (`warehouses`, `products`, `categories`, `currencies`, `exchange_rates`, `customer_debts`, `stock`, `customers`, `suppliers`) usan `DownloadQueueService`:
+- 7 flat-array → `fetchAllWithIntegrity` con schema Zod del validator correspondiente + `userId: 'boot-loader'`
+- `products` → `downloadEntity` con `onProgress` (página actual/total) cableado a `setSubStep`/`setSubProgress`
+- `DB_VERSION` importado de `db.ts` (cambio de 1 palabra en `db.ts:6` documentado como FIX-012 — `export` añadido)
+- Helpers internos `fetchPaginated`, `fetchAll`, `loadCatalogOptional`, `extractItems`, `apiClient` eliminados
+- Mensajes de error en español para los 8 fetches
 
 ### B.4.5 — Validación de integridad para entidades de array plano ✅ Completado (commit f94069e)
 
@@ -2163,7 +2170,7 @@ async function fetchAllWithIntegrity<T>(
 
 **Backend**: Agregar `X-Content-Checksum` header a `GET /api/v1/warehouses`, `GET /api/v1/categories`, `GET /api/v1/customers`, `GET /api/v1/suppliers`, `GET /api/v1/stock-balances` usando `DigestUtils.sha256Hex` + `@JsonInclude`. Por consistencia con B.3, usar prefijo `sha256:`.
 
-### B.5 — `CorruptionRepairCenter.tsx`
+### B.5 — `CorruptionRepairCenter.tsx` ✅ Completado (commit 292455a)
 
 **Archivo**: `frontend/src/presentation/shared/components/data-repair/CorruptionRepairCenter.tsx`
 
@@ -2175,6 +2182,12 @@ Muestra chunks corruptos desde `corruptionQueue` con:
 - Tooltips obligatorios en todas las acciones
 - Mobile-first (min-h-11 en botones)
 
+**Implementación** (commit 292455a): 3 archivos nuevos en `presentation/shared/components/data-repair/`:
+- `CorruptionRepairCenter.tsx` (440 líneas) — 4 sub-componentes: `RetryButton` (24), `CorruptionRow` (232, incluye editor JSON inline), `ErrorState` (21), `CorruptionRepairCenter` (119). Tooltips vía `<TooltipHint>`, `min-h-11` en todos los botones, mobile-first (stack en pantallas pequeñas), `role="alert"` en ErrorState, loading/ready/empty/error views.
+- `CorruptionRepairCenter.test.tsx` (256 líneas) — 9 tests Vitest cubriendo EmptyState, lista, header, descartar, reparar (JSON válido + inválido), reintentar descarga, error IDB, expansión de payload.
+- `index.ts` — barrel export.
+- Reutiliza `Button`, `Dialog`, `EmptyState`, `TooltipHint`, `icon-mapping`. Acciones llamadas vía `DownloadQueueService.fetchAllWithIntegrity` con la `entityType` de la entrada. Logs vía `appLogger`.
+
 ### Files Summary B
 
 | Archivo | Acción | Estado |
@@ -2183,9 +2196,9 @@ Muestra chunks corruptos desde `corruptionQueue` con:
 | `frontend/src/core/loading/validators/*.ts` (9 DTOs) | Nuevo — basado en DTOs reales del backend | ✅ commit ff699bc |
 | `frontend/src/core/utils/crypto.ts` | Nuevo — `sha256` wrapper | ✅ commit ff699bc |
 | `frontend/src/infrastructure/storage/db.ts` | DB v5→v6 (corruptionQueue, downloadChunks, appLogs, etc.) | ✅ commit ff699bc |
-| `frontend/src/infrastructure/repositories/{dashboard,stock,exchange-rate}/*Repository.ts` | B.1 invariants: `balance.onHand`, `baseCode/quoteCode`, etc. | ✅ commit ff699bc (regresado en WT — pendiente B.6) |
-| `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts` | Usar `downloadEntityPaginated` para products | ⏳ pendiente (B.4) |
-| `frontend/src/presentation/shared/components/data-repair/CorruptionRepairCenter.tsx` | Nuevo | ⏳ pendiente (B.5) |
+| `frontend/src/infrastructure/repositories/{dashboard,stock,exchange-rate}/*Repository.ts` | B.1 invariants: `balance.onHand`, `baseCode/quoteCode`, etc. | ✅ commit ff699bc (restaurado en commit f298620 — B.6) |
+| `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts` | Usar `downloadEntityPaginated` para products | ✅ commit e2c7034 (B.4) |
+| `frontend/src/presentation/shared/components/data-repair/CorruptionRepairCenter.tsx` | Nuevo | ✅ commit 292455a (B.5) |
 | Backend `adapters/web/util/ChecksumUtils.java` | Nuevo — sha256 helper | ✅ commit f94069e (B.4.5) |
 | Backend `adapters/web/dto/product/PaginatedProductResponse.java` | Nuevo — record con `chunkChecksum` | ✅ commit f94069e (B.3) |
 | Backend `adapters/web/controller/{product,category,customer,supplier,warehouse,stock}/*Controller.java` | `withChecksum` / `chunkChecksum` / CORS headers | ✅ commit f94069e (B.3+B.4.5) |
