@@ -988,7 +988,7 @@ Política general:
 |------|--------|--------|
 | **A** | Fundaciones offline — IDB v5 + store refactor + appLogger + fix endpoint | ✅ Completado |
 | **B** | Integridad de descarga — DownloadQueueService + validación DTO | ✅ Completado (B.1, B.2, B.3, B.4, B.4.5, B.5) |
-| **C** | Loader robusto — phase/availability split + rehydrate_local + backgroundTasksStore (map_verify, precache_routes, image_prefetch) | ❌ Pendiente |
+| **C** | Loader robusto — phase/availability split + rehydrate_local + backgroundTasksStore (map_verify, precache_routes, image_prefetch) + HealthPanel + PHASE_ORDER fix | ✅ Completado (C.1–C.8: 02606c0 C.1 bg tasks + 8s timeout, 6cb1508 C.7 HealthPanel, commit final cierre C) |
 | **D** | Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token | ❌ Pendiente |
 | **E** | Mapa/GPS — MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado + FileSystemResource | ❌ Pendiente |
 | **F** | Verificación end-to-end (incluye checklist P1–P5) | ❌ Pendiente |
@@ -2212,8 +2212,14 @@ cd backend/inventory-app && mvn compile -q
 
 ---
 
-## Fase C — Loader robusto: phase/availability split + rehydrate_local + backgroundTasksStore
+## Fase C — Loader robusto: phase/availability split + rehydrate_local + backgroundTasksStore ✅ Completado
 
+> **Estado final 2026-06-05** (commits `02606c0` C.1 bg tasks, `6cb1508` C.7 HealthPanel, cierre C). Todas las subfases implementadas: C.1 (appLoaderStore split + background tasks + 8s rehydrate timeout), C.2 (rehydrate_local effect + 8s timeout), C.3 (image_prefetch background task), C.4 (currencies/exchange_rates/customer_debts effects), C.5 (map_verify + precache_routes + image_prefetch background tasks + `startBackgroundTasks` trigger con `bgTasksTriggeredRef`), C.6 (CacheProgressBar adaptado a phase/availability + PHASE_ORDER extendido con `rehydrate_local`/`currencies`/`exchange_rates`/`customer_debts`), C.7 (HealthPanel admin/dev con `?debug=1` con 7 secciones de diagnóstico read-only), C.7.5 (backgroundTasksStore Zustand), C.8 (pullCatalogsIfStale en useSyncStatus).
+> 
+> **Correcciones fuera del plan**: FIX-014 (HealthPanel dividido en 6 archivos cohesivos en vez de 3, justificado por cohesión — siguiendo precedente FIX-013). Bug pre-existente PHASE_WEIGHTS `products:40 < categories:43` documentado para revisión futura (no bloquea progresión por tener `subPercentFor` con caso especial para `products`).
+> 
+> **Próximo**: Fase D (Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token).
+>
 > **Skills**: `senior-frontend`, `web-performance-optimization`, `hexagonal-architecture`
 > **Objetivo**: Implementar la máquina de estados separada (phase + availability), fase `rehydrate_local` para arranque instantáneo desde cache, y las **background tasks** `map_verify` + `precache_routes` + `image_prefetch` (NO son fases del loader — viven en `backgroundTasksStore`). `ready_complete` es derivado.
 

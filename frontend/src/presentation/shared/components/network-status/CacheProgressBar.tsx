@@ -5,8 +5,10 @@ import { useAppLoaderStore, getPhaseLabel, getPhaseProgress, type LoadPhase, typ
 import { Check, Loader2, ChevronDown, ChevronRight } from '@/presentation/shared/components/ui/icon-mapping';
 
 const PHASE_ORDER: LoadPhase[] = [
-  'quota', 'sw_precache', 'db_open', 'warehouses', 'categories',
-  'products', 'customers', 'suppliers', 'stock',
+  'quota', 'sw_precache', 'db_open', 'rehydrate_local',
+  'warehouses', 'categories', 'products',
+  'currencies', 'exchange_rates', 'customer_debts',
+  'stock', 'customers', 'suppliers',
 ];
 
 function subLabelFor(phase: LoadPhase, subStep: string, swCompleted: number, swTotal: number): string {
