@@ -230,6 +230,35 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 
 ---
 
+## FIX-012 — `DB_VERSION` no estaba exportado desde `db.ts`
+
+**Fase de origen**: B.4 (refactor de loader a `DownloadQueueService`)
+**Detectado en**: B.4 (2026-06-05, durante refactor de `useAppLoader.ts`)
+
+**Síntoma**: El plan B.4 (spec de subagente senior-frontend) instruye explícitamente:
+
+> "Add `DB_VERSION` constant from `db.ts` (import, don't redeclare)"
+> "Replace the magic number `5_000` (FETCH_TIMEOUT_MS) with the actual DB_VERSION reference in the `rehydrate_local` effect (use the imported DB_VERSION from db.ts)"
+
+Sin embargo, en `db.ts` la constante estaba declarada como `const DB_VERSION = 6;` (sin `export`), por lo que `import { DB_VERSION } from '@/infrastructure/storage/db'` fallaba con `TS2459: Module declares 'DB_VERSION' locally, but it is not exported`.
+
+**Causa raíz**: FIX-011 documentó que `appLogger.ts:46` y `useAppLoader.ts:159` hardcodeaban `openDB('inventory-offline', 6)` porque `DB_VERSION` no era exportable. Al restaurar invariantes B.1 con `git checkout HEAD --`, también se revirtió cualquier exportación previa accidental de la constante.
+
+**Impacto si se hubiera aplicado literalmente el plan**:
+- Opción A: re-declarar `const DB_VERSION = 6` en `useAppLoader.ts` → duplica la fuente de verdad (riesgo de drift con FIX-001 si DB_VERSION se incrementa).
+- Opción B: dejar el magic number `6` literal → incumple el objetivo B.4 #6 y perpetúa el foot-gun de FIX-011.
+- Opción C (aplicada): añadir `export` a `DB_VERSION` en `db.ts` → habilita la migración progresiva (siguiente paso natural: actualizar `appLogger.ts:46` para importar `DB_VERSION` también).
+
+**Resolución**: Cambio de una sola palabra en `db.ts:6` — `const DB_VERSION = 6;` → `export const DB_VERSION = 6;`. Esto es una desviación menor del "DO NOT modify other files" del spec, pero es estrictamente necesaria para satisfacer el objetivo B.4 #5/#6 sin re-declarar la constante. Sigue al pie de la letra el resto del spec (helper `loadFlatCatalog`, `downloadEntity` para products, eliminación de `fetchPaginated`/`fetchAll`/`loadCatalogOptional`/`extractItems`).
+
+**Aplicar en**: B.4 (este commit).
+
+**Follow-up recomendado** (fuera de scope B.4):
+1. `appLogger.ts:46` — reemplazar `openDB('inventory-offline', 6)` por `openDB(DB_NAME, DB_VERSION)` importando desde `@/infrastructure/storage/db`.
+2. Cualquier otra ocurrencia del literal `6` en archivos que abren IDB.
+
+---
+
 ## Resumen ejecutivo (actualizado)
 
 | ID | Severidad | Resolución en |
@@ -245,6 +274,7 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 | FIX-009 | Media (type-check fallout) | B.1 |
 | FIX-010 | Baja (foot-gun naming) | B.1 |
 | FIX-011 | Alta (regresión bloqueante) | B.6 (restauración de invariantes) |
+| FIX-012 | Baja (export faltante) | B.4 (refactor loader → DownloadQueueService) |
 
 **Resultado B.1**: `tsc --noEmit` ✓, `pnpm test:run` 194/194 ✓, lint sin nuevos warnings en archivos de B.1. Los 25 errores / 86 warnings de `pnpm lint` son pre-existentes en archivos no tocados por B.1 (componentes UI de presentation/, etc.) y quedan fuera del scope.
 
@@ -252,6 +282,8 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 
 **Resultado B.6** (este commit): working tree restaurado a invariantes B.1. `tsc --noEmit` ✓ (revisado contra HEAD limpio).
 
+**Resultado B.4** (este commit): `useAppLoader.ts` refactorizado para usar `DownloadQueueService` (los 8 fetches de catálogo pasan por `fetchAllWithIntegrity` para flat arrays y `downloadEntity` para products). `tsc --noEmit` ✓, `pnpm test:run` 194/194 ✓, lint sin nuevos errores/warnings en archivos tocados (db.ts 1 palabra cambiada — `export`; useAppLoader.ts 305 → 250 líneas). Cambio auxiliar en `db.ts:6` documentado como FIX-012.
+
 ---
 
-*Documento generado durante preparación de Fase B el 2026-06-04; ampliado con FIX-007/008/009/010 al cierre de B.1, FIX-011 al cierre de B.6.*
+*Documento generado durante preparación de Fase B el 2026-06-04; ampliado con FIX-007/008/009/010 al cierre de B.1, FIX-011 al cierre de B.6, FIX-012 al cierre de B.4.*

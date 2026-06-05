@@ -3,7 +3,7 @@ import type { Product } from '@/core/product/entities/product';
 
 const MAX_OUTBOX_ENTRIES = 500;
 const DB_NAME = 'inventory-offline';
-const DB_VERSION = 6;
+export const DB_VERSION = 6;
 const DB_OPEN_TIMEOUT = 5_000;
 
 const BACKOFF_DELAYS = [30_000, 120_000, 480_000, 1_920_000, 7_200_000];

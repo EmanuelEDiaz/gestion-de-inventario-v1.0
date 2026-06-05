@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
+import type { z } from 'zod';
 import {
   useAppLoaderStore,
   getPhaseLabel,
@@ -10,95 +11,49 @@ import {
 import { useSWPrecacheProgress } from './useSWPrecacheProgress';
 import {
   initPersistence,
-  cacheStoreData,
   getCachedCount,
+  DB_VERSION,
 } from '@/infrastructure/storage/db';
-import { apiClient } from '@/infrastructure/api/client';
+import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueService';
+import {
+  productResponseSchema,
+  customerResponseSchema,
+  supplierResponseSchema,
+  warehouseResponseSchema,
+  categoryResponseSchema,
+  stockResponseSchema,
+  currencyResponseSchema,
+  exchangeRateResponseSchema,
+  customerDebtResponseSchema,
+} from '@/core/loading/validators';
 import { getStorageUsage } from './useCacheProgress';
 import { setIdbReady, appLogger } from '@/infrastructure/logging/appLogger';
 
-const FETCH_TIMEOUT_MS = 5_000;
 const PAGE_SIZE = 100;
 
 let bootInProgress = false;
 
-function extractItems(raw: unknown, store: string): Record<string, unknown>[] {
-  if (Array.isArray(raw)) return raw;
-  const r = raw as Record<string, unknown>;
-  if (r?.content && Array.isArray(r.content)) return r.content as Record<string, unknown>[];
-  if (r?.data && Array.isArray(r.data)) return r.data as Record<string, unknown>[];
-  const embedded = r._embedded as Record<string, unknown> | undefined;
-  if (embedded) {
-    for (const key of Object.keys(embedded)) {
-      const v = embedded[key];
-      if (Array.isArray(v)) return v as Record<string, unknown>[];
-    }
-    if (embedded[store] && Array.isArray(embedded[store])) {
-      return embedded[store] as Record<string, unknown>[];
-    }
-    const singular = store.replace(/s$/, '');
-    if (embedded[singular] && Array.isArray(embedded[singular])) {
-      return embedded[singular] as Record<string, unknown>[];
-    }
-  }
-  return [];
-}
+const LOADER_USER_ID = 'boot-loader';
 
-async function fetchPaginated(
-  endpoint: string,
-  store: string,
-  onProgress?: (page: number, total: number) => void,
-): Promise<void> {
-  let page = 0;
-  let hasMore = true;
-  while (hasMore) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    try {
-      const res = await apiClient.get<{ content?: Record<string, unknown>[]; totalPages?: number }>(
-        `${endpoint}?page=${page}&size=${PAGE_SIZE}`,
-        { signal: controller.signal },
-      );
-      const data = res.data as { content?: Record<string, unknown>[]; totalPages?: number };
-      const items = (data.content ?? []).map((item) => ({ ...item, cachedAt: Date.now() }));
-      if (items.length > 0) {
-        await cacheStoreData(store, items);
-      }
-      hasMore = page + 1 < (data.totalPages ?? 0);
-      page++;
-      onProgress?.(page, data.totalPages ?? 0);
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-}
-
-async function fetchAll(endpoint: string, store: string): Promise<void> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await apiClient.get<Record<string, unknown>[] | Record<string, unknown>>(
-      endpoint,
-      { signal: controller.signal },
+async function loadFlatCatalog(params: {
+  endpoint: string;
+  idbStoreName: string;
+  schema: z.ZodSchema<unknown>;
+  entityLabel: string;
+}): Promise<void> {
+  const count = await getCachedCount(params.idbStoreName);
+  if (count > 0) return;
+  const result = await DownloadQueueService.fetchAllWithIntegrity(
+    params.endpoint,
+    params.idbStoreName,
+    params.schema,
+    { userId: LOADER_USER_ID },
+  );
+  if (!result.ok) {
+    appLogger.warn(
+      `[AppLoader] ${params.entityLabel} falló (parcial o total)`,
+      result.errors,
     );
-    const items = extractItems(res.data, store).map(
-      (item: Record<string, unknown>) => ({ ...item, cachedAt: Date.now() }),
-    );
-    if (items.length > 0) {
-      await cacheStoreData(store, items);
-    }
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function loadCatalogOptional(endpoint: string, store: string, label: string): Promise<void> {
-  try {
-    const count = await getCachedCount(store);
-    if (count > 0) return;
-    await fetchAll(endpoint, store);
-  } catch (err) {
-    appLogger.warn(`[AppLoader] ${label} non-fatal`, err);
   }
 }
 
@@ -156,7 +111,7 @@ export function useAppLoader() {
     if (store.phase !== 'rehydrate_local') return;
     (async () => {
       try {
-        const db = await import('idb').then((idb) => idb.openDB('inventory-offline', 6));
+        const db = await import('idb').then((idb) => idb.openDB('inventory-offline', DB_VERSION));
         const [warehouseCount, productCount, stockCount] = await Promise.all([
           db.count('warehouses'),
           db.count('products'),
@@ -183,8 +138,12 @@ export function useAppLoader() {
     (async () => {
       try {
         setSubStep('Descargando bodegas...');
-        const count = await getCachedCount('warehouses');
-        if (count === 0) await fetchAll('/api/v1/warehouses', 'warehouses');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/warehouses',
+          idbStoreName: 'warehouses',
+          schema: warehouseResponseSchema,
+          entityLabel: 'bodegas',
+        });
         setPhase('products');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al descargar bodegas');
@@ -198,12 +157,21 @@ export function useAppLoader() {
       try {
         const count = await getCachedCount('products');
         if (count > 0) { setPhase('categories'); return; }
-        await fetchPaginated('/api/v1/products', 'products',
-          (page, total) => {
-            setSubStep(`página ${page}/${total}`);
+        const result = await DownloadQueueService.downloadEntity({
+          entityType: 'products',
+          endpoint: '/api/v1/products',
+          idbStoreName: 'products',
+          schema: productResponseSchema,
+          pageSize: PAGE_SIZE,
+          userId: LOADER_USER_ID,
+          onProgress: (page, total) => {
+            setSubStep(`Página ${page}/${total}`);
             setSubProgress(page, total);
           },
-        );
+        });
+        if (!result.ok && result.chunksFailed > 0) {
+          appLogger.warn('[AppLoader] products descarga parcial', result.errors);
+        }
         setPhase('categories');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al descargar productos');
@@ -216,8 +184,12 @@ export function useAppLoader() {
     (async () => {
       try {
         setSubStep('Descargando categorías...');
-        const count = await getCachedCount('categories');
-        if (count === 0) await fetchAll('/api/v1/categories', 'categories');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/categories',
+          idbStoreName: 'categories',
+          schema: categoryResponseSchema,
+          entityLabel: 'categorías',
+        });
         setPhase('currencies');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al descargar categorías');
@@ -229,7 +201,12 @@ export function useAppLoader() {
     if (store.phase !== 'currencies') return;
     (async () => {
       setSubStep('Descargando monedas...');
-      await loadCatalogOptional('/api/v1/currencies', 'currencies', 'currencies');
+      await loadFlatCatalog({
+        endpoint: '/api/v1/currencies',
+        idbStoreName: 'currencies',
+        schema: currencyResponseSchema,
+        entityLabel: 'monedas',
+      });
       setPhase('exchange_rates');
     })();
   }, [store.phase, setPhase, setSubStep]);
@@ -238,7 +215,12 @@ export function useAppLoader() {
     if (store.phase !== 'exchange_rates') return;
     (async () => {
       setSubStep('Descargando tasas de cambio...');
-      await loadCatalogOptional('/api/v1/exchange-rates', 'exchangeRates', 'exchange_rates');
+      await loadFlatCatalog({
+        endpoint: '/api/v1/exchange-rates',
+        idbStoreName: 'exchangeRates',
+        schema: exchangeRateResponseSchema,
+        entityLabel: 'tasas de cambio',
+      });
       setPhase('customer_debts');
     })();
   }, [store.phase, setPhase, setSubStep]);
@@ -247,7 +229,12 @@ export function useAppLoader() {
     if (store.phase !== 'customer_debts') return;
     (async () => {
       setSubStep('Descargando deudas...');
-        await loadCatalogOptional('/api/v1/debts', 'customerDebts', 'customer_debts');
+      await loadFlatCatalog({
+        endpoint: '/api/v1/debts',
+        idbStoreName: 'customerDebts',
+        schema: customerDebtResponseSchema,
+        entityLabel: 'deudas de clientes',
+      });
       setPhase('stock');
     })();
   }, [store.phase, setPhase, setSubStep]);
@@ -257,8 +244,12 @@ export function useAppLoader() {
     (async () => {
       try {
         setSubStep('Descargando existencias...');
-        const count = await getCachedCount('stockBalances');
-        if (count === 0) await fetchAll('/api/v1/stock', 'stockBalances');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/stock',
+          idbStoreName: 'stockBalances',
+          schema: stockResponseSchema,
+          entityLabel: 'existencias',
+        });
         setAvailability('ready_partial');
         setPhase('customers');
       } catch (err) {
@@ -271,7 +262,12 @@ export function useAppLoader() {
     if (store.phase !== 'customers') return;
     (async () => {
       setSubStep('Descargando clientes...');
-      await loadCatalogOptional('/api/v1/customers', 'customers', 'customers');
+      await loadFlatCatalog({
+        endpoint: '/api/v1/customers',
+        idbStoreName: 'customers',
+        schema: customerResponseSchema,
+        entityLabel: 'clientes',
+      });
       setPhase('suppliers');
     })();
   }, [store.phase, setPhase, setSubStep]);
@@ -280,7 +276,12 @@ export function useAppLoader() {
     if (store.phase !== 'suppliers') return;
     (async () => {
       setSubStep('Descargando proveedores...');
-      await loadCatalogOptional('/api/v1/suppliers', 'suppliers', 'suppliers');
+      await loadFlatCatalog({
+        endpoint: '/api/v1/suppliers',
+        idbStoreName: 'suppliers',
+        schema: supplierResponseSchema,
+        entityLabel: 'proveedores',
+      });
       setPhase('idle');
     })();
   }, [store.phase, setPhase, setSubStep]);
