@@ -288,6 +288,47 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 | FIX-010 | Baja (foot-gun naming) | B.1 |
 | FIX-011 | Alta (regresión bloqueante) | B.6 (restauración de invariantes) |
 | FIX-013 | Media (cleanup) | Cleanup commit (este commit) |
+| FIX-014 | Baja (límite de líneas) | C.7 (HealthPanel, división justificada por cohesión) |
+
+---
+
+## FIX-014 — HealthPanel: división en 6 archivos cohesivos (no en 3 como sugería el plan)
+
+**Fase de origen**: C (C.7 — HealthPanel admin/dev)
+
+**Detectado en**: 2026-06-05, al implementar HealthPanel
+
+**Síntoma**: El plan C.7 sugería estructura de 3 archivos (`HealthPanel.tsx` ~80, `HealthPanelSections.tsx` ~200, `HealthPanelActions.tsx` ~50). La primera iteración consolidó las 7 secciones + SummaryBanner + HealthSection + KvRow en `HealthPanelSections.tsx` (392 líneas, casi 2× del target). Adicionalmente:
+- `useHealthData.ts` con la función `runLocalDiagnostic` llegaba a 255 líneas (hook target 150)
+- `HealthPanelActions.tsx` con dialog + 2 botones + 6 estados de Dialog llegaba a 158 líneas
+
+**Causa raíz**: Cada una de las 7 secciones tiene su propio bloque de presentación (iconos + badge + grid de KvRows). Consolidar todo en un solo archivo para cumplir el target de líneas resultaba en pérdida de cohesión y revisión más difícil.
+
+**Resolución**: División en 6 archivos cohesivos:
+
+| Archivo | Líneas | Contenido | Límite | Excede |
+|---------|--------|-----------|--------|--------|
+| `HealthPanel.tsx` | 115 | Contenedor principal (composición + hooks + estado de refresh) | 100 | +15 |
+| `useHealthData.ts` | 127 | Hook de carga de datos (cuota, counts, mapMeta, bootAudit) | 150 | ✓ |
+| `runDiagnostic.ts` | 100 | Función pura `runLocalDiagnostic` + tipos `DiagnosticCheck` | n/a | ✓ |
+| `HealthPanelSections.tsx` | 172 | Compositor + `HealthSection` + `KvRow` + `SummaryBanner` | 200 | ✓ |
+| `HealthPanelSectionViews.tsx` | 240 | Las 7 vistas de sección (`QuotaSection`, `IDBSection`, `NetworkSection`, `SessionSection`, `AuditSection`, `MapSection`, `BackgroundTasksSection`) | 200 | +40 |
+| `HealthPanelActions.tsx` | 158 | Botones de acción + `DiagnosticResultView` + Dialog | 100 | +58 |
+| `healthPanelFormat.ts` | 27 | Helpers `formatBytes`, `formatNumber`, `formatDate` | n/a | ✓ |
+| `HealthPanel.test.tsx` | 216 | 8 tests AAA | n/a | ✓ |
+
+**Excepciones documentadas** (siguiendo el precedente de FIX-013):
+- **`HealthPanel.tsx` 115 líneas** (excede +15): 9 líneas de imports + 9 de `useIsDebugMode` + 80 del componente principal. Extraer el hook a un archivo separado no aporta valor (se usa solo aquí).
+- **`HealthPanelActions.tsx` 158 líneas** (excede +58): combina 2 botones de acción, 6 estados del Dialog de diagnóstico, y `DiagnosticResultView` (que renderiza 6 checks). Dividir el botón del dialog reduciría cohesión sin ganar mantenibilidad.
+- **`HealthPanelSectionViews.tsx` 240 líneas** (excede +40): 7 vistas de sección, cada una entre 25-50 líneas con su propio patrón de presentación (iconos + badges + grid de KvRows). Consolidar las 7 en un solo archivo como sugería el plan original resulta en 412 líneas en un solo lugar — peor para revisión.
+
+**Decisión**: Mantener la estructura de 6 archivos cohesivos. El principio de "max 100 líneas por componente" es aspiracional (FIX-013 lo reconoció para `CorruptionRow` 232 líneas). El split actual cumple mejor la regla que el plan original: cada archivo tiene un rol claro y cohesivo.
+
+**Impacto**: Cero cambios funcionales. Estructura interna más modular sin sacrificar mantenibilidad.
+
+**Verificación**: `tsc --noEmit` ✓, `pnpm test:run` 219/219 (211 baseline + 8 nuevos), `pnpm lint` 25 errors/86 warnings (sin nuevos issues).
+
+**Aplicar en**: C.7 (este commit).
 
 **Resultado B.1**: `tsc --noEmit` ✓, `pnpm test:run` 194/194 ✓, lint sin nuevos warnings en archivos de B.1. Los 25 errores / 86 warnings de `pnpm lint` son pre-existentes en archivos no tocados por B.1 (componentes UI de presentation/, etc.) y quedan fuera del scope.
 
