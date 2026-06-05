@@ -48,7 +48,20 @@ public class SyncPushController {
         return syncPushUseCase.execute(operations, userId)
             .map(response -> {
                 var results = response.results().stream()
-                    .map(r -> new PushResultDto(r.operationId(), r.accepted(), r.data(), r.error(), r.entityId()))
+                    .map(r -> new PushResultDto(
+                        r.operationId(),
+                        r.accepted(),
+                        r.data(),
+                        r.error(),
+                        r.entityType(),
+                        r.entityId(),
+                        null,  // errorCode
+                        r.error(),  // errorMessage
+                        null,  // serverPayload
+                        null,  // clientPayload
+                        null,  // serverVersion
+                        null   // clientVersion
+                    ))
                     .toList();
                 return new SyncPushResponseDto(results);
             });

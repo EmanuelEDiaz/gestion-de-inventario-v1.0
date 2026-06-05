@@ -26,23 +26,25 @@ import java.util.stream.Collectors;
 @Service
 public class JwtTokenServiceImpl implements JwtTokenService {
     
-    private static final long ACCESS_TOKEN_VALIDITY_SECONDS = 30 * 24 * 60 * 60; // 30 días (offline-first)
-    
     private final SecretKey secretKey;
+    private final long accessTokenExpirationMs;
     
-    public JwtTokenServiceImpl(@Value("${app.security.jwt.secret}") String secret) {
-        // Asegurar que la clave tenga al menos 256 bits para HS256
+    public JwtTokenServiceImpl(
+        @Value("${app.security.jwt.secret}") String secret,
+        @Value("${app.security.jwt.access-token-expiration:900000}") long accessTokenExpirationMs
+    ) {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length < 32) {
             throw new IllegalArgumentException("JWT secret must be at least 32 characters (256 bits)");
         }
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+        this.accessTokenExpirationMs = accessTokenExpirationMs;
     }
     
     @Override
     public String generateAccessToken(User user) {
         Instant now = Instant.now();
-        Instant expiration = now.plusSeconds(ACCESS_TOKEN_VALIDITY_SECONDS);
+        Instant expiration = now.plusSeconds(accessTokenExpirationMs / 1000);
         
         String permissions = user.getRole().getPermissionCodes().stream()
                 .collect(Collectors.joining(","));
@@ -89,7 +91,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     
     @Override
     public long getAccessTokenValiditySeconds() {
-        return ACCESS_TOKEN_VALIDITY_SECONDS;
+        return accessTokenExpirationMs / 1000;
     }
     
     /**

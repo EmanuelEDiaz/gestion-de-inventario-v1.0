@@ -2,6 +2,7 @@ import {
   getDB,
   canAddToOutbox,
   BACKOFF_DELAYS,
+  MAX_OUTBOX_ENTRIES,
   type OutboxEntry,
   type DeadLetterEntry,
 } from './db';
@@ -36,7 +37,15 @@ export async function addToOutbox(entry: {
 }): Promise<void> {
   const allowed = await canAddToOutbox();
   if (!allowed) {
-    throw new Error('Límite de la cola offline alcanzado. Sincronice antes de agregar más.');
+    throw Object.assign(
+      new Error('No se puede guardar porque la cola de cambios está llena (500/500). Conéctate al servidor para sincronizar los cambios pendientes.'),
+      {
+        errorCode: 'ERR_OUTBOX_FULL',
+        kind: 'outbox-full',
+        pendingCount: MAX_OUTBOX_ENTRIES,
+        max: MAX_OUTBOX_ENTRIES,
+      }
+    );
   }
   const db = await getDB();
   const outboxEntry: OutboxEntry = {
@@ -191,4 +200,23 @@ export async function enqueueOrBlock(operation: {
     throw new OfflineQueueFullError();
   }
   await addToOutbox(operation);
+}
+
+export async function updateLocalEntityStatus(
+  entityType: string,
+  entityId: string,
+  status: string
+): Promise<void> {
+  const db = await getDB();
+  const storeName = entityType.toLowerCase();
+  try {
+    const entry = await (db as any).get(storeName, entityId);
+    if (entry) {
+      entry.status = status;
+      await (db as any).put(storeName, entry);
+    }
+  } catch (error) {
+    const { appLogger } = await import('@/infrastructure/logging/appLogger');
+    appLogger.warn('Failed to update local entity status', { entityType, entityId, status, error });
+  }
 }

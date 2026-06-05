@@ -2759,7 +2759,13 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 
 ---
 
-## Fase D — Sync/conflictos: serverPayload + FieldDiffTable + políticas
+## Fase D — Sync/conflictos: serverPayload + FieldDiffTable + políticas ✅ Completado
+
+> **Estado final 2026-06-05**. Todas las subfases implementadas: D.1 (PushResultDto con serverPayload, entityType, errorCode, serverVersion, clientVersion), D.2 (FieldDiffTable con diff campo a campo + NOT_FOUND handling), D.3 (políticas documentadas en componente), D.4 (PushResultDto extendido con clientPayload), D.5 (processOutbox con locks + CriticalActionGuard para Tipo B offline), D.6 (outbox priority + MAX_OUTBOX), D.6.1 (ERR_OUTBOX_FULL handler), D.7 (token rotation ya existía + TTL 15min access + cross-tab refresh con BroadcastChannel + locks).
+> 
+> **Verificación**: `tsc --noEmit` 0 errors, `pnpm test:run` 219/219 pass, `mvn compile -q` 0 errors.
+> 
+> **Próximo**: Fase E (Mapa/GPS — MapLibre + PMTiles + OPFS).
 
 > **Skills**: `senior-frontend`, `hexagonal-architecture`
 > **Objetivo**: Agregar field-by-field diff table al `SyncConflictResolver` existente y formalizar políticas de conflicto por entidad.

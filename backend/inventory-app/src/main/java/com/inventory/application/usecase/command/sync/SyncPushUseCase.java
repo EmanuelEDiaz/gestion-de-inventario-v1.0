@@ -50,7 +50,7 @@ public class SyncPushUseCase {
             .flatMap(cached -> {
                 if (cached != null) {
                     String entityId = extractEntityIdFromJson(cached);
-                    return Mono.just(new OperationResult(op.operationId(), true, cached, null, entityId));
+                    return Mono.just(new OperationResult(op.operationId(), true, cached, null, op.entityType(), entityId));
                 }
                 return resolveAndRoute(op, userId, hash);
             })
@@ -116,13 +116,13 @@ public class SyncPushUseCase {
                     }
                     return idempotencyService.checkAndStore(op.operationId(), hash, responseJson)
                         .then(writeSyncLog(op, userId))
-                        .thenReturn(new OperationResult(op.operationId(), true, result.data(), null, entityId));
+                        .thenReturn(new OperationResult(op.operationId(), true, result.data(), null, op.entityType(), entityId));
                 }
                 return Mono.just(new OperationResult(op.operationId(), false, null,
-                    result.data() != null ? result.data().toString() : "Unknown error", op.entityId()));
+                    result.data() != null ? result.data().toString() : "Unknown error", op.entityType(), op.entityId()));
             })
             .onErrorResume(e ->
-                Mono.just(new OperationResult(op.operationId(), false, null, e.getMessage(), op.entityId())));
+                Mono.just(new OperationResult(op.operationId(), false, null, e.getMessage(), op.entityType(), op.entityId())));
     }
 
     private Mono<Void> writeSyncLog(PushOperation op, UUID userId) {
@@ -181,10 +181,11 @@ public class SyncPushUseCase {
         boolean accepted,
         Object data,
         String error,
+        String entityType,
         String entityId
     ) {
         public OperationResult(String operationId, boolean accepted, Object data, String error) {
-            this(operationId, accepted, data, error, null);
+            this(operationId, accepted, data, error, null, null);
         }
     }
 }

@@ -50,6 +50,8 @@ app:
   security:
     jwt:
       secret: ${JWT_SECRET:change-me-in-production-minimum-256-bits-key-here!!}
+      access-token-expiration: 900000      # 15 minutos en ms
+      refresh-token-expiration: 2592000000  # 30 días en ms
   
   # Media storage (imágenes)
   media:

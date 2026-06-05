@@ -323,3 +323,127 @@ export async function applyPullEntriesForStore(store: string, entries: SyncLogEn
 
   await tx.done;
 }
+
+async function updateTempIdMapping(entityType: string, tempId: string, realId: string): Promise<void> {
+  const db = await getDB();
+  const storeName = entityType.toLowerCase();
+  try {
+    const existing = await (db as any).get(storeName, tempId);
+    if (existing) {
+      const tx = (db as any).transaction(storeName, 'readwrite');
+      await tx.objectStore(storeName).delete(tempId);
+      await tx.objectStore(storeName).put({ ...existing, id: realId });
+      await tx.done;
+    }
+  } catch {
+    // Non-fatal — temp ID mapping is best-effort
+  }
+}
+
+async function createIncident(entry: OutboxEntry, serverResult: any): Promise<void> {
+  const db = await getDB();
+  const incident = {
+    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    entityType: entry.entityType,
+    entityId: entry.entityId,
+    operationId: entry.operationId,
+    myPayload: entry.payload,
+    serverPayload: serverResult?.serverPayload || null,
+    errorCode: serverResult?.errorCode || 'UNKNOWN',
+    error: serverResult?.error || serverResult?.errorMessage || 'Error desconocido al sincronizar',
+    clientVersion: (entry.payload as any)?.version,
+    serverVersion: serverResult?.serverVersion,
+    occurredAt: new Date().toISOString(),
+    resolved: false,
+  };
+  try {
+    await db.add('incidents' as any, incident as any);
+  } catch {
+    const { appLogger } = await import('@/infrastructure/logging/appLogger');
+    appLogger.warn('Could not create incident store entry', { entityType: entry.entityType });
+  }
+}
+
+export async function processOutbox(): Promise<PushResult> {
+  const result: PushResult = { pushed: 0, failed: 0, total: 0, incidents: [], conflicts: 0 };
+
+  if (getNetworkMode() === 'offline') return result;
+
+  const hasLocks = typeof navigator !== 'undefined' && 'locks' in navigator;
+  const lockFn = hasLocks
+    ? <T>(name: string, fn: (lock?: any) => Promise<T>) => (navigator.locks as any).request(name, { ifAvailable: true }, fn)
+    : <T>(_name: string, fn: (lock?: any) => Promise<T>) => fn({} as any);
+
+  const output = await lockFn('outbox-process-lock', async (lock: any) => {
+    if (!lock) {
+      const { appLogger } = await import('@/infrastructure/logging/appLogger');
+      appLogger.info('[Sync] Outbox lock acquired by another tab — skipping');
+      return { skipped: true };
+    }
+
+    const db = await getDB();
+    const critical = await db.getAllFromIndex('outbox', 'by-priority', IDBKeyRange.only(1));
+    const normal = await db.getAllFromIndex('outbox', 'by-priority', IDBKeyRange.only(0));
+    const entries = [...critical.filter(e => e.status === 'pending'), ...normal.filter(e => e.status === 'pending')];
+
+    result.total = entries.length;
+
+    for (const entry of entries) {
+      if (!navigator.onLine) break;
+
+      try {
+        entry.status = 'syncing';
+        await db.put('outbox', entry as any);
+
+        const pushResult = await apiClient.post('/api/v1/sync/push', {
+          operations: [{
+            operationId: entry.operationId,
+            entityType: entry.entityType,
+            entityId: entry.entityId,
+            action: entry.action,
+            payload: entry.payload,
+          }],
+        });
+
+        const entryResult = Array.isArray(pushResult.data?.results) ? pushResult.data.results[0] : pushResult.data;
+
+        if (entryResult?.accepted) {
+          entry.status = 'accepted';
+          await db.put('outbox', entry as any);
+          if (entryResult.entityId && entry.entityId !== entryResult.entityId) {
+            await updateTempIdMapping(entry.entityType, entry.entityId, entryResult.entityId);
+          }
+          result.pushed++;
+        } else {
+          await createIncident(entry, entryResult);
+          entry.status = 'rejected';
+          await db.put('outbox', entry as any);
+          result.failed++;
+          if (entryResult?.errorCode === 'OPTIMISTIC_LOCK') {
+            result.conflicts++;
+          }
+          result.incidents.push(`Error on ${entry.operationId}: ${entryResult?.error || entryResult?.errorMessage || 'Unknown'}`);
+        }
+      } catch (err) {
+        entry.retryCount = (entry.retryCount || 0) + 1;
+        entry.lastError = String(err);
+        if (entry.retryCount >= 3) {
+          entry.status = 'rejected';
+          const { moveToDeadLetter } = await import('./outbox');
+          await moveToDeadLetter(entry as any);
+        } else {
+          entry.status = 'pending';
+          entry.nextRetryAt = Date.now() + Math.min(30000 * Math.pow(2, entry.retryCount), 120000);
+        }
+        await db.put('outbox', entry as any);
+        result.failed++;
+        result.incidents.push(`${entry.operationId} error: ${err}`);
+      }
+    }
+
+    return { skipped: false };
+  });
+
+  if (output?.skipped) return result;
+  return result;
+}

@@ -24,6 +24,8 @@ export interface SyncIncident {
   userId: string | null;
   createdAt: string;
   resolvedAt: string | null;
+  errorCode?: string;
+  error?: string;
 }
 
 export interface ReportSyncIncidentData {
@@ -36,8 +38,11 @@ export interface ReportSyncIncidentData {
   serverPayload?: string;
 }
 
+export type ResolutionAction = 'use-server' | 'use-client' | 'merge' | 'delete-local';
+
 export interface ResolveSyncIncidentData {
-  resolution: string;
+  resolution: ResolutionAction | string;
+  payload?: Record<string, unknown>;
 }
 
 export const SYNC_INCIDENT_TYPE_LABELS: Record<SyncIncidentType, string> = {
