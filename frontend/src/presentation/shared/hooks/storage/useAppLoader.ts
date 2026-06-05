@@ -29,8 +29,10 @@ import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueServ
 import { setIdbReady, appLogger } from '@/infrastructure/logging/appLogger';
 import { useSWPrecacheProgress } from './useSWPrecacheProgress';
 import { getStorageUsage } from './useCacheProgress';
+import { startBackgroundTasks } from './useBackgroundTasks';
 
 const PAGE_SIZE = 100;
+const REHYDRATE_TIMEOUT_MS = 8_000;
 
 let bootInProgress = false;
 
@@ -67,6 +69,7 @@ export function useAppLoader() {
   const setSubProgress = useAppLoaderStore((s) => s.setSubProgress);
   const { done: swDone, triggerStart: swTriggerStart } = useSWPrecacheProgress();
   const swStartedRef = useRef(false);
+  const bgTasksTriggeredRef = useRef(false);
 
   useEffect(() => {
     if (store.phase !== 'quota') return;
@@ -111,13 +114,34 @@ export function useAppLoader() {
   useEffect(() => {
     if (store.phase !== 'rehydrate_local') return;
     (async () => {
-      try {
+      const rehydrate = (async () => {
         const db = await import('idb').then((idb) => idb.openDB(DB_NAME, DB_VERSION));
         const [warehouseCount, productCount, stockCount] = await Promise.all([
           db.count('warehouses'),
           db.count('products'),
           db.count('stockBalances'),
         ]);
+        return { warehouseCount, productCount, stockCount };
+      })();
+
+      const timeout = new Promise<null>((resolve) =>
+        setTimeout(() => resolve(null), REHYDRATE_TIMEOUT_MS),
+      );
+
+      const result = await Promise.race([rehydrate, timeout]);
+
+      if (!result) {
+        appLogger.warn(
+          '[AppLoader] rehydrate_local timeout (>8s), forzando descarga completa',
+          { errorCode: 'ERR_REHYDRATE_TIMEOUT' },
+        );
+        setSubStep('Reintentando descarga...');
+        setPhase('warehouses');
+        return;
+      }
+
+      try {
+        const { warehouseCount, productCount, stockCount } = result;
         const hasMinCache = warehouseCount > 0 && productCount > 0 && stockCount > 0;
 
         if (hasMinCache) {
@@ -286,6 +310,14 @@ export function useAppLoader() {
       setPhase('idle');
     })();
   }, [store.phase, setPhase, setSubStep]);
+
+  useEffect(() => {
+    if (store.availability !== 'ready_partial') return;
+    if (store.phase !== 'idle') return;
+    if (bgTasksTriggeredRef.current) return;
+    bgTasksTriggeredRef.current = true;
+    void startBackgroundTasks();
+  }, [store.availability, store.phase]);
 
   const startLoading = useCallback(() => {
     if (bootInProgress) return;
