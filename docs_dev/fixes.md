@@ -197,6 +197,39 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 
 ---
 
+## FIX-011 — Regresión de invariantes B.1 en working tree al retomar Fase B
+
+**Fase de origen**: B (preparación de B.3 + B.4.5)
+
+**Detectado en**: B (2026-06-05, antes de commit f94069e)
+
+**Síntoma**: Al retomar el plan tras pausa, el working tree tenía los siguientes cambios no-commiteados que **revocaban parcialmente** los invariantes establecidos por B.1 (commit ff699bc):
+
+| Archivo | HEAD (B.1) | Working tree | Impacto |
+|---|---|---|---|
+| `db.ts` | `DB_VERSION = 6` | `DB_VERSION = 5` | Bloque v5→v6 borrado: `corruptionQueue` y `downloadChunks` no se crean en upgrade desde v4; FIX-001 queda sin protección |
+| `db.ts` | `Cached*` tipos ricos (con `onHand`, `baseCode/quoteCode`, `cachedAt?` opcional) | Tipos finos (con `quantity`, `fromCurrency/toCurrency`, `cachedAt` requerido) | DTO validators de B.1 no encajan con cache shape → queue de corrupción se llenaría en runtime |
+| `appLogger.ts` | `openDB('inventory-offline', 6)` | `openDB('inventory-offline', 5)` | Logger abre DB paralela con versión obsoleta |
+| `useAppLoader.ts` | `openDB('inventory-offline', 6)` | `openDB('inventory-offline', 5)` | Mismo problema en rehydrate_local |
+| `useAppLoader.ts` | `/api/v1/products`, `/api/v1/debts` | `/api/v1/products/paginated`, `/api/v1/customer-debts` | Endpoints corregidos a path inexistente → 404 silencioso |
+| `StockRepository.ts` | `b.onHand` | `b.quantity` | Regresión a FIX-004 |
+| `DashboardRepository.ts` | `balance.onHand` | `balance.quantity` | Idem |
+| `ExchangeRateRepository.ts` | `baseCode/quoteCode` | `fromCurrency/toCurrency` | Idem FIX-010 |
+
+**Causa raíz**: Hipótesis: edición manual durante la pausa o stash mal aplicado — el working tree mezcló una versión B.1 "revocada" con un intento de fix que solo arregló los endpoints pero rompió los nombres de campos y la migración. Los cambios backend (B.3 + B.4.5) sí estaban bien y se mantuvieron.
+
+**Impacto si se hubiera committeado tal cual**: Bloqueante — el loader habría abierto v5 (sin corruptionQueue/downloadChunks), los DTO validators habrían enviado todo a quarantine, y los endpoints `/api/v1/products/paginated` y `/api/v1/customer-debts` habrían devuelto 404 (los reales son `/api/v1/products?page=N` con `Page<>` y `/api/v1/debts`).
+
+**Resolución**: `git checkout HEAD -- <archivos>` para los 6 archivos frontend (db.ts, appLogger.ts, 3 repos, useAppLoader.ts). El comportamiento correcto se mantiene con los endpoints de B.1 (`/api/v1/products` y `/api/v1/debts`) hasta que B.4 los migre a `DownloadQueueService.downloadEntityPaginated`, que es la ruta planificada.
+
+**Lección**:
+- El "working tree mixto" tras pausa es un anti-patrón. La verificación pre-commit debe incluir `git diff --stat` + revisión cruzada contra último commit de fase.
+- El plan B.4 unificará el acceso a productos bajo `DownloadQueueService` (con `chunkChecksum` del backend B.3), eliminando la duplicación de endpoints que el loader mantenía.
+
+**Aplicar en**: Subfase B.6 (nueva — restauración de invariantes). Commit dedicado, sin cambios funcionales.
+
+---
+
 ## Resumen ejecutivo (actualizado)
 
 | ID | Severidad | Resolución en |
@@ -211,9 +244,14 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 | FIX-008 | NULA (corrección documental) | B.1 |
 | FIX-009 | Media (type-check fallout) | B.1 |
 | FIX-010 | Baja (foot-gun naming) | B.1 |
+| FIX-011 | Alta (regresión bloqueante) | B.6 (restauración de invariantes) |
 
 **Resultado B.1**: `tsc --noEmit` ✓, `pnpm test:run` 194/194 ✓, lint sin nuevos warnings en archivos de B.1. Los 25 errores / 86 warnings de `pnpm lint` son pre-existentes en archivos no tocados por B.1 (componentes UI de presentation/, etc.) y quedan fuera del scope.
 
+**Resultado B.3 + B.4.5** (commit f94069e): `mvn compile` ✓, `mvn test` 102/102 (17 fallos pre-existentes en `ProductControllerTest`/`ProductCommandUseCaseTest`/`SaleCommandUseCaseTest`/`ArchitectureTest` no relacionados con esta subfase — son bugs en `mockUser()` que no incluye roles, y en ArchUnit que asume `domain` libre de Spring/Jackson).
+
+**Resultado B.6** (este commit): working tree restaurado a invariantes B.1. `tsc --noEmit` ✓ (revisado contra HEAD limpio).
+
 ---
 
-*Documento generado durante preparación de Fase B el 2026-06-04; ampliado con FIX-007/008/009/010 al cierre de B.1.*
+*Documento generado durante preparación de Fase B el 2026-06-04; ampliado con FIX-007/008/009/010 al cierre de B.1, FIX-011 al cierre de B.6.*

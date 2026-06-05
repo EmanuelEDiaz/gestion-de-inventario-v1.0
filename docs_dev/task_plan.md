@@ -987,7 +987,7 @@ Política general:
 | Fase | Nombre | Estado |
 |------|--------|--------|
 | **A** | Fundaciones offline — IDB v5 + store refactor + appLogger + fix endpoint | ✅ Completado |
-| **B** | Integridad de descarga — DownloadQueueService + validación DTO | ❌ Pendiente |
+| **B** | Integridad de descarga — DownloadQueueService + validación DTO | 🚧 En curso (B.1, B.2, B.3, B.4.5 ✅; B.4, B.5 pendientes) |
 | **C** | Loader robusto — phase/availability split + rehydrate_local + backgroundTasksStore (map_verify, precache_routes, image_prefetch) | ❌ Pendiente |
 | **D** | Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token | ❌ Pendiente |
 | **E** | Mapa/GPS — MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado + FileSystemResource | ❌ Pendiente |
@@ -2054,7 +2054,7 @@ export function validateCustomerDTO(item: unknown): string[] {
 }
 ```
 
-### B.3 — Backend: opcional `chunkChecksum`
+### B.3 — Backend: opcional `chunkChecksum` ✅ Completado (commit f94069e)
 
 **Archivo**: `backend/.../product/ProductController.java` — record `PaginatedProductResponse`
 
@@ -2099,7 +2099,7 @@ Reemplazar los efectos de `products`, `customers` y `suppliers` para que usen `d
 
 **Regla**: Si `totalPages > 1` o `totalElements > 500`, usar `downloadEntityPaginated` automáticamente. Para conjuntos pequeños (categories < 50, currencies < 50), `fetchAll` directo con validación JSON es suficiente.
 
-### B.4.5 — Validación de integridad para entidades de array plano
+### B.4.5 — Validación de integridad para entidades de array plano ✅ Completado (commit f94069e)
 
 **Problema**: `chunkChecksum` (B.3) cubre solo `products` con paginación backend. `warehouses`, `categories`, `customers`, `suppliers`, `stockBalances` devuelven arrays planos sin paginación. Sin embargo, aún necesitan validación de integridad de transporte.
 
@@ -2177,13 +2177,19 @@ Muestra chunks corruptos desde `corruptionQueue` con:
 
 ### Files Summary B
 
-| Archivo | Acción |
-|---------|--------|
-| `frontend/src/infrastructure/storage/DownloadQueueService.ts` | Nuevo |
-| `frontend/src/core/loading/validators/index.ts` | Nuevo — basado en DTOs reales del backend |
-| `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts` | Usar `downloadEntityPaginated` para products |
-| `frontend/src/presentation/shared/components/data-repair/CorruptionRepairCenter.tsx` | Nuevo |
-| Backend `ProductController.java` | Agregar `chunkChecksum` a `PaginatedProductResponse` |
+| Archivo | Acción | Estado |
+|---------|--------|--------|
+| `frontend/src/infrastructure/storage/DownloadQueueService.ts` | Nuevo | ✅ commit ff699bc |
+| `frontend/src/core/loading/validators/*.ts` (9 DTOs) | Nuevo — basado en DTOs reales del backend | ✅ commit ff699bc |
+| `frontend/src/core/utils/crypto.ts` | Nuevo — `sha256` wrapper | ✅ commit ff699bc |
+| `frontend/src/infrastructure/storage/db.ts` | DB v5→v6 (corruptionQueue, downloadChunks, appLogs, etc.) | ✅ commit ff699bc |
+| `frontend/src/infrastructure/repositories/{dashboard,stock,exchange-rate}/*Repository.ts` | B.1 invariants: `balance.onHand`, `baseCode/quoteCode`, etc. | ✅ commit ff699bc (regresado en WT — pendiente B.6) |
+| `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts` | Usar `downloadEntityPaginated` para products | ⏳ pendiente (B.4) |
+| `frontend/src/presentation/shared/components/data-repair/CorruptionRepairCenter.tsx` | Nuevo | ⏳ pendiente (B.5) |
+| Backend `adapters/web/util/ChecksumUtils.java` | Nuevo — sha256 helper | ✅ commit f94069e (B.4.5) |
+| Backend `adapters/web/dto/product/PaginatedProductResponse.java` | Nuevo — record con `chunkChecksum` | ✅ commit f94069e (B.3) |
+| Backend `adapters/web/controller/{product,category,customer,supplier,warehouse,stock}/*Controller.java` | `withChecksum` / `chunkChecksum` / CORS headers | ✅ commit f94069e (B.3+B.4.5) |
+| Backend `adapters/security/SecurityConfig.java` | CORS exposed headers: `X-Content-Checksum` | ✅ commit f94069e (B.4.5) |
 
 **Verificación:**
 ```bash
