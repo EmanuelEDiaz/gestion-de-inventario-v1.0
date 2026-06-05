@@ -1,5 +1,7 @@
 package com.inventory.adapters.web.controller.customer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.inventory.adapters.web.util.ChecksumUtils;
 import com.inventory.application.customer.dto.CreateCustomerRequest;
 import com.inventory.application.customer.dto.CustomerDto;
 import com.inventory.application.customer.dto.UpdateCustomerRequest;
@@ -8,6 +10,7 @@ import com.inventory.domain.ports.in.customer.CustomerCommandPort;
 import com.inventory.domain.ports.in.customer.CustomerQueryPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,22 +28,25 @@ public class CustomerController {
     private final CustomerCommandPort commandPort;
     private final CustomerQueryPort queryPort;
     private final CustomerMapper mapper;
+    private final ObjectMapper objectMapper;
 
-    public CustomerController(CustomerCommandPort commandPort, 
-                              CustomerQueryPort queryPort, 
-                              CustomerMapper mapper) {
+    public CustomerController(CustomerCommandPort commandPort,
+                              CustomerQueryPort queryPort,
+                              CustomerMapper mapper,
+                              ObjectMapper objectMapper) {
         this.commandPort = commandPort;
         this.queryPort = queryPort;
         this.mapper = mapper;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('customers:read')")
-    public Flux<CustomerDto> findAll(@RequestParam(required = false) Boolean active) {
-        if (active != null) {
-            return queryPort.findByActive(active).map(mapper::toDto);
-        }
-        return queryPort.findAll().map(mapper::toDto);
+    public Mono<ResponseEntity<Flux<CustomerDto>>> findAll(@RequestParam(required = false) Boolean active) {
+        Flux<CustomerDto> flux = (active != null
+            ? queryPort.findByActive(active).map(mapper::toDto)
+            : queryPort.findAll().map(mapper::toDto));
+        return ChecksumUtils.withChecksum(flux, objectMapper);
     }
 
     @GetMapping("/{id}")

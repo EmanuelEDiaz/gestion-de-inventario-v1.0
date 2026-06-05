@@ -1,8 +1,11 @@
 package com.inventory.adapters.web.controller.stock;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.inventory.adapters.web.util.ChecksumUtils;
 import com.inventory.application.stock.dto.StockBalanceDto;
 import com.inventory.application.mapper.StockBalanceMapper;
 import com.inventory.domain.ports.in.stock.StockQueryPort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -19,15 +22,17 @@ public class StockController {
 
     private final StockQueryPort stockQueryPort;
     private final StockBalanceMapper mapper;
+    private final ObjectMapper objectMapper;
 
-    public StockController(StockQueryPort stockQueryPort, StockBalanceMapper mapper) {
+    public StockController(StockQueryPort stockQueryPort, StockBalanceMapper mapper, ObjectMapper objectMapper) {
         this.stockQueryPort = stockQueryPort;
         this.mapper = mapper;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('stock:read')")
-    public Flux<StockBalanceDto> getAllBalances(
+    public Mono<ResponseEntity<Flux<StockBalanceDto>>> getAllBalances(
             @RequestParam(required = false) UUID warehouseId,
             @RequestParam(required = false) UUID productId,
             @RequestParam(required = false) UUID categoryId,
@@ -35,13 +40,14 @@ public class StockController {
             @RequestParam(required = false) Boolean outOfStock,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         StockQueryPort.StockFilter filter = new StockQueryPort.StockFilter(
             warehouseId, productId, categoryId, belowReorderPoint, outOfStock, page, size
         );
-        
-        return stockQueryPort.getAllBalances(filter)
+
+        Flux<StockBalanceDto> flux = stockQueryPort.getAllBalances(filter)
                 .map(mapper::toDto);
+        return ChecksumUtils.withChecksum(flux, objectMapper);
     }
 
     @GetMapping("/warehouse/{warehouseId}")

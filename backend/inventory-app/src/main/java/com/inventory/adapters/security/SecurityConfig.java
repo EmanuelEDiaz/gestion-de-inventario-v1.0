@@ -97,7 +97,9 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         // Cache preflight
         config.setMaxAge(3600L);
-        
+        // Headers de respuesta expuestos al cliente (lectura JS)
+        config.setExposedHeaders(List.of("X-Content-Checksum"));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

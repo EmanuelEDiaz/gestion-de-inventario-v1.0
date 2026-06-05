@@ -1,7 +1,9 @@
 package com.inventory.adapters.web.controller.category;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inventory.adapters.web.dto.category.*;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
+import com.inventory.adapters.web.util.ChecksumUtils;
 import com.inventory.domain.ports.in.category.CategoryCommandPort;
 import com.inventory.domain.ports.in.category.CategoryQueryPort;
 import com.inventory.domain.ports.out.CategoryRepository;
@@ -30,23 +32,27 @@ public class CategoryController {
     private final CategoryCommandPort categoryCommand;
     private final CategoryRepository categoryRepository; // Solo para queries adicionales
     private final CatalogWebMapper mapper;
+    private final ObjectMapper objectMapper;
 
     public CategoryController(
             CategoryQueryPort categoryQuery,
             CategoryCommandPort categoryCommand,
             CategoryRepository categoryRepository,
-            CatalogWebMapper mapper) {
+            CatalogWebMapper mapper,
+            ObjectMapper objectMapper) {
         this.categoryQuery = categoryQuery;
         this.categoryCommand = categoryCommand;
         this.categoryRepository = categoryRepository;
         this.mapper = mapper;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('categories:read')")
-    public Flux<CategoryResponse> getAll(@RequestParam(defaultValue = "false") boolean activeOnly) {
-        return categoryQuery.findAll(activeOnly)
+    public Mono<ResponseEntity<Flux<CategoryResponse>>> getAll(@RequestParam(defaultValue = "false") boolean activeOnly) {
+        Flux<CategoryResponse> flux = categoryQuery.findAll(activeOnly)
             .map(mapper::toResponse);
+        return ChecksumUtils.withChecksum(flux, objectMapper);
     }
 
     @GetMapping("/roots")

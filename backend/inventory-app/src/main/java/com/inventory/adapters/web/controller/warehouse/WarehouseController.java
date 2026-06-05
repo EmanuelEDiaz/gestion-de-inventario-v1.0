@@ -1,7 +1,9 @@
 package com.inventory.adapters.web.controller.warehouse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inventory.adapters.web.dto.warehouse.*;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
+import com.inventory.adapters.web.util.ChecksumUtils;
 import com.inventory.domain.ports.in.warehouse.WarehouseCommandPort;
 import com.inventory.domain.ports.in.warehouse.WarehouseQueryPort;
 import jakarta.validation.Valid;
@@ -25,21 +27,25 @@ public class WarehouseController {
     private final WarehouseQueryPort warehouseQuery;
     private final WarehouseCommandPort warehouseCommand;
     private final CatalogWebMapper mapper;
+    private final ObjectMapper objectMapper;
 
     public WarehouseController(
             WarehouseQueryPort warehouseQuery,
             WarehouseCommandPort warehouseCommand,
-            CatalogWebMapper mapper) {
+            CatalogWebMapper mapper,
+            ObjectMapper objectMapper) {
         this.warehouseQuery = warehouseQuery;
         this.warehouseCommand = warehouseCommand;
         this.mapper = mapper;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'SELLER') || hasAuthority('warehouses:read')")
-    public Flux<WarehouseResponse> getAll(@RequestParam(defaultValue = "false") boolean activeOnly) {
-        return warehouseQuery.findAll(activeOnly)
+    public Mono<ResponseEntity<Flux<WarehouseResponse>>> getAll(@RequestParam(defaultValue = "false") boolean activeOnly) {
+        Flux<WarehouseResponse> flux = warehouseQuery.findAll(activeOnly)
             .map(mapper::toResponse);
+        return ChecksumUtils.withChecksum(flux, objectMapper);
     }
 
     @GetMapping("/{id}")

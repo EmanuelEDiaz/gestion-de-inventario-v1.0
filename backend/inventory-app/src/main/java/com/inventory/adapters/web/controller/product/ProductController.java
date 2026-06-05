@@ -1,7 +1,9 @@
 package com.inventory.adapters.web.controller.product;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inventory.adapters.web.dto.product.*;
 import com.inventory.adapters.web.mapper.CatalogWebMapper;
+import com.inventory.adapters.web.util.ChecksumUtils;
 import com.inventory.domain.model.category.Category;
 import com.inventory.domain.model.product.Product;
 import com.inventory.domain.ports.in.product.ProductCommandPort;
@@ -37,16 +39,19 @@ public class ProductController {
     private final ProductCommandPort productCommand;
     private final CategoryRepository categoryRepository; // Solo para enriquecer respuestas
     private final CatalogWebMapper mapper;
+    private final ObjectMapper objectMapper;
 
     public ProductController(
             ProductQueryPort productQuery,
             ProductCommandPort productCommand,
             CategoryRepository categoryRepository,
-            CatalogWebMapper mapper) {
+            CatalogWebMapper mapper,
+            ObjectMapper objectMapper) {
         this.productQuery = productQuery;
         this.productCommand = productCommand;
         this.categoryRepository = categoryRepository;
         this.mapper = mapper;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -122,26 +127,20 @@ public class ProductController {
         Mono<Long> totalElements = productQuery.countFiltered(filter, activeOnly);
 
         return Mono.zip(items, totalElements)
-            .map(tuple -> new PaginatedProductResponse(
-                tuple.getT1(),
-                tuple.getT2(),
-                (int) Math.ceil((double) tuple.getT2() / effectiveSize),
-                effectiveSize,
-                page
-            ));
+            .map(tuple -> {
+                List<ProductResponse> content = tuple.getT1();
+                long total = tuple.getT2();
+                int totalPages = (int) Math.ceil((double) total / effectiveSize);
+                String checksum = ChecksumUtils.checksumOf(content, objectMapper);
+                return PaginatedProductResponse.of(
+                    content, total, totalPages, effectiveSize, page, checksum
+                );
+            });
     }
 
     record ProductsPageResponse(
         List<ProductResponse> items,
         String nextCursor
-    ) {}
-
-    record PaginatedProductResponse(
-        List<ProductResponse> content,
-        long totalElements,
-        int totalPages,
-        int size,
-        int number
     ) {}
 
     @GetMapping("/search")
