@@ -39,6 +39,16 @@ self.addEventListener("install", () => { /* skipWaiting controlado por la app */
 self.addEventListener("activate", serwist.handleActivate);
 self.addEventListener("fetch", serwist.handleFetch);
 
+async function clearUserCaches(userId: string): Promise<void> {
+  const cacheNames = await caches.keys();
+  const userPrefix = `inventory-offline-${userId}`;
+  await Promise.all(
+    cacheNames
+      .filter((name) => name.startsWith(userPrefix))
+      .map((name) => caches.delete(name)),
+  );
+}
+
 self.addEventListener("message", async (event: ExtendableMessageEvent) => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
@@ -46,7 +56,11 @@ self.addEventListener("message", async (event: ExtendableMessageEvent) => {
   }
 
   if (event.data?.type === "SET_USER_CONTEXT") {
+    const prevUserId = currentUserId;
     currentUserId = event.data.payload.userId;
+    if (currentUserId && currentUserId !== prevUserId) {
+      await clearUserCaches(currentUserId);
+    }
     return;
   }
 

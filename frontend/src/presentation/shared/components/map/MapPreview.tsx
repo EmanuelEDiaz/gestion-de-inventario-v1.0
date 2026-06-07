@@ -32,7 +32,6 @@ export function MapPreview(props: MapPreviewProps) {
           initialZoom={props.zoom ?? 10}
           markers={props.marker ? [{ id: 'preview', lat: props.marker.lat, lng: props.marker.lng, label: props.marker.label }] : undefined}
           height="100%"
-          showSearch={false}
           showLocate={false}
           showZoomControls={false}
         />
@@ -60,7 +59,6 @@ export function MapPreview(props: MapPreviewProps) {
             initialZoom={props.zoom ?? 10}
             markers={props.marker ? [{ id: 'preview', lat: props.marker.lat, lng: props.marker.lng, label: props.marker.label }] : undefined}
             height="100%"
-            showSearch
             showLocate
             showZoomControls
           />

@@ -8,7 +8,7 @@ import { openPMTilesFromOPFS } from '@/infrastructure/maps/protocols/OPFSTileSou
 import { getCubaMapStyle } from '@/infrastructure/maps/styles/cuba-map-style';
 import { getMapMeta } from '@/infrastructure/maps/opfs-utils';
 import { MapStatusOverlay } from './MapStatusOverlay';
-import { Crosshair, Search, ZoomIn, ZoomOut, Share2 } from 'lucide-react';
+import { Crosshair, ZoomIn, ZoomOut, Share2 } from 'lucide-react';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 
@@ -21,7 +21,6 @@ interface MapViewerProps {
   markers?: Array<{ id: string; lat: number; lng: number; label?: string; color?: string }>;
   onLocationSelect?: (coords: { lat: number; lng: number }) => void;
   height?: string;
-  showSearch?: boolean;
   showLocate?: boolean;
   showZoomControls?: boolean;
   onError?: () => void;
@@ -34,7 +33,6 @@ export function MapViewer({
   markers,
   onLocationSelect,
   height = 'h-96',
-  showSearch = true,
   showLocate = true,
   showZoomControls = true,
   onError,
@@ -104,6 +102,7 @@ export function MapViewer({
       map?.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLocate = useCallback(() => {

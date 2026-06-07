@@ -382,3 +382,121 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 **Lección**: La subfase C.6 (CacheProgressBar) y C.8 (background refresh) tenían implementaciones parciales que pasaron desapercibidas porque el componente CacheProgressBar no crasheaba visiblemente (solo UX sub-óptimo) y `pullCatalogsIfStale` funcionalmente refrescaba aunque fuera solo 3 stores. Esto refuerza la necesidad de la "auditoría pre-commit" de FIX-011 aplicada también a docs contra código real.
 
 ---
+
+## FIX-016 — as any en OPFSTileSource.ts
+
+**Fase de origen**: E (E.4 — OPFSTileSource protocolo OPFS)
+
+**Detectado en**: Auditoría Phase E post-commit (2026-06-05)
+
+**Síntoma**: `const source = { ... }; cachedTiles = new PMTiles(source as any);` — `as any` viola la regla "sin `any` sin justificación explícita" (task_plan.md línea 153).
+
+**Causa raíz**: El tipo `Source` de pmtiles no se importaba desde la librería. Se asumió que el objeto inline no cumplía la interfaz esperada.
+
+**Resolución**: Importar `type Source` desde `pmtiles` y tipar `source: Source`. Eliminar `as any`.
+
+**Archivos**: `frontend/src/infrastructure/maps/protocols/OPFSTileSource.ts`
+
+---
+
+## FIX-017 — MapViewer.tsx: unused import/prop + useEffect deps
+
+**Fase de origen**: E (E.6.2 — MapViewer interactivo)
+
+**Detectado en**: Auditoría Phase E post-commit (2026-06-05)
+
+**Síntomas**:
+1. `Search` importado de `lucide-react` pero nunca usado
+2. Prop `showSearch` definida en interfaz y destructured pero nunca usada en render
+3. `useEffect` sin `initialCenter`, `initialZoom`, `markers`, `mode`, `onError`, `onLocationSelect` en array de dependencias
+
+**Causa raíz**: Búsqueda offline planeada (useGeoSearch) no se integró en MapViewer. Props y useEffect no se actualizaron para reflejar que la búsqueda se delega al padre.
+
+**Resolución**:
+1. Eliminar `Search` del import
+2. Eliminar `showSearch` de interface y destructuring (showLocate/showZoomControls se mantienen)
+3. Añadir `// eslint-disable-next-line react-hooks/exhaustive-deps` al useEffect — el efecto debe ejecutarse solo una vez (mount) porque inicializa el mapa MapLibre. Agregar las props al array causaría re-inicialización completa del mapa en cada cambio.
+
+**Archivos**: `frontend/src/presentation/shared/components/map/MapViewer.tsx`
+
+---
+
+## FIX-018 — StoragePanel.tsx: useState usado como ref
+
+**Fase de origen**: E (E.13 — StoragePanel descarga mapa)
+
+**Detectado en**: Auditoría Phase E post-commit (2026-06-05)
+
+**Síntoma**: `const abortRef = useState<AbortController | null>(null)` seguido de `abortRef[1](abortController)`. El patrón correcto para mantener una referencia mutable que no cause re-renders es `useRef`.
+
+**Causa raíz**: Confusión entre `useState` (para estado que gatilla re-render) y `useRef` (para valores mutables sin re-render). El `AbortController` no necesita re-render al cambiar.
+
+**Resolución**: Cambiar a `const abortRef = useRef<AbortController | null>(null)`. Actualizar accesos de `abortRef[1]` → `abortRef.current =` y `abortRef[0]` → `abortRef.current`.
+
+**Archivos**: `frontend/src/presentation/shared/components/storage/StoragePanel.tsx`
+
+---
+
+## FIX-019 — sw.ts: currentUserId sin uso para namespacing de caches
+
+**Fase de origen**: E (A.10 — SW communication channel)
+
+**Detectado en**: Auditoría Phase E post-commit (2026-06-05)
+
+**Síntoma**: `currentUserId` se asigna vía mensaje `SET_USER_CONTEXT` pero nunca se usa para namespaces de caches SW. El plan requiere "Namespace de cache SW por userId para evitar contaminación entre sesiones".
+
+**Causa raíz**: La implementación del handler recibe el userId pero no lo aplica a limpieza de caches ni namespacing.
+
+**Resolución**: Agregar función `clearUserCaches(userId)` que elimina caches con prefijo `inventory-offline-${userId}`. Invocar en `SET_USER_CONTEXT` cuando userId cambia. Dejar namespacing de futuras caches dinámicas para Fase I (MaintenanceService).
+
+**Archivos**: `frontend/src/app/sw.ts`
+
+---
+
+## FIX-020 — application.yml: maps.location sin trailing slash
+
+**Fase de origen**: E (E.1 — configuración servidor PMTiles)
+
+**Detectado en**: Auditoría Phase E post-commit (2026-06-05)
+
+**Síntoma**: `app.maps.location: ${INVENTORY_MAPS_LOCATION:./maps}` — sin trailing slash. `MapController.java` concatena `mapsDir + filename` → produce `./mapscuba.pmtiles` (path inválido) cuando la variable de entorno no está definida y se usa el default del YAML.
+
+**Causa raíz**: El default en el YAML omitió el `/` final. El código Java tiene `"./maps/"` como default en `env.getProperty`, pero el YAML sobreescribe el valor antes de que llegue al código, inyectando `./maps` sin slash.
+
+**Resolución**: Cambiar default YAML a `./maps/`.
+
+**Archivos**: `backend/inventory-app/src/main/resources/application.yml`
+
+---
+
+## FIX-021 — MapController.java: path traversal en serveMap
+
+**Fase de origen**: E (E.1 — MapController endpoint)
+
+**Detectado en**: Auditoría Phase E post-commit (2026-06-05)
+
+**Síntoma**: `@PathVariable String filename` se concatena directamente a `mapsDir + filename`. Sin validación, `../` permite leer archivos fuera del directorio de mapas (ej: `../../etc/passwd`).
+
+**Causa raíz**: Falta de sanitización de input en endpoint público (`.permitAll()` en SecurityConfig). El plan no especificaba validación de path traversal.
+
+**Resolución**: Validar que `filename` no contenga `..`, `/` ni `\\`. Rechazar con `400 Bad Request` si contiene alguno.
+
+**Archivos**: `backend/inventory-app/src/main/java/com/inventory/adapters/web/controller/maps/MapController.java`
+
+---
+
+## FIX-022 — docs_dev/adr-map-migration.md faltante
+
+**Fase de origen**: E (File Summary E — ADR Leaflet→MapLibre)
+
+**Detectado en**: Auditoría Phase E post-commit (2026-06-05)
+
+**Síntoma**: El plan lista `docs_dev/adr-map-migration.md` en el File Summary E como archivo a crear. No existe en el working tree ni en el último commit. El ADR con criterio de retiro de Leaflet nunca se documentó.
+
+**Causa raíz**: Omisión durante implementación de Phase E. El archivo no se incluyó en el commit de cierre.
+
+**Resolución**: Crear `docs_dev/adr-map-migration.md` con criterio de retiro y justificación de la migración.
+
+**Archivos**: `docs_dev/adr-map-migration.md` (nuevo)
+
+---

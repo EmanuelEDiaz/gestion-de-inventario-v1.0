@@ -55,7 +55,7 @@ app:
 
   # Map tiles (PMTiles)
   maps:
-    location: ${INVENTORY_MAPS_LOCATION:./maps}
+    location: ${INVENTORY_MAPS_LOCATION:./maps/}
 
   # Media storage (imágenes)
   media:

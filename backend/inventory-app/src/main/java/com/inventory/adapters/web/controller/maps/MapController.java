@@ -24,6 +24,9 @@ public class MapController {
     @GetMapping("/{filename:.+}")
     public Mono<ResponseEntity<Resource>> serveMap(
             @PathVariable String filename) {
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            return Mono.just(ResponseEntity.badRequest().build());
+        }
         String mapsDir = env.getProperty("app.maps.location", "./maps/");
         Resource resource = new FileSystemResource(mapsDir + filename);
         if (!resource.exists()) return Mono.just(ResponseEntity.notFound().build());

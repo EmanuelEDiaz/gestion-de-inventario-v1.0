@@ -1,3 +1,4 @@
+import type { Source } from 'pmtiles';
 import maplibregl from 'maplibre-gl';
 import { PMTiles } from 'pmtiles';
 
@@ -9,14 +10,14 @@ export async function openPMTilesFromOPFS(filename: string): Promise<boolean> {
     const root = await navigator.storage.getDirectory();
     const handle = await root.getFileHandle(filename, { create: false });
     const file = await handle.getFile();
-    const source = {
+    const source: Source = {
       getBytes: async (offset: number, length: number) => {
         const blob = file.slice(offset, offset + length);
         return { data: await blob.arrayBuffer() };
       },
       getKey: () => `opfs-${filename}`,
     };
-    cachedTiles = new PMTiles(source as any);
+    cachedTiles = new PMTiles(source);
     if (!protocolRegistered) {
       registerOPFSProtocol();
       protocolRegistered = true;

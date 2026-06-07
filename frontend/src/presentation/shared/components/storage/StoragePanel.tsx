@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MapIcon, Download, Trash2, HardDrive, X, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
@@ -17,7 +17,7 @@ export function StoragePanel() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
-  const abortRef = useState<AbortController | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const refreshMeta = useCallback(async () => {
     const meta = await getMapMeta();
@@ -30,7 +30,7 @@ export function StoragePanel() {
 
   const handleDownload = useCallback(async () => {
     const abortController = new AbortController();
-    abortRef[1](abortController);
+    abortRef.current = abortController;
     setIsDownloading(true);
     setProgress(0);
     setStatusMessage('Descargando mapa...');
@@ -119,8 +119,8 @@ export function StoragePanel() {
   }, [refreshMeta, abortRef]);
 
   const handleCancel = useCallback(async () => {
-    abortRef[0]?.abort();
-  }, [abortRef]);
+    abortRef.current?.abort();
+  }, []);
 
   const handleDelete = useCallback(async () => {
     const root = await navigator.storage.getDirectory();
