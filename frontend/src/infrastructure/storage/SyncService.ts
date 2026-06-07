@@ -23,7 +23,7 @@ export interface SyncLogEntry {
   entityType: string;
   entityId: string;
   action: string;
-  afterData?: any;
+  afterData?: unknown;
   occurredAt: string;
 }
 
@@ -31,14 +31,6 @@ export interface SyncPullResponse {
   nextCursor: number;
   hasMore: boolean;
   entries: SyncLogEntry[];
-}
-
-interface SyncPushOperation {
-  operationId: string;
-  entityType: string;
-  entityId: string;
-  action: string;
-  payload: unknown;
 }
 
 interface SyncPushResponseEntry {
@@ -57,6 +49,39 @@ interface TempIdMapping {
   tempId: string;
   realId: string;
   entityType: string;
+}
+
+interface ServerConflictResult {
+  accepted?: boolean;
+  entityId?: string;
+  error?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  serverPayload?: unknown;
+  serverVersion?: number;
+}
+
+type CachedEntityRecord = { id: string; [key: string]: unknown };
+type GenericIDBStore = {
+  get(key: string): Promise<CachedEntityRecord | undefined>;
+  delete(key: string): Promise<void>;
+  put(value: CachedEntityRecord): Promise<void>;
+  add(value: IncidentRecord): Promise<unknown>;
+};
+
+interface IncidentRecord {
+  id: string;
+  entityType: string;
+  entityId: string;
+  operationId: string;
+  myPayload: unknown;
+  serverPayload: unknown;
+  errorCode: string;
+  error: string;
+  clientVersion?: number;
+  serverVersion?: number;
+  occurredAt: string;
+  resolved: boolean;
 }
 
 const MAX_BATCH_SIZE = 50;
@@ -116,12 +141,23 @@ function mergeOutboxGroup(group: OutboxEntry[]): OutboxEntry[] {
   return [last];
 }
 
-async function updateTempIdMappings(mappings: TempIdMapping[]): Promise<void> {
+async function getEntityStore(storeName: string, mode: 'readwrite' | 'readonly' = 'readwrite'): Promise<{
+  tx: { done: Promise<void>; objectStore: (name: string) => GenericIDBStore };
+  store: GenericIDBStore;
+}> {
   const db = await getDB();
+  const tx = db.transaction(storeName as 'products', mode) as unknown as {
+    done: Promise<void>;
+    objectStore: (name: string) => GenericIDBStore;
+  };
+  const store = tx.objectStore(storeName) as unknown as GenericIDBStore;
+  return { tx, store };
+}
+
+async function updateTempIdMappings(mappings: TempIdMapping[]): Promise<void> {
   for (const m of mappings) {
     const storeName = m.entityType.toLowerCase();
-    const tx = db.transaction(storeName as any, 'readwrite');
-    const store = tx.objectStore(storeName as any) as any;
+    const { tx, store } = await getEntityStore(storeName, 'readwrite');
     const cached = await store.get(m.tempId);
     if (cached) {
       await store.delete(m.tempId);
@@ -136,7 +172,7 @@ export async function pushOutbox(): Promise<PushResult> {
 
   if (getNetworkMode() === 'offline') return result;
 
-  let all = await getPendingOutbox() as any[];
+  let all = await getPendingOutbox();
   const now = Date.now();
 
   for (const entry of all) {
@@ -150,9 +186,9 @@ export async function pushOutbox(): Promise<PushResult> {
     }
   }
 
-  all = await getPendingOutbox() as any[];
+  all = await getPendingOutbox();
   const collapsed = collapseOutboxEntries(all);
-  const eligible = collapsed.filter((e: any) => !e.skip && (!e.nextRetryAt || e.nextRetryAt <= now));
+  const eligible = collapsed.filter((e) => !e.skip && (!e.nextRetryAt || e.nextRetryAt <= now));
 
   result.total = collapsed.length;
 
@@ -176,7 +212,7 @@ export async function pushOutbox(): Promise<PushResult> {
 
       const mappings: TempIdMapping[] = [];
       for (const entry of response.data.results) {
-        const match = batch.find((e: any) => e.operationId === entry.operationId);
+        const match = batch.find((e) => e.operationId === entry.operationId);
         if (!match) continue;
 
         if (entry.accepted) {
@@ -239,10 +275,8 @@ export async function pushOutbox(): Promise<PushResult> {
 export async function pullCatalogsIfStale(): Promise<void> {
   if (getNetworkMode() === 'offline') return;
 
-  const lastSync = await getSyncMeta('catalog_last_sync') as number | undefined;
+  const lastSync = (await getSyncMeta('catalog_last_sync')) as number | undefined;
   if (lastSync && Date.now() - lastSync < CATALOG_TTL) return;
-
-  const db = await getDB();
 
   for (const store of CATALOG_STORES) {
     try {
@@ -266,8 +300,6 @@ export async function pullDeltaSync(): Promise<Map<string, PullResult>> {
   const results = new Map<string, PullResult>();
 
   if (getNetworkMode() === 'offline') return results;
-
-  const db = await getDB();
 
   const processStore = async (store: string): Promise<void> => {
     let cursor = await getStoreCursor(store);
@@ -307,17 +339,13 @@ export async function pullDeltaSync(): Promise<Map<string, PullResult>> {
 }
 
 export async function applyPullEntriesForStore(store: string, entries: SyncLogEntry[]): Promise<void> {
-  const db = await getDB();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tx = db.transaction(store as any, 'readwrite');
+  const { tx, store: objectStore } = await getEntityStore(store, 'readwrite');
 
   for (const entry of entries) {
     if (entry.action === 'DELETE') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (tx as any).objectStore(store).delete(entry.entityId);
+      await objectStore.delete(entry.entityId);
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (tx as any).objectStore(store).put({ ...entry.afterData, cachedAt: Date.now() });
+      await objectStore.put({ ...(entry.afterData as CachedEntityRecord), cachedAt: Date.now() });
     }
   }
 
@@ -325,14 +353,14 @@ export async function applyPullEntriesForStore(store: string, entries: SyncLogEn
 }
 
 async function updateTempIdMapping(entityType: string, tempId: string, realId: string): Promise<void> {
-  const db = await getDB();
   const storeName = entityType.toLowerCase();
   try {
-    const existing = await (db as any).get(storeName, tempId);
+    const db = await getDB();
+    const existing = await (db as unknown as { get: (store: string, key: string) => Promise<CachedEntityRecord | undefined> }).get(storeName, tempId);
     if (existing) {
-      const tx = (db as any).transaction(storeName, 'readwrite');
-      await tx.objectStore(storeName).delete(tempId);
-      await tx.objectStore(storeName).put({ ...existing, id: realId });
+      const { tx, store } = await getEntityStore(storeName, 'readwrite');
+      await store.delete(tempId);
+      await store.put({ ...existing, id: realId });
       await tx.done;
     }
   } catch {
@@ -340,28 +368,43 @@ async function updateTempIdMapping(entityType: string, tempId: string, realId: s
   }
 }
 
-async function createIncident(entry: OutboxEntry, serverResult: any): Promise<void> {
-  const db = await getDB();
-  const incident = {
-    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+function getPayloadVersion(payload: unknown): number | undefined {
+  if (typeof payload !== 'object' || payload === null) return undefined;
+  const version = (payload as { version?: unknown }).version;
+  return typeof version === 'number' ? version : undefined;
+}
+
+function generateIncidentId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+async function createIncident(entry: OutboxEntry, serverResult: ServerConflictResult | undefined): Promise<void> {
+  const incident: IncidentRecord = {
+    id: generateIncidentId(),
     entityType: entry.entityType,
     entityId: entry.entityId,
     operationId: entry.operationId,
     myPayload: entry.payload,
-    serverPayload: serverResult?.serverPayload || null,
-    errorCode: serverResult?.errorCode || 'UNKNOWN',
-    error: serverResult?.error || serverResult?.errorMessage || 'Error desconocido al sincronizar',
-    clientVersion: (entry.payload as any)?.version,
+    serverPayload: serverResult?.serverPayload ?? null,
+    errorCode: serverResult?.errorCode ?? 'UNKNOWN',
+    error: serverResult?.error ?? serverResult?.errorMessage ?? 'Error desconocido al sincronizar',
+    clientVersion: getPayloadVersion(entry.payload),
     serverVersion: serverResult?.serverVersion,
     occurredAt: new Date().toISOString(),
     resolved: false,
   };
   try {
-    await db.add('incidents' as any, incident as any);
+    const db = await getDB();
+    await (db as unknown as { add: (store: string, value: IncidentRecord) => Promise<unknown> }).add('incidents', incident);
   } catch {
     const { appLogger } = await import('@/infrastructure/logging/appLogger');
     appLogger.warn('Could not create incident store entry', { entityType: entry.entityType });
   }
+}
+
+interface LockResult {
+  skipped: boolean;
 }
 
 export async function processOutbox(): Promise<PushResult> {
@@ -370,11 +413,17 @@ export async function processOutbox(): Promise<PushResult> {
   if (getNetworkMode() === 'offline') return result;
 
   const hasLocks = typeof navigator !== 'undefined' && 'locks' in navigator;
-  const lockFn = hasLocks
-    ? <T>(name: string, fn: (lock?: any) => Promise<T>) => (navigator.locks as any).request(name, { ifAvailable: true }, fn)
-    : <T>(_name: string, fn: (lock?: any) => Promise<T>) => fn({} as any);
+  type LockRequester = (name: string, fn: (lock: Lock | null) => Promise<LockResult>) => Promise<LockResult>;
+  const requestLock: LockRequester = hasLocks
+    ? async (name, fn) => {
+        const lockManager = navigator.locks as unknown as {
+          request: <T>(n: string, options: { ifAvailable: boolean }, cb: (lock: Lock | null) => Promise<T>) => Promise<T>;
+        };
+        return lockManager.request<LockResult>(name, { ifAvailable: true }, fn);
+      }
+    : (_name, fn) => fn(null);
 
-  const output = await lockFn('outbox-process-lock', async (lock: any) => {
+  const output = await requestLock('outbox-process-lock', async (lock) => {
     if (!lock) {
       const { appLogger } = await import('@/infrastructure/logging/appLogger');
       appLogger.info('[Sync] Outbox lock acquired by another tab — skipping');
@@ -393,7 +442,7 @@ export async function processOutbox(): Promise<PushResult> {
 
       try {
         entry.status = 'syncing';
-        await db.put('outbox', entry as any);
+        await db.put('outbox', entry);
 
         const pushResult = await apiClient.post('/api/v1/sync/push', {
           operations: [{
@@ -405,11 +454,13 @@ export async function processOutbox(): Promise<PushResult> {
           }],
         });
 
-        const entryResult = Array.isArray(pushResult.data?.results) ? pushResult.data.results[0] : pushResult.data;
+        const entryResult: ServerConflictResult | undefined = Array.isArray(pushResult.data?.results)
+          ? pushResult.data.results[0]
+          : pushResult.data;
 
         if (entryResult?.accepted) {
           entry.status = 'accepted';
-          await db.put('outbox', entry as any);
+          await db.put('outbox', entry);
           if (entryResult.entityId && entry.entityId !== entryResult.entityId) {
             await updateTempIdMapping(entry.entityType, entry.entityId, entryResult.entityId);
           }
@@ -417,7 +468,7 @@ export async function processOutbox(): Promise<PushResult> {
         } else {
           await createIncident(entry, entryResult);
           entry.status = 'rejected';
-          await db.put('outbox', entry as any);
+          await db.put('outbox', entry);
           result.failed++;
           if (entryResult?.errorCode === 'OPTIMISTIC_LOCK') {
             result.conflicts++;
@@ -430,12 +481,12 @@ export async function processOutbox(): Promise<PushResult> {
         if (entry.retryCount >= 3) {
           entry.status = 'rejected';
           const { moveToDeadLetter } = await import('./outbox');
-          await moveToDeadLetter(entry as any);
+          await moveToDeadLetter(entry);
         } else {
           entry.status = 'pending';
           entry.nextRetryAt = Date.now() + Math.min(30000 * Math.pow(2, entry.retryCount), 120000);
         }
-        await db.put('outbox', entry as any);
+        await db.put('outbox', entry);
         result.failed++;
         result.incidents.push(`${entry.operationId} error: ${err}`);
       }

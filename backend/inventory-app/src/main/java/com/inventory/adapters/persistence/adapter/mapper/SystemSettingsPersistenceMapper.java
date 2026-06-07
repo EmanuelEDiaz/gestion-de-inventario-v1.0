@@ -1,7 +1,7 @@
 package com.inventory.adapters.persistence.adapter.mapper;
 
 import com.inventory.adapters.persistence.adapter.entity.SystemSettingEntity;
-import com.inventory.adapters.web.dto.settings.SystemSettingResponse;
+import com.inventory.application.dto.settings.SystemSettingResponse;
 import org.springframework.stereotype.Component;
 
 @Component

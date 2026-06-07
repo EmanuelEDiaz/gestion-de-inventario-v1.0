@@ -5,6 +5,10 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
  * Maneja tokens JWT automáticamente con soporte cross-tab y race condition.
  */
 
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // Variables para cola de refresh
@@ -125,12 +129,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as RetryableRequestConfig | undefined;
 
     if (
       error.response?.status !== 401 ||
       !originalRequest ||
-      (originalRequest as any)._retry ||
+      originalRequest._retry ||
       originalRequest.url?.includes('/auth/refresh') ||
       originalRequest.url?.includes('/auth/login')
     ) {
@@ -148,7 +152,7 @@ apiClient.interceptors.response.use(
       });
     }
 
-    (originalRequest as any)._retry = true;
+    originalRequest._retry = true;
     isRefreshing = true;
 
     try {
@@ -156,10 +160,10 @@ apiClient.interceptors.response.use(
       let accessToken: string;
 
       if (hasLocks) {
-        const result = await (navigator.locks as any).request(
+        const result = await navigator.locks.request(
           'token-refresh-lock',
           { ifAvailable: true },
-          async (lock: any) => {
+          async (lock): Promise<RefreshTokensResult | null> => {
             if (!lock) {
               await waitForTokenRefresh(5000);
               return { accessToken: localStorage.getItem('access_token') || '' };
@@ -167,7 +171,7 @@ apiClient.interceptors.response.use(
             return refreshTokens();
           }
         );
-        accessToken = result.accessToken;
+        accessToken = result?.accessToken ?? localStorage.getItem('access_token') ?? '';
       } else {
         const result = await refreshTokens();
         accessToken = result.accessToken;

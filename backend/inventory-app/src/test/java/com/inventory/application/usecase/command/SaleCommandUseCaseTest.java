@@ -72,6 +72,7 @@ class SaleCommandUseCaseTest {
         when(saleRepository.generateSaleNumber()).thenReturn(Mono.just("VEN-001"));
         when(saleRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
         when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        lenient().when(syncLogWriter.log(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
         when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
         StepVerifier.create(useCase.create(command, userId))
@@ -244,6 +245,7 @@ class SaleCommandUseCaseTest {
 
         when(saleRepository.findById(draft.id())).thenReturn(Mono.just(draft));
         when(saleRepository.deleteById(draft.id())).thenReturn(Mono.empty());
+        lenient().when(syncLogWriter.log(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.delete(draft.id()))
             .verifyComplete();

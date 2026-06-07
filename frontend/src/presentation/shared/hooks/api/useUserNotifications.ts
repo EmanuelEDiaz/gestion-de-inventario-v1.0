@@ -10,8 +10,7 @@ import { INotification } from '@/core/notification/entities/notification';
 
 export const USER_NOTIFICATIONS_PAGE_SIZE = 20;
 
-export interface UseUserNotificationsOptions
-  extends UseNotificationListOptions {}
+export type UseUserNotificationsOptions = UseNotificationListOptions;
 
 export type UseUserNotificationsReturn = UseNotificationListReturn;
 

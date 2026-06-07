@@ -1,6 +1,6 @@
 package com.inventory.application.service;
 
-import com.inventory.adapters.web.dto.settings.SystemSettingResponse;
+import com.inventory.application.dto.settings.SystemSettingResponse;
 import com.inventory.domain.ports.out.SystemSettingsRepository;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;

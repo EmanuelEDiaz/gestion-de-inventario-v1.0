@@ -135,8 +135,8 @@ export function FieldDiffTable({ serverPayload, clientPayload, errorCode, errorM
                   <div className="flex gap-1">
                     <button
                       onClick={() => {
-                        const merged = { ...clientPayload };
-                        (merged as any)[row.field] = JSON.parse(row.clientValue);
+                        const merged: Record<string, unknown> = { ...clientPayload };
+                        merged[row.field] = JSON.parse(row.clientValue);
                         onResolve({ action: 'merge', mergedPayload: merged });
                       }}
                       className="min-h-11 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
@@ -146,8 +146,8 @@ export function FieldDiffTable({ serverPayload, clientPayload, errorCode, errorM
                     </button>
                     <button
                       onClick={() => {
-                        const merged = { ...clientPayload };
-                        (merged as any)[row.field] = JSON.parse(row.serverValue);
+                        const merged: Record<string, unknown> = { ...clientPayload };
+                        merged[row.field] = JSON.parse(row.serverValue);
                         onResolve({ action: 'merge', mergedPayload: merged });
                       }}
                       className="min-h-11 px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"

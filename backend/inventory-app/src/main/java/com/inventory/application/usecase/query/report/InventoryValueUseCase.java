@@ -1,6 +1,6 @@
 package com.inventory.application.usecase.query.report;
 
-import com.inventory.adapters.web.dto.report.InventoryValueResponse;
+import com.inventory.application.dto.report.InventoryValueResponse;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

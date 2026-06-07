@@ -1,12 +1,12 @@
 package com.inventory.adapters.web.controller.report;
 
-import com.inventory.adapters.web.dto.report.InventoryReportResponse;
-import com.inventory.adapters.web.dto.report.InventoryValueResponse;
-import com.inventory.adapters.web.dto.report.ProfitSummaryResponse;
-import com.inventory.adapters.web.dto.report.SalesReportResponse;
-import com.inventory.adapters.web.dto.report.SalesTimelinePoint;
-import com.inventory.adapters.web.dto.report.TopCustomerEntry;
-import com.inventory.adapters.web.dto.report.TopProductEntry;
+import com.inventory.application.dto.report.InventoryReportResponse;
+import com.inventory.application.dto.report.InventoryValueResponse;
+import com.inventory.application.dto.report.ProfitSummaryResponse;
+import com.inventory.application.dto.report.SalesReportResponse;
+import com.inventory.application.dto.report.SalesTimelinePoint;
+import com.inventory.application.dto.report.TopCustomerEntry;
+import com.inventory.application.dto.report.TopProductEntry;
 import com.inventory.application.usecase.query.report.InventoryReportUseCase;
 import com.inventory.application.usecase.query.report.InventoryValueUseCase;
 import com.inventory.application.usecase.query.report.ProfitSummaryUseCase;

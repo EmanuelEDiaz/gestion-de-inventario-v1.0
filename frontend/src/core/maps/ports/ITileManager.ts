@@ -1,6 +1,7 @@
 export interface TileSetInfo {
   countryCode: string;
   tilesUrl: string;
+  geoIndexUrl?: string;
   sizeBytes: number;
   downloadedAt: number;
   zoomMax: number;

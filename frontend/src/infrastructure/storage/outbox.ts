@@ -131,12 +131,9 @@ export async function moveToDeadLetter(entry: OutboxEntry): Promise<void> {
     rejectedAt: Date.now(),
     userNotified: false,
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tx = db.transaction(['deadLetter', 'outbox'] as any, 'readwrite');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const deadStore = tx.objectStore('deadLetter' as any) as any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const outboxStore = tx.objectStore('outbox' as any) as any;
+  const tx = db.transaction(['deadLetter', 'outbox'], 'readwrite');
+  const deadStore = tx.objectStore('deadLetter');
+  const outboxStore = tx.objectStore('outbox');
   await deadStore.add(deadEntry);
   if (entry.id !== undefined) {
     await outboxStore.delete(entry.id);
@@ -162,12 +159,9 @@ export async function retryDeadLetter(operationId: string): Promise<void> {
     expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
     createdAt: Date.now(),
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tx = db.transaction(['outbox', 'deadLetter'] as any, 'readwrite');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const outboxStore = tx.objectStore('outbox' as any) as any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const deadStore = tx.objectStore('deadLetter' as any) as any;
+  const tx = db.transaction(['outbox', 'deadLetter'], 'readwrite');
+  const outboxStore = tx.objectStore('outbox');
+  const deadStore = tx.objectStore('deadLetter');
   await outboxStore.add(outboxEntry);
   await deadStore.delete(operationId);
   await tx.done;
@@ -210,13 +204,26 @@ export async function updateLocalEntityStatus(
   const db = await getDB();
   const storeName = entityType.toLowerCase();
   try {
-    const entry = await (db as any).get(storeName, entityId);
+    const entry = await getLocalEntity(storeName, entityId);
     if (entry) {
       entry.status = status;
-      await (db as any).put(storeName, entry);
+      await putLocalEntity(storeName, entry);
     }
   } catch (error) {
     const { appLogger } = await import('@/infrastructure/logging/appLogger');
     appLogger.warn('Failed to update local entity status', { entityType, entityId, status, error });
   }
+}
+
+type LocalEntityRecord = { id: string; status?: string; [key: string]: unknown };
+
+async function getLocalEntity(storeName: string, entityId: string): Promise<LocalEntityRecord | undefined> {
+  const db = await getDB();
+  const record = await db.get(storeName as 'products', entityId);
+  return record as LocalEntityRecord | undefined;
+}
+
+async function putLocalEntity(storeName: string, entry: LocalEntityRecord): Promise<void> {
+  const db = await getDB();
+  await db.put(storeName as 'products', entry as never);
 }

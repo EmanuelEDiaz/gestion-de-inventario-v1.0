@@ -1,6 +1,6 @@
 package com.inventory.adapters.web.controller.settings;
 
-import com.inventory.adapters.web.dto.settings.SystemSettingResponse;
+import com.inventory.application.dto.settings.SystemSettingResponse;
 import com.inventory.application.service.SettingsValidator;
 import com.inventory.application.service.SystemSettingsService;
 import com.inventory.adapters.web.shared.AuditSerializerImpl;

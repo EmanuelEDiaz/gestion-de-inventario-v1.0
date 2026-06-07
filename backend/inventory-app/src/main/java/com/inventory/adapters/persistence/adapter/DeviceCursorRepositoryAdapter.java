@@ -1,7 +1,9 @@
 package com.inventory.adapters.persistence.adapter;
 
+import com.inventory.adapters.persistence.adapter.mapper.DeviceCursorPersistenceMapper;
 import com.inventory.adapters.persistence.entity.DeviceCursorEntity;
 import com.inventory.adapters.persistence.repository.SpringDataDeviceCursorRepository;
+import com.inventory.domain.model.sync.DeviceCursor;
 import com.inventory.domain.ports.out.DeviceCursorRepository;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -13,9 +15,12 @@ import java.util.UUID;
 @Component
 public class DeviceCursorRepositoryAdapter implements DeviceCursorRepository {
     private final SpringDataDeviceCursorRepository springRepo;
+    private final DeviceCursorPersistenceMapper mapper;
 
-    public DeviceCursorRepositoryAdapter(SpringDataDeviceCursorRepository springRepo) {
+    public DeviceCursorRepositoryAdapter(SpringDataDeviceCursorRepository springRepo,
+                                         DeviceCursorPersistenceMapper mapper) {
         this.springRepo = springRepo;
+        this.mapper = mapper;
     }
 
     /**
@@ -45,13 +50,13 @@ public class DeviceCursorRepositoryAdapter implements DeviceCursorRepository {
     }
 
     @Override
-    public Mono<DeviceCursorEntity> findByDeviceId(UUID deviceId) {
-        return springRepo.findById(deviceId);
+    public Mono<DeviceCursor> findByDeviceId(UUID deviceId) {
+        return springRepo.findById(deviceId).map(mapper::toDomain);
     }
 
     @Override
-    public Mono<Void> save(DeviceCursorEntity entity) {
-        return springRepo.save(entity).then();
+    public Mono<Void> save(DeviceCursor cursor) {
+        return springRepo.save(mapper.toEntity(cursor)).then();
     }
 
     @Override

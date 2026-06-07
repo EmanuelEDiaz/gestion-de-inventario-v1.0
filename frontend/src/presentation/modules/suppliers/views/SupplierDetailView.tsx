@@ -48,9 +48,8 @@ export function SupplierDetailView({ supplierId, onBack }: SupplierDetailViewPro
 
       <div className="flex gap-0 border-b overflow-x-auto">
         {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
-            <TooltipWrapper content={`Ver ${TAB_LABELS[t]}`} side="top">
+            <TooltipWrapper key={t} content={`Ver ${TAB_LABELS[t]}`} side="top">
               <button
-              key={t}
               onClick={() => setTab(t)}
               title={`Ver ${TAB_LABELS[t]}`}
               className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${

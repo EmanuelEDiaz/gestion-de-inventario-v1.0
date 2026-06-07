@@ -1,13 +1,17 @@
 import type { ITileManager, TileSetInfo } from '@/core/maps/ports/ITileManager';
 import { getDB, setSyncMeta } from '@/infrastructure/storage/db';
 
+type SyncMetaRecord = { key: string; value: unknown };
+
 export class CubaTileManager implements ITileManager {
   async getInstalledTileSets(): Promise<TileSetInfo[]> {
     const db = await getDB();
-    const meta = await (db as any).getAll('syncMeta');
+    const meta = await db.getAll('syncMeta');
     return meta
-      .filter((m: any) => m.key?.startsWith('tileset_'))
-      .map((m: any) => m.value as TileSetInfo);
+      .filter((m): m is SyncMetaRecord =>
+        typeof m.key === 'string' && m.key.startsWith('tileset_') && isTileSetInfo(m.value)
+      )
+      .map((m) => m.value as TileSetInfo);
   }
 
   async installTileSet(config: { tilesUrl: string; geoIndexUrl: string; countryCode: string }): Promise<void> {
@@ -33,16 +37,25 @@ export class CubaTileManager implements ITileManager {
 
   async updateTileSet(countryCode: string): Promise<void> {
     const db = await getDB();
-    const meta = await (db as any).get('syncMeta', `tileset_${countryCode}`);
-    if (meta) {
+    const meta = await db.get('syncMeta', `tileset_${countryCode}`);
+    if (meta && isTileSetInfo(meta.value)) {
       const config = meta.value;
-      await this.installTileSet({ tilesUrl: config.tilesUrl, geoIndexUrl: config.geoIndexUrl, countryCode });
+      await this.installTileSet({ tilesUrl: config.tilesUrl, geoIndexUrl: config.geoIndexUrl ?? '', countryCode });
     }
   }
 
   async getEstimatedSize(config: { countryCode: string }): Promise<number> {
     const db = await getDB();
-    const meta = await (db as any).get('syncMeta', `tileset_${config.countryCode}`);
-    return meta?.value?.sizeBytes ?? 0;
+    const meta = await db.get('syncMeta', `tileset_${config.countryCode}`);
+    if (meta && isTileSetInfo(meta.value)) {
+      return meta.value.sizeBytes;
+    }
+    return 0;
   }
+}
+
+function isTileSetInfo(value: unknown): value is TileSetInfo {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.tilesUrl === 'string' && typeof v.countryCode === 'string';
 }

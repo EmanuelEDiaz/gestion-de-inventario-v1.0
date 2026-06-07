@@ -1,4 +1,4 @@
-package com.inventory.adapters.web.dto.settings;
+package com.inventory.application.dto.settings;
 
 import java.time.Instant;
 

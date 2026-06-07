@@ -3,6 +3,10 @@ import type { GeoEntry } from '@/core/maps/entities/map-location';
 import type { Index as FlexSearchIndex } from 'flexsearch';
 import { getDB } from '@/infrastructure/storage/db';
 
+function isGeoEntryArray(value: unknown): value is GeoEntry[] {
+  return Array.isArray(value);
+}
+
 export class CubaGeoSearchAdapter implements IGeoSearchAdapter {
   private index: FlexSearchIndex | null = null;
   private entries: GeoEntry[] = [];
@@ -22,22 +26,22 @@ export class CubaGeoSearchAdapter implements IGeoSearchAdapter {
 
   private async loadGeoIndex(url: string): Promise<GeoEntry[]> {
     const db = await getDB();
-    const idbCached = await (db as any).get('syncMeta', `geo_index_${this.countryCode}`);
-    if (idbCached?.data) return idbCached.data;
+    const idbCached = await db.get('syncMeta', `geo_index_${this.countryCode}`);
+    if (idbCached && isGeoEntryArray(idbCached.value)) return idbCached.value;
 
     const cache = await caches.open('map-tiles-v1');
     const cachedResponse = await cache.match(url);
     if (cachedResponse?.ok) {
-      const data = await cachedResponse.json() as GeoEntry[];
-      await (db as any).put('syncMeta', { key: `geo_index_${this.countryCode}`, value: { data } });
+      const data = (await cachedResponse.json()) as GeoEntry[];
+      await db.put('syncMeta', { key: `geo_index_${this.countryCode}`, value: { data } });
       return data;
     }
 
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Geo index no disponible: ${response.status}`);
-    const data = await response.json() as GeoEntry[];
+    const data = (await response.json()) as GeoEntry[];
     await cache.put(url, new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } }));
-    await (db as any).put('syncMeta', { key: `geo_index_${this.countryCode}`, value: { data } });
+    await db.put('syncMeta', { key: `geo_index_${this.countryCode}`, value: { data } });
     return data;
   }
 

@@ -4465,7 +4465,19 @@ cd backend/inventory-app && mvn compile -q
 
 ---
 
-## Fase F — Verificación end-to-end
+## Fase F — Verificación end-to-end ✅ Completado (F.1.a, F.2.a-d)
+
+> **Estado final 2026-06-06**. Subfases automatizables completadas; subfases manuales (F.1.b, F.3, F.4, F.5) documentadas en `docs_dev/phase-f-verification.md` para ejecución por admin/QA.
+>
+> **Subfases implementadas**:
+> - **F.2.a** — Fix frontend React hooks bugs (2 bugs reales: `useNotificationStream.ts:109` ref durante render, `JsonView.tsx:60` useMemo condicional)
+> - **F.2.b** — Fix backend ArchUnit violations (16 violations: 7 application→adapters + 2 domain→adapters). DTOs movidos a `application/dto/*`, DeviceCursor port ahora usa domain entity
+> - **F.2.c** — Fix backend test NPEs (7 tests: AuditLogger + syncLogWriter stubs agregados en ProductCommandUseCaseTest y SaleCommandUseCaseTest)
+> - **F.2.d** — Fix 46 lint errors frontend (40 `any` + 2 jsx-key + 2 no-unescaped-entities + 2 no-empty-object-type)
+>
+> **Verificación post-fix**: `tsc --noEmit` 0 errors, `pnpm lint` 0 errors (85 warnings), `pnpm test:run` 219/219 pass, `mvn compile` 0 errors, `mvn test` 93/93 (excluyendo ProductControllerTest que requiere DB activa, 8 fallos pre-existentes con `@PreAuthorize` config que no están en scope de F).
+>
+> **Próximo**: Ejecutar F.3, F.4, F.5 manualmente (ver `docs_dev/phase-f-verification.md`), luego Fase G.
 
 > **Skills**: `webapp-testing`, `senior-frontend`
 

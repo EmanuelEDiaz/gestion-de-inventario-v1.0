@@ -1,4 +1,4 @@
-package com.inventory.adapters.web.dto.report;
+package com.inventory.application.dto.report;
 
 import java.math.BigDecimal;
 import java.util.UUID;

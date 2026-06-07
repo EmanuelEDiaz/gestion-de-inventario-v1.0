@@ -9,8 +9,7 @@ import { getSystemNotifications } from '@/infrastructure/api/notifications.api';
 
 export const SYSTEM_NOTIFICATIONS_PAGE_SIZE = 20;
 
-export interface UseSystemNotificationsOptions
-  extends UseNotificationListOptions {}
+export type UseSystemNotificationsOptions = UseNotificationListOptions;
 
 export type UseSystemNotificationsReturn = UseNotificationListReturn;
 

@@ -500,3 +500,198 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 **Archivos**: `docs_dev/adr-map-migration.md` (nuevo)
 
 ---
+
+## FIX-023 — useNotificationStream.ts: ref assignment during render
+
+**Fase de origen**: F (F.2.a — Build checks / React hooks bugs)
+
+**Detectado en**: `pnpm lint` durante F.2 build checks (2026-06-06)
+
+**Síntoma**: `sseFilterRef.current = sseFilter;` ejecutado directamente en el cuerpo del componente (línea 109), fuera de un useEffect. ESLint rule `react-hooks/refs` marca esto como error: refs no deben mutarse durante render.
+
+**Causa raíz**: El patrón "asignar ref durante render para tener siempre la última versión del callback" es un antipatrón. La asignación puede ejecutarse múltiples veces si el render se interrumpe, llevando a un estado inconsistente.
+
+**Resolución**: Mover la asignación dentro de un `useEffect([sseFilter])` que sincronice el ref con el valor actual del callback. Esto garantiza que el ref siempre tenga la última versión sin ejecutarse durante render.
+
+**Archivos**: `frontend/src/presentation/shared/hooks/api/useNotificationStream.ts`
+
+**Lección**: Toda mutación de ref (`ref.current = X`) debe estar en `useEffect` o en un event handler. Nunca en el cuerpo del componente.
+
+---
+
+## FIX-024 — JsonView.tsx: useMemo called after conditional return
+
+**Fase de origen**: F (F.2.a — Build checks / React hooks bugs)
+
+**Detectado en**: `pnpm lint` durante F.2 build checks (2026-06-06)
+
+**Síntoma**: `JsonView.tsx:60` — `useMemo` para tokenizar JSON se llama DESPUÉS de un early return (`if (!formatted) return <span>...`). Esto viola la regla de orden de hooks: los hooks deben llamarse en el mismo orden en cada render. ESLint rule `react-hooks/rules-of-hooks` lo detecta.
+
+**Causa raíz**: El early return hace que cuando `formatted` es null, el segundo `useMemo` no se ejecute. Si en el siguiente render `formatted` no es null, se ejecuta DESPUÉS de no haberse ejecutado antes → orden de hooks inconsistente → React falla.
+
+**Resolución**: Mover el `useMemo` de tokens ANTES del early return. Cuando `formatted` es null, retornar `[]` como fallback (el `tokenizeJson` nunca se llama con null).
+
+**Archivos**: `frontend/src/presentation/shared/components/data-display/JsonView.tsx`
+
+**Lección**: Los hooks deben estar al inicio del componente, antes de cualquier conditional return. Los early returns solo pueden ocurrir DESPUÉS de todos los hooks.
+
+---
+
+## FIX-025 — ArchUnit: application depende de adapters.web.dto (16 violations)
+
+**Fase de origen**: F (F.2.b — ArchUnit violations)
+
+**Detectado en**: `mvn test -Dtest=ArchitectureTest` (2026-06-06)
+
+**Síntoma**: 16 violaciones en 8 archivos: clases en `application/` importan DTOs de `adapters/web/dto/{settings,report}/*`. La regla hexagonal establece que application NO debe depender de adapters.
+
+**Causa raíz**: DTOs de respuesta fueron colocados originalmente en `adapters/web/dto/` por seguir convención de "DTOs son de presentación". Esto es incorrecto: los DTOs de respuesta son parte del CONTRATO del caso de uso, no de la capa web. Deben vivir en application.
+
+**Resolución**: Mover (con `git mv` para preservar historial) los 8 DTOs desde `adapters/web/dto/{settings,report}/` a `application/dto/{settings,report}/`. Actualizar imports en 11 archivos (controllers, mappers, use cases).
+
+**Archivos**:
+- Movidos: `SystemSettingResponse`, `InventoryReportResponse`, `InventoryValueResponse`, `ProfitSummaryResponse`, `SalesReportResponse`, `SalesTimelinePoint`, `TopCustomerEntry`, `TopProductEntry`
+- Modificados: 11 archivos con import updates
+
+**Verificación**: `mvn test -Dtest=ArchitectureTest` → 5 tests run, 0 failures, 1 skipped (pre-existing `@Disabled`).
+
+---
+
+## FIX-026 — ArchUnit: domain.ports.out depende de adapters.persistence.entity (2 violations)
+
+**Fase de origen**: F (F.2.b — ArchUnit violations)
+
+**Detectado en**: `mvn test -Dtest=ArchitectureTest` (2026-06-06)
+
+**Síntoma**: `domain/ports/out/DeviceCursorRepository.java` retorna `Mono<DeviceCursorEntity>` y recibe `DeviceCursorEntity` como parámetro. La regla hexagonal exige que los ports (en `domain/ports/out/`) solo usen tipos de `domain/`, no de `adapters/persistence/`.
+
+**Causa raíz**: Cuando se creó el port, se importó el `DeviceCursorEntity` (que es un adapter entity, anotado con Spring Data R2DBC) directamente en la firma del port. Esto acopla el dominio al framework de persistencia.
+
+**Resolución**:
+1. Crear `domain/model/sync/DeviceCursor.java` — entidad de dominio pura, sin dependencias de Spring/JPA/R2DBC
+2. Crear `adapters/persistence/adapter/mapper/DeviceCursorPersistenceMapper.java` — convierte Entity ↔ Domain
+3. Modificar el port `DeviceCursorRepository` para usar `DeviceCursor` (domain) en su firma
+4. Modificar `DeviceCursorRepositoryAdapter` para usar el nuevo mapper
+
+`DeviceCursorEntity` se mantiene como detalle de persistencia (Spring Data R2DBC lo requiere para su `Repository<T>`).
+
+**Archivos**:
+- Nuevos: `domain/model/sync/DeviceCursor.java`, `adapters/persistence/adapter/mapper/DeviceCursorPersistenceMapper.java`
+- Modificados: `domain/ports/out/DeviceCursorRepository.java`, `adapters/persistence/adapter/DeviceCursorRepositoryAdapter.java`
+
+---
+
+## FIX-027 — Tests backend: NullPointerException en AuditLogger (5 tests)
+
+**Fase de origen**: F (F.2.c — Backend test NPEs)
+
+**Detectado en**: `mvn test` durante F.2 build checks (2026-06-06)
+
+**Síntoma**: 5 tests en `ProductCommandUseCaseTest` fallan con `NullPointerException: this.auditLogger is null` en `ProductCommandUseCase.create()/update()/etc`. El `@InjectMocks` no puede inyectar `AuditLogger` porque no hay `@Mock` declarado.
+
+**Causa raíz**: El test declara `@Mock` para `ProductRepository`, `CategoryRepository`, `AuditLogRepository`, `SyncLogWriterPort`, `AuditSerializer` — pero no para `AuditLogger`. El constructor de `ProductCommandUseCase` requiere `AuditLogger`, por lo que queda en null.
+
+**Resolución**: Agregar `@Mock private AuditLogger auditLogger;` y stub lenient en cada test que dispara `auditLogger.log(...)`: `lenient().when(auditLogger.log(any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty());`
+
+**Archivos**: `backend/inventory-app/src/test/java/com/inventory/application/usecase/command/ProductCommandUseCaseTest.java`
+
+---
+
+## FIX-028 — Tests backend: NullPointerException en syncLogWriter (2 tests)
+
+**Fase de origen**: F (F.2.c — Backend test NPEs)
+
+**Detectado en**: `mvn test` durante F.2 build checks (2026-06-06)
+
+**Síntoma**: 2 tests en `SaleCommandUseCaseTest` fallan con `NullPointerException` originado en `Mono.then(syncLogWriter.log(...))`. El mock de `SyncLogWriterPort` retorna null por defecto (Mockito non-strict), y `.then(null)` lanza NPE.
+
+**Causa raíz**: Los tests no stub `syncLogWriter.log(...)`, por lo que el mock retorna null. La chain `Mono.then(null)` es un NPE garantizado.
+
+**Resolución**: Agregar stub: `lenient().when(syncLogWriter.log(any(), any(), any(), any(), any())).thenReturn(Mono.empty());` en cada test que dispare la cadena de sync log.
+
+**Archivos**: `backend/inventory-app/src/test/java/com/inventory/application/usecase/command/SaleCommandUseCaseTest.java`
+
+**Lección**: Al usar `Mockito` con métodos que retornan `Mono`/`Flux`, siempre stubear el método para retornar `Mono.empty()`/`Flux.empty()` aunque no sea foco del test. Si no, `.then()` o `.flatMap()` sobre el mock no-stubbed lanzan NPE.
+
+---
+
+## FIX-029 — Frontend lint: 40 errores `no-explicit-any` (pre-existing)
+
+**Fase de origen**: F (F.2.d — Lint cleanup)
+
+**Detectado en**: `pnpm lint` durante F.2 build checks (2026-06-06)
+
+**Síntoma**: 40 errores `@typescript-eslint/no-explicit-any` distribuidos en 5 archivos:
+- `frontend/src/infrastructure/api/client.ts` (4)
+- `frontend/src/infrastructure/maps/adapters/CubaGeoSearchAdapter.ts` (3)
+- `frontend/src/infrastructure/maps/adapters/CubaTileManager.ts` (5)
+- `frontend/src/infrastructure/storage/SyncService.ts` (23)
+- `frontend/src/infrastructure/storage/outbox.ts` (5)
+- `frontend/src/presentation/modules/sync/components/FieldDiffTable.tsx` (2)
+
+**Causa raíz**: `any` introducido en fases previas (B, C, D, E) por velocidad de implementación, sin justificación explícita según la regla "sin any sin justificación explícita" del plan.
+
+**Resolución**:
+- Crear tipos propios: `ServerConflictResult`, `CachedEntityRecord`, `GenericIDBStore`, `IncidentRecord`, `LockResult` en `SyncService.ts`
+- Type guards: `isGeoEntryArray`, `isTileSetInfo` para narrowing
+- `RetryableRequestConfig` en `client.ts` para axios interceptor
+- `Record<string, unknown>` + cast tipado en `FieldDiffTable.tsx`
+- `as 'products'` (literal de schema válido) en `outbox.ts` en lugar de `as any`
+
+**Archivos**: 6 archivos frontend modificados (lista completa arriba).
+
+**Verificación**: `pnpm lint` → 0 errors, 85 warnings (solo `exhaustive-deps` y otros warnings informativos).
+
+---
+
+## FIX-030 — Frontend lint: 2 `react/jsx-key` en CustomerDetailView/SupplierDetailView
+
+**Fase de origen**: F (F.2.d — Lint cleanup)
+
+**Detectado en**: `pnpm lint` durante F.2 build checks (2026-06-06)
+
+**Síntoma**: Falta `key` prop en componentes renderizados dentro de `TooltipWrapper` map (CustomerDetailView.tsx:64, SupplierDetailView.tsx:51).
+
+**Causa raíz**: Al refactorizar a `TooltipWrapper`, el `key` no se propagó al componente hijo.
+
+**Resolución**: Agregar `key={item.id}` en el map correspondiente.
+
+**Archivos**:
+- `frontend/src/presentation/modules/customers/views/CustomerDetailView.tsx`
+- `frontend/src/presentation/modules/suppliers/views/SupplierDetailView.tsx`
+
+---
+
+## FIX-031 — Frontend lint: 2 `no-unescaped-entities` en ToastContent
+
+**Fase de origen**: F (F.2.d — Lint cleanup)
+
+**Detectado en**: `pnpm lint` durante F.2 build checks (2026-06-06)
+
+**Síntoma**: Comillas dobles `"` no escapadas en JSX (línea 69 de ToastContent.tsx, dos instancias).
+
+**Causa raíz**: Texto con comillas tipográficas en el mensaje de notificación.
+
+**Resolución**: Reemplazar `"` con `&quot;` en la entidad HTML.
+
+**Archivos**: `frontend/src/presentation/shared/components/ui/toast/ToastContent.tsx`
+
+---
+
+## FIX-032 — Frontend lint: 2 `no-empty-object-type` en useSystemNotifications/useUserNotifications
+
+**Fase de origen**: F (F.2.d — Lint cleanup)
+
+**Detectado en**: `pnpm lint` durante F.2 build checks (2026-06-06)
+
+**Síntoma**: `interface X {}` declarada vacía en useSystemNotifications.ts:12 y useUserNotifications.ts:13. La regla `@typescript-eslint/no-empty-object-type` marca interfaces vacías como equivalentes a su supertipo.
+
+**Causa raíz**: Las interfaces se crearon como placeholder para futuras extensiones, sin campos definidos.
+
+**Resolución**: Cambiar `interface X {}` a `type X = Record<string, never>` (type alias explícito) o `type X = object` (object genérico). Esto preserva la intención semántica sin violar la regla.
+
+**Archivos**:
+- `frontend/src/presentation/shared/hooks/api/useSystemNotifications.ts`
+- `frontend/src/presentation/shared/hooks/api/useUserNotifications.ts`
+
+---

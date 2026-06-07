@@ -12,6 +12,7 @@ import com.inventory.domain.ports.out.CategoryRepository;
 import com.inventory.domain.ports.out.ProductRepository;
 import com.inventory.domain.ports.out.AuditLogRepository;
 import com.inventory.domain.ports.out.SyncLogWriterPort;
+import com.inventory.application.shared.AuditLogger;
 import com.inventory.application.shared.AuditSerializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,9 @@ class ProductCommandUseCaseTest {
     @Mock
     private AuditSerializer auditSerializer;
 
+    @Mock
+    private AuditLogger auditLogger;
+
     @InjectMocks
     private ProductCommandUseCase useCase;
 
@@ -64,7 +68,8 @@ class ProductCommandUseCaseTest {
         when(productRepository.findBySku("SKU-001")).thenReturn(Mono.empty());
         when(productRepository.findByBarcode("BAR-001")).thenReturn(Mono.empty());
         when(productRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
-        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        lenient().when(auditLogger.log(any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty());
+        lenient().when(syncLogWriter.log(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
         when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
         StepVerifier.create(useCase.create(userId, command))
@@ -172,7 +177,8 @@ class ProductCommandUseCaseTest {
         when(productRepository.findBySku("NEW-SKU")).thenReturn(Mono.empty());
         when(productRepository.findByBarcode("NEW-BAR")).thenReturn(Mono.empty());
         when(productRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
-        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        lenient().when(auditLogger.log(any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty());
+        lenient().when(syncLogWriter.log(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
         when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
         StepVerifier.create(useCase.update(productId, userId, command))
@@ -220,7 +226,8 @@ class ProductCommandUseCaseTest {
 
         when(productRepository.findById(productId)).thenReturn(Mono.just(activeProduct));
         when(productRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
-        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        lenient().when(auditLogger.log(any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty());
+        lenient().when(syncLogWriter.log(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
         when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
         StepVerifier.create(useCase.archive(productId, userId))
@@ -246,7 +253,8 @@ class ProductCommandUseCaseTest {
 
         when(productRepository.findById(productId)).thenReturn(Mono.just(archivedProduct));
         when(productRepository.save(any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
-        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        lenient().when(auditLogger.log(any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty());
+        lenient().when(syncLogWriter.log(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
         when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
         StepVerifier.create(useCase.activate(productId, userId))
@@ -266,7 +274,8 @@ class ProductCommandUseCaseTest {
 
         when(productRepository.deleteById(productId)).thenReturn(Mono.empty());
         when(productRepository.findById(productId)).thenReturn(Mono.just(Product.create("Test", "SKU-1", null, BigDecimal.ONE)));
-        when(auditLogRepository.save(any())).thenReturn(Mono.empty());
+        lenient().when(auditLogger.log(any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty());
+        lenient().when(syncLogWriter.log(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
         when(auditSerializer.toJsonTruncated(any())).thenReturn("{}");
 
         StepVerifier.create(useCase.delete(productId, userId))

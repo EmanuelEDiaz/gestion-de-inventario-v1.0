@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { INotification } from '@/core/notification/entities/notification';
+
+interface PageData {
+  content: INotification[];
+  totalElements: number;
+}
 
 interface UseNotificationStreamOptions {
   typeKey: readonly string[];
@@ -106,8 +111,11 @@ export function useNotificationStream(options: UseNotificationStreamOptions): vo
   const queryClient = useQueryClient();
   const abortRef = useRef<AbortController | null>(null);
   const sseFilterRef = useRef(sseFilter);
-  sseFilterRef.current = sseFilter;
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    sseFilterRef.current = sseFilter;
+  }, [sseFilter]);
 
   useEffect(() => {
     if (!enableSSE) return;
@@ -122,7 +130,7 @@ export function useNotificationStream(options: UseNotificationStreamOptions): vo
 
         queryClient.invalidateQueries({ queryKey: typeKey });
 
-        queryClient.setQueryData(infiniteKey, (oldData: any) => {
+        queryClient.setQueryData<InfiniteData<PageData>>(infiniteKey, (oldData) => {
           if (!oldData?.pages?.length) return oldData;
           return {
             ...oldData,

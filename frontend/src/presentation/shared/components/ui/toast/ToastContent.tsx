@@ -66,7 +66,7 @@ export function ToastContent({
           )}
           <p className="font-medium text-sm">{title}</p>
           {description && <p className="text-sm opacity-90">{description}</p>}
-          {action && <p className="text-xs opacity-75 mt-1">Acción: "{action}"</p>}
+          {action && <p className="text-xs opacity-75 mt-1">Acción: &quot;{action}&quot;</p>}
           {requiredPermission && <p className="text-xs opacity-75">Permiso: {requiredPermission}</p>}
         </div>
         {showCopyButton && (

@@ -54,10 +54,9 @@ export function JsonView({ data, maxHeight = '240px', collapsed = false }: JsonV
   const [copied, setCopied] = useState(false);
 
   const formatted = useMemo(() => formatJson(data), [data]);
+  const tokens = useMemo(() => (formatted ? tokenizeJson(formatted) : []), [formatted]);
 
   if (!formatted) return <span className="text-sm italic text-gray-400">No hay datos</span>;
-
-  const tokens = useMemo(() => tokenizeJson(formatted), [formatted]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(formatted);
