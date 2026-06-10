@@ -1,3 +1,5 @@
+> **SUPERSEDED** — This plan is superseded. See `docs/contracts/notifications-reference.md` for the current implementation.
+
 # Plan Detallado: Sistema de Notificaciones Avanzado
 
 ## Resumen Ejecutivo

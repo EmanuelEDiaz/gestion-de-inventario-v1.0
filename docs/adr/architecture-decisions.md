@@ -121,3 +121,64 @@
   - Compile-time error if mapping is incomplete.
   - No runtime reflection overhead.
   - Mapper interfaces in each layer's `mapper/` package.
+
+---
+
+## ADR-009: Migración de Dexie.js a idb
+
+**Fecha**: 2026-06-04
+
+**Contexto**: La versión inicial del proyecto usaba Dexie.js como wrapper de IndexedDB. La flexibilidad de Dexie.js para definir schemas dinámicos resultó en stores sin índices explícitos, dificultando consultas eficientes offline.
+
+**Decisión**: Migrar a `idb` (v8+), un wrapper minimalista que expone la API nativa de IndexedDB con tipado estricto. Esto permite:
+- Definir índices explícitos en el schema de upgrade
+- Mejor rendimiento (Dexie.js agregaba overhead de observables)
+- Bundle más pequeño (~3KB vs ~30KB de Dexie.js)
+- Cero dependencias transitivas
+
+**Consecuencias**:
+- El código de DB migrations ahora es explícito (if/else vs version().stores())
+- Los repositorios locales usan `db.transaction().store.put()` directo
+- Se necesita un export `DB_VERSION` y `getDB()` centralizados
+
+---
+
+## ADR-010: Migración de Workbox a Serwist
+
+**Fecha**: 2026-06-04
+
+**Contexto**: Workbox era el Service Worker library inicial, pero requería configuración compleja para el precaching y routing offline.
+
+**Decisión**: Migrar a Serwist, una librería SW moderna para Next.js que:
+- Se integra nativamente con el build system de Next.js (turbopack)
+- Soporta precaching declarativo y runtime caching
+- `skipWaiting: false` para controlar la activación del SW
+- `clientsClaim: true` para que el SW controle las pestañas existentes
+
+**Consecuencias**:
+- SW config vía `frontend/src/app/serwist/[path]/route.ts`
+- Precaching de assets estáticos (JS, CSS, fonts, sprites)
+- Offline fallback para navegación via `/~offline`
+- Namespace de cache por userId para datos dinámicos
+
+---
+
+## ADR-011: Migración de Leaflet a MapLibre GL JS
+
+**Fecha**: 2026-06-05
+
+**Contexto**: La app usaba Leaflet con react-leaflet para mapas offline. Leaflet no soporta nativamente PMTiles (el formato estándar para tiles vectoriales offline), requiriendo plugins adicionales (leaflet.vectorgrid, pmtiles). El bundle resultante era comparable al de MapLibre pero con peor rendimiento de renderizado y APIs menos predecibles.
+
+**Decisión**: Migrar a MapLibre GL JS porque:
+- Soporte nativo de PMTiles vía `addProtocol()`
+- Soporte de tiles vectoriales (mejor renderizado, más pequeño que PNG tiles)
+- Sin dependencia de `react-leaflet` (MapLibre se usa directo, sin wrapper React)
+- Mejor rendimiento de GPU vía WebGL
+- Comunidad activa y compatible con protomaps basemaps
+
+**Consecuencias**:
+- Carga lazy via `next/dynamic({ ssr: false })` por ~500KB gzipped
+- Protocolo `opfs-pmtiles://` para tiles desde OPFS
+- Protocolo `pmtiles://` para tiles desde servidor
+- Se eliminó Leaflet y sus dependencias (react-leaflet, leaflet.vectorgrid, @types/leaflet)
+- Criterio de retiro: Leaflet se mantiene en git history, disponible como fallback

@@ -1,4 +1,5 @@
-﻿# Implementation Roadmap
+﻿# [ARCHIVED] Implementation Roadmap
+> This document is archived. The current implementation plan is at `docs_dev/task_plan.md`.
 
 Este documento aterriza [CLAUDE.md](../../CLAUDE.md) y [execution-addendum.md](./execution-addendum.md) a una secuencia operativa. No reemplaza los contratos del plan principal; define orden, dependencias y entregables para reducir ambiguedad.
 

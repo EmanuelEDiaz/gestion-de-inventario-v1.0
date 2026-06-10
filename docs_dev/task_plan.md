@@ -991,9 +991,9 @@ Política general:
 | **C** | Loader robusto — phase/availability split + rehydrate_local + backgroundTasksStore (map_verify, precache_routes, image_prefetch) + HealthPanel + PHASE_ORDER fix | ✅ Completado (C.1–C.8: 02606c0 C.1 bg tasks + 8s timeout, 6cb1508 C.7 HealthPanel, commit final cierre C) |
 | **D** | Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token | ✅ Completado |
 | **E** | Mapa/GPS — MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado + FileSystemResource | ✅ Completado |
-| **F** | Verificación end-to-end (incluye checklist P1–P5) | ❌ Pendiente |
+| **F** | Verificación end-to-end (incluye checklist P1–P5) | ✅ Completado (F.1.a, F.2.a-d) |
 | **G** | Estrategia de imágenes offline — OPFS + imageIndex + useImageCache + OfflineImage + backend | ✅ Completado |
-| **H** | Doc & Code Cleanup — eliminar código/documentación muerta, consolidar docs/ y docs_dev/, actualizar README | ❌ Pendiente |
+| **H** | Doc & Code Cleanup — eliminar código/documentación muerta, consolidar docs/ y docs_dev/, actualizar README | ✅ Completado |
 | **I** | Mantenimiento local — MaintenanceService + pruning automático + alarmas cuota | ✅ Completado |
 
 ---
@@ -4680,8 +4680,12 @@ cd backend/inventory-app && mvn compile -q
 
 ---
 
-## Fase H — Doc & Code Cleanup: eliminar código/documentación muerta, consolidar documentación
+## Fase H — Doc & Code Cleanup ✅ Completado
 
+> **Estado final 2026-06-09**. Todas las subfases implementadas: H.1 (eliminación de 13 archivos Leaflet muertos — OfflineMap, CubaTileManager, CubaGeoSearchAdapter, MapContainer, MapSkeleton, MapError, MapEmpty, RegionDownloadService, ITileManager, IGeoSearchAdapter, GeoSearchInput, MapControls, map-location.ts + 4 dependencias package.json), H.2 (0 console.* calls restantes en producción — todos ya migrados a appLogger), H.3 (actualización de 7 documentos: offline-strategy, implementation-roadmap [ARCHIVED], +ADR-009/010/011, image-handling, database-schema, dtos, notifications-plan [SUPERSEDED]), H.4 (README.md raíz reescrito + frontend/README.md reescrito), H.5–H.6 (archivos huérfanos eliminados).
+> >
+> > **Verificación**: `tsc --noEmit` 0 errors, `pnpm lint` 0 errors 0 warnings, `pnpm test:run` 219/219 pass, `mvn compile -q` 0 errors.
+>
 > **Skills**: `clean-code`, `file-organizer`
 > **Objetivo**: Eliminar todo el código muerto, documentación obsoleta y referencias a librerías que ya no se usan. Consolidar `docs/` y `docs_dev/` para que reflejen el estado actual del proyecto. Actualizar README. Esta fase se ejecuta al final para que no interfiera con fases anteriores y capture todo el código que quedó huérfano durante la implementación.
 

@@ -370,7 +370,7 @@ ALTER TABLE sales
 
 ---
 
-## IndexedDB Schema — Extensiones (Dexie.js v4+)
+## IndexedDB Schema — Extensiones (idb v8+)
 > Esta sección documenta el esquema del lado cliente (frontend). No es SQL.
 
 ### Stores nuevos

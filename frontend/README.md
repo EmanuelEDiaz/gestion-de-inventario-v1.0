@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend — Gestión de Inventario
 
-## Getting Started
+Frontend offline-first para el sistema de gestión de inventario.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Next.js 16 + React 19 + TypeScript 5 + Tailwind CSS v4 + shadcn/ui
+- TanStack Query + Zustand (estado)
+- idb (IndexedDB) + OPFS (almacenamiento local)
+- Serwist (Service Worker)
+- MapLibre GL JS + PMTiles (mapas offline)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Comando | Descripción |
+|---------|-------------|
+| `pnpm dev` | Dev server en :3000 (turbopack) |
+| `pnpm build` | Build producción |
+| `pnpm lint` | ESLint |
+| `pnpm test:run` | Vitest (single run) |
+| `pnpm test` | Vitest (watch) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Arquitectura
 
-## Learn More
+Arquitectura hexagonal: `core/` → `infrastructure/` → `presentation/`.
 
-To learn more about Next.js, take a look at the following resources:
+- `core/` — Entidades, puertos, casos de uso (sin dependencias de React/HTTP)
+- `infrastructure/` — Repositorios, almacenamiento, APIs, loggers
+- `presentation/` — Componentes React, hooks, vistas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Offline
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+La aplicación está diseñada para funcionar sin conexión indefinidamente:
+- Lectura siempre desde IndexedDB (local-first)
+- Escrituras se guardan localmente y se sincronizan con el servidor
+- Mapas offline via OPFS + MapLibre
+- Imágenes cacheadas en OPFS

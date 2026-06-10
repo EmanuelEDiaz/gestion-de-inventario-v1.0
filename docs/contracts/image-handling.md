@@ -176,20 +176,49 @@ BufferedImage resize(BufferedImage original, int targetSize) {
 
 ## Offline (Frontend)
 
-### IndexedDB Cache
+### imageIndex Store (IndexedDB) + OPFS
 
+- Metadata en `imageIndex` store en IndexedDB (idb)
+- Blobs almacenados en OPFS (Origin Private File System) para evitar límites de IndexedDB
 - Cachear thumbnails 256 (no originales)
 - Política: LRU
 - Límite: **50 MiB**
 
 ```typescript
-interface ImageCache {
+interface ImageIndexEntry {
   key: string        // "product:{id}:thumb256" o "user:{id}:avatar"
-  data: Blob
+  opfsPath: string   // ruta dentro de OPFS
   cachedAt: number
   size: number
 }
 ```
+
+### ImageResolver
+
+`ImageResolver.ts` traduce URLs de imágenes a su fuente correcta:
+- Online → URL del servidor (`/api/v1/{entity}/{id}/images/{imgId}?variant=thumb256`)
+- Offline → Blob URL desde OPFS
+
+### useImageCache Hook
+
+`useImageCache` hook gestiona el ciclo de vida de las imágenes:
+- Auto-revoca Object URLs al desmontar el componente
+- Prioriza carga offline si hay datos cacheados
+- Fallback a placeholder si no hay caché ni conexión
+
+### OfflineImage Component
+
+```typescript
+<OfflineImage
+  src="/api/v1/products/{id}/images/{imgId}?variant=thumb256"
+  alt="Producto"
+  loading={<Skeleton className="w-16 h-16" />}
+  error={<PlaceholderIcon />}
+  fallback={<PlaceholderIcon />}
+/>
+```
+
+Estados: `loading` → `success` → `error` con transiciones suaves.
 
 ### UI Fallback
 

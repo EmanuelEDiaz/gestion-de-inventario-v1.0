@@ -6,8 +6,8 @@
 ┌─────────────────────────────────────────────────────┐
 │  Mobile/Desktop Browser (PWA)                       │
 │  ┌──────────┐  ┌──────────┐  ┌─────────────────┐   │
-│  │ React UI │──│ Dexie.js │──│ Service Worker  │   │
-│  │          │  │ IndexedDB│  │ (Workbox)       │   │
+│  │ React UI │──│ idb      │──│ Service Worker  │   │
+│  │          │  │ IndexedDB│  │ (Serwist)       │   │
 │  └──────────┘  └──────────┘  └─────────────────┘   │
 │       │              │                              │
 │       │         ┌────┴────┐                         │
@@ -31,7 +31,7 @@
 └───────────────────────────────┘
 ```
 
-## 2. IndexedDB Schema (Dexie.js v4+)
+## 2. IndexedDB Schema (idb v8+)
 
 ### Tables
 
@@ -47,7 +47,7 @@
 | `suppliers` | `id, name` | Cached supplier list |
 | `currencies` | `code` | Cached currencies |
 | `exchangeRates` | `id, [baseCode+quoteCode]` | Cached exchange rates |
-| `imageCache` | `relativePath` | Cached thumbnail blobs (LRU, max 50 MiB) |
+| `imageIndex` | `relativePath` | Metadata index; blobs stored in OPFS (LRU, max 50 MiB) |
 
 ### Outbox Entry Schema
 
@@ -111,7 +111,7 @@ On connectivity detected:
   - If mismatch → `409 Conflict` with current server state.
 - Client shows conflict to user with server state and lets them retry.
 
-## 5. Service Worker (Workbox)
+## 5. Service Worker (Serwist)
 
 ### Caching Strategies
 

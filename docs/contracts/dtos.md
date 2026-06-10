@@ -17,6 +17,7 @@ ProductCreateRequest {
   description?: string
   categoryId?: string
   standardCost?: number
+  salePrice?: number
   reorderPoint?: number
   currencyCode: string
 }
@@ -27,6 +28,7 @@ ProductUpdateRequest {
   categoryId?: string
   status?: 'ACTIVE' | 'ARCHIVED'
   standardCost?: number
+  salePrice?: number
   reorderPoint?: number
   barcode?: string
 }
@@ -41,6 +43,7 @@ ProductResponse {
   categoryId?: string
   status: string
   standardCost?: number
+  salePrice?: number
   reorderPoint?: number
   currencyCode: string
   images: ImageMetadata[]
