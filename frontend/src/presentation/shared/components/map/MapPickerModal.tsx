@@ -1,20 +1,19 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Dialog } from '@/presentation/shared/components/ui/Dialog';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
-import { MapContainer } from './MapContainer';
-import type { MapLocation, GeoEntry } from '@/core/maps/entities/map-location';
-import type { IGeoSearchAdapter } from '@/core/maps/ports/IGeoSearchAdapter';
+
+const MapViewer = dynamic(() => import('./MapViewer').then(m => m.MapViewer), { ssr: false });
 
 interface MapPickerModalProps {
   open: boolean;
   province?: string;
   municipality?: string;
-  initialLocation?: MapLocation;
-  geoSearchAdapter?: IGeoSearchAdapter;
-  onSelect: (lat: number, lng: number, entry?: GeoEntry) => void;
+  initialLocation?: { lat: number; lng: number };
+  onSelect: (lat: number, lng: number) => void;
   onClose: () => void;
 }
 
@@ -23,29 +22,25 @@ export function MapPickerModal({
   province,
   municipality,
   initialLocation,
-  geoSearchAdapter,
   onSelect,
   onClose,
 }: MapPickerModalProps) {
   void province; void municipality;
-  const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null);
-  const [selectedEntry, setSelectedEntry] = useState<GeoEntry | undefined>();
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  const handleLocationSelect = useCallback((location: MapLocation, entry?: GeoEntry) => {
-    setSelectedLocation(location);
-    setSelectedEntry(entry);
+  const handleLocationSelect = useCallback((coords: { lat: number; lng: number }) => {
+    setSelectedLocation(coords);
   }, []);
 
   const handleConfirm = () => {
     if (selectedLocation) {
-      onSelect(selectedLocation.lat, selectedLocation.lng, selectedEntry);
+      onSelect(selectedLocation.lat, selectedLocation.lng);
     }
     onClose();
   };
 
   const handleClose = () => {
     setSelectedLocation(null);
-    setSelectedEntry(undefined);
     onClose();
   };
 
@@ -64,14 +59,14 @@ export function MapPickerModal({
           </p>
         )}
 
-        <MapContainer
-          center={initialLocation}
-          zoom={initialLocation ? 15 : 8}
-          geoSearchAdapter={geoSearchAdapter}
-          readonly={false}
+        <MapViewer
+          mode="select"
+          initialCenter={initialLocation}
+          initialZoom={initialLocation ? 15 : 8}
           onLocationSelect={handleLocationSelect}
-          searchEnabled={true}
-          controlsEnabled={true}
+          height="h-96"
+          showLocate
+          showZoomControls
         />
 
         <div className="flex justify-end gap-3">

@@ -134,12 +134,9 @@ export function SupplierFormFields({ onSubmit, onContinue, isSubmitting, onCance
         province={province}
         municipality={municipality}
         initialLocation={latitude && longitude ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined}
-        onSelect={(lat, lng, entry) => {
+        onSelect={(lat, lng) => {
           setLatitude(lat.toString());
           setLongitude(lng.toString());
-          if (entry?.parentName && !province) setProvince(entry.parentName);
-          if (entry?.extra?.municipality && !municipality) setMunicipality(entry.extra.municipality);
-          if (entry?.name && !street) setStreet(entry.name);
           setShowMapPicker(false);
         }}
         onClose={() => setShowMapPicker(false)}

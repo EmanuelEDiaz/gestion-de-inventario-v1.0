@@ -4,7 +4,7 @@ import { useSettingsController } from '../hooks/useSettingsController';
 import { SettingsFormFields } from '../components/form/SettingsFormFields';
 import { NotificationPreferencesView } from './NotificationPreferencesView';
 import { SystemSettingsView } from './SystemSettingsView';
-import { MapSettingsPanel } from '../components/MapSettingsPanel';
+import { StoragePanel } from '@/presentation/shared/components/storage/StoragePanel';
 import {
   Tabs, TabsList, TabsTrigger, TabsContent,
 } from '@/presentation/shared/components/ui/tabs';
@@ -59,7 +59,7 @@ export function SettingsView() {
             <CardTitle>Mapas Offline</CardTitle>
           </CardHeader>
           <CardContent>
-            <MapSettingsPanel />
+            <StoragePanel />
           </CardContent>
         </Card>
       </TabsContent>
