@@ -91,6 +91,21 @@ export async function setMapMeta(meta: MapMetadata): Promise<void> {
   await setSyncMeta(MAP_META_KEY, meta);
 }
 
+export async function deleteOPFSFile(path: string): Promise<boolean> {
+  if (typeof navigator === 'undefined' || !navigator.storage?.getDirectory) {
+    return false;
+  }
+  try {
+    const root = await navigator.storage.getDirectory();
+    const { dirs, name } = resolvePath(path);
+    const dir = await navigateToDir(root, dirs, { create: false });
+    await dir.removeEntry(name);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function clearMapMeta(): Promise<void> {
   const db = await getDB();
   await db.delete('syncMeta', MAP_META_KEY);

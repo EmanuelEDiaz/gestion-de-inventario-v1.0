@@ -272,6 +272,14 @@ export async function pushOutbox(): Promise<PushResult> {
   return result;
 }
 
+async function triggerPostSyncMaintenance(): Promise<void> {
+  try {
+    const { MaintenanceService } = await import('./MaintenanceService');
+    await MaintenanceService.runOnce();
+  } catch {
+  }
+}
+
 export async function pullCatalogsIfStale(): Promise<void> {
   if (getNetworkMode() === 'offline') return;
 
@@ -294,6 +302,7 @@ export async function pullCatalogsIfStale(): Promise<void> {
   }
 
   await setSyncMeta('catalog_last_sync', Date.now());
+  await triggerPostSyncMaintenance();
 }
 
 export async function pullDeltaSync(): Promise<Map<string, PullResult>> {
@@ -496,5 +505,6 @@ export async function processOutbox(): Promise<PushResult> {
   });
 
   if (output?.skipped) return result;
+  await triggerPostSyncMaintenance();
   return result;
 }

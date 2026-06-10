@@ -994,7 +994,7 @@ Política general:
 | **F** | Verificación end-to-end (incluye checklist P1–P5) | ❌ Pendiente |
 | **G** | Estrategia de imágenes offline — OPFS + imageIndex + useImageCache + OfflineImage + backend | ✅ Completado |
 | **H** | Doc & Code Cleanup — eliminar código/documentación muerta, consolidar docs/ y docs_dev/, actualizar README | ❌ Pendiente |
-| **I** | Mantenimiento local — MaintenanceService + pruning automático + alarmas cuota | ❌ Pendiente |
+| **I** | Mantenimiento local — MaintenanceService + pruning automático + alarmas cuota | ✅ Completado |
 
 ---
 
@@ -4476,7 +4476,7 @@ cd backend/inventory-app && mvn compile -q
 > - **G.4** — `ImageCacheService.ts` reescrito como wrapper de compatibilidad sobre OPFS + imageIndex (deprecado en favor de `useImageCache`)
 > - **G.5** — Verificación: `tsc --noEmit` 0 errors, `pnpm lint` 0 errors (87 warnings, todos pre-existentes), `pnpm test:run` 219/219 pass, `mvn compile -q` 0 errors
 >
-> **Próximo**: Fase H (Doc & Code Cleanup) o Fase I (Mantenimiento local).
+> **Próximo**: Fase H (Doc & Code Cleanup).
 
 ## Fase F — Verificación end-to-end ✅ Completado (F.1.a, F.2.a-d)
 
@@ -5024,10 +5024,12 @@ useEffect(() => {
 
 | Archivo | Acción |
 |---------|--------|
+| `frontend/src/core/loading/schedulerState.ts` | Nuevo — Zustand store con flags isPruning, isMapDownloading, isSyncing |
 | `frontend/src/infrastructure/storage/MaintenanceService.ts` | Nuevo — scheduler pruning + evicción LRU + cleanup |
 | `frontend/src/presentation/shared/hooks/storage/useMaintenance.ts` | Nuevo — hook que inicia MaintenanceService post-ready_partial |
+| `frontend/src/infrastructure/maps/opfs-utils.ts` | Modificado — +deleteOPFSFile() |
 | `frontend/src/infrastructure/sync/SyncService.ts` | Modificado — +call a service.runAll() post-sync exitoso |
-| `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts` | Modificado — +call a MaintenanceService.runAll() en rehydrate_local |
+| `frontend/src/presentation/shared/components/layout/DashboardLayout.tsx` | Modificado — +useMaintenance() hook |
 
 **Verificación:**
 ```bash
@@ -5036,7 +5038,18 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 
 ---
 
-### Nuevos archivos (32)
+## Fase I — Mantenimiento Local ✅ Completado
+
+> **Estado final 2026-06-09**. Subfases I.1–I.4 implementadas:
+>
+> - **I.1** — `schedulerState.ts`: Zustand store con flags `isPruning`, `isMapDownloading`, `isSyncing`, `userActivityAt` para coordinación global de scheduler
+> - **I.2** — `MaintenanceService.ts`: scheduler con pruning automático: purge appLogs (7 días/5000), date pruning (sales/movements/purchases/transfers/adjustments/returns por TTL), cleanup downloadChunks (committed > 24h, failed ≥3 retries), cleanup OPFS temporales, LRU eviction imageIndex (100MB), checkQuota (< 20% / < 10%)
+> - **I.3** — `useMaintenance.ts`: hook que inicia MaintenanceService post-ready_partial en DashboardLayout. SyncService.ts modificado (post-sync trigger via `runOnce()`). `deleteOPFSFile()` agregado a `opfs-utils.ts`
+> - **I.4** — Verificación: `tsc --noEmit` 0 errors, `pnpm lint` 0 errors (88 warnings, todos pre-existentes), `pnpm test:run` 219/219 pass
+>
+> **Próximo**: Fase H (Doc & Code Cleanup).
+
+### Nuevos archivos (34)
 
 | Archivo | Fase | Propósito |
 |---------|------|-----------|
@@ -5071,6 +5084,9 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 | `src/presentation/shared/components/media/OfflineImage.tsx` | G | Componente imagen offline (loading/error/success) |
 | `src/presentation/shared/components/media/ImageGallery.tsx` | G | ❌ Pendiente — G.8 (galería imágenes con lightbox modal) |
 | Backend `ImageController.java` | G | Endpoint /api/v1/images/** con ETag + streaming |
+| `src/core/loading/schedulerState.ts` | I | Zustand store coordinación scheduler (isPruning, isMapDownloading, isSyncing) |
+| `src/infrastructure/storage/MaintenanceService.ts` | I | Scheduler pruning automático + LRU eviction + cleanup |
+| `src/presentation/shared/hooks/storage/useMaintenance.ts` | I | Hook que inicia MaintenanceService post-ready_partial |
 | Backend `MapController.java` | E | Endpoint /api/v1/maps/{filename} con Accept-Ranges + Cache-Control immutable |
 | Backend `WarehouseController.java` | B | +X-Content-Checksum header en GET /api/v1/warehouses |
 | Backend `CategoryController.java` | B | +X-Content-Checksum header en GET /api/v1/categories |
@@ -5142,6 +5158,9 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 | Backend `application.yml` | D | Access token TTL: 30 días → 15 minutos |
 | Backend `SecurityConfig.java` (opcional) | D | Si el TTL está hardcodeado en Java, cambiarlo aquí |
 | `frontend/src/app/serwist/[path]/route.ts` (o registro SW) | A | +listener SW_UPDATED + chequeo outbox pendiente antes de activar; +handler SKIP_WAITING; +activate cleanup de caches viejas |
+| `frontend/src/infrastructure/maps/opfs-utils.ts` | I | +deleteOPFSFile() genérico |
+| `frontend/src/infrastructure/sync/SyncService.ts` | D, I | Outbox Tipo B > Tipo A; +triggerPostSyncMaintenance() |
+| `frontend/src/presentation/shared/components/layout/DashboardLayout.tsx` | I | +useMaintenance() hook |
 
 ### Archivos heredados (1 — sin cambios, relevancia contextual)
 
@@ -5151,9 +5170,9 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 
 > Los archivos Leaflet (`OfflineMap.tsx`, `CubaTileManager.ts`, `CubaGeoSearchAdapter.ts`) se eliminan en Fase H.1 — ya no son heredados.
 
-**Total**: 32 nuevos + 53 modificados + 3 eliminados + 1 heredado = 89 archivos.
-- **Nuevos**: 30 originales + `MaintenanceService.ts` + `useMaintenance.ts` + `backgroundTasksStore.ts` = 32
-- **Modificados**: 50 originales + `application.yml` (app.maps.location) + `syncService.ts` (lock + maintenance call) + `useAppLoader.ts` (maintenance call) = 53
+**Total**: 33 nuevos + 53 modificados + 3 eliminados + 1 heredado = 90 archivos.
+- **Nuevos**: 30 originales + `backgroundTasksStore.ts` + `MaintenanceService.ts` + `useMaintenance.ts` + `schedulerState.ts` = 33
+- **Modificados**: 50 originales + `application.yml` (app.maps.location) + `syncService.ts` (lock + maintenance call) + `DashboardLayout.tsx` (useMaintenance hook) + `opfs-utils.ts` (deleteOPFSFile) = 53
 
 ---
 

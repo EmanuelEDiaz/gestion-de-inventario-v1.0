@@ -16,6 +16,7 @@ import { getOutboxCount } from '@/infrastructure/storage/db';
 import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.config';
 import { useCacheProgress } from '@/presentation/shared/hooks/storage/useCacheProgress';
 import { useAppLoader } from '@/presentation/shared/hooks/storage/useAppLoader';
+import { useMaintenance } from '@/presentation/shared/hooks/storage/useMaintenance';
 import { usePermission } from '@/presentation/shared/hooks/auth/usePermission';
 import { PERMISSION_ROUTES } from '@/presentation/shared/config/permission-routes';
 import { useErrorLogStore } from '@/core/loading/errorLogStore';
@@ -31,6 +32,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { can } = usePermission();
   const { isAuthenticated, hasHydrated, logout } = useAuthStore();
   const { phase: appPhase, availability: appAvailability, error: appError, phaseLabel, startLoading } = useAppLoader();
+  useMaintenance();
   const addError = useErrorLogStore((s) => s.addError);
   const { overallPercent } = useCacheProgress();
 
