@@ -1,78 +1,61 @@
+/**
+ * @deprecated Use useImageCache (React hook) or ImageResolver directly.
+ * This service is a thin compatibility layer over the new OPFS + imageIndex system.
+ */
+
 import { getDB } from '@/infrastructure/storage/db';
+import { revokeAllObjectUrls } from '@/infrastructure/images/ImageResolver';
+import { deleteOPFSImage, getOPFSImageSize } from '@/infrastructure/images/opfs-image-utils';
 
 const MAX_IMAGE_CACHE_BYTES = 50 * 1024 * 1024;
 
-interface ImageCacheEntry {
-  relativePath: string;
-  blob: Blob;
-  size: number;
-  cachedAt: number;
-  lastAccessed: number;
+export async function getCachedImage(/* relativePath: string */): Promise<Blob | null> {
+  return null;
 }
 
-export async function getCachedImage(relativePath: string): Promise<Blob | null> {
-  const db = await getDB();
-  const tx = db.transaction('imageCache', 'readwrite');
-  const store = tx.objectStore('imageCache');
-  const entry = await store.get(relativePath) as ImageCacheEntry | undefined;
-  if (!entry) return null;
-  entry.lastAccessed = Date.now();
-  await store.put(entry);
-  await tx.done;
-  return entry.blob;
-}
-
-export async function cacheImage(relativePath: string, blob: Blob): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction('imageCache', 'readwrite');
-  const store = tx.objectStore('imageCache');
-  const entry: ImageCacheEntry = {
-    relativePath,
-    blob,
-    size: blob.size,
-    cachedAt: Date.now(),
-    lastAccessed: Date.now(),
-  };
-  await store.put(entry);
-  await tx.done;
-  await evictLRU();
+export async function cacheImage(/* relativePath: string, blob: Blob */): Promise<void> {
+  return;
 }
 
 export async function evictLRU(): Promise<void> {
   const db = await getDB();
-  const tx = db.transaction('imageCache', 'readwrite');
-  const store = tx.objectStore('imageCache');
+  const tx = db.transaction('imageIndex', 'readwrite');
+  const store = tx.objectStore('imageIndex');
   let totalSize = 0;
   let cursor = await store.openCursor();
-  const entries: { key: string; lastAccessed: number; size: number }[] = [];
+  const entries: { key: string; sizeBytes: number; cachedAt: number }[] = [];
   while (cursor) {
-    const value = cursor.value as ImageCacheEntry;
-    totalSize += value.size;
-    entries.push({ key: cursor.key as string, lastAccessed: value.lastAccessed, size: value.size });
+    const value = cursor.value as { sizeBytes: number; cachedAt: number };
+    totalSize += value.sizeBytes;
+    entries.push({ key: cursor.key as string, sizeBytes: value.sizeBytes, cachedAt: value.cachedAt });
     cursor = await cursor.continue();
   }
   if (totalSize <= MAX_IMAGE_CACHE_BYTES) {
     await tx.done;
     return;
   }
-  entries.sort((a, b) => a.lastAccessed - b.lastAccessed);
+  entries.sort((a, b) => a.cachedAt - b.cachedAt);
   let freed = 0;
   for (const entry of entries) {
     if (totalSize - freed <= MAX_IMAGE_CACHE_BYTES) break;
+    const record = await store.get(entry.key) as { opfsPath: string } | undefined;
+    if (record?.opfsPath) {
+      await deleteOPFSImage(record.opfsPath);
+    }
     await store.delete(entry.key);
-    freed += entry.size;
+    freed += entry.sizeBytes;
   }
   await tx.done;
 }
 
 export async function getImageCacheSize(): Promise<number> {
   const db = await getDB();
-  const tx = db.transaction('imageCache', 'readonly');
-  const store = tx.objectStore('imageCache');
+  const tx = db.transaction('imageIndex', 'readonly');
+  const store = tx.objectStore('imageIndex');
   let totalSize = 0;
   let cursor = await store.openCursor();
   while (cursor) {
-    totalSize += (cursor.value as ImageCacheEntry).size;
+    totalSize += (cursor.value as { sizeBytes: number }).sizeBytes;
     cursor = await cursor.continue();
   }
   await tx.done;
@@ -81,7 +64,17 @@ export async function getImageCacheSize(): Promise<number> {
 
 export async function clearImageCache(): Promise<void> {
   const db = await getDB();
-  const tx = db.transaction('imageCache', 'readwrite');
-  await tx.objectStore('imageCache').clear();
+  const tx = db.transaction('imageIndex', 'readwrite');
+  const store = tx.objectStore('imageIndex');
+  let cursor = await store.openCursor();
+  while (cursor) {
+    const record = cursor.value as { opfsPath: string };
+    if (record.opfsPath) {
+      await deleteOPFSImage(record.opfsPath);
+    }
+    cursor = await cursor.continue();
+  }
+  await store.clear();
   await tx.done;
+  revokeAllObjectUrls();
 }

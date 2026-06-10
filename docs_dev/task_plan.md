@@ -992,7 +992,7 @@ Política general:
 | **D** | Sync/conflictos — serverPayload + FieldDiffTable + políticas + outbox lock + BroadcastChannel token | ✅ Completado |
 | **E** | Mapa/GPS — MapLibre + PMTiles + streaming OPFS + geolocation + geo-index acotado + FileSystemResource | ✅ Completado |
 | **F** | Verificación end-to-end (incluye checklist P1–P5) | ❌ Pendiente |
-| **G** | Estrategia de imágenes offline — OPFS + imageIndex + useImageCache + OfflineImage + backend | ❌ Pendiente |
+| **G** | Estrategia de imágenes offline — OPFS + imageIndex + useImageCache + OfflineImage + backend | ✅ Completado |
 | **H** | Doc & Code Cleanup — eliminar código/documentación muerta, consolidar docs/ y docs_dev/, actualizar README | ❌ Pendiente |
 | **I** | Mantenimiento local — MaintenanceService + pruning automático + alarmas cuota | ❌ Pendiente |
 
@@ -4449,13 +4449,14 @@ Usuario abre lista de productos
 | Backend `ImageController.java` | Nuevo — servir imágenes con streaming + ETag + Accept-Ranges |
 | Backend `ImageService.java` | Verificar/generar thumbnails con Thumbnailator |
 | Backend `pom.xml` | +thumbnailator dependencia |
+| `frontend/src/infrastructure/images/opfs-image-utils.ts` | Nuevo — helpers OPFS (delete, getSize, exists) |
 | `frontend/src/infrastructure/images/useImageCache.ts` | Nuevo — hook de cache de imágenes + objectURL desde OPFS |
 | `frontend/src/infrastructure/images/ImageResolver.ts` | Nuevo — intercepta rutas /api/v1/.../images/... y resuelve desde OPFS |
 | `frontend/src/presentation/shared/hooks/images/useImageUrl.ts` | Nuevo — hook sobre ImageResolver con revokeObjectURL automático |
 | `frontend/src/presentation/shared/components/media/OfflineImage.tsx` | Nuevo — componente de imagen offline que usa ImageResolver |
-| `frontend/src/presentation/shared/components/media/ImageGallery.tsx` | Nuevo — galería de imágenes con lightbox usando OfflineImage |
-| `frontend/src/infrastructure/sync/SyncService.ts` | Modificado — outbox con prioridad Tipo B > Tipo A |
-| Backend `PushResultDto.java` | Modificado — serverPayload + entityType + entityId + errorCode + versiones |
+| `frontend/src/presentation/shared/components/media/ImageGallery.tsx` | ❌ Pendiente — G.8 (galería imágenes con lightbox usando OfflineImage) |
+| `frontend/src/infrastructure/storage/ImageCacheService.ts` | Modificado — reescrito como wrapper de compatibilidad sobre OPFS + imageIndex |
+| `frontend/src/infrastructure/storage/db.ts` | Modificado — expandido schema imageIndex con imageId, size, opfsPath, contentType, cachedAt, checksum |
 
 **Verificación:**
 ```bash
@@ -4464,6 +4465,18 @@ cd backend/inventory-app && mvn compile -q
 ```
 
 ---
+
+## Fase G — Estrategia de Imágenes Offline ✅ Completado
+
+> **Estado final 2026-06-09**. Subfases G.1–G.5 implementadas:
+>
+> - **G.1** — Backend `ImageController.java`: `GET /api/v1/images/**` con ETag (SHA-1), Cache-Control `private, max-age=86400`, Accept-Ranges, 304 Not Modified, path traversal protection
+> - **G.2** — Frontend infraestructura imágenes: `ImageResolver.ts` (regex path parsing + OPFS lookup + ObjectURL tracking), `useImageUrl.ts` (lifecycle hook), `useImageCache.ts` (offline-first cache: OPFS → fetch → OPFS write), `opfs-image-utils.ts` (delete/getSize/exists helpers)
+> - **G.3** — `OfflineImage.tsx`: componente compartido con estados loading (Skeleton), error/offline (placeholder + icono), success (`<img>` con `object-cover`, eager loading en thumbnails)
+> - **G.4** — `ImageCacheService.ts` reescrito como wrapper de compatibilidad sobre OPFS + imageIndex (deprecado en favor de `useImageCache`)
+> - **G.5** — Verificación: `tsc --noEmit` 0 errors, `pnpm lint` 0 errors (87 warnings, todos pre-existentes), `pnpm test:run` 219/219 pass, `mvn compile -q` 0 errors
+>
+> **Próximo**: Fase H (Doc & Code Cleanup) o Fase I (Mantenimiento local).
 
 ## Fase F — Verificación end-to-end ✅ Completado (F.1.a, F.2.a-d)
 
@@ -4477,7 +4490,7 @@ cd backend/inventory-app && mvn compile -q
 >
 > **Verificación post-fix**: `tsc --noEmit` 0 errors, `pnpm lint` 0 errors (85 warnings), `pnpm test:run` 219/219 pass, `mvn compile` 0 errors, `mvn test` 93/93 (excluyendo ProductControllerTest que requiere DB activa, 8 fallos pre-existentes con `@PreAuthorize` config que no están en scope de F).
 >
-> **Próximo**: Ejecutar F.3, F.4, F.5 manualmente (ver `docs_dev/phase-f-verification.md`), luego Fase G.
+> **Próximo**: Ejecutar F.3, F.4, F.5 manualmente (ver `docs_dev/phase-f-verification.md`), luego Fase H.
 
 > **Skills**: `webapp-testing`, `senior-frontend`
 
@@ -5056,7 +5069,7 @@ cd frontend && pnpm exec tsc --noEmit && pnpm lint
 | `src/infrastructure/images/ImageResolver.ts` | G | Resuelve /api/v1/images/... desde OPFS |
 | `src/presentation/shared/hooks/images/useImageUrl.ts` | G | Hook sobre ImageResolver con auto-revoke |
 | `src/presentation/shared/components/media/OfflineImage.tsx` | G | Componente imagen offline (loading/error/success) |
-| `src/presentation/shared/components/media/ImageGallery.tsx` | G | Galería imágenes con lightbox modal |
+| `src/presentation/shared/components/media/ImageGallery.tsx` | G | ❌ Pendiente — G.8 (galería imágenes con lightbox modal) |
 | Backend `ImageController.java` | G | Endpoint /api/v1/images/** con ETag + streaming |
 | Backend `MapController.java` | E | Endpoint /api/v1/maps/{filename} con Accept-Ranges + Cache-Control immutable |
 | Backend `WarehouseController.java` | B | +X-Content-Checksum header en GET /api/v1/warehouses |

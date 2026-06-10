@@ -43,6 +43,7 @@ desktop.ini
 
 # === Media (dev local) ===
 media/
+!frontend/src/presentation/shared/components/media/
 
 # === Docker ===
 infra/docker/.env

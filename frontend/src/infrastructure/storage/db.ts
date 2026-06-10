@@ -382,8 +382,14 @@ interface InventoryDB extends DBSchema {
       key: string;
       entityType: string;
       entityId: string;
+      imageId: string;
+      size: 'thumbnail' | 'preview' | 'full';
+      opfsPath: string;
+      contentType: string;
       sizeBytes: number;
+      cachedAt: number;
       lastAccessedAt: number;
+      checksum: string;
     };
     indexes: {
       'by-entity': [string, string];
