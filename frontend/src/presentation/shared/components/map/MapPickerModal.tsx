@@ -10,9 +10,9 @@ import type { IGeoSearchAdapter } from '@/core/maps/ports/IGeoSearchAdapter';
 
 interface MapPickerModalProps {
   open: boolean;
-  initialLocation?: MapLocation;
   province?: string;
   municipality?: string;
+  initialLocation?: MapLocation;
   geoSearchAdapter?: IGeoSearchAdapter;
   onSelect: (lat: number, lng: number, entry?: GeoEntry) => void;
   onClose: () => void;
@@ -20,13 +20,14 @@ interface MapPickerModalProps {
 
 export function MapPickerModal({
   open,
-  initialLocation,
   province,
   municipality,
+  initialLocation,
   geoSearchAdapter,
   onSelect,
   onClose,
 }: MapPickerModalProps) {
+  void province; void municipality;
   const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<GeoEntry | undefined>();
 

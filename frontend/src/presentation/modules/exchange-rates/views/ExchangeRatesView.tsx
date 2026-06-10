@@ -11,7 +11,7 @@ import { PageHeader } from '@/presentation/shared/components/data-display/PageHe
 import { GenericTable } from '@/presentation/shared/components/data-display/GenericTable';
 import type { Column, TableAction } from '@/presentation/shared/components/data-display/GenericTable';
 import { RATE_TYPE_LABELS } from '@/core/exchange-rate/entities/exchange-rate';
-import type { ExchangeRate, RateType } from '@/core/exchange-rate/entities/exchange-rate';
+import type { ExchangeRate } from '@/core/exchange-rate/entities/exchange-rate';
 import { Pencil, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 import { FilterBar } from '@/presentation/shared/components/ui/FilterBar';
 import type { FilterDef } from '@/presentation/shared/components/ui/FilterBar';

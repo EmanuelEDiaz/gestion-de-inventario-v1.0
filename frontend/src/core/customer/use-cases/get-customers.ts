@@ -1,4 +1,4 @@
-import type { Customer, CreateCustomerData, UpdateCustomerData } from '@/core/customer/entities/customer';
+import type { Customer } from '@/core/customer/entities/customer';
 import type { ICustomerRepository } from '@/core/customer/ports/ICustomerRepository';
 
 export class GetCustomersUseCase {

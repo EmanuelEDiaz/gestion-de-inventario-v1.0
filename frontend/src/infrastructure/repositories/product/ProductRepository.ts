@@ -62,11 +62,7 @@ export class ProductRepository implements IProductRepository {
     };
   }
 
-  async getAllWithCursor(
-    _cursor: string | null,
-    _size: number,
-    _params: Omit<ProductQueryParams, 'cursor' | 'size'> = {},
-  ): Promise<CursorResponse<Product>> {
+  async getAllWithCursor(): Promise<CursorResponse<Product>> {
     const items = await this.getCachedAll();
     return { items, nextCursor: null };
   }

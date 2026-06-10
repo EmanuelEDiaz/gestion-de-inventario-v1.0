@@ -64,7 +64,7 @@ const FILTER_DEFS: FilterDef[] = [
 
 export function AuditLogsView() {
   const {
-    items, isLoading, error, filter, detailItem, isDetailOpen,
+    items, isLoading, error, detailItem, isDetailOpen,
     openDetail, closeDetail, updateFilter, setPage, page, totalPages, total, pageSize,
   } = useAuditLogsController();
 

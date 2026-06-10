@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { StockBalance, StockFilter } from '@/core/stock/entities/stock-balance';
 import { stockRepository } from '@/infrastructure/repositories/stock/StockRepository';
 import {
@@ -28,11 +28,11 @@ export function useStock(initialFilter?: StockFilter) {
     error: null
   });
 
-  const getAllUseCase = new GetAllStockBalancesUseCase(stockRepository);
-  const getByWarehouseUseCase = new GetStockByWarehouseUseCase(stockRepository);
-  const getByProductUseCase = new GetStockByProductUseCase(stockRepository);
-  const getBalanceUseCase = new GetStockBalanceUseCase(stockRepository);
-  const getLowStockUseCase = new GetLowStockAlertsUseCase(stockRepository);
+  const getAllUseCase = useMemo(() => new GetAllStockBalancesUseCase(stockRepository), []);
+  const getByWarehouseUseCase = useMemo(() => new GetStockByWarehouseUseCase(stockRepository), []);
+  const getByProductUseCase = useMemo(() => new GetStockByProductUseCase(stockRepository), []);
+  const getBalanceUseCase = useMemo(() => new GetStockBalanceUseCase(stockRepository), []);
+  const getLowStockUseCase = useMemo(() => new GetLowStockAlertsUseCase(stockRepository), []);
 
   const fetchAll = useCallback(async (filter?: StockFilter) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -46,7 +46,7 @@ export function useStock(initialFilter?: StockFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [getAllUseCase]);
 
   const fetchByWarehouse = useCallback(async (warehouseId: string, belowReorderOnly = false) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -60,7 +60,7 @@ export function useStock(initialFilter?: StockFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [getByWarehouseUseCase]);
 
   const fetchByProduct = useCallback(async (productId: string) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -74,7 +74,7 @@ export function useStock(initialFilter?: StockFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [getByProductUseCase]);
 
   const fetchBalance = useCallback(async (warehouseId: string, productId: string) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -88,7 +88,7 @@ export function useStock(initialFilter?: StockFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [getBalanceUseCase]);
 
   const fetchLowStockAlerts = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -102,7 +102,7 @@ export function useStock(initialFilter?: StockFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [getLowStockUseCase]);
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
@@ -112,7 +112,7 @@ export function useStock(initialFilter?: StockFilter) {
     if (initialFilter) {
       fetchAll(initialFilter);
     }
-  }, []);
+  }, [fetchAll, initialFilter]);
 
   return {
     ...state,

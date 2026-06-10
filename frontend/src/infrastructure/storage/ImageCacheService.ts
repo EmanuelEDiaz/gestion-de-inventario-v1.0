@@ -5,7 +5,7 @@
 
 import { getDB } from '@/infrastructure/storage/db';
 import { revokeAllObjectUrls } from '@/infrastructure/images/ImageResolver';
-import { deleteOPFSImage, getOPFSImageSize } from '@/infrastructure/images/opfs-image-utils';
+import { deleteOPFSImage } from '@/infrastructure/images/opfs-image-utils';
 
 const MAX_IMAGE_CACHE_BYTES = 50 * 1024 * 1024;
 

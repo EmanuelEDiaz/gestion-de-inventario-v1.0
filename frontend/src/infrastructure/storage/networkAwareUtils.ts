@@ -7,9 +7,8 @@
  */
 import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 import {
-  getCachedProducts, getCachedProduct, cacheProducts,
+  getCachedProducts,
   getCachedCategories, getCachedCustomerDebts,
-  getCachedCount,
 } from '@/infrastructure/storage/db';
 import {
   addToOutbox, OfflineQueueFullError,

@@ -13,7 +13,6 @@ export function NetworkStatusWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { backendStatus } = useNetworkHealth();
   const { status: syncStatus, lastSyncAt, pendingCount, sync } = useSyncStatus();
-  const appPhase = useAppLoaderStore((s) => s.phase);
   const availability = useAppLoaderStore((s) => s.availability);
   const progress = useAppLoaderStore((s) => s.progress);
   const isAppLoading = availability === 'blocking';

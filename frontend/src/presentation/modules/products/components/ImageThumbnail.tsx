@@ -20,6 +20,7 @@ export function ImageThumbnail({ image, index, isActive, onClick }: ImageThumbna
           isActive ? 'border-cyan-500 ring-2 ring-cyan-500' : 'border-slate-200'
         }`}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={getMediaUrl(image.filePath)} alt="" className="h-full w-full object-cover" />
         {image.isPrimary && (
           <span className="absolute left-1 top-1 rounded bg-amber-300 px-1.5 py-0.5 text-[10px] font-semibold text-amber-950">

@@ -201,7 +201,6 @@ export async function updateLocalEntityStatus(
   entityId: string,
   status: string
 ): Promise<void> {
-  const db = await getDB();
   const storeName = entityType.toLowerCase();
   try {
     const entry = await getLocalEntity(storeName, entityId);

@@ -31,6 +31,7 @@ export function ActiveImageDisplay({
           onClick={() => onLightboxOpen(safeActiveIndex)}
           className="relative aspect-video cursor-zoom-in"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={getMediaUrl(activeImage.filePath)}
             alt={activeImage.originalFilename || 'Imagen del producto'}

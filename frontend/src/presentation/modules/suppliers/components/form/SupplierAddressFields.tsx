@@ -30,12 +30,13 @@ interface SupplierAddressFieldsProps {
   onStreetChange: (value: string) => void;
   onLocalityChange: (value: string) => void;
   onZipCodeChange: (value: string) => void;
-  onLatitudeChange: (value: string) => void;
-  onLongitudeChange: (value: string) => void;
+  onLatitudeChange?: (value: string) => void;
+  onLongitudeChange?: (value: string) => void;
   onOpenMapPicker: () => void;
 }
 
 export function SupplierAddressFields({ province, municipality, street, locality, zipCode, latitude, longitude, provinces, municipalities, onProvinceChange, onMunicipalityChange, onStreetChange, onLocalityChange, onZipCodeChange, onLatitudeChange, onLongitudeChange, onOpenMapPicker }: SupplierAddressFieldsProps) {
+  void onLatitudeChange; void onLongitudeChange;
   return (
     <>
       <div className="space-y-1 sm:col-span-2">

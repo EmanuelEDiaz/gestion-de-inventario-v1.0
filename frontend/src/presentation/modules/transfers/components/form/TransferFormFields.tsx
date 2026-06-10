@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import type { CreateTransferRequest } from '@/core/transfer/entities/transfer';
-import type { Warehouse } from '@/core/warehouse/entities/warehouse';
-import type { Product } from '@/core/product/entities/product';
 import { useReferenceData } from '@/presentation/shared/hooks/api/useReferenceData';
 import { Button, TooltipWrapper } from '@/presentation/shared/components/ui';
 import { Textarea } from '@/presentation/shared/components/form/Textarea';

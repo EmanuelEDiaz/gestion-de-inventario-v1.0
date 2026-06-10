@@ -9,7 +9,7 @@ import { getToastVariant, getCategoryDescription } from '../api/notification-toa
 function showToast(notification: INotification): void {
   const variant = getToastVariant(notification);
   toast.custom(
-    (t) =>
+    () =>
       React.createElement(ToastContent, {
         title: notification.title,
         description: getCategoryDescription(notification.category),

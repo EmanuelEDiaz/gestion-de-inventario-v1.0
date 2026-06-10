@@ -30,14 +30,8 @@ const variantClasses = {
 
 const IconButtonContent = memo(function IconButtonContent({
   icon: Icon,
-  variant = 'ghost',
-  size = 'md',
-  className,
 }: {
   icon: SvgIcon;
-  variant?: 'ghost' | 'outline' | 'danger';
-  size?: 'sm' | 'md';
-  className?: string;
 }) {
   return (
     <Icon className="h-4 w-4" />
@@ -62,7 +56,7 @@ export const IconButton = memo(
             className
           )}
         >
-          <IconButtonContent icon={Icon} variant={variant} size={size} />
+          <IconButtonContent icon={Icon} />
         </button>
       );
 
@@ -75,7 +69,7 @@ export const IconButton = memo(
             sizeClasses[size]
           )}
         >
-          <IconButtonContent icon={Icon} variant={variant} size={size} />
+          <IconButtonContent icon={Icon} />
         </Link>
       ) : button;
 

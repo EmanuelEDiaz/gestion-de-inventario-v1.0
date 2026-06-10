@@ -89,7 +89,6 @@ export function EntityForm({
   continueLabel,
   autoFillSources,
   afterFields,
-  continueAfterFields,
   renderField,
   error,
   externalFieldErrors,

@@ -81,12 +81,10 @@ export function MapContainer({
     }
 
     return () => { cancelled = true; };
-  }, [config.tilesUrl, config.geoIndexUrl, config.countryCode, adapter]);
+  }, [config.tilesUrl, config.geoIndexUrl, config.countryCode, adapter, geoAvailable, tilesAvailable]);
 
   useEffect(() => {
-    let cancelled = false;
     init();
-    return () => { cancelled = true; };
   }, [init]);
 
   if (status === 'loading') return <MapSkeleton />;

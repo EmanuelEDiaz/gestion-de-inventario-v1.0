@@ -53,6 +53,7 @@ export function ImageLightbox({ images, initialIndex, onClose }: ImageLightboxPr
       )}
       
       <div className="max-w-[90vw] max-h-[90vh] p-4" onClick={(e) => e.stopPropagation()}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src={getMediaUrl(image.filePath)} 
           alt={image.originalFilename || 'Imagen producto'}

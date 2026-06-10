@@ -20,6 +20,7 @@ interface SupplierImageCardProps {
 export function SupplierImageCard({ image, onSetPrimary, onRemove }: SupplierImageCardProps) {
   return (
     <div className="relative group rounded-lg border overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={getMediaUrl(image.filePath)}
         alt={image.originalFilename || 'Imagen proveedor'}

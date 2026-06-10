@@ -38,7 +38,7 @@ test.beforeEach(async ({ context, page }) => {
       onmessage: ((event: MessageEvent) => void) | null = null;
       private listeners: Record<string, Array<(event: MessageEvent) => void>> = {};
 
-      constructor(_url: string) {
+      constructor() {
         setTimeout(() => {
           const evt = new MessageEvent('message', { data: 'new-notification' });
           this.onmessage?.(evt);

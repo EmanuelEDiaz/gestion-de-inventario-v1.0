@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useDeferredValue } from 'react';
-import { useAppLoaderStore, getPhaseLabel, getPhaseProgress, type LoadPhase, type AppAvailability } from '@/core/loading/appLoaderStore';
+import { useAppLoaderStore, getPhaseLabel, getPhaseProgress, type LoadPhase } from '@/core/loading/appLoaderStore';
 import { Check, Loader2, ChevronDown, ChevronRight } from '@/presentation/shared/components/ui/icon-mapping';
 
 const PHASE_ORDER: LoadPhase[] = [

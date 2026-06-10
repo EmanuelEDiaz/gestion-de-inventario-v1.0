@@ -56,6 +56,7 @@ export function ImagePreview({ src, alt, isOpen, onClose }: ImagePreviewProps) {
           </div>
         )}
 
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={alt}

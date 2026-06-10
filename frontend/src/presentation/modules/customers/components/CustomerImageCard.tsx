@@ -21,6 +21,7 @@ interface CustomerImageCardProps {
 export function CustomerImageCard({ image, onSetPrimary, onRemove }: CustomerImageCardProps) {
   return (
     <div className="relative group rounded-lg overflow-hidden border bg-gray-100 aspect-square">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={getMediaUrl(image.filePath)}
         alt={image.originalFilename || 'Imagen del cliente'}

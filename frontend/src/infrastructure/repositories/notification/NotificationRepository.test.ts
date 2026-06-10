@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotificationRepository } from './NotificationRepository';
 import { notificationApi } from '@/infrastructure/api/notification-api';
-import type { Notification, CreateNotificationRequest } from '@/core/notification/entities/notification';
+import type { Notification } from '@/core/notification/entities/notification';
 import { NotificationCategory, NotificationTargetType, NotificationSource, NotificationPriority, DeliveryChannel } from '@/core/notification/entities/notification';
 
 vi.mock('@/infrastructure/api/notification-api', () => ({

@@ -41,7 +41,7 @@ export function ComboboxSelect({
 
   useEffect(() => {
     if (value && !options.find((opt) => opt.value === value)) onChange('');
-  }, [optionsKey, value, onChange]);
+  }, [options, optionsKey, value, onChange]);
 
   useEffect(() => {
     if (isOpen && containerRef.current) containerRef.current.querySelector('input')?.focus();

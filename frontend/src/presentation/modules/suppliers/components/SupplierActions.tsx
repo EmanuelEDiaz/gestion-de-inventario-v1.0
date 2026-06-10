@@ -1,7 +1,6 @@
 'use client';
 
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
-import type { Supplier } from '@/core/supplier/entities/supplier';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Eye, EyeOff, Trash2 } from '@/presentation/shared/components/ui/icon-mapping';
 

@@ -19,6 +19,7 @@ export function CreateImageThumbnail({
 }: CreateImageThumbnailProps) {
   return (
     <div className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt} className="h-full w-full object-cover" />
       <div className="absolute inset-0 flex items-end justify-between bg-linear-to-t from-black/65 via-black/10 to-transparent p-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <button

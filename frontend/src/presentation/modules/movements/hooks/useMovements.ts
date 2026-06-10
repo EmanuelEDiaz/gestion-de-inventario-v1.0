@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { InventoryMovement, MovementFilter } from '@/core/movement/entities/inventory-movement';
 import { movementRepository } from '@/infrastructure/repositories/movement/MovementRepository';
 import {
@@ -28,11 +28,11 @@ export function useMovements(initialFilter?: MovementFilter) {
     error: null
   });
 
-  const getAllUseCase = new GetAllMovementsUseCase(movementRepository);
-  const getByIdUseCase = new GetMovementByIdUseCase(movementRepository);
-  const getByWarehouseProductUseCase = new GetMovementsByWarehouseProductUseCase(movementRepository);
-  const getByDocumentUseCase = new GetMovementsByDocumentUseCase(movementRepository);
-  const countUseCase = new CountMovementsUseCase(movementRepository);
+  const getAllUseCase = useMemo(() => new GetAllMovementsUseCase(movementRepository), []);
+  const getByIdUseCase = useMemo(() => new GetMovementByIdUseCase(movementRepository), []);
+  const getByWarehouseProductUseCase = useMemo(() => new GetMovementsByWarehouseProductUseCase(movementRepository), []);
+  const getByDocumentUseCase = useMemo(() => new GetMovementsByDocumentUseCase(movementRepository), []);
+  const countUseCase = useMemo(() => new CountMovementsUseCase(movementRepository), []);
 
   const fetchAll = useCallback(async (filter?: MovementFilter) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -49,7 +49,7 @@ export function useMovements(initialFilter?: MovementFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [countUseCase, getAllUseCase]);
 
   const fetchById = useCallback(async (id: string) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -63,7 +63,7 @@ export function useMovements(initialFilter?: MovementFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [getByIdUseCase]);
 
   const fetchByWarehouseProduct = useCallback(async (warehouseId: string, productId: string) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -77,7 +77,7 @@ export function useMovements(initialFilter?: MovementFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [getByWarehouseProductUseCase]);
 
   const fetchByDocument = useCallback(async (docType: string, docId: string) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -91,7 +91,7 @@ export function useMovements(initialFilter?: MovementFilter) {
         isLoading: false 
       }));
     }
-  }, []);
+  }, [getByDocumentUseCase]);
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
@@ -101,7 +101,7 @@ export function useMovements(initialFilter?: MovementFilter) {
     if (initialFilter) {
       fetchAll(initialFilter);
     }
-  }, []);
+  }, [fetchAll, initialFilter]);
 
   return {
     ...state,

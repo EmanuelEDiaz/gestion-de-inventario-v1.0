@@ -125,7 +125,6 @@ export class MaintenanceService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async pruneByRule(rule: DatePruneRule, now: number): Promise<void> {
     const db = await getDB();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

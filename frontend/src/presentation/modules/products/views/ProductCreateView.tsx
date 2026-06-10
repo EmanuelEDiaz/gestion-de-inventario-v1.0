@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { TooltipHint, TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
+import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 import { Sparkles } from '@/presentation/shared/components/ui/icon-mapping';
 import { toast } from '@/presentation/shared/components/ui';
 import { LoadingSpinner } from '@/presentation/shared/components/form/LoadingSpinner';

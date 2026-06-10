@@ -1,6 +1,6 @@
 import { apiClient } from '@/infrastructure/api/client';
 import type { IExchangeRateRepository } from '@/core/exchange-rate/ports/IExchangeRateRepository';
-import type { ExchangeRate, CreateExchangeRateInput, UpdateExchangeRateInput, ExchangeRateFilter } from '@/core/exchange-rate/entities/exchange-rate';
+import type { ExchangeRate, CreateExchangeRateInput, UpdateExchangeRateInput } from '@/core/exchange-rate/entities/exchange-rate';
 import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
 import { getNetworkMode } from '@/infrastructure/storage/networkStore';
@@ -8,7 +8,7 @@ import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 export class ExchangeRateRepository implements IExchangeRateRepository {
   private readonly basePath = '/api/v1/exchange-rates';
 
-  async getAll(_filter?: ExchangeRateFilter): Promise<ExchangeRate[]> {
+  async getAll(): Promise<ExchangeRate[]> {
     const db = await getDB();
     return (await db.getAll('exchangeRates')) as unknown as ExchangeRate[];
   }

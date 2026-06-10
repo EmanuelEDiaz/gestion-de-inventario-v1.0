@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useDebts, useOverdueDebts } from './useDebts';
+import { useDebts } from './useDebts';
 import { useDebtDetail } from './useDebtDetail';
-import { useUpdateDebt, useCancelDebt } from './useUpdateDebt';
+import { useUpdateDebt } from './useUpdateDebt';
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: vi.fn(),

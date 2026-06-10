@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- user avatars from API */
+
 import { useMemo, useState } from 'react';
 import { KeyRound, Pencil, Power } from '@/presentation/shared/components/ui/icon-mapping';
 import type { User } from '@/core/user/entities/user';
@@ -60,7 +62,7 @@ export function UsersView() {
     { icon: Pencil, title: 'Editar usuario', onClick: handleEdit },
     { icon: KeyRound, title: 'Cambiar contraseña', onClick: handleChangePassword },
     { icon: Power, title: 'Activar/desactivar usuario', onClick: (r) => update({ id: r.id, data: { isActive: !r.isActive } }) },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   ], [update]);
 
   if (isLoading) return <LoadingSpinner />;

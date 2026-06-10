@@ -61,7 +61,7 @@ export function useCurrenciesController() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al desactivar monedas');
     }
-  }, []);
+  }, [queryClient]);
 
   const bulkEnable = useCallback(async (codes: string[]) => {
     try {
@@ -71,7 +71,7 @@ export function useCurrenciesController() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al activar monedas');
     }
-  }, []);
+  }, [queryClient]);
 
   const removeMany = useCallback(async (codes: string[]) => {
     try {
@@ -81,7 +81,7 @@ export function useCurrenciesController() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al eliminar monedas');
     }
-  }, []);
+  }, [queryClient]);
 
   return {
     currencies: query.data ?? [],

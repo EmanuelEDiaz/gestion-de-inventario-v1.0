@@ -31,7 +31,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const { can } = usePermission();
   const { isAuthenticated, hasHydrated, logout } = useAuthStore();
-  const { phase: appPhase, availability: appAvailability, error: appError, phaseLabel, startLoading } = useAppLoader();
+  const { phase: appPhase, availability: appAvailability, error: appError, startLoading } = useAppLoader();
   useMaintenance();
   const addError = useErrorLogStore((s) => s.addError);
   const { overallPercent } = useCacheProgress();

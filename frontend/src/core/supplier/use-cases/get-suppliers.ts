@@ -1,4 +1,4 @@
-import type { Supplier, CreateSupplierData, UpdateSupplierData } from '@/core/supplier/entities/supplier';
+import type { Supplier } from '@/core/supplier/entities/supplier';
 import type { ISupplierRepository } from '@/core/supplier/ports/ISupplierRepository';
 
 export class GetSuppliersUseCase {

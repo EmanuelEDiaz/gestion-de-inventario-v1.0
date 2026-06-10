@@ -115,7 +115,7 @@ export function useSales(initialFilter?: SaleFilter) {
     }
   }, []);
 
-  useEffect(() => { fetchAll(initialFilter); }, []);
+  useEffect(() => { fetchAll(initialFilter); }, [fetchAll, initialFilter]);
 
   return { ...state, fetchAll, create, confirm, deliver, cancel, deleteSale, deleteMany, clearError: () => setState(p => ({ ...p, error: null })) };
 }

@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 export type FieldResolution =
   | { action: 'use-server' }
   | { action: 'use-client' }
@@ -37,8 +35,6 @@ function getDiffRows(server: Record<string, unknown>, client: Record<string, unk
 }
 
 export function FieldDiffTable({ serverPayload, clientPayload, errorCode, errorMessage, onResolve }: FieldDiffTableProps) {
-  const [mergedValues, setMergedValues] = useState<Record<string, string>>({});
-
   if (!serverPayload) {
     if (errorCode === 'NOT_FOUND') {
       return (

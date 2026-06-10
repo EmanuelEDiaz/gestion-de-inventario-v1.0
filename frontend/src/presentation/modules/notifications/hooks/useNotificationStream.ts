@@ -34,7 +34,7 @@ async function runSSEStream(
 ): Promise<void> {
   const getToken = () => localStorage.getItem('access_token');
 
-  // eslint-disable-next-line no-constant-condition
+   
   while (!signal.aborted) {
     const token = getToken();
     try {
@@ -71,7 +71,7 @@ async function runSSEStream(
       const decoder = new TextDecoder();
       let buffer = '';
 
-      // eslint-disable-next-line no-constant-condition
+       
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;

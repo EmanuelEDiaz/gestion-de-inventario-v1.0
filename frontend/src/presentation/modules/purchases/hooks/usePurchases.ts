@@ -115,7 +115,7 @@ export function usePurchases(initialFilter?: PurchaseFilter) {
     }
   }, []);
 
-  useEffect(() => { fetchAll(initialFilter); }, []);
+  useEffect(() => { fetchAll(initialFilter); }, [fetchAll, initialFilter]);
 
   return { ...state, fetchAll, create, confirm, receive, cancel, deletePurchase, deleteMany, clearError: () => setState(p => ({ ...p, error: null })) };
 }

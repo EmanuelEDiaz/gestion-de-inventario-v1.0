@@ -5,6 +5,7 @@ import { customerDebtApi } from '@/infrastructure/api/customer-debt-api';
 import type { RegisterDebtPaymentData } from '@/core/customer/entities/debt-payment';
 
 export function useDebtPayment(customerId: string, _debtId?: string) {
+  void _debtId;
   const qc = useQueryClient();
 
   const mutation = useMutation({

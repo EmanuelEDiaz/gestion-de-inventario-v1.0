@@ -79,17 +79,14 @@ export function EditUserDialog({ open, user, onClose, onSave, isSaving, onUpload
         <div className="space-y-2">
           <label className="text-sm font-medium">Foto de Perfil</label>
           <div className="flex items-center gap-4">
-            {previewUrl || user.avatarUrl ? (
-              <img
-                src={previewUrl || user.avatarUrl || ''}
-                alt={user.displayName}
-                className="h-16 w-16 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
-                {user.displayName.charAt(0).toUpperCase()}
-              </div>
-            )}
+            {(() => {
+              const avatarUrl = previewUrl || user.avatarUrl;
+              if (avatarUrl) {
+                // eslint-disable-next-line @next/next/no-img-element
+                return <img src={avatarUrl} alt={user.displayName} className="h-16 w-16 rounded-full object-cover" />;
+              }
+              return <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">{user.displayName.charAt(0).toUpperCase()}</div>;
+            })()}
             <div>
               <input
                 type="file"

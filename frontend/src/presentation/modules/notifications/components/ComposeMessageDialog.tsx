@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useUserDirectory } from '../hooks/useUserDirectory';
 import { useSendMessage } from '../hooks/useSendMessage';
 import { MessageRecipientSelector } from './MessageRecipientSelector';
@@ -33,10 +33,10 @@ export function ComposeMessageDialog({ open, onClose }: Props) {
     setBody('');
   }
 
-  function handleClose() {
+  const handleClose = useCallback(() => {
     resetForm();
     onClose();
-  }
+  }, [onClose]);
 
   function handleSend() {
     if (!canSend) return;
@@ -56,7 +56,7 @@ export function ComposeMessageDialog({ open, onClose }: Props) {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [open]);
+  }, [open, handleClose]);
 
   if (!open) return null;
 

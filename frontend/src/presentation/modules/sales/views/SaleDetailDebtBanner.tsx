@@ -7,7 +7,8 @@ interface SaleDetailDebtBannerProps {
   customerId: string;
 }
 
-export function SaleDetailDebtBanner({ debtId, customerId }: SaleDetailDebtBannerProps) {
+export function SaleDetailDebtBanner({ customerId }: SaleDetailDebtBannerProps) {
+  void customerId;
   return (
     <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 flex items-center justify-between text-sm">
       <span className="text-yellow-800">Deuda generada por esta venta</span>

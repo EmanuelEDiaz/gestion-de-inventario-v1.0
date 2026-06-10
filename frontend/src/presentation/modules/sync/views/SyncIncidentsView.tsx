@@ -10,8 +10,7 @@ import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSe
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/presentation/shared/components/ui/tabs';
 import { DeadLetterList } from '../components/DeadLetterList';
 
-const ALL_TYPES = ['all', 'STOCK_CONFLICT', 'ENTITY_DUPLICATE', 'VERSION_MISMATCH', 'CHECKSUM_ERROR'] as const;
-type FilterType = typeof ALL_TYPES[number];
+type FilterType = 'all' | 'STOCK_CONFLICT' | 'ENTITY_DUPLICATE' | 'VERSION_MISMATCH' | 'CHECKSUM_ERROR';
 
 export function SyncIncidentsView() {
   const { data: incidents = [], isLoading } = useSyncIncidents();

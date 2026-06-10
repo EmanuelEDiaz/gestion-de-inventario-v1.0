@@ -4,7 +4,7 @@ import type { NavSection } from '@/presentation/shared/hooks/ui/useSidebarSectio
 import { cn } from '@/presentation/shared/lib/utils';
 import { SidebarSection } from './SidebarSection';
 import { SidebarCollapseButton } from './SidebarCollapseButton';
-import { Icons, sectionIcons, fallbackIcon } from './SidebarIcons';
+import { sectionIcons, fallbackIcon } from './SidebarIcons';
 
 interface SidebarProps {
   sections: NavSection[];

@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- avatars from API, not from next/image */
+
 import { useMemo } from 'react';
 import { Pencil, KeyRound, ToggleLeft } from '@/presentation/shared/components/ui/icon-mapping';
 import type { User } from '@/core/user/entities/user';

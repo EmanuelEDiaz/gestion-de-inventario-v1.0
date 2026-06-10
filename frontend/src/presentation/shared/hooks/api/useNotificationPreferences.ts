@@ -22,20 +22,20 @@ export function useNotificationPreferences(
   const prefMut = usePreferencesMutation({ enableInvalidation });
   const schedMut = useScheduleMutation({ enableInvalidation });
 
-  const categoryKeyMap: Record<string, keyof NotificationPreferences> = {
+  const categoryKeyMap = useMemo<Record<string, keyof NotificationPreferences>>(() => ({
     inventoryEnabled: 'lowStockEnabled',
     syncEnabled: 'syncEnabled',
     operationsEnabled: 'operationsEnabled',
     creditEnabled: 'debtEnabled',
     userActionsEnabled: 'userActionsEnabled',
     systemEnabled: 'systemEnabled',
-  };
+  }), []);
 
-  const channelKeyMap: Record<string, keyof NotificationPreferences> = {
+  const channelKeyMap = useMemo<Record<string, keyof NotificationPreferences>>(() => ({
     sseEnabled: 'sseEnabled',
     toastEnabled: 'toastNotificationsEnabled',
     pushEnabled: 'pushNotificationsEnabled',
-  };
+  }), []);
 
   const toggleCategory = useCallback(
     (categoryKey: string) => {
@@ -43,7 +43,7 @@ export function useNotificationPreferences(
       const originalKey = categoryKeyMap[categoryKey] || categoryKey as keyof NotificationPreferences;
       prefMut.updatePreferences({ ...pref.rawPreferences, [originalKey]: !pref.rawPreferences[originalKey] });
     },
-    [pref.rawPreferences, prefMut.updatePreferences]
+    [pref.rawPreferences, categoryKeyMap, prefMut]
   );
 
   const toggleDeliveryChannel = useCallback(
@@ -52,7 +52,7 @@ export function useNotificationPreferences(
       const originalKey = channelKeyMap[channel] || channel as keyof NotificationPreferences;
       prefMut.updatePreferences({ ...pref.rawPreferences, [originalKey]: !pref.rawPreferences[originalKey] });
     },
-    [pref.rawPreferences, prefMut.updatePreferences]
+    [pref.rawPreferences, channelKeyMap, prefMut]
   );
 
   const updateQuietHoursFn = useCallback(
@@ -60,7 +60,7 @@ export function useNotificationPreferences(
       if (!sched.rawSchedule) return;
       schedMut.updateSchedule({ ...sched.rawSchedule, quietHoursStart: startTime, quietHoursEnd: endTime });
     },
-    [sched.rawSchedule, schedMut.updateSchedule]
+    [sched.rawSchedule, schedMut]
   );
 
   const toggleQuietHoursFn = useCallback(
@@ -68,7 +68,7 @@ export function useNotificationPreferences(
       if (!sched.rawSchedule) return;
       schedMut.updateSchedule({ ...sched.rawSchedule, quietHoursEnabled: enabled });
     },
-    [sched.rawSchedule, schedMut.updateSchedule]
+    [sched.rawSchedule, schedMut]
   );
 
   const isCurrentlyInQuietHours = useMemo(() => {
