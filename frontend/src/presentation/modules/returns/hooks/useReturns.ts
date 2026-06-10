@@ -28,7 +28,7 @@ export function useReturns() {
       const data = await getReturns.execute();
       setReturns(data);
       setError(null);
-    } catch (err) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al cargar devoluciones');
     } finally {
       setLoading(false);

@@ -31,7 +31,7 @@ export function useNotificationMutations(
         };
       });
       try { await markNotificationAsRead(notificationId); }
-      catch (error) { queryClient.invalidateQueries({ queryKey: typeKey }); throw error; }
+      catch (error: unknown) { queryClient.invalidateQueries({ queryKey: typeKey }); throw error; }
     },
     [queryClient, infiniteKey, typeKey]
   );
@@ -52,7 +52,7 @@ export function useNotificationMutations(
         };
       });
       try { await deleteNotification(notificationId); }
-      catch (error) { queryClient.invalidateQueries({ queryKey: typeKey }); throw error; }
+      catch (error: unknown) { queryClient.invalidateQueries({ queryKey: typeKey }); throw error; }
     },
     [queryClient, infiniteKey, typeKey]
   );

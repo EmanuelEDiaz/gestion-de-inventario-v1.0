@@ -41,7 +41,7 @@ export function useSales(initialFilter?: SaleFilter) {
     try {
       const data = await useCases.getAll.execute(filter);
       setState({ sales: data, isLoading: false, error: null });
-    } catch (e) {
+    } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error cargando ventas');
     }
   }, []);
@@ -52,7 +52,7 @@ export function useSales(initialFilter?: SaleFilter) {
       const data = await useCases.create.execute(input);
       setState(p => ({ ...p, sales: [data, ...p.sales], isLoading: false }));
       return data;
-    } catch (e) {
+    } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error creando venta');
       return null;
     }
@@ -64,7 +64,7 @@ export function useSales(initialFilter?: SaleFilter) {
       const data = await useCases.confirm.execute(id);
       updateSale(id, data);
       return data;
-    } catch (e) {
+    } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error confirmando venta');
       return null;
     }
@@ -76,7 +76,7 @@ export function useSales(initialFilter?: SaleFilter) {
       const data = await useCases.deliver.execute(id);
       updateSale(id, data);
       return data;
-    } catch (e) {
+    } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error entregando venta');
       return null;
     }
@@ -88,7 +88,7 @@ export function useSales(initialFilter?: SaleFilter) {
       const data = await useCases.cancel.execute(id);
       updateSale(id, data);
       return data;
-    } catch (e) {
+    } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error cancelando venta');
       return null;
     }
@@ -100,7 +100,7 @@ export function useSales(initialFilter?: SaleFilter) {
       await useCases.delete.execute(id);
       setState(p => ({ ...p, sales: p.sales.filter(x => x.id !== id), isLoading: false }));
       return true;
-    } catch (e) {
+    } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error eliminando venta');
       return false;
     }
@@ -110,7 +110,7 @@ export function useSales(initialFilter?: SaleFilter) {
     try {
       await saleRepository.deleteAll(ids);
       setState(p => ({ ...p, sales: p.sales.filter(x => !ids.includes(x.id)) }));
-    } catch (e) {
+    } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error eliminando ventas');
     }
   }, []);

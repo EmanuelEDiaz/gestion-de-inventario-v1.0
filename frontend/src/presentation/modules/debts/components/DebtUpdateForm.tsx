@@ -30,7 +30,7 @@ export function DebtUpdateForm({ debt, onSubmit, onCancel }: DebtUpdateFormProps
         dueDate: dueDate || undefined,
         notes: notes || undefined,
       });
-    } catch (err) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al actualizar');
     } finally {
       setLoading(false);
