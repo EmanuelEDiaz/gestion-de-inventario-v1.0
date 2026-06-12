@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10"
+  WORKSPACE: frontend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ env.WORKSPACE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: ${{ env.WORKSPACE }}/pnpm-lock.yaml
+
+      - name: Restore .next/cache
+        uses: actions/cache@v4
+        id: next-cache
+        with:
+          path: ${{ env.WORKSPACE }}/.next/cache
+          key: next-cache-${{ hashFiles(env.WORKSPACE + '/pnpm-lock.yaml') }}-${{ hashFiles(env.WORKSPACE + '/src/**/*.{ts,tsx}', env.WORKSPACE + '/public/**') }}
+          restore-keys: |
+            next-cache-${{ hashFiles(env.WORKSPACE + '/pnpm-lock.yaml') }}-
+            next-cache-
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm build
+
+      - run: pnpm test:run

@@ -26,6 +26,7 @@ backend/**/.mvn/wrapper/maven-wrapper.jar
 frontend/node_modules/
 frontend/.next/
 pnpm-lock.yaml
+pnpm-workspace.yaml
 
 frontend/.env*.local
 

@@ -182,3 +182,47 @@
 - Protocolo `pmtiles://` para tiles desde servidor
 - Se eliminó Leaflet y sus dependencias (react-leaflet, leaflet.vectorgrid, @types/leaflet)
 - Criterio de retiro: Leaflet se mantiene en git history, disponible como fallback
+
+---
+
+## ADR-012: CI con Caching Controlado de Turbopack
+
+**Fecha**: 2026-06-11
+
+**Contexto**: El build de frontend con Next.js + Turbopack genera ~970MB de cache en `.next/cache`. Sin cacheo en CI, cada build es desde cero (~3-5 min). Con cacheo sin control, el cache de GitHub Actions crece sin límite, consumiendo el límite de 10GB por repo.
+
+**Decisión**: Implementar `actions/cache@v4` en `.github/workflows/ci.yml` con las siguientes medidas de control:
+- **Key compuesta**: `next-cache-{lockfileHash}-{sourceHash}` — se invalida automáticamente cuando cambian dependencias O código fuente
+- **Restore keys** con fallback progresivo: `next-cache-{lockfileHash}-` (reusa cache si solo cambia código) → `next-cache-` (fallback genérico si cambia lockfile)
+- **Path restringido**: solo `frontend/.next/cache` (~970MB), no todo `.next/` (~3.4GB con dev artifacts)
+- **Save-always**: No se forza guardado en fallos (comportamiento default de `actions/cache@v4`)
+- **Pipeline**: install → lint → build → test
+
+**Consecuencias**:
+- Builds en CI se benefician del cache de Turbopack sin crecer sin control
+- El límite de 10GB de GitHub Actions se maneja via LRU automático + cache keys precisas
+- El CI requiere que `next build` + `pnpm test:run` pasen para ser válido
+
+---
+
+## ADR-013: Eliminación de Lockfiles Duplicados
+
+**Fecha**: 2026-06-11
+
+**Contexto**: Next.js Turbopack detectaba múltiples lockfiles al iniciar el dev server:
+```
+▲ [next-turbopack] [turbo_binding] You have the following duplicate lockfiles:
+  pnpm-lock.yaml (raíz)
+  frontend/pnpm-workspace.yaml
+```
+La raíz contenía un `pnpm-lock.yaml` de 55 líneas (artefacto de un `pnpm install` accidental anterior al `.gitignore`). Además, `frontend/pnpm-workspace.yaml` contenía solo `allowBuilds` sin definir workspaces, pero Turbopack lo clasificaba como lockfile por su nombre.
+
+**Decisión**:
+1. Eliminar `pnpm-lock.yaml` raíz del disco (ya estaba en `.gitignore` y no en HEAD)
+2. Eliminar `frontend/pnpm-workspace.yaml` del disco y del tracking de git
+3. Migrar su config `allowBuilds` a `frontend/package.json` como `pnpm.onlyBuiltDependencies`
+
+**Consecuencias**:
+- Turbopack detecta exactamente un lockfile (`frontend/pnpm-lock.yaml`) — sin warnings
+- La seguridad de builds sigue activa via `onlyBuiltDependencies` en `package.json` (API moderna de pnpm, sin archivo workspace innecesario)
+- El proyecto no es un monorepo; no necesita `pnpm-workspace.yaml`
