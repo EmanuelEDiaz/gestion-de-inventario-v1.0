@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Icons } from './SidebarIcons';
@@ -10,12 +10,15 @@ import { NetworkStatusWidget } from '../data-display/NetworkStatusWidget';
 import { LogoutConfirmDialog } from '../feedback/LogoutConfirmDialog';
 import { LoadingOverlay } from '../form/LoadingSpinner';
 import { CacheProgressBar } from '../network-status/CacheProgressBar';
+import { CorruptionRepairCenter } from '../data-repair/CorruptionRepairCenter';
+import { TooltipHint } from '../ui/tooltip';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { useSidebarSections } from '@/presentation/shared/hooks/ui/useSidebarSections';
 import { getOutboxCount } from '@/infrastructure/storage/db';
 import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.config';
 import { useCacheProgress } from '@/presentation/shared/hooks/storage/useCacheProgress';
 import { useAppLoader } from '@/presentation/shared/hooks/storage/useAppLoader';
+import { useAppLoaderStore, formatPhaseError } from '@/core/loading/appLoaderStore';
 import { useMaintenance } from '@/presentation/shared/hooks/storage/useMaintenance';
 import { usePermission } from '@/presentation/shared/hooks/auth/usePermission';
 import { PERMISSION_ROUTES } from '@/presentation/shared/config/permission-routes';
@@ -30,15 +33,32 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { can } = usePermission();
-  const { isAuthenticated, hasHydrated, logout } = useAuthStore();
+  const { isAuthenticated, hasHydrated, user, logout } = useAuthStore();
   const { phase: appPhase, availability: appAvailability, error: appError, startLoading } = useAppLoader();
+  const store = useAppLoaderStore();
   useMaintenance();
   const addError = useErrorLogStore((s) => s.addError);
   const { overallPercent } = useCacheProgress();
 
   const isAuthReady = hasHydrated && isAuthenticated;
-  const isAppComplete = appAvailability === 'ready_complete';
   const isAppError = appAvailability === 'error';
+  const isBlocking = appAvailability === 'blocking';
+  const isAppReady = appAvailability === 'ready_partial'
+    || appAvailability === 'ready_complete'
+    || appAvailability === 'degraded';
+
+  const [showRepairCenter, setShowRepairCenter] = useState(false);
+  const userId = user?.id ?? 'boot-loader';
+  const lastFailedPhase = useAppLoaderStore((s) => s.lastFailedPhase);
+
+  const retryBoot = useCallback(() => {
+    useAppLoaderStore.getState().start();
+  }, []);
+
+  const skipAndContinue = useCallback(() => {
+    useAppLoaderStore.getState().setAvailability('degraded');
+    useAppLoaderStore.getState().setPhase('idle');
+  }, []);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -135,7 +155,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!isAuthenticated) return null;
 
   // Loading — block until app is fully loaded
-  if (!isAppComplete && !isAppError) {
+  if (isBlocking && !isAppError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
@@ -147,41 +167,126 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   }
 
-  // Error
+  // Error screen with 3 actions + tooltips
   if (isAppError) {
     const isTokenError = appError
       ? /sesión|token|expirada|expir/i.test(appError)
       : false;
+    const errorParts = formatPhaseError(store.phase, store.step, false, true);
 
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm">
-          <CacheProgressBar />
-          <div className="mt-4 flex flex-col gap-2">
+        <div className="w-full max-w-lg">
+          <div className="rounded-lg border border-red-200 bg-white p-6 shadow-sm">
             {isTokenError ? (
-              <button
-                onClick={() => { logout(); window.location.href = '/login'; }}
-                className="rounded bg-red-600 px-4 py-2 text-xs text-white hover:bg-red-700"
-              >
-                Desconectarse
-              </button>
+              <>
+                <h2 className="text-lg font-semibold text-gray-900">Sesión expirada</h2>
+                <p className="mt-2 text-sm text-red-600">{appError}</p>
+                <div className="mt-6">
+                  <button
+                    onClick={() => { logout(); window.location.href = '/login'; }}
+                    className="min-h-11 rounded bg-red-600 px-4 py-2 text-xs text-white hover:bg-red-700"
+                  >
+                    Iniciar sesión
+                  </button>
+                </div>
+              </>
             ) : (
-              <button
-                onClick={() => startLoading()}
-                className="rounded bg-blue-600 px-4 py-2 text-xs text-white hover:bg-blue-700"
-              >
-                Reintentar
-              </button>
+              <>
+                <h2 className="text-lg font-semibold text-gray-900">Error al cargar datos</h2>
+                <p className="mt-2 text-sm text-red-600">{appError}</p>
+                <p className="mt-3 text-sm text-gray-700">{errorParts.whatHappened}</p>
+                <p className="mt-1 text-xs text-gray-500">{errorParts.impact} {errorParts.autoRetry}</p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <TooltipHint
+                    title="Reintentar descarga"
+                    description="Reinicia la carga desde cero. Las fases con datos ya descargados se saltan automáticamente."
+                    variant="info"
+                  >
+                    <button onClick={retryBoot} className="min-h-11 rounded bg-blue-600 px-4 py-2 text-xs text-white hover:bg-blue-700">
+                      Reintentar descarga
+                    </button>
+                  </TooltipHint>
+                  <TooltipHint
+                    title="Abrir centro de reparación"
+                    description="Muestra los chunks corruptos con opciones: re-descargar, editar JSON manualmente, o descartar."
+                    variant="info"
+                  >
+                    <button onClick={() => setShowRepairCenter(true)} className="min-h-11 rounded bg-amber-600 px-4 py-2 text-xs text-white hover:bg-amber-700">
+                      Reparar datos corruptos
+                    </button>
+                  </TooltipHint>
+                  <TooltipHint
+                    title="Omitir y continuar con datos parciales"
+                    description="La app se mostrará con los datos que ya están en caché. Puedes reintentar la descarga después desde el panel de estado."
+                    variant="info"
+                  >
+                    <button onClick={skipAndContinue} className="min-h-11 rounded bg-gray-600 px-4 py-2 text-xs text-white hover:bg-gray-700">
+                      Omitir y continuar
+                    </button>
+                  </TooltipHint>
+                </div>
+              </>
             )}
           </div>
+          {showRepairCenter && (
+            <div className="mt-4">
+              <CorruptionRepairCenter onClose={() => setShowRepairCenter(false)} userId={userId} />
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // Dashboard fully loaded
+  // Dashboard fully loaded (could be degraded with banner)
   return (
     <div className="min-h-screen bg-gray-50">
+      {appAvailability === 'degraded' && lastFailedPhase && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-900">
+                Carga parcial — algunos datos no están disponibles
+              </p>
+              <p className="mt-1 text-xs text-amber-700">
+                No se pudo descargar {lastFailedPhase.phaseLabel}. La app usará datos anteriores.
+                Puedes reintentar o reparar datos corruptos.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <TooltipHint
+                title="Reintentar descarga"
+                description="Reinicia la carga. Las fases con datos ya descargados se saltan automáticamente."
+                variant="info"
+              >
+                <button onClick={retryBoot} className="min-h-11 rounded bg-amber-600 px-3 py-1.5 text-xs text-white hover:bg-amber-700">
+                  Reintentar
+                </button>
+              </TooltipHint>
+              <TooltipHint
+                title="Abrir centro de reparación"
+                description="Muestra los chunks corruptos con opciones de reparación."
+                variant="info"
+              >
+                <button onClick={() => setShowRepairCenter(true)} className="min-h-11 rounded bg-white px-3 py-1.5 text-xs text-amber-800 ring-1 ring-amber-300 hover:bg-amber-100">
+                  Reparar
+                </button>
+              </TooltipHint>
+            </div>
+          </div>
+          {showRepairCenter && (
+            <CorruptionRepairCenter onClose={() => setShowRepairCenter(false)} userId={userId} />
+          )}
+        </div>
+      )}
+      {appAvailability === 'ready_partial' && (
+        <div className="border-b border-blue-200 bg-blue-50 px-4 py-2">
+          <p className="text-xs text-blue-700">
+            Descargando recursos secundarios...
+          </p>
+        </div>
+      )}
       <DashboardHeader
         navigationSections={navigationSections}
         isCollapsed={isCollapsed}
