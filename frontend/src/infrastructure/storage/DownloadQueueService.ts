@@ -483,6 +483,9 @@ export class DownloadQueueService {
         status: 'pending',
       };
       await db.put('corruptionQueue', entry);
+      window.dispatchEvent(new CustomEvent('corruption-detected', {
+        detail: { idbStoreName: params.entityType, chunkKey: params.chunkKey },
+      }));
     } catch (err) {
       appLogger.error('[DownloadQueue] failed to persist corruption entry', err);
     }

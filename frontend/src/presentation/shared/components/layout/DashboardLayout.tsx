@@ -93,6 +93,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [appPhase, appError, addError]);
 
+  // Listen for corruption-detected events and show toast
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { idbStoreName } = (e as CustomEvent).detail;
+      toast.warning('Datos corruptos detectados', {
+        description: `${idbStoreName}: el checksum del chunk no coincide. Los datos se guardaron en el centro de reparación.`,
+        action: 'Ir a reparar',
+        onAction: () => setShowRepairCenter(true),
+        duration: 120_000,
+      });
+    };
+    window.addEventListener('corruption-detected', handler);
+    return () => window.removeEventListener('corruption-detected', handler);
+  }, []);
+
+  // Listen for open-repair-center events
+  useEffect(() => {
+    const handler = () => setShowRepairCenter(true);
+    window.addEventListener('open-repair-center', handler);
+    return () => window.removeEventListener('open-repair-center', handler);
+  }, []);
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
