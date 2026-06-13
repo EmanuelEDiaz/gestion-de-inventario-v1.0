@@ -1,4 +1,4 @@
-export type CorruptionStatus = 'pending' | 'repaired' | 'discarded';
+export type CorruptionStatus = 'pending' | 'repaired' | 'discarded' | 'quarantined';
 
 export interface CorruptionEntry {
   id?: number;
@@ -8,6 +8,7 @@ export interface CorruptionEntry {
   parseError: string;
   receivedAt: number;
   status: CorruptionStatus;
+  retryCount: number;
   repairedPayload?: string;
   repairedAt?: number;
 }

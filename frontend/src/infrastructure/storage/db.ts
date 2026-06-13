@@ -1,9 +1,10 @@
 import { openDB, deleteDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Product } from '@/core/product/entities/product';
+import type { CorruptionEntry } from '@/core/loading/types/corruption';
 
 const MAX_OUTBOX_ENTRIES = 500;
 export const DB_NAME = 'inventory-offline';
-export const DB_VERSION = 7;
+export const DB_VERSION = 8;
 const DB_OPEN_TIMEOUT = 5_000;
 
 const BACKOFF_DELAYS = [30_000, 120_000, 480_000, 1_920_000, 7_200_000];
@@ -708,6 +709,17 @@ export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
           const dcStore = db.createObjectStore('downloadChunks', { keyPath: 'chunkKey' });
           dcStore.createIndex('by-entity', 'entityType', { unique: false });
           dcStore.createIndex('by-status', 'status', { unique: false });
+        }
+      }
+
+      // v7→v8 migration: add retryCount to existing corruptionQueue entries
+      if (oldVersion < 8) {
+        const cqStore = transaction.objectStore('corruptionQueue');
+        const all = await cqStore.getAll();
+        for (const entry of all) {
+          if ((entry as CorruptionEntry & { retryCount?: number }).retryCount === undefined) {
+            cqStore.put({ ...entry, retryCount: 0 });
+          }
         }
       }
     },

@@ -26,6 +26,7 @@ export interface CorruptionRepairCenterProps {
 }
 
 const REPAIR_DEFAULT_USER_ID = 'repair-center';
+const MAX_RETRIES = 3;
 
 type ViewState = 'loading' | 'ready' | 'error';
 
@@ -43,11 +44,12 @@ function formatDate(timestamp: number): string {
   }
 }
 
-function RetryButton({ onClick, isLoading, title, description }: {
+function RetryButton({ onClick, isLoading, title, description, disabled }: {
   onClick: () => void;
   isLoading: boolean;
   title: string;
   description: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center gap-1">
@@ -56,6 +58,7 @@ function RetryButton({ onClick, isLoading, title, description }: {
         size="sm"
         onClick={onClick}
         isLoading={isLoading}
+        disabled={disabled}
         className="min-h-11"
       >
         <Refresh className="h-4 w-4 mr-1" />
@@ -117,36 +120,70 @@ function CorruptionRow({
   }, [markStatus, entry.id, entry.entityType]);
 
   const handleRetryDownload = useCallback(async () => {
+    if ((entry.retryCount ?? 0) >= MAX_RETRIES) {
+      const db = await getDB();
+      const updated: CorruptionEntry = {
+        ...entry,
+        status: 'quarantined',
+        retryCount: entry.retryCount ?? 0,
+        repairedAt: Date.now(),
+      };
+      await db.put('corruptionQueue', updated);
+      setRetryMessage('Límite de reintentos alcanzado. Dato en cuarentena.');
+      onStatusChange();
+      return;
+    }
+
     setBusyAction('retry');
     setRetryMessage(null);
     try {
       const result = await DownloadQueueService.fetchAllWithIntegrity(
         `/api/v1/${entry.entityType}`,
         entry.entityType,
-        // Schema not available at repair-time; skip validation. We just want
-        // to re-fetch and let the regular download flow handle validation.
-        // A more strict repair would require looking up the original schema.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (() => ({ safeParse: (v: unknown) => ({ success: true, data: v }) })) as any,
         { userId: REPAIR_DEFAULT_USER_ID },
       );
+      const newRetryCount = (entry.retryCount ?? 0) + 1;
+      const db = await getDB();
+      const updated: CorruptionEntry = {
+        ...entry,
+        retryCount: newRetryCount,
+        status: result.ok ? 'repaired' : 'pending',
+        repairedAt: Date.now(),
+      };
+      await db.put('corruptionQueue', updated);
       setRetryMessage(
         result.ok
           ? 'Re-descargado correctamente'
-          : `Reintento completado con ${result.errors.length} error(es)`,
+          : `Reintento ${newRetryCount}/${MAX_RETRIES} completado con ${result.errors.length} error(es)`,
       );
+      onStatusChange();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      appLogger.error(
-        `[CorruptionRepairCenter] retry download failed (entryId=${entry.id}, entityType=${entry.entityType}): ${msg}`,
-        err,
-        { errorCode: 'ERR_NETWORK', entryId: entry.id, entityType: entry.entityType },
+      const newRetryCount = (entry.retryCount ?? 0) + 1;
+      const db = await getDB();
+      const updated: CorruptionEntry = {
+        ...entry,
+        retryCount: newRetryCount,
+        status: newRetryCount >= MAX_RETRIES ? 'quarantined' : 'pending',
+        repairedAt: Date.now(),
+      };
+      await db.put('corruptionQueue', updated);
+      setRetryMessage(
+        newRetryCount >= MAX_RETRIES
+          ? `Reintento ${newRetryCount}/${MAX_RETRIES} falló. Dato en cuarentena.`
+          : `Reintento ${newRetryCount}/${MAX_RETRIES} falló: ${msg}`,
       );
-      setRetryMessage(`Reintento falló: ${msg}`);
+      appLogger.error('[CorruptionRepairCenter] retry download failed', err, {
+        errorCode: 'ERR_NETWORK',
+        entryId: entry.id,
+        entityType: entry.entityType,
+      });
     } finally {
       setBusyAction(null);
     }
-  }, [entry.entityType, entry.id]);
+  }, [entry, onStatusChange]);
 
   const openEditor = useCallback(() => {
     setEditorText(entry.rawPayload);
@@ -234,10 +271,16 @@ function CorruptionRow({
           <RetryButton
             onClick={handleRetryDownload}
             isLoading={busyAction === 'retry'}
+            disabled={entry.status === 'quarantined'}
             title="Volver a descargar este chunk desde el servidor"
             description="Lanza una nueva petición al endpoint /api/v1/{entityType} y reemplaza el chunk."
           />
         </div>
+        {entry.status === 'quarantined' && (
+          <p className="mt-2 text-xs text-amber-600">
+            En cuarentena — límite de reintentos alcanzado. Puedes descartar o editar manualmente.
+          </p>
+        )}
       </header>
 
       <button
@@ -337,7 +380,7 @@ export function CorruptionRepairCenter({ onClose, userId }: CorruptionRepairCent
       const all = await db.getAll('corruptionQueue');
       const pending = all
         .filter((e): e is CorruptionEntry => Boolean(e))
-        .filter((e) => e.status === 'pending')
+        .filter((e) => e.status === 'pending' || e.status === 'quarantined')
         .sort((a, b) => b.receivedAt - a.receivedAt);
       setEntries(pending);
       setView('ready');
