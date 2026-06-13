@@ -15,6 +15,7 @@ interface DashboardHeaderProps {
   onCloseMobileMenu: () => void;
   onLogoutRequest: () => void;
   onToggleMobileMenu: () => void;
+  disabled?: boolean;
 }
 
 export function DashboardHeader({
@@ -27,6 +28,7 @@ export function DashboardHeader({
   onCloseMobileMenu,
   onLogoutRequest,
   onToggleMobileMenu,
+  disabled,
 }: DashboardHeaderProps) {
   return (
     <>
@@ -37,6 +39,7 @@ export function DashboardHeader({
           onToggle={onToggleSidebar}
           openSections={openSections}
           onToggleSection={onToggleSection}
+          disabled={disabled}
         />
       </div>
       {isMobileOpen && (
@@ -55,12 +58,14 @@ export function DashboardHeader({
           onToggle={onCloseMobileMenu}
           openSections={openSections}
           onToggleSection={onToggleSection}
+          disabled={disabled}
         />
       </div>
       <Header
         isSidebarCollapsed={isCollapsed}
         onLogoutRequest={onLogoutRequest}
         onToggleMobileMenu={onToggleMobileMenu}
+        disabled={disabled}
       />
     </>
   );

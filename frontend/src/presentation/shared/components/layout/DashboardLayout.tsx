@@ -10,6 +10,7 @@ import { NetworkStatusWidget } from '../data-display/NetworkStatusWidget';
 import { LogoutConfirmDialog } from '../feedback/LogoutConfirmDialog';
 import { LoadingOverlay } from '../form/LoadingSpinner';
 import { CacheProgressBar } from '../network-status/CacheProgressBar';
+import { SkeletonDashboard } from './SkeletonDashboard';
 import { CorruptionRepairCenter } from '../data-repair/CorruptionRepairCenter';
 import { TooltipHint } from '../ui/tooltip';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
@@ -176,15 +177,31 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Not authenticated
   if (!isAuthenticated) return null;
 
-  // Loading — block until app is fully loaded
+  // Loading — render layout with skeleton + disabled navigation + floating progress
   if (isBlocking && !isAppError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm">
-          <p className="text-center text-xs text-gray-400 mb-2">Preparando aplicación para uso offline...</p>
-          <CacheProgressBar />
-          <p className="text-center text-xs text-gray-400 mt-2">{overallPercent}%</p>
+      <div className="min-h-screen bg-gray-50">
+        <DashboardHeader
+          navigationSections={navigationSections}
+          isCollapsed={isCollapsed}
+          isMobileOpen={isMobileOpen}
+          openSections={openSections}
+          onToggleSidebar={handleToggleSidebar}
+          onToggleSection={toggleSection}
+          onCloseMobileMenu={handleCloseMobileMenu}
+          onLogoutRequest={handleLogoutRequest}
+          onToggleMobileMenu={handleToggleMobileMenu}
+          disabled={true}
+        />
+        <DashboardMain isCollapsed={isCollapsed}>
+          <SkeletonDashboard />
+        </DashboardMain>
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
+          <div className="rounded-full bg-gray-900/80 px-4 py-2 text-xs text-white shadow-lg">
+            Cargando aplicación — la navegación estará disponible en unos segundos
+          </div>
         </div>
+        <CacheProgressBar variant="floating" />
       </div>
     );
   }
@@ -319,6 +336,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         onCloseMobileMenu={handleCloseMobileMenu}
         onLogoutRequest={handleLogoutRequest}
         onToggleMobileMenu={handleToggleMobileMenu}
+        disabled={false}
       />
       <DashboardMain isCollapsed={isCollapsed}>{children}</DashboardMain>
       <NetworkStatusWidget />

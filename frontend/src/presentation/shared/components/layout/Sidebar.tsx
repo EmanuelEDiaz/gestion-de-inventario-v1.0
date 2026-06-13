@@ -12,11 +12,12 @@ interface SidebarProps {
   onToggle: () => void;
   openSections: Record<string, boolean>;
   onToggleSection: (id: string) => void;
+  disabled?: boolean;
 }
 
 export { Icons } from './SidebarIcons';
 
-export function Sidebar({ sections, isCollapsed = false, onToggle, openSections, onToggleSection }: SidebarProps) {
+export function Sidebar({ sections, isCollapsed = false, onToggle, openSections, onToggleSection, disabled }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -47,6 +48,7 @@ export function Sidebar({ sections, isCollapsed = false, onToggle, openSections,
                 isOpen={isOpen}
                 isCollapsed={isCollapsed}
                 onToggle={() => onToggleSection(section.id)}
+                disabled={disabled}
               />
             );
           })}

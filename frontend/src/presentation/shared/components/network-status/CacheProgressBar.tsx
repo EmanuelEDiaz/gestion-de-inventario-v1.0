@@ -3,6 +3,7 @@
 import { useState, useDeferredValue } from 'react';
 import { useAppLoaderStore, getPhaseLabel, getPhaseProgress, type LoadPhase } from '@/core/loading/appLoaderStore';
 import { Check, Loader2, ChevronDown, ChevronRight } from '@/presentation/shared/components/ui/icon-mapping';
+import { useClickOutside } from '@/presentation/shared/hooks/ui/useClickOutside';
 
 const PHASE_ORDER: LoadPhase[] = [
   'quota', 'sw_precache', 'db_open', 'rehydrate_local',
@@ -26,7 +27,6 @@ function subPercentFor(
     return fromW + Math.round((swCompleted / swTotal) * (toW - fromW));
   }
   if (phase === 'products' && subTotal > 0) return Math.round((subProgress / subTotal) * 100);
-  // For non-paginated phases, compute how far within the current phase's weight range
   const currentW = getPhaseProgress(phase);
   const prevW = PHASE_ORDER.indexOf(phase) > 0
     ? getPhaseProgress(PHASE_ORDER[PHASE_ORDER.indexOf(phase) - 1])
@@ -36,7 +36,11 @@ function subPercentFor(
   return Math.round(((progress - prevW) / range) * 100);
 }
 
-export function CacheProgressBar() {
+interface CacheProgressBarProps {
+  variant?: 'inline' | 'floating';
+}
+
+export function CacheProgressBar({ variant = 'inline' }: CacheProgressBarProps) {
   const phase = useAppLoaderStore((s) => s.phase);
   const progress = useAppLoaderStore((s) => s.progress);
   const subStep = useAppLoaderStore((s) => s.subStep);
@@ -53,6 +57,10 @@ export function CacheProgressBar() {
 
   const deferredProgress = useDeferredValue(progress);
   const [showDetails, setShowDetails] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(variant === 'inline' ? true : false);
+  const panelRef = useClickOutside<HTMLDivElement>(() => {
+    if (variant === 'floating' && isExpanded) setIsExpanded(false);
+  });
 
   const isError = phase === 'error';
   const isIdle = phase === 'idle';
@@ -61,8 +69,38 @@ export function CacheProgressBar() {
   const label = subLabelFor(phase, subStep, swCompleted, swTotal);
   const detailPercent = subPercentFor(phase, progress, swCompleted, swTotal, subProgress, subTotal);
 
+  if (variant === 'floating' && !isExpanded) {
+    return (
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setIsExpanded(true)}
+          className="min-h-11 flex items-center gap-2 rounded-full bg-white px-3 py-2 shadow-lg ring-1 ring-gray-200 hover:bg-gray-50 transition-all"
+          title={`Cargando… ${deferredProgress}% — ${getPhaseLabel(phase)}`}
+        >
+          <Loader2 size={14} className="animate-spin text-blue-500" />
+          <span className="text-xs font-medium text-gray-700">{deferredProgress}%</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2">
+    <div ref={panelRef} className={variant === 'floating'
+      ? 'fixed top-4 right-4 z-50 w-80 rounded-lg bg-white p-4 shadow-xl ring-1 ring-gray-200'
+      : 'space-y-2'
+    }>
+      {variant === 'floating' && (
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-semibold text-gray-700">Carga de datos</span>
+          <button
+            onClick={() => setIsExpanded(false)}
+            className="text-gray-400 hover:text-gray-600 min-h-11 min-w-11 flex items-center justify-center"
+            aria-label="Cerrar panel de carga"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       {/* Main progress bar — oculta en ready_complete */}
       {!isReadyComplete && (
         <div>

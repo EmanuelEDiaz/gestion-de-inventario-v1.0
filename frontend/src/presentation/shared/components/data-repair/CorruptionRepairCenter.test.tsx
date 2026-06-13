@@ -53,6 +53,7 @@ function makeEntry(overrides: Partial<CorruptionEntry> = {}): StoredEntry {
     parseError: 'schema mismatch at index 0',
     receivedAt: Date.now() - 60_000,
     status: 'pending',
+    retryCount: 0,
     ...overrides,
   };
 }

@@ -15,6 +15,7 @@ interface SidebarSectionProps {
   isOpen: boolean;
   isCollapsed: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }
 
 function ChevronIcon({ isOpen }: { isOpen: boolean }) {
@@ -36,6 +37,7 @@ export function SidebarSection({
   isOpen,
   isCollapsed,
   onToggle,
+  disabled,
 }: SidebarSectionProps) {
   const sectionButton = (
     <button
@@ -78,10 +80,10 @@ export function SidebarSection({
             <li key={item.href}>
               {isCollapsed ? (
                 <TooltipWrapper content={item.label} description={item.description} side="right">
-                  <SidebarNavItem item={item} isCollapsed={isCollapsed} />
+                  <SidebarNavItem item={item} isCollapsed={isCollapsed} disabled={disabled} />
                 </TooltipWrapper>
               ) : (
-                <SidebarNavItem item={item} isCollapsed={isCollapsed} />
+                <SidebarNavItem item={item} isCollapsed={isCollapsed} disabled={disabled} />
               )}
             </li>
           ))}

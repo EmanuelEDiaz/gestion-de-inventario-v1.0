@@ -770,3 +770,26 @@ const nullableString = z.string().nullable().optional().default(null);
 **Lección**: La tabla de stores en `task_plan.md` listaba `currencies` con `keyPath: 'id'` por asumir simetría con el resto, pero no verificó contra el DTO real del backend ni contra `CachedCurrency`. Lección doble: (1) el keyPath IDB debe coincidir con el identity de la entidad de dominio, no con una convención arbitraria; (2) `batchPut` no debe hardcodear la key de filtrado — debe leer el `keyPath` del store para ser genérico.
 
 ---
+
+## FIX-036 — `CorruptionEntry.retryCount` faltante en `writeCorruption` (K.6 regression)
+
+**Fase de origen**: K (K.6 — retry limit y quarantine)
+
+**Detectado en**: Type-check manual post-K.6 (2026-06-13)
+
+**Síntoma**: `DownloadQueueService.writeCorruption()` crea un `CorruptionEntry` sin el campo `retryCount`. El tipo `CorruptionEntry` fue modificado en K.6 para tener `retryCount: number` como campo requerido. Sin este campo, TypeScript lanzaría error de tipo al compilar.
+
+**Causa raíz**: K.6 modificó el type `CorruptionEntry` agregando `retryCount: number` (requerido), pero no actualizó el único lugar que crea instancias de `CorruptionEntry` a través de la asignación de objeto literal (`const entry: CorruptionEntry = {...}`). TypeScript detectaría el campo faltante por inferencia del tipo anotado, pero al no correr `tsc --noEmit` (timeout de build), el error pasó desapercibido.
+
+**Impacto**: Bloqueante de compilación — `tsc` fallaría con `error TS2741: Property 'retryCount' is missing in type...`.
+
+**Resolución**: Agregar `retryCount: 0` al objeto literal en `writeCorruption` (DownloadQueueService.ts:484).
+
+**Archivos**:
+- `frontend/src/infrastructure/storage/DownloadQueueService.ts:484`
+
+**Verificación**: Corregido en mismo commit de K.9.
+
+**Lección**: Cuando se modifica un type compartido agregando campos requeridos, buscar en todo el codebase los lugares que crean instancias de ese type (`const x: Type = {...}`). La verificación `tsc --noEmit` debería haber detectado esto; el timeout de red no debería impedir una inspección manual de todas las instancias del type modificado.
+
+---

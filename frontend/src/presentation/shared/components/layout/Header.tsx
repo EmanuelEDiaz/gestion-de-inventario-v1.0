@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { NotificationTray } from '@/presentation/modules/notifications/components/NotificationTray';
 import { Icons } from './SidebarIcons';
+import { cn } from '@/presentation/shared/lib/utils';
 
 function stringToColor(str: string): string {
   let hash = 0;
@@ -48,9 +49,10 @@ interface HeaderProps {
   isSidebarCollapsed?: boolean;
   onLogoutRequest: () => void;
   onToggleMobileMenu?: () => void;
+  disabled?: boolean;
 }
 
-export function Header({ onLogoutRequest, onToggleMobileMenu }: HeaderProps) {
+export function Header({ onLogoutRequest, onToggleMobileMenu, disabled }: HeaderProps) {
   const { user } = useAuthStore();
 
   return (
@@ -62,8 +64,12 @@ export function Header({ onLogoutRequest, onToggleMobileMenu }: HeaderProps) {
         <div className="flex w-12 items-center md:w-auto">
           <button
             onClick={onToggleMobileMenu}
-            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden"
+            className={cn(
+              'rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden',
+              disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent'
+            )}
             title="Menú"
+            disabled={disabled}
           >
             {Icons.menu}
           </button>

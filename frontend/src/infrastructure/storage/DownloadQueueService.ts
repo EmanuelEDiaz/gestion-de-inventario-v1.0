@@ -481,6 +481,7 @@ export class DownloadQueueService {
         parseError: params.parseError,
         receivedAt: Date.now(),
         status: 'pending',
+        retryCount: 0,
       };
       await db.put('corruptionQueue', entry);
       window.dispatchEvent(new CustomEvent('corruption-detected', {
