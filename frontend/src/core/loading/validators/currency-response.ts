@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { CachedCurrency } from '@/infrastructure/storage/db';
 
-const nullableString = z.string().nullable();
+const nullableString = z.string().nullable().optional().default(null);
 
 export const currencyResponseSchema: z.ZodSchema<CachedCurrency> = z.object({
   code: z.string(),

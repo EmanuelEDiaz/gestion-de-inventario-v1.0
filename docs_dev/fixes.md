@@ -3,11 +3,6 @@
 > Documento vivo. Cada entrada describe una desviación del plan `task_plan.md` v5.3, su causa, resolución aplicada y a qué fase pertenece.
 
 ---
-
-## FIX-001 — Stores `corruptionQueue` y `downloadChunks` faltan en DB v5
-
-**Fase de origen**: A (Fase A — Fundaciones offline)
-
 **Detectado en**: B (preparación de B.1, 2026-06-04)
 
 **Síntoma**: `db.ts` (DB_VERSION=5) tiene 17 stores v4 + 4 nuevos declarados por Fase A (`appLogs`, `imageIndex`, `geoIndex`, `mapMarkers`, `mapAnnotations` — aprox), pero los stores `corruptionQueue` y `downloadChunks` declarados en `A.3.1` NO existen en el schema real.
@@ -693,5 +688,85 @@ Todos los fixes se aplican en **B.1** porque comparten la migración v5→v6 y l
 **Archivos**:
 - `frontend/src/presentation/shared/hooks/api/useSystemNotifications.ts`
 - `frontend/src/presentation/shared/hooks/api/useUserNotifications.ts`
+
+---
+
+## FIX-033 — Zod validators: `nullableString` no aceptaba `undefined` (solo `null`)
+
+**Fase de origen**: C (C.4 — loadFlatCatalog + validators Zod)
+
+**Detectado en**: Runtime en browser, errores recurrentes de validación en exchangeRates, customerDebts (2026-06-11)
+
+**Síntoma**: Los schemas Zod que utilizan `nullableString = z.string().nullable()` rechazan items donde el backend omite el campo en vez de enviarlo como `null`. Error típico:
+```
+"expected": "string",
+"code": "invalid_type",
+"path": ["createdBy"],
+"message": "Invalid input: expected string, received undefined"
+```
+Afectaba a `exchangeRates.createdBy`, `customerDebts.description`, `customerDebts.notes`. Los items rechazados iban a la `corruptionQueue`, el `DownloadQueue` reportaba "all N items failed validation", y esos stores quedaban vacíos en IDB.
+
+**Causa raíz**: `nullableString = z.string().nullable()` acepta `string | null` pero NO `undefined`. Cuando el backend serializa un campo como `null` en Java, Jackson puede omitirlo del JSON si tiene configurado `@JsonInclude(Include.NON_NULL)`, resultando en un objeto donde el campo simplemente no existe. El `safeParse` recibe `undefined` para ese campo, y `.nullable()` no lo tolera. Mismo problema en los 8 archivos que definen `nullableString`.
+
+**Resolución**: Cambiar la definición en los 8 validators:
+```typescript
+// Antes (rechaza undefined):
+const nullableString = z.string().nullable();
+
+// Después (acepta string | null | undefined, outputs string | null):
+const nullableString = z.string().nullable().optional().default(null);
+```
+- `.optional()` permite que el campo sea `undefined` (omitido del JSON)
+- `.default(null)` normaliza `undefined → null`, manteniendo el tipo de salida como `string | null` (idéntico al original)
+- Sin cambios en los Cached types ni en las entidades de dominio
+- `nullableNumber = z.coerce.number().nullable()` no se modificó porque el backend siempre envía números como `0` en vez de omitirlos
+
+**Archivos** (8 validators):
+- `frontend/src/core/loading/validators/product-response.ts`
+- `frontend/src/core/loading/validators/customer-response.ts`
+- `frontend/src/core/loading/validators/supplier-response.ts`
+- `frontend/src/core/loading/validators/warehouse-response.ts`
+- `frontend/src/core/loading/validators/category-response.ts`
+- `frontend/src/core/loading/validators/exchange-rate-response.ts`
+- `frontend/src/core/loading/validators/currency-response.ts`
+- `frontend/src/core/loading/validators/customer-debt-response.ts`
+
+**Verificación**: `pnpm test:run` → 219/219 tests pass (39 files), `pnpm lint` 0 errors.
+
+**Problemas asociados detectados pero no corregidos**:
+
+| Error | Causa | Solución propuesta | Estado |
+|-------|-------|-------------------|--------|
+| **currencies DataError** en IDB commit | Store `currencies` creado con `{ keyPath: 'id' }` (db.ts:517), pero `CachedCurrency` usa `code` como clave primaria, no tiene campo `id`. `target.put(item)` en `fetchAllWithIntegrity` falla porque IDB no encuentra `item.id`. | Ver FIX-034. | ✅ Corregido en FIX-034 |
+| **stock checksum mismatch** | `fetchAllWithIntegrity` calcula checksum con `JSON.stringify(raw)` DESPUÉS de `normalizeArrayResponse()` (extrae array de `{content: [...], page, totalPages}`). El servidor firmó el objeto completo, no el array plano. Los hashes nunca coinciden. | Mover el cálculo del checksum a la respuesta HTTP cruda, ANTES de normalizar. 3 líneas de cambio en `DownloadQueueService.ts`. | ❌ Pendiente |
+| **exchangeRates/customerDebts** mismos items fallando repetidamente | El error de validación envía items a `corruptionQueue`, pero en cada reintento el backend devuelve el mismo shape → falla igual. | Ya corregido con el fix de `nullableString`. | ✅ Corregido en FIX-033 |
+
+**Lección**: La convención `@JsonInclude(Include.NON_NULL)` en el backend (o equivalente en Jackson) hace que campos `null` se omitan del JSON en vez de enviarse como `null`. Los validadores Zod deben usar `.nullable().optional().default(null)` en vez de solo `.nullable()` para tolerar tanto `null` como campo ausente. Alternativa: forzar `@JsonInclude(Include.ALWAYS)` en el backend para campos opcionales, pero eso aumenta el payload. La solución en Zod es más robusta porque el frontend se protege sin importar la configuración de serialización del backend.
+
+---
+
+## FIX-034 — IDB currencies store: keyPath `'id'` → `'code'` (no coincidía con el dominio)
+
+**Fase de origen**: A (A.3.1 — IDB schema v5)
+
+**Detectado en**: Runtime en browser, `DataError` al hacer `put` de currencies en `fetchAllWithIntegrity` (2026-06-11)
+
+**Síntoma**: `DataError` silencioso al guardar monedas en IDB. El store `currencies` se creó con `{ keyPath: 'id' }` pero `CachedCurrency` no tiene campo `id` — usa `code` como identificador. Adicionalmente, `batchPut()` filtraba items con `if (item.id != null)`, descartando silenciosamente TODAS las monedas. Resultado: el store quedaba vacío, currencies no disponibles offline, el loader avanzaba igual (non-fatal).
+
+**Causa raíz**: El plan original (Fase A, A.3.1, tabla de stores) listó `currencies` con `keyPath: 'id'` por simetría con los otros stores, pero el backend PostgreSQL usa `code VARCHAR(3) PRIMARY KEY`, la entidad de dominio `Currency.code` es el identity, el DTO `CurrencyResponse` solo tiene `code`, y la interfaz frontend `CachedCurrency` no tiene campo `id`. El `keyPath: 'id'` era un error de especificación que se replicó a implementación.
+
+**Resolución**: 4 cambios en `frontend/src/infrastructure/storage/db.ts`:
+
+1. **`DB_VERSION` 6 → 7**: Fuerza upgrade en browsers existentes.
+2. **Upgrade migration**: Bloque `oldVersion < 7` elimina y recrea el store `currencies` con el keyPath correcto (IDB no permite cambiar keyPath in-place).
+3. **`keyPath: 'id'` → `'code'`** en la creación del store (line 523).
+4. **`batchPut` dinámico**: Reemplaza `if (item.id != null)` por lectura del `keyPath` real del store (`const keyPath = objectStore.keyPath`). Así funciona para cualquier store, no solo currencies.
+
+**Archivos**:
+- `frontend/src/infrastructure/storage/db.ts` (`DB_VERSION`, upgrade block, store creation, `batchPut`)
+
+**Verificación**: `pnpm test:run` → 219/219 tests pass (39 files), `pnpm lint` 0 errors.
+
+**Lección**: La tabla de stores en `task_plan.md` listaba `currencies` con `keyPath: 'id'` por asumir simetría con el resto, pero no verificó contra el DTO real del backend ni contra `CachedCurrency`. Lección doble: (1) el keyPath IDB debe coincidir con el identity de la entidad de dominio, no con una convención arbitraria; (2) `batchPut` no debe hardcodear la key de filtrado — debe leer el `keyPath` del store para ser genérico.
 
 ---

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { CachedProduct } from '@/infrastructure/storage/db';
 
-const nullableString = z.string().nullable();
+const nullableString = z.string().nullable().optional().default(null);
 const nullableNumber = z.coerce.number().nullable();
 const optionalString = z.string().optional();
 

@@ -3,7 +3,7 @@ import type { Product } from '@/core/product/entities/product';
 
 const MAX_OUTBOX_ENTRIES = 500;
 export const DB_NAME = 'inventory-offline';
-export const DB_VERSION = 6;
+export const DB_VERSION = 7;
 const DB_OPEN_TIMEOUT = 5_000;
 
 const BACKOFF_DELAYS = [30_000, 120_000, 480_000, 1_920_000, 7_200_000];
@@ -513,8 +513,14 @@ export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
         if (!store.indexNames.contains('by-name')) store.createIndex('by-name', 'name');
       }
 
+      if (oldVersion < 7) {
+        if (db.objectStoreNames.contains('currencies')) {
+          db.deleteObjectStore('currencies');
+        }
+      }
+
       if (!db.objectStoreNames.contains('currencies')) {
-        db.createObjectStore('currencies', { keyPath: 'id' });
+        db.createObjectStore('currencies', { keyPath: 'code' });
       }
 
       if (!db.objectStoreNames.contains('exchangeRates')) {
@@ -952,8 +958,10 @@ export async function batchPut(store: string, items: Record<string, unknown>[], 
     const tx = db.transaction(store as any, 'readwrite', { durability: 'relaxed' });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const objectStore = tx.objectStore(store as any) as any;
+    const keyPath = objectStore.keyPath as string | null;
     for (const item of batch) {
-      if (item.id != null) {
+      const key = keyPath ? item[keyPath] : undefined;
+      if (key != null) {
         objectStore.put(item);
       }
     }

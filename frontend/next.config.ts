@@ -3,6 +3,9 @@ import { withSerwist } from "@serwist/turbopack";
 const nextConfig = withSerwist({
   output: "standalone",
   reactStrictMode: true,
+  experimental: {
+    turbopackFileSystemCacheForBuild: true,
+  },
   images: {
     remotePatterns: [
       {

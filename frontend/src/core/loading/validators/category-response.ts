@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { CachedCategory } from '@/infrastructure/storage/db';
 
-const nullableString = z.string().nullable();
+const nullableString = z.string().nullable().optional().default(null);
 
 export const categoryResponseSchema: z.ZodSchema<CachedCategory> = z.object({
   id: z.string(),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { MapIcon, Download, Trash2, HardDrive, X, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { MapIcon, Download, Trash2, HardDrive, X, CheckCircle2, AlertTriangle } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 import { Card } from '@/presentation/shared/components/ui/card';

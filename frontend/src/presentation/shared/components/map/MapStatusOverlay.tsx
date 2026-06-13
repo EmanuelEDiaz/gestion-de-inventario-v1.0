@@ -1,6 +1,6 @@
 'use client';
 
-import { MapIcon, Download, AlertTriangle, Crosshair } from 'lucide-react';
+import { MapIcon, Download, AlertTriangle, Crosshair } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 

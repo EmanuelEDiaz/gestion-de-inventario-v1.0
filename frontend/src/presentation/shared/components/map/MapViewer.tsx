@@ -8,7 +8,7 @@ import { openPMTilesFromOPFS } from '@/infrastructure/maps/protocols/OPFSTileSou
 import { getCubaMapStyle } from '@/infrastructure/maps/styles/cuba-map-style';
 import { getMapMeta } from '@/infrastructure/maps/opfs-utils';
 import { MapStatusOverlay } from './MapStatusOverlay';
-import { Crosshair, ZoomIn, ZoomOut, Share2 } from 'lucide-react';
+import { Crosshair, ZoomIn, ZoomOut, Share } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipWrapper } from '@/presentation/shared/components/ui/tooltip';
 
@@ -179,7 +179,7 @@ export function MapViewer({
         )}
         <TooltipWrapper content="Compartir ubicación">
           <Button variant="secondary" size="icon" className="h-9 w-9" onClick={handleShare}>
-            <Share2 className="h-4 w-4" />
+            <Share className="h-4 w-4" />
           </Button>
         </TooltipWrapper>
       </div>

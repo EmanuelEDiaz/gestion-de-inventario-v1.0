@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { CachedCustomerDebt } from '@/infrastructure/storage/db';
 
-const nullableString = z.string().nullable();
+const nullableString = z.string().nullable().optional().default(null);
 
 export const customerDebtResponseSchema: z.ZodSchema<CachedCustomerDebt> = z.object({
   id: z.string(),

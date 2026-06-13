@@ -1,8 +1,7 @@
 
-import { Icon } from '@iconify/react';
 import { cn } from '@/presentation/shared/lib/utils';
 
-const sizeMap = { sm: 16, md: 24, lg: 36 };
+const sizeMap = { sm: 'h-4 w-4', md: 'h-6 w-6', lg: 'h-9 w-9' };
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -11,11 +10,9 @@ interface LoadingSpinnerProps {
 
 export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) {
   return (
-    <Icon
-      icon="svg-spinners:bars-scale-middle"
-      width={sizeMap[size]}
-      height={sizeMap[size]}
-      className={cn('text-current', className)}
+    <div
+      className={cn('animate-spin rounded-full border-2 border-current border-t-transparent', sizeMap[size], className)}
+      role="status"
       aria-label="Cargando"
     />
   );

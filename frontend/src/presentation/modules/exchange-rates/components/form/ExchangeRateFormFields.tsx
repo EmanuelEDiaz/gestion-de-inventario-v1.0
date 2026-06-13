@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@/presentation/shared/components/ui/icon-mapping';
 import type { CreateExchangeRateInput, RateType, ExchangeRate } from '@/core/exchange-rate/entities/exchange-rate';
 import { RATE_TYPE_LABELS } from '@/core/exchange-rate/entities/exchange-rate';
 import { EntityForm } from '@/presentation/shared/components/form/EntityForm';

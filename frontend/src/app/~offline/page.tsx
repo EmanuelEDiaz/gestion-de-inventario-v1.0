@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { WifiOff, RefreshCw } from 'lucide-react';
+import { WifiOff, RefreshCw } from '@/presentation/shared/components/ui/icon-mapping';
 
 export default function OfflinePage() {
   const [online, setOnline] = useState(

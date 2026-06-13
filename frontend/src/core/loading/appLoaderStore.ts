@@ -24,6 +24,12 @@ export type AppAvailability =
   | 'degraded'
   | 'error';
 
+export interface FailedPhase {
+  entityType: string;
+  phaseLabel: string;
+  error: string;
+}
+
 export interface AppLoaderState {
   phase: LoadPhase;
   availability: AppAvailability;
@@ -36,6 +42,7 @@ export interface AppLoaderState {
   swCompleted: number;
   swTotal: number;
   showSwUpdateBanner: boolean;
+  lastFailedPhase: FailedPhase | null;
 }
 
 export interface AppLoaderActions {
@@ -48,6 +55,7 @@ export interface AppLoaderActions {
   setSWProgress: (completed: number, total: number) => void;
   setShowSwUpdateBanner: (show: boolean) => void;
   setError: (error: string) => void;
+  setLastFailedPhase: (phase: FailedPhase | null) => void;
   reset: () => void;
   start: () => void;
 }
@@ -108,6 +116,43 @@ export function getAvailabilityLabel(availability: AppAvailability): string {
   return AVAILABILITY_LABELS[availability];
 }
 
+export interface ErrorMessageParts {
+  whatHappened: string;
+  impact: string;
+  userAction: string;
+  autoRetry: string;
+}
+
+export function formatPhaseError(
+  entityType: string,
+  phaseLabel: string,
+  hasCore: boolean,
+  isCore: boolean,
+): ErrorMessageParts {
+  if (hasCore) {
+    return {
+      whatHappened: `No se pudo descargar la actualización de ${phaseLabel}.`,
+      impact: 'La app seguirá usando los datos guardados anteriormente.',
+      userAction: 'Puedes reintentar la descarga, reparar datos corruptos, u omitir y continuar.',
+      autoRetry: 'No hay reintento automático.',
+    };
+  }
+  if (!isCore) {
+    return {
+      whatHappened: `No se pudo descargar ${phaseLabel}.`,
+      impact: 'Este recurso es secundario — puedes continuar con el resto de la app.',
+      userAction: 'Reintenta la descarga o continúa sin este recurso.',
+      autoRetry: 'No hay reintento automático durante el boot.',
+    };
+  }
+  return {
+    whatHappened: `No se pudo descargar ${phaseLabel}.`,
+    impact: 'Este es un dato esencial — la aplicación no puede iniciarse sin él.',
+    userAction: 'Revisa la conexión al servidor y reintenta. Si el problema persiste, contacta al administrador.',
+    autoRetry: 'No hay reintento automático.',
+  };
+}
+
 const initialState: AppLoaderState = {
   phase: 'idle',
   availability: 'blocking',
@@ -120,6 +165,7 @@ const initialState: AppLoaderState = {
   swCompleted: 0,
   swTotal: 0,
   showSwUpdateBanner: false,
+  lastFailedPhase: null,
 };
 
 export const useAppLoaderStore = create<AppLoaderState & AppLoaderActions>()((set) => ({
@@ -151,7 +197,9 @@ export const useAppLoaderStore = create<AppLoaderState & AppLoaderActions>()((se
 
   setError: (error) => set({ phase: 'error', availability: 'error', error, step: error }),
 
-  reset: () => set(initialState),
+  setLastFailedPhase: (phase) => set({ lastFailedPhase: phase }),
+
+  reset: () => set({ ...initialState, lastFailedPhase: null }),
 
   start: () =>
     set({
@@ -163,6 +211,7 @@ export const useAppLoaderStore = create<AppLoaderState & AppLoaderActions>()((se
       subProgress: 0,
       subTotal: 0,
       error: null,
+      lastFailedPhase: null,
       swCompleted: 0,
       swTotal: 0,
       showSwUpdateBanner: false,

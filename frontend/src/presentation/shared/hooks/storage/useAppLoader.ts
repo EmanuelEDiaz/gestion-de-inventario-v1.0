@@ -60,16 +60,49 @@ async function loadFlatCatalog(params: {
   }
 }
 
+const CORE_ENTITIES = new Set(['warehouses', 'products', 'stock']);
+
+function isCoreEntity(entityType: string): boolean {
+  return CORE_ENTITIES.has(entityType);
+}
+
 export function useAppLoader() {
   const store = useAppLoaderStore();
   const setPhase = useAppLoaderStore((s) => s.setPhase);
   const setAvailability = useAppLoaderStore((s) => s.setAvailability);
   const setError = useAppLoaderStore((s) => s.setError);
+  const setLastFailedPhase = useAppLoaderStore((s) => s.setLastFailedPhase);
   const setSubStep = useAppLoaderStore((s) => s.setSubStep);
   const setSubProgress = useAppLoaderStore((s) => s.setSubProgress);
   const { done: swDone, triggerStart: swTriggerStart } = useSWPrecacheProgress();
   const swStartedRef = useRef(false);
   const bgTasksTriggeredRef = useRef(false);
+
+  async function handlePhaseError(
+    entityType: string,
+    err: unknown,
+    phaseLabel: string,
+  ): Promise<void> {
+    const errMsg = err instanceof Error ? err.message : `Error al descargar ${phaseLabel}`;
+    const [wCount, pCount, sCount] = await Promise.all([
+      getCachedCount('warehouses'),
+      getCachedCount('products'),
+      getCachedCount('stockBalances'),
+    ]);
+    const hasCore = wCount > 0 && pCount > 0 && sCount > 0;
+
+    if (hasCore) {
+      setAvailability('degraded');
+      setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
+      appLogger.warn(`[AppLoader] ${entityType} non-fatal — usando datos anteriores`, err);
+    } else if (!isCoreEntity(entityType)) {
+      setAvailability('degraded');
+      setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
+      appLogger.warn(`[AppLoader] ${entityType} non-fatal — recurso secundario`, err);
+    } else {
+      setError(errMsg);
+    }
+  }
 
   useEffect(() => {
     if (store.phase !== 'quota') return;
@@ -171,7 +204,7 @@ export function useAppLoader() {
         });
         setPhase('products');
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al descargar bodegas');
+        await handlePhaseError('warehouses', err, 'bodegas');
       }
     })();
   }, [store.phase, setPhase, setSubStep, setError]);
@@ -199,7 +232,7 @@ export function useAppLoader() {
         }
         setPhase('categories');
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al descargar productos');
+        await handlePhaseError('products', err, 'productos');
       }
     })();
   }, [store.phase, setPhase, setSubStep, setSubProgress, setError]);
@@ -217,7 +250,7 @@ export function useAppLoader() {
         });
         setPhase('currencies');
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al descargar categorías');
+        await handlePhaseError('categories', err, 'categorías');
       }
     })();
   }, [store.phase, setPhase, setSubStep, setError]);
@@ -297,7 +330,7 @@ export function useAppLoader() {
         }
         setPhase('customers');
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al descargar existencias');
+        await handlePhaseError('stock', err, 'existencias');
       }
     })();
   }, [store.phase, setPhase, setAvailability, setSubStep, setError]);
@@ -305,28 +338,36 @@ export function useAppLoader() {
   useEffect(() => {
     if (store.phase !== 'customers') return;
     (async () => {
-      setSubStep('Descargando clientes...');
-      await loadFlatCatalog({
-        endpoint: '/api/v1/customers',
-        idbStoreName: 'customers',
-        schema: customerResponseSchema,
-        entityLabel: 'clientes',
-      });
-      setPhase('suppliers');
+      try {
+        setSubStep('Descargando clientes...');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/customers',
+          idbStoreName: 'customers',
+          schema: customerResponseSchema,
+          entityLabel: 'clientes',
+        });
+        setPhase('suppliers');
+      } catch (err) {
+        await handlePhaseError('customers', err, 'clientes');
+      }
     })();
   }, [store.phase, setPhase, setSubStep]);
 
   useEffect(() => {
     if (store.phase !== 'suppliers') return;
     (async () => {
-      setSubStep('Descargando proveedores...');
-      await loadFlatCatalog({
-        endpoint: '/api/v1/suppliers',
-        idbStoreName: 'suppliers',
-        schema: supplierResponseSchema,
-        entityLabel: 'proveedores',
-      });
-      setPhase('idle');
+      try {
+        setSubStep('Descargando proveedores...');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/suppliers',
+          idbStoreName: 'suppliers',
+          schema: supplierResponseSchema,
+          entityLabel: 'proveedores',
+        });
+        setPhase('idle');
+      } catch (err) {
+        await handlePhaseError('suppliers', err, 'proveedores');
+      }
     })();
   }, [store.phase, setPhase, setSubStep]);
 

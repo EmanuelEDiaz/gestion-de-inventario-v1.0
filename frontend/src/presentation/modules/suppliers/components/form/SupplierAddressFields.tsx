@@ -3,7 +3,7 @@
 import { Input } from '@/presentation/shared/components/ui/Input';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
-import { MapPin } from 'lucide-react';
+import { MapPin } from '@/presentation/shared/components/ui/icon-mapping';
 
 interface ProvinceOption {
   id: string;

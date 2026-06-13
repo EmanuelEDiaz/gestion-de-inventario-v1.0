@@ -8,7 +8,7 @@ import { Textarea } from '@/presentation/shared/components/form/Textarea';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 import { useProvinces } from '@/presentation/modules/geo/hooks/useProvinces';
 import { useMunicipalities } from '@/presentation/modules/geo/hooks/useMunicipalities';
-import { MapPin } from 'lucide-react';
+import { MapPin } from '@/presentation/shared/components/ui/icon-mapping';
 import { MapPickerModal } from '@/presentation/shared/components/map/MapPickerModal';
 
 interface CustomerFormFieldsProps {
