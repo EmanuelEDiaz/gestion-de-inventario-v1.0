@@ -4,8 +4,8 @@ export {
 } from './product-validators';
 export type { CreateProductInput, UpdateProductInput } from './product-validators';
 
-export { createSaleSchema } from './sale-validators';
-export type { CreateSaleInput } from './sale-validators';
+export { createSaleSchema, updateSaleSchema } from './sale-validators';
+export type { CreateSaleInput, UpdateSaleInput } from './sale-validators';
 
 export {
   createCustomerSchema,
@@ -54,3 +54,27 @@ export {
   updateUserSchema,
 } from './core/user-validators';
 export type { CreateUserInput, UpdateUserInput } from './core/user-validators';
+
+export {
+  createPurchaseSchema,
+  updatePurchaseSchema,
+} from './purchase-validators';
+export type { CreatePurchaseInput, UpdatePurchaseInput } from './purchase-validators';
+
+export {
+  createTransferSchema,
+  updateTransferSchema,
+} from './transfer-validators';
+export type { CreateTransferInput, UpdateTransferInput } from './transfer-validators';
+
+export {
+  createAdjustmentSchema,
+  updateAdjustmentSchema,
+} from './adjustment-validators';
+export type { CreateAdjustmentInput, UpdateAdjustmentInput } from './adjustment-validators';
+
+export {
+  createReturnSchema,
+  updateReturnSchema,
+} from './return-validators';
+export type { CreateReturnInput, UpdateReturnInput } from './return-validators';

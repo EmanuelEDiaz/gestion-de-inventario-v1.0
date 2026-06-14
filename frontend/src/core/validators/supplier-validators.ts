@@ -1,14 +1,31 @@
 import { z } from 'zod';
+import {
+  supplierName, supplierCode, supplierContactName, supplierPhone,
+  supplierEmail, supplierAddress, supplierNotes, supplierWebsite,
+  supplierProvince, supplierMunicipality, supplierStreet,
+  supplierLocality, supplierZipCode, supplierLatitude, supplierLongitude,
+} from './fields/commerce/supplier-fields';
+
+const geoFields = {
+  province: supplierProvince().optional(),
+  municipality: supplierMunicipality().optional(),
+  street: supplierStreet().optional(),
+  locality: supplierLocality().optional(),
+  zipCode: supplierZipCode().optional(),
+  latitude: supplierLatitude().optional(),
+  longitude: supplierLongitude().optional(),
+};
 
 export const createSupplierSchema = z.object({
-  code: z.string().optional(),
-  name: z.string().min(1, 'El nombre es requerido'),
-  contactName: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
-  address: z.string().optional(),
-  notes: z.string().optional(),
-  website: z.string().url('URL inválida').optional().or(z.literal('')).nullable(),
+  code: supplierCode().optional(),
+  name: supplierName(),
+  contactName: supplierContactName().optional(),
+  phone: supplierPhone().optional(),
+  email: supplierEmail().optional(),
+  address: supplierAddress().optional(),
+  notes: supplierNotes().optional(),
+  website: supplierWebsite().optional().or(z.literal('')).nullable(),
+  ...geoFields,
 });
 
 export const updateSupplierSchema = createSupplierSchema.partial();
