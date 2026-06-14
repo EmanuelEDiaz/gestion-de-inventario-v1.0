@@ -54,7 +54,7 @@
 
 ---
 
-### O.4 — currencies/exchange_rates/customer_debts failures invisibles
+### ✅ O.4 — currencies/exchange_rates/customer_debts failures invisibles
 
 **Archivo**: `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts`
 
@@ -64,7 +64,14 @@
 
 **Solución**: Reemplazar el bloque catch de estos 3 handlers con `handlePhaseError(entity, err, label)` manteniendo el avance de fase (no `return` como en core). Esto setea `lastFailedPhase` y degrada `availability` correctamente.
 
-**Verificación**: Mockear error en fase `currencies`, verificar que `lastFailedPhase` se setea y `availability` se degrada a `degraded`.
+**Commit**: `eb3b5e4`
+
+**Qué se hizo**:
+- `currencies`, `exchange_rates`, `customer_debts`: catch blocks cambiados de `appLogger.warn()` a `await handlePhaseError(...)`
+- `handlePhaseError` setea `lastFailedPhase` + degrada `availability` a `degraded` (son recursos secundarios, non-core)
+- Mantiene avance de fase (`setPhase('next')`) después del error
+
+**Verificado**: `tsc --noEmit` OK, 224/224 tests pasan.
 
 ---
 
@@ -139,7 +146,7 @@
 | **O.1** | Backend serverPayload real en SyncPushController | ✅ Completo (commit 8c4fb80) |
 | **O.2** | Geo search offline (hooks + población) | ✅ Completo (commit 6df9c06) |
 | **O.3** | Migrar Currency/ExchangeRate/CustomerDebt a local-first | ✅ Completo (commit fec01fc) |
-| **O.4** | currencies/exchange_rates/customer_debts failures invisibles | ⏳ Pendiente |
+| **O.4** | currencies/exchange_rates/customer_debts failures invisibles | ✅ Completo (commit eb3b5e4) |
 | **O.5** | README desactualizado | ⏳ Pendiente |
 | **O.6** | catalog_refresh task huérfana | ✅ Completo (incluido en O.2) |
 | **O.7** | ready_complete literal nunca usado | ⏳ Pendiente |
