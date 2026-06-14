@@ -218,7 +218,7 @@ export function useAppLoader() {
         if (count > 0) { setPhase('categories'); return; }
         const result = await DownloadQueueService.downloadEntity({
           entityType: 'products',
-          endpoint: '/api/v1/products',
+          endpoint: '/api/v1/products/paginated',
           idbStoreName: 'products',
           schema: productResponseSchema,
           pageSize: PAGE_SIZE,
