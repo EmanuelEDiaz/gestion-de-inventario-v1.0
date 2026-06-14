@@ -272,7 +272,7 @@ export function useAppLoader() {
         });
         setPhase('exchange_rates');
       } catch (err) {
-        appLogger.warn('[AppLoader] currencies non-fatal — disponible solo online', { error: err, errorCode: 'ERR_CURRENCIES_LOAD' });
+        await handlePhaseError('currencies', err, 'monedas');
         setPhase('exchange_rates');
       }
     })();
@@ -291,7 +291,7 @@ export function useAppLoader() {
         });
         setPhase('customer_debts');
       } catch (err) {
-        appLogger.warn('[AppLoader] exchange_rates non-fatal — tasas no disponibles offline', { error: err, errorCode: 'ERR_EXCHANGE_RATES_LOAD' });
+        await handlePhaseError('exchange_rates', err, 'tasas de cambio');
         setPhase('customer_debts');
       }
     })();
@@ -310,7 +310,7 @@ export function useAppLoader() {
         });
         setPhase('stock');
       } catch (err) {
-        appLogger.warn('[AppLoader] customer_debts non-fatal — deudas no disponibles offline', { error: err, errorCode: 'ERR_DEBTS_LOAD' });
+        await handlePhaseError('customer_debts', err, 'deudas de clientes');
         setPhase('stock');
       }
     })();

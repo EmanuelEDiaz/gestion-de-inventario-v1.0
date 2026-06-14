@@ -35,32 +35,22 @@
 
 ---
 
-### O.3 — Migrar Currency/ExchangeRate/CustomerDebt repos a local-first
+### ✅ O.3 — Migrar Currency/ExchangeRate/CustomerDebt repos a local-first
 
-**Archivos**:
-- `frontend/src/infrastructure/repositories/currency/CurrencyRepository.ts`
-- `frontend/src/infrastructure/repositories/exchange-rate/ExchangeRateRepository.ts`
-- `frontend/src/infrastructure/repositories/customer/CustomerDebtRepository.ts`
+**Commit**: `fec01fc`
 
-**Problema**: Estos 3 repos aún usan `apiClient.get` como fuente primaria de lectura. El loader descarga currencies, exchange_rates y customer_debts a IDB durante el boot, pero la UI vuelve a pedirlos por HTTP. Viola P3 (offline indefinido).
+**Nota**: CurrencyRepository y ExchangeRateRepository ya estaban migrados local-first. Solo CustomerDebtRepository estaba pendiente.
 
-**Referencia**: task_plan.md línea 1745-1761 (tabla de migración), línea 208: "La UI lee SIEMPRE desde repositorios locales basados en IDB."
+**Qué se hizo**:
+- `CustomerDebtRepository.ts`: Migrado a local-first completo
+  - `findAll`/`findOverdue`/`findById`/`findByCustomer`: todas leen de IDB (`db.getAll` / `db.get` / `db.getAllFromIndex`)
+  - `update`/`cancel`: write API-first con outbox fallback, actualizan cache en éxito
+  - `registerPayment`: write API-first con outbox fallback (no cachea DebtPayment — no hay store local)
+- `useCustomerDebts.ts`: Cambiado de `customerDebtApi.getByCustomer()` a `customerDebtRepository.findByCustomer()`
+- `useDebtPayment.ts`: Cambiado de `customerDebtApi.registerPayment()` a `customerDebtRepository.registerPayment()`
+- Tests refactoreados al patrón ProductRepository (mock IDB, no mock API)
 
-**Solución**: Cada repositorio debe cambiar de:
-```typescript
-// ❌ HTTP-first
-async getAll(): Promise<Currency[]> {
-  return readWithCache(() => apiClient.get('/api/v1/currencies'), () => db.getAll('currencies'));
-}
-// ✅ Local-first
-async getAll(): Promise<Currency[]> {
-  return db.getAll('currencies');
-}
-```
-
-Mantener `create`/`update`/`delete` con outbox.
-
-**Verificación**: `rg "apiClient\\.get" frontend/src/infrastructure/repositories/ --include '*.ts'` NO debe mostrar currency, exchange-rate, customer-debt.
+**Verificado**: `tsc --noEmit` OK, 224/224 tests pasan, `rg "apiClient.get" en los 3 repos` → 0 matches.
 
 ---
 
@@ -148,7 +138,7 @@ Mantener `create`/`update`/`delete` con outbox.
 | **O.0** | Fix pre-existentes (ProductControllerTest 500) | ✅ Completo (commit 19671e6) |
 | **O.1** | Backend serverPayload real en SyncPushController | ✅ Completo (commit 8c4fb80) |
 | **O.2** | Geo search offline (hooks + población) | ✅ Completo (commit 6df9c06) |
-| **O.3** | Migrar Currency/ExchangeRate/CustomerDebt a local-first | ⏳ Pendiente |
+| **O.3** | Migrar Currency/ExchangeRate/CustomerDebt a local-first | ✅ Completo (commit fec01fc) |
 | **O.4** | currencies/exchange_rates/customer_debts failures invisibles | ⏳ Pendiente |
 | **O.5** | README desactualizado | ⏳ Pendiente |
 | **O.6** | catalog_refresh task huérfana | ✅ Completo (incluido en O.2) |
