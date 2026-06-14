@@ -39,9 +39,6 @@
     "zod": "^4.4.3",
     "zustand": "^5.0.12"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": ["@swc/core", "esbuild", "sharp", "unrs-resolver"]
-  },
   "devDependencies": {
 
     "@serwist/turbopack": "^9.5.11",
