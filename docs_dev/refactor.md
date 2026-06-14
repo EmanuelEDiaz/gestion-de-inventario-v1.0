@@ -20,46 +20,18 @@
 
 ## 🟡 Prioridad Media
 
-### O.2 — Geo search offline (ni hooks ni población)
+### ✅ O.2 — Geo search offline (hooks + población de geoIndex)
 
-**Archivos a crear**:
-- `frontend/src/presentation/shared/hooks/storage/useGeoSearch.ts`
-- `frontend/src/presentation/shared/hooks/storage/useProvinces.ts`
-- `frontend/src/presentation/shared/hooks/storage/useMunicipalities.ts`
+**Commit**: `6df9c06` | **Subfases**: O.2.A (exploración), O.2.B (hooks + fix DBSchema), O.2.C (background task), O.2.E (verificación)
 
-**Archivos a modificar**: `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts`
-
-**Problema**: El store `geoIndex` existe en IDB v5 con índices `by-type`, `by-name`, `by-parent`, pero NADIE lo puebla. Los hooks `useGeoSearch`, `useProvinces`, `useMunicipalities` no existen.
-
-**Referencia**: task_plan.md:
-- Línea 94: "Búsqueda geográfica offline (provincias, municipios, ciudades) — useGeoSearch('La Habana') retorna resultados sin red"
-- Línea 1860-1902: Carga de geoIndex post-ready_partial (efecto separado en useAppLoader.ts)
-- Línea 753: `geoIndex` full (Cuba) — provincias + municipios desde `/api/v1/geo/provinces?countryCode=CU` + `/api/v1/geo/municipalities/{provinceId}`
-
-**Solución**:
-
-1. **Crear `useGeoSearch.ts`** (en `hooks/storage/`):
-   - Consulta `geoIndex` IDB store por `normalizedName` y `type`
-   - Retorna `{ results, loading, error }`
-   - Busca por substring case-insensitive en `normalizedName`
-
-2. **Crear `useProvinces.ts`** (en `hooks/storage/`):
-   - Lee todas las provincias desde `geoIndex` filtrado por `type === 'province'`
-   - Cachea en memoria
-
-3. **Crear `useMunicipalities.ts`** (en `hooks/storage/`):
-   - Toma `provinceId` como parámetro
-   - Lee municipios desde `geoIndex` filtrado por `type === 'municipality'` y `parentIds` contiene `provinceId`
-
-4. **Poblar `geoIndex` post-ready_partial** en `useAppLoader.ts`:
-   - Agregar `useEffect` que se ejecuta cuando `availability === 'ready_partial'`
-   - Si `geoIndex` ya tiene datos (`db.count('geoIndex') > 0`), skip
-   - Fetch provincias + municipios desde `GeoRegionRepository`
-   - Guardar en IDB store `geoIndex`
-   - Reintento máximo 3 veces en misma sesión si falla
-   - No degrada `availability` — solo deshabilita búsqueda
-
-**Verificación**: `pnpm exec tsc --noEmit` sin errores. Test unitario con mock de IDB.
+**Qué se hizo**:
+- Fix DBSchema `geoIndex` type: agregados campos `name`, `aliases`, `center`, `bbox`, `countryCode` que ya se guardaban via `as never`
+- Fix `by-parent` index type: cambió de `string[]` a `string` (multiEntry index se consulta con string individual)
+- Creados `useProvinces.ts` y `useMunicipalities.ts` en `hooks/map/`
+- Agregado `populate_geo_index` como background task en `useBackgroundTasks.ts` (se ejecuta post-`ready_partial`)
+- Fix `useGeoIndexLoader.ts` eliminó `as never`
+- `useGeoSearch.ts` ya existía y funciona (solo requirió fix de DBSchema)
+- **Verificado**: `tsc --noEmit` OK, `pnpm test:run` 219/219 OK
 
 ---
 
@@ -125,13 +97,11 @@ Mantener `create`/`update`/`delete` con outbox.
 
 ## 🟢 Prioridad Baja
 
-### O.6 — `catalog_refresh` task huérfana
+### ✅ O.6 — `catalog_refresh` task huérfana
 
-**Archivo**: `frontend/src/core/loading/backgroundTasksStore.ts`
+**Commit**: `6df9c06` (incluido en O.2)
 
-**Problema**: El tipo `BackgroundTaskId` incluye `'catalog_refresh'` pero `useBackgroundTasks.ts` no registra runner para ella. Es dead code.
-
-**Solución**: Eliminar `'catalog_refresh'` del tipo o implementar el runner.
+**Qué se hizo**: Eliminado `'catalog_refresh'` de `BackgroundTaskId` y reemplazado por `'populate_geo_index'`. Era dead code — no había runner registrado.
 
 ---
 
@@ -175,11 +145,12 @@ Mantener `create`/`update`/`delete` con outbox.
 
 | Fase | Nombre | Estado |
 |------|--------|--------|
+| **O.0** | Fix pre-existentes (ProductControllerTest 500) | ✅ Completo (commit 19671e6) |
 | **O.1** | Backend serverPayload real en SyncPushController | ✅ Completo (commit 8c4fb80) |
-| **O.2** | Geo search offline (hooks + población) | ⏳ Pendiente |
+| **O.2** | Geo search offline (hooks + población) | ✅ Completo (commit 6df9c06) |
 | **O.3** | Migrar Currency/ExchangeRate/CustomerDebt a local-first | ⏳ Pendiente |
 | **O.4** | currencies/exchange_rates/customer_debts failures invisibles | ⏳ Pendiente |
 | **O.5** | README desactualizado | ⏳ Pendiente |
-| **O.6** | catalog_refresh task huérfana | ⏳ Pendiente |
+| **O.6** | catalog_refresh task huérfana | ✅ Completo (incluido en O.2) |
 | **O.7** | ready_complete literal nunca usado | ⏳ Pendiente |
 | **O.8** | OfflineImage component | ⏳ Pendiente |

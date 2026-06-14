@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { customerDebtApi } from '@/infrastructure/api/customer-debt-api';
+import { customerDebtRepository } from '@/infrastructure/repositories/customer/CustomerDebtRepository';
 import type { RegisterDebtPaymentData } from '@/core/customer/entities/debt-payment';
 
 export function useDebtPayment(customerId: string, _debtId?: string) {
@@ -10,7 +10,7 @@ export function useDebtPayment(customerId: string, _debtId?: string) {
 
   const mutation = useMutation({
     mutationFn: ({ debtId, data }: { debtId: string; data: RegisterDebtPaymentData }) =>
-      customerDebtApi.registerPayment(debtId, data),
+      customerDebtRepository.registerPayment(debtId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['customer-debts', customerId] });
       qc.invalidateQueries({ queryKey: ['debts'] });
