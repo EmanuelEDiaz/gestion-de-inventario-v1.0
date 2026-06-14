@@ -5,7 +5,7 @@ const optionalString = z.string().optional();
 const optionalNullableNumber = z.coerce.number().nullable().optional();
 
 export const stockResponseSchema: z.ZodSchema<CachedStockBalance> = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   warehouseId: z.string(),
   productId: z.string(),
   warehouseName: optionalString,
@@ -18,4 +18,7 @@ export const stockResponseSchema: z.ZodSchema<CachedStockBalance> = z.object({
   totalValue: optionalNullableNumber,
   updatedAt: optionalString,
   cachedAt: z.coerce.number().optional(),
-});
+}).transform(data => ({
+  ...data,
+  id: data.id ?? `${data.warehouseId}:${data.productId}`,
+}));

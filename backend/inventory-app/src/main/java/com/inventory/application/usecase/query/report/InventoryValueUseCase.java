@@ -20,7 +20,7 @@ public class InventoryValueUseCase {
         return db.sql("""
             SELECT
                 COALESCE(SUM(sb.on_hand * COALESCE(sb.avg_cost, 0)), 0) AS total_value,
-                COALESCE(SUM(sb.on_hand * COALESCE(p.cost, 0)), 0) AS total_cost,
+                COALESCE(SUM(sb.on_hand * COALESCE(p.standard_cost, 0)), 0) AS total_cost,
                 COUNT(DISTINCT p.id) AS product_count,
                 CASE WHEN COUNT(DISTINCT p.id) > 0
                     THEN COALESCE(SUM(sb.on_hand * COALESCE(sb.avg_cost, 0)), 0) / COUNT(DISTINCT p.id)
