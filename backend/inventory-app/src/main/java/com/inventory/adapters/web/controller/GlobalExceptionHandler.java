@@ -1,34 +1,38 @@
 package com.inventory.adapters.web.controller;
 
+import com.inventory.adapters.web.dto.FieldErrorDetail;
 import com.inventory.adapters.web.dto.ProblemDetail;
+import com.inventory.domain.errors.CategoryNotFoundError;
+import com.inventory.domain.errors.ConflictException;
+import com.inventory.domain.errors.CustomerNotFoundError;
 import com.inventory.domain.errors.DomainException;
+import com.inventory.domain.errors.InsufficientStockError;
 import com.inventory.domain.errors.InvalidCredentialsException;
 import com.inventory.domain.errors.InvalidSettingsValueException;
 import com.inventory.domain.errors.InvalidTokenException;
-import com.inventory.domain.errors.SettingsVersionConflictException;
-import com.inventory.domain.errors.UserDisabledException;
-import com.inventory.domain.errors.CategoryNotFoundError;
-import com.inventory.domain.errors.CustomerNotFoundError;
-import com.inventory.domain.errors.InsufficientStockError;
 import com.inventory.domain.errors.ProductDuplicateError;
 import com.inventory.domain.errors.ProductNotFoundError;
 import com.inventory.domain.errors.ProductOutOfStockError;
 import com.inventory.domain.errors.SaleNotFoundError;
+import com.inventory.domain.errors.SettingsVersionConflictException;
 import com.inventory.domain.errors.SupplierNotFoundError;
+import com.inventory.domain.errors.UserDisabledException;
 import com.inventory.domain.errors.UserNotFoundException;
 import com.inventory.domain.errors.WarehouseNotFoundError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 /**
  * Manejador global de excepciones.
@@ -114,19 +118,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(WebExchangeBindException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleValidation(
             WebExchangeBindException ex, ServerWebExchange exchange) {
-        String detail = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .reduce((a, b) -> a + "; " + b)
-                .orElse("Validation failed");
-        
-        ProblemDetail problem = ProblemDetail.of(
+        List<FieldErrorDetail> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> new FieldErrorDetail(error.getField(), error.getDefaultMessage()))
+                .toList();
+
+        ProblemDetail problem = ProblemDetail.withFieldErrors(
                 "urn:inventory:error:validation",
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation Error",
-                detail,
-                exchange.getRequest().getPath().value()
+                "Validation failed for " + fieldErrors.size() + " field(s)",
+                exchange.getRequest().getPath().value(),
+                fieldErrors
         );
-        
+
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .header("Content-Type", "application/problem+json")
                 .body(problem));
@@ -192,13 +196,26 @@ public class GlobalExceptionHandler {
         HttpStatus status = resolveHttpStatus(ex);
         log.warn("Domain exception [{}]: {}", status, ex.getMessage());
 
-        ProblemDetail problem = ProblemDetail.of(
-                "urn:inventory:error:" + ex.getErrorCode().toLowerCase().replace("_", "-"),
-                status.value(),
-                status.getReasonPhrase(),
-                ex.getMessage(),
-                exchange.getRequest().getPath().value()
-        );
+        List<FieldErrorDetail> fieldErrors = null;
+        if (ex instanceof ConflictException ce && ce.getField() != null) {
+            fieldErrors = List.of(new FieldErrorDetail(ce.getField(), ce.getMessage()));
+        }
+
+        ProblemDetail problem = fieldErrors != null
+                ? ProblemDetail.withFieldErrors(
+                        "urn:inventory:error:" + ex.getErrorCode().toLowerCase().replace("_", "-"),
+                        status.value(),
+                        status.getReasonPhrase(),
+                        ex.getMessage(),
+                        exchange.getRequest().getPath().value(),
+                        fieldErrors)
+                : ProblemDetail.of(
+                        "urn:inventory:error:" + ex.getErrorCode().toLowerCase().replace("_", "-"),
+                        status.value(),
+                        status.getReasonPhrase(),
+                        ex.getMessage(),
+                        exchange.getRequest().getPath().value()
+                );
 
         return Mono.just(ResponseEntity.status(status)
                 .header("Content-Type", "application/problem+json")
