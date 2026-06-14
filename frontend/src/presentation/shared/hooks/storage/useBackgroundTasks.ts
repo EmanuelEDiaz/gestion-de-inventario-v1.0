@@ -191,10 +191,72 @@ export async function prefetchImagesBackground(): Promise<void> {
   }
 }
 
+export async function populateGeoIndexBackground(): Promise<void> {
+  const { startTask, completeTask, failTask, skipTask } = useBackgroundTasksStore.getState();
+  startTask('populate_geo_index', 'Cargando índice geográfico...', 1);
+
+  try {
+    const { getDB: openDB } = await import('@/infrastructure/storage/db');
+    const db = await openDB();
+    const existing = await db.count('geoIndex');
+    if (existing > 0) {
+      skipTask('populate_geo_index', 'already_populated');
+      return;
+    }
+
+    const { GeoRegionRepository } = await import('@/infrastructure/repositories/geo/GeoRegionRepository');
+    const repo = new GeoRegionRepository();
+
+    const provinces = await repo.getProvinces('CU');
+
+    const tx = db.transaction('geoIndex', 'readwrite');
+    const store = tx.objectStore('geoIndex');
+
+    for (const province of provinces) {
+      await store.put({
+        id: `province_${province.id}`,
+        type: 'province',
+        name: province.name,
+        normalizedName: province.name.toLowerCase(),
+        aliases: [],
+        parentIds: ['CU'],
+        center: [province.longitude ?? 0, province.latitude ?? 0] as [number, number],
+        bbox: [0, 0, 0, 0] as [number, number, number, number],
+        countryCode: 'CU',
+      });
+
+      const municipalities = await repo.getMunicipalities(province.id);
+      for (const muni of municipalities) {
+        await store.put({
+          id: `municipality_${muni.id}`,
+          type: 'municipality',
+          name: muni.name,
+          normalizedName: muni.name.toLowerCase(),
+          aliases: [],
+          parentIds: [`province_${province.id}`, 'CU'],
+          center: [muni.longitude ?? 0, muni.latitude ?? 0] as [number, number],
+          bbox: [0, 0, 0, 0] as [number, number, number, number],
+          countryCode: 'CU',
+        });
+      }
+    }
+
+    await tx.done;
+    completeTask('populate_geo_index');
+  } catch (err) {
+    appLogger.warn('[populate_geo_index] non-fatal', {
+      error: err,
+      errorCode: 'ERR_GEOINDEX_LOAD_FAILED',
+    });
+    failTask('populate_geo_index', errorMessage(err));
+  }
+}
+
 const BACKGROUND_TASK_RUNNERS: Array<{ id: BackgroundTaskId; run: () => Promise<void> }> = [
   { id: 'map_verify', run: verifyMapBackground },
   { id: 'precache_routes', run: precacheOfflineRoute },
   { id: 'image_prefetch', run: prefetchImagesBackground },
+  { id: 'populate_geo_index', run: populateGeoIndexBackground },
 ];
 
 export async function startBackgroundTasks(): Promise<void> {

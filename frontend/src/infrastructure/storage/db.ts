@@ -403,13 +403,18 @@ interface InventoryDB extends DBSchema {
     value: {
       id: string;
       type: string;
+      name: string;
       normalizedName: string;
       parentIds: string[];
+      aliases: string[];
+      center: [number, number];
+      bbox: [number, number, number, number];
+      countryCode: string;
     };
     indexes: {
       'by-type': string;
       'by-name': string;
-      'by-parent': string[];
+      'by-parent': string;
     };
   };
   mapMarkers: {

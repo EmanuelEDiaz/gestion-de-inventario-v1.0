@@ -5,7 +5,7 @@ export type BackgroundTaskId =
   | 'image_prefetch'
   | 'precache_routes'
   | 'map_verify'
-  | 'catalog_refresh';
+  | 'populate_geo_index';
 
 export type BackgroundTaskStatus = 'idle' | 'running' | 'done' | 'failed' | 'skipped';
 
@@ -39,7 +39,7 @@ const INITIAL_TASKS: Record<BackgroundTaskId, BackgroundTaskProgress> = {
   image_prefetch: { id: 'image_prefetch', label: '', completed: 0, total: 0, status: 'idle' },
   precache_routes: { id: 'precache_routes', label: '', completed: 0, total: 0, status: 'idle' },
   map_verify: { id: 'map_verify', label: '', completed: 0, total: 0, status: 'idle' },
-  catalog_refresh: { id: 'catalog_refresh', label: '', completed: 0, total: 0, status: 'idle' },
+  populate_geo_index: { id: 'populate_geo_index', label: '', completed: 0, total: 0, status: 'idle' },
 };
 
 const TERMINAL_STATUSES: ReadonlySet<BackgroundTaskStatus> = new Set(['done', 'failed', 'skipped']);

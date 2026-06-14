@@ -1,214 +1,173 @@
-# Plan M: Cortar Loop Infinito en Descarga Corrupta + Reintentar Controlado
+# Plan O: Remaining Gaps from task_plan.md
 
-> Created: 2026-06-13 | v1 — Basado en error reportado: `[DownloadQueue] validation failed for products-0` se repite infinitamente. El chunk corrupto nunca se persiste, `getCachedCount('products')` siempre devuelve 0, y `DashboardLayout` re-triggers el boot cycle al ver `appPhase === 'idle'`. Task_plan.md línea 583 dice: `corrupted` → **No reintentar automático infinito**. El código viola esta regla.
->
-> ⚠️ **Plan L ya está implementado y commiteado** (90f492b). Este es el siguiente plan.
+> Created: 2026-06-13 | Audit del codebase vs `task_plan.md` (canónico). Refleja todo lo NO implementado aún de las fases A–I. Fases M (loop fix, commit cebe809) y N (schemas alineados, commit 7cbba0f) están completas.
 
 ---
 
-## Problema: Loop Infinito en Carga Inicial con Datos Corruptos
+## 🔴 Prioridad Alta
 
-### Síntoma
-```
-Toast: "Datos corruptos en products. El checksum del chunk no coincide..."
-Consola: [ERROR] [DownloadQueue] validation failed for products-0  (se repite cada ~5s)
-         [WARN] [AppLoader] products descarga parcial
-```
+### ✅ O.1 — Backend `serverPayload` real en SyncPushController
 
-El toast aparece una vez por ciclo de boot. El número de repeticiones en consola corresponde al loop infinito.
+**Commit**: `8c4fb80` | **Subfases**: O.1.A (OperationResult+errorCode), O.1.B (CurrentEntityFetcher), O.1.C (controller enrichment), O.1.D (tests)
 
-### Root Cause
-
-```
-flowchart TD
-    A[Boot cycle comienza] --> B[products phase: downloadEntity]
-    B --> C[processChunk valida ALL items inválidos]
-    C --> D[nada se persiste a IDB]
-    D --> E[setPhase('categories') avanza igual]
-    E --> F[... suppliers → setPhase('idle')]
-    F --> G[DashboardLayout: appPhase === 'idle'?]
-    G -->|SÍ| H[startLoading → store.start → reset]
-    H --> A
-```
-
-**Por qué `getCachedCount('products')` siempre es 0**: `processChunk` (DownloadQueueService.ts:348-369) retorna `corrupted: true` inmediatamente sin llamar a `commitChunk`. El store de productos en IDB queda vacío.
-
-**Por qué el boot re-triggers**: DashboardLayout.tsx:100-104:
-```typescript
-useEffect(() => {
-    if (isAuthReady && appPhase === 'idle') {
-      startLoading();  // ← Siempre que phase = 'idle', sin check de availability
-    }
-}, [isAuthReady, appPhase, startLoading]);
-```
-Llama `startLoading()` → `store.start()` → resetea a `phase: 'quota'` → el ciclo se repite.
-
-**Por qué el handler no detecta el error**: `useAppLoader.ts:231-233`:
-```typescript
-if (!result.ok && result.chunksFailed > 0) {
-    appLogger.warn(...); // Solo log, no cambia estado
-}
-setPhase('categories'); // Siempre avanza, incluso con 0 ítems commited
-```
-
-### Referencia en task_plan.md
-
-| Línea | Regla | Estado actual |
-|-------|-------|--------------|
-| 583 | `corrupted` → **No reintentar automático infinito** | ❌ Violado — el loop reintenta infinitamente |
-| 665 | core entity sin core dataset → **Fatal → ErrorState** | ❌ Violado — nunca llega a ErrorState |
-| 572 | Sin core dataset → error en core entity = **fatal de boot** | ❌ Violado — avanza como si nada |
-| 567-570 | Clasificación por tipo de arranque (primer arranque vs cache) | ❌ No implementada en products handler |
+**Qué se hizo**:
+- `OperationResult` record tiene nuevo campo `errorCode` extraído de `DomainException.getErrorCode()`
+- Nuevo `CurrentEntityFetcher` service mapea entity types (PRODUCT, CATEGORY, CUSTOMER, SUPPLIER, WAREHOUSE) a sus repositorios y retorna `Map<String,Object>` via Jackson
+- `SyncPushController` enriches rejected OperationResults con: `errorCode`, `serverPayload` (estado actual DB), `clientPayload` (payload original request), `serverVersion`
+- **Verificado**: `mvn compile` OK, 93/93 tests pasan (excluyendo ProductControllerTest preexistente)
 
 ---
 
-## Soluciones Propuestas
+## 🟡 Prioridad Media
 
-### Principio Rector (de task_plan.md)
-> `corrupted` → No reintentar automático infinito — enviar a `corruptionQueue` y `CorruptionRepairCenter`
+### O.2 — Geo search offline (ni hooks ni población)
 
-### Lo que NO cambia
-- Toast de corrupción: sigue apareciendo (correcto)
-- `CorruptionRepairCenter`: sigue accesible desde toast y error screen
-- `lastFailedPhase` + `handlePhaseError`: ya funcionan (Plan L implementado)
-- `CacheProgressBar` con botones: ya funcionan (Plan L implementado)
-- Botón "Cerrar sesión": ya visible (Plan L implementado)
+**Archivos a crear**:
+- `frontend/src/presentation/shared/hooks/storage/useGeoSearch.ts`
+- `frontend/src/presentation/shared/hooks/storage/useProvinces.ts`
+- `frontend/src/presentation/shared/hooks/storage/useMunicipalities.ts`
+
+**Archivos a modificar**: `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts`
+
+**Problema**: El store `geoIndex` existe en IDB v5 con índices `by-type`, `by-name`, `by-parent`, pero NADIE lo puebla. Los hooks `useGeoSearch`, `useProvinces`, `useMunicipalities` no existen.
+
+**Referencia**: task_plan.md:
+- Línea 94: "Búsqueda geográfica offline (provincias, municipios, ciudades) — useGeoSearch('La Habana') retorna resultados sin red"
+- Línea 1860-1902: Carga de geoIndex post-ready_partial (efecto separado en useAppLoader.ts)
+- Línea 753: `geoIndex` full (Cuba) — provincias + municipios desde `/api/v1/geo/provinces?countryCode=CU` + `/api/v1/geo/municipalities/{provinceId}`
+
+**Solución**:
+
+1. **Crear `useGeoSearch.ts`** (en `hooks/storage/`):
+   - Consulta `geoIndex` IDB store por `normalizedName` y `type`
+   - Retorna `{ results, loading, error }`
+   - Busca por substring case-insensitive en `normalizedName`
+
+2. **Crear `useProvinces.ts`** (en `hooks/storage/`):
+   - Lee todas las provincias desde `geoIndex` filtrado por `type === 'province'`
+   - Cachea en memoria
+
+3. **Crear `useMunicipalities.ts`** (en `hooks/storage/`):
+   - Toma `provinceId` como parámetro
+   - Lee municipios desde `geoIndex` filtrado por `type === 'municipality'` y `parentIds` contiene `provinceId`
+
+4. **Poblar `geoIndex` post-ready_partial** en `useAppLoader.ts`:
+   - Agregar `useEffect` que se ejecuta cuando `availability === 'ready_partial'`
+   - Si `geoIndex` ya tiene datos (`db.count('geoIndex') > 0`), skip
+   - Fetch provincias + municipios desde `GeoRegionRepository`
+   - Guardar en IDB store `geoIndex`
+   - Reintento máximo 3 veces en misma sesión si falla
+   - No degrada `availability` — solo deshabilita búsqueda
+
+**Verificación**: `pnpm exec tsc --noEmit` sin errores. Test unitario con mock de IDB.
 
 ---
 
-### Solución A — Cortar el loop (mínimo, 2 cambios)
+### O.3 — Migrar Currency/ExchangeRate/CustomerDebt repos a local-first
 
-**Impacto**: La app no se queda en loop infinito, pero availability queda como `ready_partial` (seteado por stock phase) aunque products esté vacío. El usuario ve la app sin productos y un toast de corrupción.
+**Archivos**:
+- `frontend/src/infrastructure/repositories/currency/CurrencyRepository.ts`
+- `frontend/src/infrastructure/repositories/exchange-rate/ExchangeRateRepository.ts`
+- `frontend/src/infrastructure/repositories/customer/CustomerDebtRepository.ts`
 
-#### A.1 — DashboardLayout.tsx:102 — No re-trigger si availability no es 'blocking'
+**Problema**: Estos 3 repos aún usan `apiClient.get` como fuente primaria de lectura. El loader descarga currencies, exchange_rates y customer_debts a IDB durante el boot, pero la UI vuelve a pedirlos por HTTP. Viola P3 (offline indefinido).
 
-**Archivo**: `frontend/src/presentation/shared/components/layout/DashboardLayout.tsx`
+**Referencia**: task_plan.md línea 1745-1761 (tabla de migración), línea 208: "La UI lee SIEMPRE desde repositorios locales basados en IDB."
 
-**Before**:
+**Solución**: Cada repositorio debe cambiar de:
 ```typescript
-if (isAuthReady && appPhase === 'idle') {
-    startLoading();
+// ❌ HTTP-first
+async getAll(): Promise<Currency[]> {
+  return readWithCache(() => apiClient.get('/api/v1/currencies'), () => db.getAll('currencies'));
+}
+// ✅ Local-first
+async getAll(): Promise<Currency[]> {
+  return db.getAll('currencies');
 }
 ```
 
-**After**:
-```typescript
-if (isAuthReady && appPhase === 'idle' && appAvailability === 'blocking') {
-    startLoading();
-}
-```
+Mantener `create`/`update`/`delete` con outbox.
 
-Esto rompe el loop porque después del primer boot, `availability` deja de ser `'blocking'` (stock phase la setea a `'ready_partial'`). `retryBoot()` manual sigue funcionando porque llama `store.start()` directo sin pasar por este trigger.
+**Verificación**: `rg "apiClient\\.get" frontend/src/infrastructure/repositories/ --include '*.ts'` NO debe mostrar currency, exchange-rate, customer-debt.
 
-#### A.2 — useAppLoader.ts:231 — Detectar corrupción en products y setear degraded
+---
+
+### O.4 — currencies/exchange_rates/customer_debts failures invisibles
 
 **Archivo**: `frontend/src/presentation/shared/hooks/storage/useAppLoader.ts`
 
-**Before**:
-```typescript
-if (!result.ok && result.chunksFailed > 0) {
-    appLogger.warn('[AppLoader] products descarga parcial', result.errors);
-}
-setPhase('categories');
-```
+**Problema**: Los handlers de `currencies`, `exchange_rates` y `customer_debts` atrapan errores solo con `appLogger.warn()` y avanzan a la siguiente fase. NO llaman a `handlePhaseError`, NO setean `lastFailedPhase`, NO degradan `availability`. Si fallan en primer arranque, el usuario no tiene feedback.
 
-**After**:
-```typescript
-if (!result.ok) {
-    const errMsg = result.errors?.[0] ?? 'Error desconocido descargando productos';
-    appLogger.warn('[AppLoader] products descarga parcial', result.errors);
-    setAvailability('degraded');
-    setLastFailedPhase({ entityType: 'products', phaseLabel: 'productos', error: errMsg });
-}
-setPhase('categories');
-```
+**Referencia**: task_plan.md línea 567-570: Errores en catálogos secundarios (non-core) → Non-fatal → degradan a `degraded`.
 
-**⚠️ Problema con esta solución**: El stock phase handler (línea 327) llama `setAvailability('ready_partial')` incondicionalmente, pisando el `'degraded'` que acabamos de setear. Para evitarlo, necesitamos:
+**Solución**: Reemplazar el bloque catch de estos 3 handlers con `handlePhaseError(entity, err, label)` manteniendo el avance de fase (no `return` como en core). Esto setea `lastFailedPhase` y degrada `availability` correctamente.
 
-#### A.3 — useAppLoader.ts:327 — No sobreescribir 'degraded' en stock phase
-
-**Before**:
-```typescript
-setAvailability('ready_partial');
-```
-
-**After**:
-```typescript
-const currentAvail = useAppLoaderStore.getState().availability;
-if (currentAvail !== 'degraded') {
-    setAvailability('ready_partial');
-}
-```
-
-**Verificación**: `start()` resetea availability a `'blocking'`, así que en el primer boot normal esto no afecta — solo cuando ya hay un degraded previo.
+**Verificación**: Mockear error en fase `currencies`, verificar que `lastFailedPhase` se setea y `availability` se degrada a `degraded`.
 
 ---
 
-### Solución B — ErrorState para core corrupto (completa, 3 cambios + UX correcta)
+### O.5 — README desactualizado
 
-**Impacto**: Cuando products (core entity) falla sin core dataset, se muestra ErrorState (según task_plan.md línea 665). El usuario ve "Error descargando productos" con botones Reintentar / Reparar / Cerrar sesión. Availability correcta.
+**Archivo**: `README.md` (raíz del proyecto)
 
-#### B.1 — DashboardLayout.tsx:102 — Mismo que A.1 (indispensable)
+**Problema**: El plan (Objetivo 6) exige README con arquitectura offline-first, stack real (PostgreSQL 17, endpoints correctos, sin duplicados).
 
-#### B.2 — useAppLoader.ts:231 — Llamar handlePhaseError en lugar de solo log
+**Referencia**: task_plan.md línea 129: "Actualizar README con arquitectura offline-first, stack real — README sin duplicados, PostgreSQL 17, endpoints correctos"
 
-**Before**:
-```typescript
-if (!result.ok && result.chunksFailed > 0) {
-    appLogger.warn('[AppLoader] products descarga parcial', result.errors);
-}
-setPhase('categories');
-```
-
-**After**:
-```typescript
-if (!result.ok) {
-    const errMsg = result.errors?.[0] ?? 'Error desconocido descargando productos';
-    appLogger.warn('[AppLoader] products descarga parcial', result.errors);
-    await handlePhaseError('products', new Error(errMsg), 'productos');
-    return; // ← handlePhaseError ya setea phase/availability; no avanzar
-}
-setPhase('categories');
-```
-
-`handlePhaseError` para 'products' (core entity) en primer arranque (warehouses=unknown, products=0, stock=0 → `hasCore=false`):
-- Llama `setLastFailedPhase({ entityType: 'products', ... })`
-- Llama `setError(errMsg)` → `phase: 'error', availability: 'error'`
-- → **ErrorState** con "Reintentar descarga", "Reparar datos corruptos", "Cerrar sesión"
-
-Esto está alineado con task_plan.md línea 665: error en `warehouses/products/stock` **sin core** → Fatal → ErrorState.
-
-#### B.3 — useAppLoader.ts:327 — No sobreescribir 'error' en stock phase (safety net)
-
-Mismo cambio que A.3. Aunque con B.2 el phase es 'error' (stock effect no se ejecuta), este cambio previene futuros casos donde un error temprano sea pisado.
+**Solución**: Reescribir README con:
+- Stack real: Next.js 16 + React 19 + Spring Boot 3.4 + WebFlux + Java 21 + PostgreSQL 17
+- Arquitectura offline-first con principios P1–P5
+- Enlaces a `docs/contracts/` y `docs/adr/`
+- Instrucciones de desarrollo local (`./start-dev.sh` y `./stop-dev.sh`)
+- Eliminar secciones duplicadas con AGENTS.md y CLAUDE.md
 
 ---
 
-### Comparación
+## 🟢 Prioridad Baja
 
-| Aspecto | Solución A (mínima) | Solución B (completa) |
-|---------|--------------------|-----------------------|
-| Loops infinitos | ✅ Eliminado | ✅ Eliminado |
-| Availability tras corrupción en primer arranque | `ready_partial` (incorrecto — products vacío) | `error` (alineado con task_plan.md) |
-| UI que ve el usuario | App sin productos + toast de corrupción | ErrorState con "Error descargando productos" + botones |
-| Alineación con task_plan.md línea 665 | ❌ Parcial (no muestra ErrorState) | ✅ Completa |
-| Cantidad de cambios | 3 archivos, ~10 líneas | 3 archivos, ~15 líneas |
-| Riesgo | Bajo — availability incorrecta pero app no crashea | Bajo — ErrorState es el comportamiento esperado |
-| Después de "Omitir y continuar" | Funciona (skipAndContinue setea degraded + idle) | Funciona (skipAndContinue reemplaza error state) |
+### O.6 — `catalog_refresh` task huérfana
+
+**Archivo**: `frontend/src/core/loading/backgroundTasksStore.ts`
+
+**Problema**: El tipo `BackgroundTaskId` incluye `'catalog_refresh'` pero `useBackgroundTasks.ts` no registra runner para ella. Es dead code.
+
+**Solución**: Eliminar `'catalog_refresh'` del tipo o implementar el runner.
+
+---
+
+### O.7 — `ready_complete` literal nunca usado
+
+**Archivos**: `frontend/src/core/loading/appLoaderStore.ts`, `frontend/src/presentation/shared/hooks/storage/useBackgroundTasks.ts`
+
+**Problema**: `AppAvailability` incluye `'ready_complete'` y `AVAILABILITY_LABELS` tiene entrada para él. Pero NADIE setea `availability` a `'ready_complete'` — el hook `useReadyComplete()` computa un booleano derivado. El valor literal es dead code.
+
+**Solución**: Si `useReadyComplete()` se usa en UI para mostrar badge "Todo listo", el literal `'ready_complete'` en `AppAvailability` es sobrante y puede eliminarse del union type. Si se necesita para selectores de UI, dejarlo como está documentado (derivado, no seteado).
+
+---
+
+### O.8 — `OfflineImage` component
+
+**Archivo**: No existe — crear en `presentation/shared/components/images/`
+
+**Problema**: task_plan.md línea 120 especifica "Tres niveles: thumbnail/preview/full-resolution en OPFS — OfflineImage con prop size". El hook `useImageCache` ya existe y cubre la lógica, pero no hay un componente React que abstraiga los tamaños.
+
+**Solución**: Crear componente `<OfflineImage>` que:
+- Toma `src` (API path), `size` (`'thumbnail' | 'preview' | 'full'`), `alt`, `className`
+- Internamente usa `useImageCache`
+- Muestra skeleton durante carga, fallback visual en error
+- Auto-revoke de ObjectURLs en cleanup
 
 ---
 
 ## Reglas de Ejecución
 
-> ⚠️ Complementan task_plan.md. Son vinculantes para este plan.
-
-- **🏛️ task_plan.md es canónico**: línea 583 (`corrupted` → No reintentar automático infinito) es ley. Cualquier subfase que la viole se descarta.
-- **Una fase a la vez**: primero decidir Solución A vs B, luego implementar, verificar, preguntar.
-- **Commit al final**: `git add . && git commit -m 'fix(ux): M-phase cortar loop corrupto'`
+- **🏛️ task_plan.md es canónico**: cualquier subfase que viole P1–P5 se descarta.
+- **Una fase a la vez**: ejecutar → verificar → preguntar al usuario si continuar
+- **Commit al final**: `git add . && git commit -m '<tipo>(<scope>): <mensaje>'`
 - **Verificación**: `pnpm exec tsc --noEmit` + `pnpm test:run`
 - **UI**: Español. **Código**: Inglés.
-- **Mobile-first**: Touch targets ≥44px (`min-h-11`) — ya cumplido por Plan L.
-- **Frontend tests**: Vitest + RTL, patrón AAA.
+- **Mobile-first**: Touch targets ≥44px (`min-h-11`)
+- **Frontend tests**: Vitest + RTL, patrón AAA
 
 ---
 
@@ -216,24 +175,11 @@ Mismo cambio que A.3. Aunque con B.2 el phase es 'error' (stock effect no se eje
 
 | Fase | Nombre | Estado |
 |------|--------|--------|
-| **M** | Cortar loop infinito en descarga corrupta | ⏳ Pendiente |
-| **M.1** | DashboardLayout — guard condition re-trigger | ⏳ Pendiente |
-| **M.2** | useAppLoader — detectar corrupción en products | ⏳ Pendiente |
-| **M.3** | useAppLoader — no pisar degraded/error en stock | ⏳ Pendiente |
-
----
-
-## Matriz de verificación
-
-| Check | M.1 | M.2 | M.3 |
-|-------|-----|-----|-----|
-| `pnpm tsc --noEmit` sin errores | ❌ | ❌ | ❌ |
-| `pnpm test:run` pasa (219/219) | ❌ | ❌ | ❌ |
-| Loop infinito eliminado (corrupción products) | ❌ | ❌ | ❌ |
-| `retryBoot()` manual desde error screen funciona | ❌ | ❌ | ❌ |
-| `skipAndContinue()` desde error screen funciona | ❌ | ❌ | ❌ |
-| Stock phase no pisa availability que ya es 'degraded' o 'error' | ❌ | ❌ | ❌ |
-| Toast de corrupción sigue apareciendo | ❌ | ❌ | ❌ |
-
----
-
+| **O.1** | Backend serverPayload real en SyncPushController | ✅ Completo (commit 8c4fb80) |
+| **O.2** | Geo search offline (hooks + población) | ⏳ Pendiente |
+| **O.3** | Migrar Currency/ExchangeRate/CustomerDebt a local-first | ⏳ Pendiente |
+| **O.4** | currencies/exchange_rates/customer_debts failures invisibles | ⏳ Pendiente |
+| **O.5** | README desactualizado | ⏳ Pendiente |
+| **O.6** | catalog_refresh task huérfana | ⏳ Pendiente |
+| **O.7** | ready_complete literal nunca usado | ⏳ Pendiente |
+| **O.8** | OfflineImage component | ⏳ Pendiente |

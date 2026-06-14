@@ -28,44 +28,36 @@ export function useGeoIndexLoader(): void {
         }
 
         const provinces = await repo.getProvinces('CU');
-        const geoIndexRecords: Array<{
-          id: string; type: string; name: string; normalizedName: string;
-          aliases: string[]; parentIds: string[]; center: [number, number];
-          bbox: [number, number, number, number]; countryCode: string;
-        }> = [];
         const tx = db.transaction('geoIndex', 'readwrite');
+        const store = tx.objectStore('geoIndex');
 
         for (const province of provinces) {
-          geoIndexRecords.push({
+          await store.put({
             id: `province_${province.id}`,
             type: 'province',
             name: province.name,
             normalizedName: province.name.toLowerCase(),
             aliases: [],
             parentIds: ['CU'],
-            center: [province.longitude ?? 0, province.latitude ?? 0],
-            bbox: [0, 0, 0, 0],
+            center: [province.longitude ?? 0, province.latitude ?? 0] as [number, number],
+            bbox: [0, 0, 0, 0] as [number, number, number, number],
             countryCode: 'CU',
           });
 
           const municipalities = await repo.getMunicipalities(province.id);
           for (const muni of municipalities) {
-            geoIndexRecords.push({
+            await store.put({
               id: `municipality_${muni.id}`,
               type: 'municipality',
               name: muni.name,
               normalizedName: muni.name.toLowerCase(),
               aliases: [],
               parentIds: [`province_${province.id}`, 'CU'],
-              center: [muni.longitude ?? 0, muni.latitude ?? 0],
-              bbox: [0, 0, 0, 0],
+              center: [muni.longitude ?? 0, muni.latitude ?? 0] as [number, number],
+              bbox: [0, 0, 0, 0] as [number, number, number, number],
               countryCode: 'CU',
             });
           }
-        }
-
-        for (const record of geoIndexRecords) {
-          await tx.store.put(record as never);
         }
 
         await tx.done;
