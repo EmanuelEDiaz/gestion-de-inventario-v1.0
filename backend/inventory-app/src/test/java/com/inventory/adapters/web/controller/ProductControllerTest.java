@@ -77,7 +77,7 @@ class ProductControllerTest {
             .thenReturn(Flux.empty());
 
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .get().uri("/api/v1/products")
             .exchange()
             .expectStatus().isOk()
@@ -96,7 +96,7 @@ class ProductControllerTest {
         when(mapper.toResponse(product, null)).thenReturn(response);
 
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .get().uri("/api/v1/products/{id}", productId)
             .exchange()
             .expectStatus().isOk()
@@ -110,7 +110,7 @@ class ProductControllerTest {
         when(productQuery.findById(productId)).thenReturn(Mono.empty());
 
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .get().uri("/api/v1/products/{id}", productId)
             .exchange()
             .expectStatus().isNotFound();
@@ -127,7 +127,7 @@ class ProductControllerTest {
         when(mapper.toResponse(product, null)).thenReturn(response);
 
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .mutateWith(csrf())
             .post().uri("/api/v1/products")
             .contentType(MediaType.APPLICATION_JSON)
@@ -148,7 +148,7 @@ class ProductControllerTest {
     @DisplayName("POST /api/v1/products returns 400 on validation error")
     void create_validationError() {
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .mutateWith(csrf())
             .post().uri("/api/v1/products")
             .contentType(MediaType.APPLICATION_JSON)
@@ -173,7 +173,7 @@ class ProductControllerTest {
         when(mapper.toResponse(product, null)).thenReturn(response);
 
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .mutateWith(csrf())
             .put().uri("/api/v1/products/{id}", productId)
             .contentType(MediaType.APPLICATION_JSON)
@@ -196,7 +196,7 @@ class ProductControllerTest {
         when(productCommand.delete(eq(productId), any())).thenReturn(Mono.empty());
 
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .mutateWith(csrf())
             .delete().uri("/api/v1/products/{id}", productId)
             .exchange()
@@ -223,7 +223,7 @@ class ProductControllerTest {
         when(mapper.toResponse(archivedProduct, null)).thenReturn(archivedResponse);
 
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .mutateWith(csrf())
             .post().uri("/api/v1/products/{id}/archive", productId)
             .exchange()
@@ -252,7 +252,7 @@ class ProductControllerTest {
         when(mapper.toResponse(activatedProduct, null)).thenReturn(activatedResponse);
 
         webTestClient
-            .mutateWith(mockUser())
+            .mutateWith(mockUser().roles("ADMIN"))
             .mutateWith(csrf())
             .post().uri("/api/v1/products/{id}/activate", productId)
             .exchange()

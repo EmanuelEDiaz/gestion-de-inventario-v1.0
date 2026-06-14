@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -228,6 +229,24 @@ public class GlobalExceptionHandler {
         };
     }
     
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleAccessDenied(
+            AuthorizationDeniedException ex, ServerWebExchange exchange) {
+        log.warn("Access denied: {}", ex.getMessage());
+
+        ProblemDetail problem = ProblemDetail.of(
+                "urn:inventory:error:access-denied",
+                HttpStatus.FORBIDDEN.value(),
+                "Access Denied",
+                "You do not have permission to perform this action.",
+                exchange.getRequest().getPath().value()
+        );
+
+        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .header("Content-Type", "application/problem+json")
+                .body(problem));
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleResponseStatus(
             ResponseStatusException ex, ServerWebExchange exchange) {
