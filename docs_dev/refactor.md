@@ -568,8 +568,8 @@ Si el patrón `{error && <p className="text-xs text-red-500">` se repite en +5 l
 ##### Fase B — Raw forms simples (migrar a EntityForm + Zod + storageKey)
 | Entidad | Form | createSchema | updateSchema | storageKey | Prioridad |
 |---------|------|:------------:|:------------:|:-----------|:---------:|
-| **Warehouse** | `WarehouseFormFields.tsx` | ❌ falta | ❌ falta | ❌ falta | 🟡 Media |
-| **User** | `UserFormFields.tsx` | ❌ falta | ❌ falta | ❌ falta | 🟡 Media |
+| **Warehouse** | `WarehouseFormFields.tsx` | ✅ | ✅ | ✅ `"warehouse-create"` | 🟡 Media — completado J.6.3-B.2 |
+| **User** | `UserFormFields.tsx` | ✅ | ✅ | ✅ `"user-create"` | 🟡 Media — completado J.6.3-B.3 |
 
 ##### Fase C — Raw forms con geo o arrays dinámicos (migrar a EntityForm + Zod + storageKey)
 | Entidad | Form | createSchema | updateSchema | storageKey | Prioridad |
@@ -709,11 +709,11 @@ Ya están integrados con EntityForm. Solo requieren los cambios del refactor:
 
 | Form | storageKey | onSubmitAction | createSchema | updateSchema | FIELD_VALIDATORS | mapBackendErrorToField | Status |
 |------|-----------|---------------|--------------|--------------|------------------|----------------------|--------|
-| ProductFormFields | `"product-create"` ✅ | ❌ | ❌ | ❌ | ✅ exists | ✅ exists | Pendiente (J.6 A) |
-| CategoryForm | `"category-create"` ✅ | ❌ | ❌ | ❌ | ✅ exists | ✅ exists | Pendiente (J.6 A) |
-| CurrencyFormFields | ❌ falta | ❌ | ❌ | ❌ | ✅ exists | ✅ exists | Pendiente (J.6 A) |
-| ExchangeRateFormFields | ❌ falta | ❌ | ❌ | ❌ | ✅ exists | ✅ exists | Pendiente (J.6 A) |
-| RoleFormFields | ❌ falta | ❌ | ❌ | ❌ | ✅ exists | ✅ exists | Pendiente (J.6 A) |
+| ProductFormFields | `"product-create"` ✅ | ✅ | ✅ | ✅ | ❌ eliminado | ❌ eliminado | ✅ Completado (J.6 A) |
+| CategoryForm | `"category-create"` ✅ | ✅ | ✅ | ✅ | ❌ eliminado | ❌ eliminado | ✅ Completado (J.6 A) |
+| CurrencyFormFields | `"currency-create"` ✅ | ✅ | ✅ | ✅ | ❌ eliminado | ❌ eliminado | ✅ Completado (J.6 A) |
+| ExchangeRateFormFields | `"exchange-rate-create"` ✅ | ✅ | ✅ | ✅ | ❌ eliminado | ❌ eliminado | ✅ Completado (J.6 A) |
+| RoleFormFields | `"role-create"` ✅ | ✅ | ✅ | ✅ | ❌ eliminado | ❌ eliminado | ✅ Completado (J.6 A) |
 
 Ejemplo ProductFormFields post-migración (aplica igual a los otros 4):
 ```typescript
@@ -751,7 +751,7 @@ export function ProductFormFields({ categories, initialData, storageKey, persist
 
 #### J.6.3 — Fase B: migrar Warehouse + User a EntityForm
 
-**Forms**: `WarehouseFormFields.tsx`, `UserFormFields.tsx`
+> ✅ **J.6.3 Fase B completada** — Warehouse y User migrados a EntityForm con Zod schemas, storageKey, onSubmitAction.
 
 Forms simples (3 y 5 campos, sin arrays dinámicos, sin geo) que actualmente usan raw `<form>`. Se migran COMPLETAMENTE a EntityForm.
 
@@ -765,11 +765,19 @@ Forms simples (3 y 5 campos, sin arrays dinámicos, sin geo) que actualmente usa
 7. Pasar `onSubmitAction` que llama al repository hook
 8. Si el form vive en un modal/dialog inline: adaptar el parent (`WarehousesListView`/`UsersListView`) para pasar las props de EntityForm
 
+**Estado actual**:
+
+| Sub-fase | Entidad | Status |
+|----------|---------|--------|
+| B.1 | Field definitions + validators | ✅ Completado `b205c6c` |
+| B.2 | WarehouseFormFields → EntityForm | ✅ Completado `b205c6c` |
+| B.3 | UserFormFields → EntityForm | ✅ Completado |
+
 **Diferencias por form**:
 
-| Aspecto | WarehouseFormFields | UserFormFields |
-|---------|-------------------|---------------|
-| Líneas actuales | 47 | 105 |
+| Aspecto | WarehouseFormFields ✅ | UserFormFields ✅ |
+|---------|----------------------|-------------------|
+| Líneas actuales | ~40 (migrado) | ~150 (migrado) |
 | Campos | 3 (code, name, address) | 5 (username, displayName, email, password, roleId) |
 | Sub-componentes | Ninguno | Ninguno |
 | View pattern | Página dedicada (`WarehouseCreateView`) | Modal inline (`UsersListView`) |
@@ -1221,7 +1229,7 @@ Confirmar que los forms no migrados aún usan `onSubmit` (no `onSubmitAction`) y
 | J.4 EntityForm Zod | 0 | 1 | 1 |
 | J.5 Error prop en ComboboxSelect | 0 | 1 | 1 |
 | **J.6 Fase A** (5 forms EntityForm) | 5 fields + 4 validators | 1 existing validator + 5 forms + 1 view + 4 response validators | 20 |
-| **J.6 Fase B** (Warehouse + User) | 2 fields + 2 validators | 2 forms + 2 views + 1 response validator | 9 |
+| **J.6 Fase B** (Warehouse + User) ✅ | 2 fields + 2 validators | 2 forms + 2 views + 1 response validator | 9 |
 | **J.6 Fase C** (Customer, Supplier, 5 arrays) | 7 fields + 4 validators + 1 helper + 2 shared components | 3 existing validators + 7 forms + 2 views + 3 response validators | 29 |
 | **J.6 Total** | **27** | **31** | **58** |
 | J.7 Sync recovery | 2 | 3 | 5 |

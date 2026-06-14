@@ -49,7 +49,7 @@ const COLUMNS: Column<User>[] = [
 ];
 
 export function UsersView() {
-  const { users, isLoading, error, create, update, changeUserPassword, uploadAvatar, deleteAvatar, isCreating, isUpdating, isChangingPassword } = useUsersController();
+  const { users, isLoading, error, create, update, changeUserPassword, uploadAvatar, deleteAvatar, isUpdating, isChangingPassword } = useUsersController();
   const [showForm, setShowForm] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dialogType, setDialogType] = useState<'edit' | 'password' | null>(null);
@@ -75,9 +75,9 @@ export function UsersView() {
       />
       {showForm && (
         <UserFormFields
+          storageKey="user-create"
           onSubmit={async (data) => { await create(data); setShowForm(false); }}
-          onContinue={async (data) => { await create(data); toast.success('Usuario creado. Puedes seguir agregando.'); }}
-          isSubmitting={isCreating} onCancel={() => setShowForm(false)} />
+          onCancel={() => setShowForm(false)} />
       )}
       <GenericTable data={users} columns={COLUMNS} actions={actions} emptyMessage="No hay usuarios registrados" />
       {selectedUser && <EditUserDialog open={dialogType === 'edit'} user={selectedUser}
