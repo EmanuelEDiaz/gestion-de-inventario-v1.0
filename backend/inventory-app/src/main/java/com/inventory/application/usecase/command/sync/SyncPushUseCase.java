@@ -3,6 +3,7 @@ package com.inventory.application.usecase.command.sync;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inventory.application.service.IdempotencyService;
 import com.inventory.application.service.OperationRouter;
+import com.inventory.domain.errors.DomainException;
 import com.inventory.domain.ports.out.SyncLogWriterPort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -50,7 +51,7 @@ public class SyncPushUseCase {
             .flatMap(cached -> {
                 if (cached != null) {
                     String entityId = extractEntityIdFromJson(cached);
-                    return Mono.just(new OperationResult(op.operationId(), true, cached, null, op.entityType(), entityId));
+                    return Mono.just(new OperationResult(op.operationId(), true, cached, null, op.entityType(), entityId, null));
                 }
                 return resolveAndRoute(op, userId, hash);
             })
@@ -116,13 +117,15 @@ public class SyncPushUseCase {
                     }
                     return idempotencyService.checkAndStore(op.operationId(), hash, responseJson)
                         .then(writeSyncLog(op, userId))
-                        .thenReturn(new OperationResult(op.operationId(), true, result.data(), null, op.entityType(), entityId));
+                        .thenReturn(new OperationResult(op.operationId(), true, result.data(), null, op.entityType(), entityId, null));
                 }
                 return Mono.just(new OperationResult(op.operationId(), false, null,
-                    result.data() != null ? result.data().toString() : "Unknown error", op.entityType(), op.entityId()));
+                    result.data() != null ? result.data().toString() : "Unknown error", op.entityType(), op.entityId(), null));
             })
-            .onErrorResume(e ->
-                Mono.just(new OperationResult(op.operationId(), false, null, e.getMessage(), op.entityType(), op.entityId())));
+            .onErrorResume(e -> {
+                String errorCode = e instanceof DomainException de ? de.getErrorCode() : null;
+                return Mono.just(new OperationResult(op.operationId(), false, null, e.getMessage(), op.entityType(), op.entityId(), errorCode));
+            });
     }
 
     private Mono<Void> writeSyncLog(PushOperation op, UUID userId) {
@@ -182,10 +185,15 @@ public class SyncPushUseCase {
         Object data,
         String error,
         String entityType,
-        String entityId
+        String entityId,
+        String errorCode
     ) {
         public OperationResult(String operationId, boolean accepted, Object data, String error) {
-            this(operationId, accepted, data, error, null, null);
+            this(operationId, accepted, data, error, null, null, null);
+        }
+
+        public OperationResult withErrorCode(String errorCode) {
+            return new OperationResult(operationId, accepted, data, error, entityType, entityId, errorCode);
         }
     }
 }
