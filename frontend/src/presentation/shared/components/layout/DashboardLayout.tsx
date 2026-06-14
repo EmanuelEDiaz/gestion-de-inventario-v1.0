@@ -14,6 +14,7 @@ import { SkeletonDashboard } from './SkeletonDashboard';
 import { CorruptionRepairCenter } from '../data-repair/CorruptionRepairCenter';
 import { TooltipHint } from '../ui/tooltip';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
+import { useCorruptionCount } from '@/presentation/shared/hooks/storage/useCorruptionCount';
 import { useSidebarSections } from '@/presentation/shared/hooks/ui/useSidebarSections';
 import { getOutboxCount } from '@/infrastructure/storage/db';
 import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.config';
@@ -49,8 +50,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     || appAvailability === 'degraded';
 
   const [showRepairCenter, setShowRepairCenter] = useState(false);
+  const [corruptionRefreshTrigger, setCorruptionRefreshTrigger] = useState(0);
+  const corruptionCount = useCorruptionCount(corruptionRefreshTrigger);
   const userId = user?.id ?? 'boot-loader';
   const lastFailedPhase = useAppLoaderStore((s) => s.lastFailedPhase);
+
+  const handleCloseRepairCenter = useCallback(() => {
+    setShowRepairCenter(false);
+    setCorruptionRefreshTrigger((prev) => prev + 1);
+  }, []);
+
+  const handleOpenRepairCenter = useCallback(() => {
+    setShowRepairCenter(true);
+  }, []);
 
   const retryBoot = useCallback(() => {
     useAppLoaderStore.getState().start();
@@ -101,7 +113,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       toast.warning('Datos corruptos detectados', {
         description: `${idbStoreName}: el checksum del chunk no coincide. Los datos se guardaron en el centro de reparación.`,
         action: 'Ir a reparar',
-        onAction: () => setShowRepairCenter(true),
+        onAction: () => handleOpenRepairCenter(),
         duration: 120_000,
       });
     };
@@ -111,7 +123,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Listen for open-repair-center events
   useEffect(() => {
-    const handler = () => setShowRepairCenter(true);
+    const handler = () => handleOpenRepairCenter();
     window.addEventListener('open-repair-center', handler);
     return () => window.removeEventListener('open-repair-center', handler);
   }, []);
@@ -133,9 +145,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         .map(({ iconKey, ...rest }) => ({
           ...rest,
           icon: Icons[iconKey as keyof typeof Icons] ?? Icons.dashboard,
+          badge: rest.href === '/audit-log' && corruptionCount > 0
+            ? String(corruptionCount)
+            : undefined,
         })),
     }))
-    .filter((section) => section.items.length > 0), [can]);
+    .filter((section) => section.items.length > 0), [can, corruptionCount]);
 
   const { openSections, toggleSection } = useSidebarSections({
     sections: navigationSections, currentPathname: pathname,
@@ -251,7 +266,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     description="Muestra los chunks corruptos con opciones: re-descargar, editar JSON manualmente, o descartar."
                     variant="info"
                   >
-                    <button onClick={() => setShowRepairCenter(true)} className="min-h-11 rounded bg-amber-600 px-4 py-2 text-xs text-white hover:bg-amber-700">
+                    <button onClick={handleOpenRepairCenter} className="min-h-11 rounded bg-amber-600 px-4 py-2 text-xs text-white hover:bg-amber-700">
                       Reparar datos corruptos
                     </button>
                   </TooltipHint>
@@ -270,7 +285,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
           {showRepairCenter && (
             <div className="mt-4">
-              <CorruptionRepairCenter onClose={() => setShowRepairCenter(false)} userId={userId} />
+              <CorruptionRepairCenter onClose={handleCloseRepairCenter} userId={userId} />
             </div>
           )}
         </div>
@@ -308,14 +323,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 description="Muestra los chunks corruptos con opciones de reparación."
                 variant="info"
               >
-                <button onClick={() => setShowRepairCenter(true)} className="min-h-11 rounded bg-white px-3 py-1.5 text-xs text-amber-800 ring-1 ring-amber-300 hover:bg-amber-100">
+                <button onClick={handleOpenRepairCenter} className="min-h-11 rounded bg-white px-3 py-1.5 text-xs text-amber-800 ring-1 ring-amber-300 hover:bg-amber-100">
                   Reparar
                 </button>
               </TooltipHint>
             </div>
           </div>
           {showRepairCenter && (
-            <CorruptionRepairCenter onClose={() => setShowRepairCenter(false)} userId={userId} />
+            <CorruptionRepairCenter onClose={handleCloseRepairCenter} userId={userId} />
           )}
         </div>
       )}

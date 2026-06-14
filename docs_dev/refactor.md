@@ -1117,16 +1117,16 @@ a:
 
 | Fase | Nombre | Estado | Alineado con `task_plan.md`? |
 |---|---|---|---|
-| **K** | Romper ciclo infinito: ErrorScreen + RepairCenter visible | ⏳ Pendiente | ✅ Secciones: Reanudación de carga, Matriz de respuesta, Auditoría clasificada, Formato mensajes, Política Feedback UI |
-| **K.1** | Agregar `'degraded'` a `AppAvailability` | ⏳ Pendiente | Línea 563: Auditoría diagnóstica degrada a `degraded` |
-| **K.2** | Error screen con opciones según tipo de error | ⏳ Pendiente | Línea 562: ErrorState con acciones múltiples. Líneas 611-618: formato mensajes |
-| **K.3** | `CorruptionRepairCenter` renderizado condicional | ⏳ Pendiente | Línea 685: Chunk corrupto → RepairCenter |
-| **K.4** | Badge de corrupción en sidebar | ⏳ Pendiente | Línea 685: Badge nav |
-| **K.5** | Error classification crítico vs diagnóstico | ⏳ Pendiente | Líneas 565-572: Matriz de error por tipo de arranque |
-| **K.6** | Límite de 3 retries + quarantine | ⏳ Pendiente | Línea 649: `corruption` → 3 intentos, luego quarantine |
-| **K.7** | Degraded state: layout renderiza con banner degradado (loading condition fix + DegradedBanner) | ⏳ Pendiente | Líneas 563, 703: `degraded` renderiza dashboard no error screen |
-| **K.8** | Toast con link al RepairCenter | ⏳ Pendiente | Línea 685: Toast dirige al RepairCenter |
-| **K.9** | Loading UX: skeleton dashboard + CacheProgressBar colapsable + bloqueador navegación | ⏳ Pendiente | Línea 702: `blocking` → layout visible + skeleton + colapsed progress. Click-outside-to-close. Navegación bloqueada (logout exceptuado) |
+| **K** | Romper ciclo infinito: ErrorScreen + RepairCenter visible | ✅ Completo | ✅ Secciones: Reanudación de carga, Matriz de respuesta, Auditoría clasificada, Formato mensajes, Política Feedback UI |
+| **K.1** | Verificar `'degraded'` en todos los switch/if | ✅ Completo | Todos los places manejan `degraded` correctamente |
+| **K.2** | Error screen con opciones según tipo de error | ✅ Completo | Línea 562: ErrorState con acciones múltiples. Líneas 611-618: formato mensajes |
+| **K.3** | `CorruptionRepairCenter` renderizado condicional | ✅ Completo | Línea 685: Chunk corrupto → RepairCenter |
+| **K.4** | Badge de corrupción en sidebar | ✅ Completo | `useCorruptionCount` hook creado. Badge rojo en icono de Auditoría |
+| **K.5** | Error classification crítico vs diagnóstico | ✅ Completo | Líneas 565-572: Matriz de error por tipo de arranque |
+| **K.6** | Límite de 3 retries + quarantine | ✅ Completo | Línea 649: `corruption` → 3 intentos, luego quarantine |
+| **K.7** | Degraded state: layout renderiza con banner degradado | ✅ Completo | Líneas 563, 703: `degraded` renderiza dashboard no error screen |
+| **K.8** | Toast con link al RepairCenter | ✅ Completo | Línea 685: Toast dirige al RepairCenter |
+| **K.9** | Loading UX: skeleton + CacheProgressBar colapsable + navegación bloqueada | ✅ Completo | Línea 702: `blocking` → layout visible + skeleton + colapsed progress. Navegación bloqueada (logout exceptuado) |
 
 ---
 

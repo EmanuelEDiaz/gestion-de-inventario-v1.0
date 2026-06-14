@@ -30,3 +30,4 @@ export { useStatusActions } from './ui/useStatusActions';
 export type { StatusActionDef } from './ui/useStatusActions';
 export { useReferenceData } from './api/useReferenceData';
 export { useClickOutside } from './ui/useClickOutside';
+export { useCorruptionCount } from './storage/useCorruptionCount';
