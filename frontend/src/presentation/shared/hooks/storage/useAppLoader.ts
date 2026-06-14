@@ -228,8 +228,11 @@ export function useAppLoader() {
             setSubProgress(page, total);
           },
         });
-        if (!result.ok && result.chunksFailed > 0) {
+        if (!result.ok) {
+          const errMsg = result.errors?.[0] ?? 'Error desconocido descargando productos';
           appLogger.warn('[AppLoader] products descarga parcial', result.errors);
+          await handlePhaseError('products', new Error(errMsg), 'productos');
+          return;
         }
         setPhase('categories');
       } catch (err) {
@@ -324,7 +327,10 @@ export function useAppLoader() {
           schema: stockResponseSchema,
           entityLabel: 'existencias',
         });
-        setAvailability('ready_partial');
+        const currentAvail = useAppLoaderStore.getState().availability;
+        if (currentAvail !== 'degraded' && currentAvail !== 'error') {
+          setAvailability('ready_partial');
+        }
         if (!bgTasksTriggeredRef.current && store.phase === 'stock') {
           bgTasksTriggeredRef.current = true;
           void startBackgroundTasks();

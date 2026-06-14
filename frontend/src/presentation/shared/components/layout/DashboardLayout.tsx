@@ -98,7 +98,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Trigger AppLoader when auth is ready
   useEffect(() => {
-    if (isAuthReady && appPhase === 'idle') {
+    if (isAuthReady && appPhase === 'idle' && appAvailability === 'blocking') {
       startLoading();
     }
   }, [isAuthReady, appPhase, startLoading]);
