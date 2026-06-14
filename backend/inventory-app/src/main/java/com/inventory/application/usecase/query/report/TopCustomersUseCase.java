@@ -23,14 +23,14 @@ public class TopCustomersUseCase {
             SELECT c.id AS customer_id, c.name AS customer_name,
                 COUNT(DISTINCT s.id) AS total_purchases,
                 COALESCE(SUM(s.total), 0) AS total_revenue,
-                COALESCE(cd.balance, 0) AS debt_balance
+                COALESCE(cd.original_amount - COALESCE(cd.paid_amount, 0), 0) AS debt_balance
             FROM sales s
             JOIN customers c ON c.id = s.customer_id
             LEFT JOIN customer_debts cd ON cd.customer_id = c.id AND cd.status != 'PAID'
             WHERE s.created_at BETWEEN $1 AND $2
               AND ($3::uuid IS NULL OR s.warehouse_id = $3)
               AND s.status NOT IN ('CANCELLED', 'VOIDED')
-            GROUP BY c.id, c.name, cd.balance
+            GROUP BY c.id, c.name, cd.original_amount, cd.paid_amount
             ORDER BY total_revenue DESC
             LIMIT $4
             """)

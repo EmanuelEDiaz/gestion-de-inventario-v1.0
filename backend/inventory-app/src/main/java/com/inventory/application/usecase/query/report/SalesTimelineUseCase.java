@@ -20,9 +20,9 @@ public class SalesTimelineUseCase {
 
     public Flux<SalesTimelinePoint> execute(Instant fromDate, Instant toDate, UUID warehouseId, String granularity) {
         String dateExpr = switch (granularity) {
-            case "day" -> "TO_CHAR(s.created_at, 'YYYY-MM-DD')";
-            case "week" -> "TO_CHAR(s.created_at, 'IYYY-IW')";
-            default -> "TO_CHAR(s.created_at, 'YYYY-MM')";
+            case "day" -> "TO_CHAR(DATE_TRUNC('day', s.created_at), 'YYYY-MM-DD')";
+            case "week" -> "TO_CHAR(DATE_TRUNC('week', s.created_at), 'IYYY-IW')";
+            default -> "TO_CHAR(DATE_TRUNC('month', s.created_at), 'YYYY-MM')";
         };
 
         String groupExpr = switch (granularity) {

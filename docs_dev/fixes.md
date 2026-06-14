@@ -908,3 +908,62 @@ if (warehouseId != null) {
 **Lección**: R2DBC's `.bind(int, value)` no acepta `null`. Usar `.bindNull(int, Class)` para parámetros SQL que pueden ser nulos. Este patrón es obligatorio en toda query con parámetros opcionales.
 
 ---
+
+## FIX-042 — `TopCustomersUseCase` SQL referencia `cd.balance` que no existe en `customer_debts`
+
+**Fase de origen**: C (reporte top customers — query SQL no testada)
+
+**Detectado en**: Runtime en backend, HTTP 500 al cargar reporte /api/v1/reports/top-customers (2026-06-13)
+
+**Síntoma**: `column cd.balance does not exist`. El endpoint retorna 500. El frontend muestra "Error al cargar reportes".
+
+**Causa raíz**: La tabla `customer_debts` no tiene columna `balance`. Tiene `original_amount` y `paid_amount` (migración V9). El saldo pendiente se calcula como `original_amount - paid_amount`. La query SQL hardcodeó `cd.balance` asumiendo una columna que nunca existió.
+
+**Resolución**: Reemplazar `cd.balance` con la expresión computada `cd.original_amount - COALESCE(cd.paid_amount, 0)` en SELECT y GROUP BY:
+
+```diff
+- COALESCE(cd.balance, 0) AS debt_balance
++ COALESCE(cd.original_amount - COALESCE(cd.paid_amount, 0), 0) AS debt_balance
+...
+- GROUP BY c.id, c.name, cd.balance
++ GROUP BY c.id, c.name, cd.original_amount, cd.paid_amount
+```
+
+**Archivos**:
+- `backend/.../application/usecase/query/report/TopCustomersUseCase.java` (lines 26, 33)
+
+**Verificación**: `mvn compile -q` ✓
+
+**Lección**: Toda columna SQL en query raw debe verificarse contra la DDL real de la tabla (migraciones Flyway). No asumir nombres de columnas por convención.
+
+---
+
+## FIX-043 — `SalesTimelineUseCase` SQL: `s.created_at` en SELECT no está en GROUP BY (PostgreSQL)
+
+**Fase de origen**: C (reporte sales timeline — query SQL con error de sintaxis SQL)
+
+**Detectado en**: Runtime en backend, HTTP 500 al cargar reporte /api/v1/reports/sales-timeline (2026-06-13)
+
+**Síntoma**: `column "s.created_at" must appear in the GROUP BY clause or be used in an aggregate function`. El endpoint retorna 500.
+
+**Causa raíz**: La query usa `TO_CHAR(s.created_at, 'YYYY-MM') AS date` en SELECT pero GROUP BY usa `DATE_TRUNC('month', s.created_at)`. PostgreSQL exige que `s.created_at` (dentro de `TO_CHAR`) esté en GROUP BY o en función de agregación. `TO_CHAR` no es función de agregación. La query de `SalesReportUseCase.java` sí funciona porque allí el SELECT usa `TO_CHAR(DATE_TRUNC('month', s.created_at), ...)` — `s.created_at` está dentro de `DATE_TRUNC` que iguala la expresión del GROUP BY.
+
+**Resolución**: Envolver `s.created_at` en `DATE_TRUNC(...)` dentro de `TO_CHAR`, igualando las 3 variantes de granularidad con su correspondiente `groupExpr`:
+
+```diff
+- case "day" -> "TO_CHAR(s.created_at, 'YYYY-MM-DD')";
++ case "day" -> "TO_CHAR(DATE_TRUNC('day', s.created_at), 'YYYY-MM-DD')";
+- case "week" -> "TO_CHAR(s.created_at, 'IYYY-IW')";
++ case "week" -> "TO_CHAR(DATE_TRUNC('week', s.created_at), 'IYYY-IW')";
+- default -> "TO_CHAR(s.created_at, 'YYYY-MM')";
++ default -> "TO_CHAR(DATE_TRUNC('month', s.created_at), 'YYYY-MM')";
+```
+
+**Archivos**:
+- `backend/.../application/usecase/query/report/SalesTimelineUseCase.java` (lines 23-25)
+
+**Verificación**: `mvn compile -q` ✓
+
+**Lección**: En PostgreSQL, si una expresión en SELECT referencia una columna sin función de agregación, esa columna (o expresión) debe estar en GROUP BY. La convención correcta es que la expresión de formato (`TO_CHAR`) opere sobre la misma expresión de truncamiento (`DATE_TRUNC`) que se usa en GROUP BY, no sobre la columna raw.
+
+---
