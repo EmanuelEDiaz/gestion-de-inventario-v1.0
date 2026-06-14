@@ -75,20 +75,18 @@
 
 ---
 
-### O.5 — README desactualizado
+### ✅ O.5 — README desactualizado
 
-**Archivo**: `README.md` (raíz del proyecto)
+**Commit**: `02c51cd`
 
-**Problema**: El plan (Objetivo 6) exige README con arquitectura offline-first, stack real (PostgreSQL 17, endpoints correctos, sin duplicados).
-
-**Referencia**: task_plan.md línea 129: "Actualizar README con arquitectura offline-first, stack real — README sin duplicados, PostgreSQL 17, endpoints correctos"
-
-**Solución**: Reescribir README con:
-- Stack real: Next.js 16 + React 19 + Spring Boot 3.4 + WebFlux + Java 21 + PostgreSQL 17
-- Arquitectura offline-first con principios P1–P5
+**Qué se hizo**:
+- README reescrito (76 líneas) con stack real en tabla, principios P1–P5 explícitos, arquitectura hexagonal frontend/backend, ADR-001 al ADR-013 referenciados
+- Quick Start con `./start-dev.sh` como comando principal, referencias a `AGENTS.md` para comandos detallados (sin duplicación)
 - Enlaces a `docs/contracts/` y `docs/adr/`
-- Instrucciones de desarrollo local (`./start-dev.sh` y `./stop-dev.sh`)
-- Eliminar secciones duplicadas con AGENTS.md y CLAUDE.md
+- Características actualizadas con offline-first, multi-almacén, POS, multi-moneda, mapas offline, PWA, RBAC, auditoría
+- MIT license
+
+**Verificado**: `tsc --noEmit` OK
 
 ---
 
@@ -147,7 +145,7 @@
 | **O.2** | Geo search offline (hooks + población) | ✅ Completo (commit 6df9c06) |
 | **O.3** | Migrar Currency/ExchangeRate/CustomerDebt a local-first | ✅ Completo (commit fec01fc) |
 | **O.4** | currencies/exchange_rates/customer_debts failures invisibles | ✅ Completo (commit eb3b5e4) |
-| **O.5** | README desactualizado | ⏳ Pendiente |
+| **O.5** | README desactualizado | ✅ Completo (commit 02c51cd) |
 | **O.6** | catalog_refresh task huérfana | ✅ Completo (incluido en O.2) |
 | **O.7** | ready_complete literal nunca usado | ⏳ Pendiente |
 | **O.8** | OfflineImage component | ⏳ Pendiente |
