@@ -19,7 +19,7 @@ public class TopCustomersUseCase {
     }
 
     public Flux<TopCustomerEntry> execute(Instant fromDate, Instant toDate, UUID warehouseId, int limit) {
-        return db.sql("""
+        var spec = db.sql("""
             SELECT c.id AS customer_id, c.name AS customer_name,
                 COUNT(DISTINCT s.id) AS total_purchases,
                 COALESCE(SUM(s.total), 0) AS total_revenue,
@@ -35,12 +35,15 @@ public class TopCustomersUseCase {
             LIMIT $4
             """)
             .bind(0, fromDate != null ? fromDate : Instant.EPOCH)
-            .bind(1, toDate != null ? toDate : Instant.now())
-            .bind(2, warehouseId)
-            .bind(3, limit)
-            .fetch()
-            .all()
-            .map(row -> new TopCustomerEntry(
+            .bind(1, toDate != null ? toDate : Instant.now());
+
+        if (warehouseId != null) {
+            spec = spec.bind(2, warehouseId);
+        } else {
+            spec = spec.bindNull(2, UUID.class);
+        }
+
+        return spec.bind(3, limit).fetch().all().map(row -> new TopCustomerEntry(
                 (UUID) row.get("customer_id"),
                 (String) row.get("customer_name"),
                 ((Number) row.get("total_purchases")).longValue(),

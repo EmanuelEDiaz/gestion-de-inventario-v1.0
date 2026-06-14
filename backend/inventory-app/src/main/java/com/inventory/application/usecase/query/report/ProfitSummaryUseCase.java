@@ -19,7 +19,7 @@ public class ProfitSummaryUseCase {
     }
 
     public Mono<ProfitSummaryResponse> execute(Instant fromDate, Instant toDate, UUID warehouseId) {
-        return db.sql("""
+        var spec = db.sql("""
             SELECT
                 COALESCE(SUM(s.total), 0) AS total_revenue,
                 COALESCE(SUM(sl.total_cost), 0) AS total_cost,
@@ -45,11 +45,15 @@ public class ProfitSummaryUseCase {
               AND s.status NOT IN ('CANCELLED', 'VOIDED')
             """)
             .bind(0, fromDate != null ? fromDate : Instant.EPOCH)
-            .bind(1, toDate != null ? toDate : Instant.now())
-            .bind(2, warehouseId)
-            .fetch()
-            .first()
-            .map(row -> new ProfitSummaryResponse(
+            .bind(1, toDate != null ? toDate : Instant.now());
+
+        if (warehouseId != null) {
+            spec = spec.bind(2, warehouseId);
+        } else {
+            spec = spec.bindNull(2, UUID.class);
+        }
+
+        return spec.fetch().first().map(row -> new ProfitSummaryResponse(
                 (BigDecimal) row.get("total_revenue"),
                 (BigDecimal) row.get("total_cost"),
                 (BigDecimal) row.get("total_profit"),

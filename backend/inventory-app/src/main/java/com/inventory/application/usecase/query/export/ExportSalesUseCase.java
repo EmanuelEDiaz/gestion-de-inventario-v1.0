@@ -19,7 +19,7 @@ public class ExportSalesUseCase {
     }
 
     public Flux<ExportSalesRow> execute(Instant fromDate, Instant toDate, UUID warehouseId) {
-        return db.sql("""
+        var spec = db.sql("""
             SELECT
                 TO_CHAR(s.sale_date, 'YYYY-MM-DD') AS date,
                 s.sale_number AS invoice_number,
@@ -44,11 +44,15 @@ public class ExportSalesUseCase {
             ORDER BY s.sale_date DESC
             """)
             .bind(0, fromDate != null ? fromDate : Instant.EPOCH)
-            .bind(1, toDate != null ? toDate : Instant.now())
-            .bind(2, warehouseId)
-            .fetch()
-            .all()
-            .map(row -> new ExportSalesRow(
+            .bind(1, toDate != null ? toDate : Instant.now());
+
+        if (warehouseId != null) {
+            spec = spec.bind(2, warehouseId);
+        } else {
+            spec = spec.bindNull(2, UUID.class);
+        }
+
+        return spec.fetch().all().map(row -> new ExportSalesRow(
                 (String) row.get("date"),
                 (String) row.get("invoice_number"),
                 (String) row.get("customer_name"),

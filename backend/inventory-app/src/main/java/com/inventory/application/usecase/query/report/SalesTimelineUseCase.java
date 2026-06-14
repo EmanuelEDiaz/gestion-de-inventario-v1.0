@@ -31,7 +31,7 @@ public class SalesTimelineUseCase {
             default -> "DATE_TRUNC('month', s.created_at)";
         };
 
-        return db.sql(String.format("""
+        var spec = db.sql(String.format("""
             SELECT
                 %s AS date,
                 COALESCE(SUM(s.total), 0) AS revenue,
@@ -53,11 +53,15 @@ public class SalesTimelineUseCase {
             LIMIT 365
             """, dateExpr, groupExpr, groupExpr))
             .bind(0, fromDate != null ? fromDate : Instant.EPOCH)
-            .bind(1, toDate != null ? toDate : Instant.now())
-            .bind(2, warehouseId)
-            .fetch()
-            .all()
-            .map(row -> new SalesTimelinePoint(
+            .bind(1, toDate != null ? toDate : Instant.now());
+
+        if (warehouseId != null) {
+            spec = spec.bind(2, warehouseId);
+        } else {
+            spec = spec.bindNull(2, UUID.class);
+        }
+
+        return spec.fetch().all().map(row -> new SalesTimelinePoint(
                 (String) row.get("date"),
                 (BigDecimal) row.get("revenue"),
                 (BigDecimal) row.get("cost"),

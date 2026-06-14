@@ -813,3 +813,98 @@ const nullableString = z.string().nullable().optional().default(null);
 **Lección**: Cualquier callback que use `await` debe declararse `async`. Verificar con `tsc --noEmit` antes de commit.
 
 ---
+
+## FIX-039 — `InventoryValueUseCase` SQL usa `p.cost` pero la columna se llama `standard_cost`
+
+**Fase de origen**: A (reporte `inventory-value` — A.7, query no testada)
+
+**Detectado en**: Runtime en browser, error HTTP 500 al cargar dashboard (2026-06-13)
+
+**Síntoma**: `GET /api/v1/reports/inventory-value` retorna HTTP 500 con `column p.cost does not exist`. El dashboard muestra "Error al cargar reportes" y el backend loggea `BadSqlGrammarException`.
+
+**Causa raíz**: La tabla `products` (migración V4) tiene `standard_cost NUMERIC(19,4)`, no `cost`. La columna nunca se llamó `cost`. La query raw en `InventoryValueUseCase.java:23` referencia `p.cost`, que no existe.
+
+**Resolución**: Cambiar `p.cost` → `p.standard_cost` en `InventoryValueUseCase.java:23`.
+
+```diff
+- COALESCE(SUM(sb.on_hand * COALESCE(p.cost, 0)), 0) AS total_cost,
++ COALESCE(SUM(sb.on_hand * COALESCE(p.standard_cost, 0)), 0) AS total_cost,
+```
+
+**Archivos**:
+- `backend/.../application/usecase/query/report/InventoryValueUseCase.java` (line 23)
+
+**Verificación**: `mvn compile -q` ✓ (sin errores de compilación).
+
+---
+
+## FIX-040 — `stockBalances` fallan validación Zod porque no tienen campo `id`
+
+**Fase de origen**: B (loader — schema Zod para stockBalances)
+
+**Detectado en**: Runtime en browser, `"all 20 items failed validation in stockBalances"` (2026-06-13)
+
+**Síntoma**: Los 20 items de `stockBalances` van a `corruptionQueue`. El store queda vacío. El champú "existencias" no está disponible offline.
+
+**Causa raíz**: La tabla `stock_balances` usa PK compuesta `(warehouse_id, product_id)` — no tiene columna `id`. El backend DTO `StockBalanceDto` no tiene campo `id`. Pero el schema Zod `stockResponseSchema` exigía `id: z.string()` (requerido), y el store de IDB `stockBalances` usaba `keyPath: 'id'`.
+
+**Resolución**: Hacer `id` opcional en el schema Zod y agregar `.transform()` que genera `id` como `${warehouseId}:${productId}` antes de insertar en IDB:
+
+```typescript
+// Antes (causa el error):
+id: z.string(),
+
+// Después (acepta ausencia, genera automático):
+id: z.string().optional(),
+}).transform(data => ({
+  ...data,
+  id: data.id ?? `${data.warehouseId}:${data.productId}`,
+}));
+```
+
+**Archivos**:
+- `frontend/src/core/loading/validators/stock-response.ts` (lines 8, 23-26)
+
+**Verificación**: `tsc --noEmit` ✓ (0 errores), `vitest run` ✓ (219/219 tests pass).
+
+**Lección**: Los stores con PK compuesta en PostgreSQL requieren generar un `id` sintético en el frontend para IndexedDB. No asumir que toda tabla tiene columna `id`.
+
+---
+
+## FIX-041 — Reportes con `warehouseId` opcional lanzan `Value at index 2 must not be null`
+
+**Fase de origen**: C (reportes — 6 use cases)
+
+**Detectado en**: Runtime en browser, errores repetidos al cargar reportes sin filtro de almacén (2026-06-13)
+
+**Síntoma**: 6 endpoints de reportes (`/sales`, `/profit-summary`, `/sales-timeline`, `/top-products`, `/top-customers`, `/export/sales`) retornan HTTP 500 cuando se llaman SIN parámetro `warehouseId`. Backend loggea `IllegalArgumentException: Value at index 2 must not be null. Use bindNull(…) instead`.
+
+**Causa raíz**: El driver R2DBC rechaza `.bind(int, null)`. Los 6 use cases hacen `.bind(2, warehouseId)` donde `warehouseId` puede ser `null` (parámetro `@RequestParam(required = false)`). Aunque la SQL ya maneja `$3::uuid IS NULL` correctamente, el binding Java falla antes de llegar a la BD.
+
+**Resolución**: Separar el encadenamiento fluent y usar `.bindNull(2, UUID.class)` cuando `warehouseId` es `null`, siguiendo el patrón ya usado en `AuditLogRepositoryAdapter:46-55`:
+
+```java
+// Antes (causa el error):
+.bind(2, warehouseId)
+
+// Después:
+if (warehouseId != null) {
+    spec = spec.bind(2, warehouseId);
+} else {
+    spec = spec.bindNull(2, UUID.class);
+}
+```
+
+**Archivos** (6 use cases):
+- `backend/.../application/usecase/query/report/SalesReportUseCase.java` (line 45)
+- `backend/.../application/usecase/query/report/ProfitSummaryUseCase.java` (line 49)
+- `backend/.../application/usecase/query/report/SalesTimelineUseCase.java` (line 57)
+- `backend/.../application/usecase/query/report/TopProductsUseCase.java` (line 39)
+- `backend/.../application/usecase/query/report/TopCustomersUseCase.java` (line 39)
+- `backend/.../application/usecase/query/export/ExportSalesUseCase.java` (line 48)
+
+**Verificación**: `mvn compile -q` ✓ (sin errores de compilación).
+
+**Lección**: R2DBC's `.bind(int, value)` no acepta `null`. Usar `.bindNull(int, Class)` para parámetros SQL que pueden ser nulos. Este patrón es obligatorio en toda query con parámetros opcionales.
+
+---
