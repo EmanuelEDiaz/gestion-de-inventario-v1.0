@@ -3,16 +3,16 @@
 import { useState, useMemo } from 'react';
 import type { CreateCurrencyInput, Currency } from '@/core/currency/entities/currency';
 import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
+import { createCurrencySchema, updateCurrencySchema } from '@/core/validators/currency-validators';
 
 interface CurrencyFormFieldsProps {
   initialData?: Currency;
   initialValues?: Partial<CreateCurrencyInput>;
   onSubmit: (data: CreateCurrencyInput) => void;
-  isSubmitting: boolean;
   onCancel: () => void;
 }
 
-export function CurrencyFormFields({ initialData, initialValues, onSubmit, isSubmitting, onCancel }: CurrencyFormFieldsProps) {
+export function CurrencyFormFields({ initialData, initialValues, onSubmit, onCancel }: CurrencyFormFieldsProps) {
   const isEditing = !!initialData;
 
   const [code, setCode] = useState(initialData?.code ?? initialValues?.code ?? '');
@@ -45,10 +45,13 @@ export function CurrencyFormFields({ initialData, initialValues, onSubmit, isSub
     },
   ], [isEditing]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({ code: code.toUpperCase(), name, symbol: symbol || undefined });
-  };
+  const handleSubmit = useMemo(() => async (formValues: Record<string, string>) => {
+    await onSubmit({
+      code: formValues.code.toUpperCase(),
+      name: formValues.name,
+      symbol: formValues.symbol || undefined,
+    } satisfies CreateCurrencyInput);
+  }, [onSubmit]);
 
   return (
     <EntityForm
@@ -56,10 +59,11 @@ export function CurrencyFormFields({ initialData, initialValues, onSubmit, isSub
       fields={fieldConfigs}
       values={values}
       onChange={onChange}
-      onSubmit={handleSubmit}
+      onSubmitAction={handleSubmit}
       onCancel={onCancel}
-      isSubmitting={isSubmitting}
       isEditing={isEditing}
+      createSchema={createCurrencySchema}
+      updateSchema={updateCurrencySchema}
       submitLabel={isEditing ? 'Actualizar Moneda' : 'Crear Moneda'}
       submitLoadingLabel={isEditing ? 'Actualizando...' : 'Guardando...'}
       initialValues={isEditing ? undefined : initialValues}

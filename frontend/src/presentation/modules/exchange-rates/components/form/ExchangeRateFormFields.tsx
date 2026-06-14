@@ -1,21 +1,21 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowRight } from '@/presentation/shared/components/ui/icon-mapping';
 import type { CreateExchangeRateInput, RateType, ExchangeRate } from '@/core/exchange-rate/entities/exchange-rate';
 import { RATE_TYPE_LABELS } from '@/core/exchange-rate/entities/exchange-rate';
 import { EntityForm, type EntityFormField } from '@/presentation/shared/components/form/EntityForm';
 import { useCurrenciesController } from '@/presentation/modules/currencies/hooks/useCurrenciesController';
+import { createExchangeRateSchema, updateExchangeRateSchema } from '@/core/validators/exchange-rate-validators';
 
 interface ExchangeRateFormFieldsProps {
   rates: ExchangeRate[];
   initialData?: ExchangeRate;
   onSubmit: (data: CreateExchangeRateInput) => void;
-  isSubmitting: boolean;
   onCancel: () => void;
 }
 
-export function ExchangeRateFormFields({ rates, initialData, onSubmit, isSubmitting, onCancel }: ExchangeRateFormFieldsProps) {
+export function ExchangeRateFormFields({ rates, initialData, onSubmit, onCancel }: ExchangeRateFormFieldsProps) {
   const { currencies, isLoading } = useCurrenciesController();
   const isEditing = !!initialData;
 
@@ -51,6 +51,7 @@ export function ExchangeRateFormFields({ rates, initialData, onSubmit, isSubmitt
     else if (field === 'rateType') setRateType(value as RateType);
     else if (field === 'validFrom') setValidFrom(value);
   };
+
   const fieldConfigs = useMemo(() => [
     {
       name: 'baseCode', label: 'Moneda Base', type: 'select' as const, required: true,
@@ -71,7 +72,7 @@ export function ExchangeRateFormFields({ rates, initialData, onSubmit, isSubmitt
       placeholder: '120.00', autoSelect: true, className: 'max-w-xs',
       autoFillSource: 'exchangeRates',
       hint: 'Valor numérico de la tasa de cambio',
-      hintDescription: 'Se auto-completa con la última tasa registrada para este par si existe. Cantidad de unidades de la moneda cotizada por 1 unidad de la moneda base.',
+      hintDescription: 'Se auto-completa con la última tasa registrada para este par si existe.',
     },
     {
       name: 'rateType', label: 'Tipo de Tasa', type: 'radio-group' as const,
@@ -87,21 +88,19 @@ export function ExchangeRateFormFields({ rates, initialData, onSubmit, isSubmitt
       name: 'validFrom', label: 'Válida desde', type: 'date' as const, required: true,
       autoSelect: true, className: 'max-w-xs',
       hint: 'Fecha a partir de la cual esta tasa entra en vigor',
-      hintDescription: 'Puedes programar tasas con vigencia futura. Por defecto se establece la fecha actual.',
+      hintDescription: 'Puedes programar tasas con vigencia futura.',
     },
   ], [currencyOptions, isLoading, isEditing]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (sameCurrency) return;
+  const handleSubmit = useCallback(async (formValues: Record<string, string>) => {
     onSubmit({
-      baseCode: baseCode.toUpperCase(),
-      quoteCode: quoteCode.toUpperCase(),
-      rate: Number(rate),
-      rateType,
-      validFrom: `${validFrom}T00:00:00Z`,
-    });
-  };
+      baseCode: formValues.baseCode.toUpperCase(),
+      quoteCode: formValues.quoteCode.toUpperCase(),
+      rate: Number(formValues.rate),
+      rateType: formValues.rateType as RateType,
+      validFrom: `${formValues.validFrom}T00:00:00Z`,
+    } satisfies CreateExchangeRateInput);
+  }, [onSubmit]);
 
   return (
     <EntityForm
@@ -109,11 +108,12 @@ export function ExchangeRateFormFields({ rates, initialData, onSubmit, isSubmitt
       fields={fieldConfigs}
       values={values}
       onChange={onChange}
-      onSubmit={handleSubmit}
+      onSubmitAction={handleSubmit}
       onCancel={onCancel}
-      isSubmitting={isSubmitting}
       isEditing={isEditing}
       submitDisabled={sameCurrency}
+      createSchema={createExchangeRateSchema}
+      updateSchema={updateExchangeRateSchema}
       submitLabel={isEditing ? 'Actualizar Tasa' : 'Crear Tasa'}
       submitLoadingLabel={isEditing ? 'Actualizando...' : 'Guardando...'}
       storageKey="exchange-rate-create"
@@ -124,7 +124,7 @@ export function ExchangeRateFormFields({ rates, initialData, onSubmit, isSubmitt
           valueField: 'rate',
         },
       }}
-      renderField={({ field, defaultRender }: { field: EntityFormField; defaultRender: (f: EntityFormField) => React.ReactNode }) => {
+      renderField={({ field, defaultRender }) => {
         if (field.name === 'baseCode') {
           const quoteField = fieldConfigs.find(f => f.name === 'quoteCode')!;
           return (

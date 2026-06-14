@@ -128,7 +128,6 @@ export function RolesView() {
           initialData={editingRole ?? undefined}
           initialValues={editingRole ? undefined : createInitialValues}
           onSubmit={editingRole ? handleUpdate : handleCreate}
-          isSubmitting={editingRole ? isUpdating : isCreating}
           onCancel={() => { setShowCreate(false); setEditingRole(null); }}
         />
       )}

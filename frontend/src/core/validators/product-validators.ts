@@ -1,19 +1,28 @@
 import { z } from 'zod';
-
-const unitOfMeasure = z.enum(['UNIT', 'KG', 'L', 'M', 'M2', 'BOX', 'PACK']);
-const productStatus = z.enum(['ACTIVE', 'ARCHIVED']);
-const costMethod = z.enum(['INHERIT', 'STANDARD', 'WAC', 'FIFO']);
+import {
+  productName,
+  productSku,
+  productBarcode,
+  productDescription,
+  productStandardCost,
+  productSalePrice,
+  productTaxRate,
+  productReorderPoint,
+  unitOfMeasure,
+  productStatus,
+  costMethod,
+} from './fields/core/product-fields';
 
 export const createProductSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  sku: z.string().nullable().optional(),
-  barcode: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
+  name: productName(),
+  sku: productSku().nullable().optional(),
+  barcode: productBarcode().nullable().optional(),
+  description: productDescription().nullable().optional(),
   categoryId: z.string().nullable().optional(),
-  standardCost: z.number().min(0, 'Debe ser mayor o igual a 0').nullable().optional(),
-  salePrice: z.number().min(0, 'Debe ser mayor o igual a 0').nullable().optional(),
-  taxRate: z.number().min(0).max(100).optional(),
-  reorderPoint: z.number().min(0).nullable().optional(),
+  standardCost: productStandardCost().nullable().optional(),
+  salePrice: productSalePrice().nullable().optional(),
+  taxRate: productTaxRate().optional(),
+  reorderPoint: productReorderPoint().nullable().optional(),
   unitOfMeasure: unitOfMeasure.optional(),
 });
 

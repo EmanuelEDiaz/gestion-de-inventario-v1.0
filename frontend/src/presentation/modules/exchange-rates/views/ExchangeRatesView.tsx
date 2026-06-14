@@ -82,7 +82,6 @@ export function ExchangeRatesView() {
           rates={rates}
           initialData={editingRate ?? undefined}
           onSubmit={editingRate ? handleUpdate : handleCreate}
-          isSubmitting={false}
           onCancel={() => { setShowForm(false); setEditingRate(null); }}
         />
       )}

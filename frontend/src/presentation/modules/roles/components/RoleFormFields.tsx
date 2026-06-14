@@ -1,21 +1,21 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { Role, CreateRoleData, UpdateRoleData } from '@/core/user/entities/user';
 import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
 import { PermissionGroupSelector } from './PermissionGroupSelector';
 import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
 import { usePermissions } from '../hooks/usePermissions';
+import { createRoleSchema, updateRoleSchema } from '@/core/validators/role-validators';
 
 interface RoleFormFieldsProps {
   initialData?: Role;
   initialValues?: Partial<CreateRoleData>;
   onSubmit: (data: CreateRoleData | UpdateRoleData) => void;
-  isSubmitting: boolean;
   onCancel: () => void;
 }
 
-export function RoleFormFields({ initialData, initialValues, onSubmit, isSubmitting, onCancel }: RoleFormFieldsProps) {
+export function RoleFormFields({ initialData, initialValues, onSubmit, onCancel }: RoleFormFieldsProps) {
   const { data: allPerms = [] } = usePermissions();
   const isEditing = !!initialData;
 
@@ -76,15 +76,23 @@ export function RoleFormFields({ initialData, initialValues, onSubmit, isSubmitt
     },
   ], [isEditing]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(async (formValues: Record<string, string>) => {
     if (!isEditing) {
       try { localStorage.setItem('role-create-permissions', JSON.stringify(selectedPermIds)); } catch {}
-      onSubmit({ code: code.toUpperCase(), name, description: description || undefined, permissionIds: selectedPermIds } satisfies CreateRoleData);
+      await onSubmit({
+        code: formValues.code.toUpperCase(),
+        name: formValues.name,
+        description: formValues.description || undefined,
+        permissionIds: selectedPermIds,
+      } satisfies CreateRoleData);
     } else {
-      onSubmit({ name, description: description || undefined, permissionIds: selectedPermIds } satisfies UpdateRoleData);
+      await onSubmit({
+        name: formValues.name,
+        description: formValues.description || undefined,
+        permissionIds: selectedPermIds,
+      } satisfies UpdateRoleData);
     }
-  };
+  }, [isEditing, selectedPermIds, onSubmit]);
 
   return (
     <EntityForm
@@ -93,10 +101,11 @@ export function RoleFormFields({ initialData, initialValues, onSubmit, isSubmitt
       fields={fieldConfigs}
       values={values}
       onChange={onChange}
-      onSubmit={handleSubmit}
+      onSubmitAction={handleSubmit}
       onCancel={onCancel}
-      isSubmitting={isSubmitting}
       isEditing={isEditing}
+      createSchema={createRoleSchema}
+      updateSchema={updateRoleSchema}
       submitLabel={isEditing ? 'Actualizar Rol' : 'Crear Rol'}
       submitLoadingLabel={isEditing ? 'Actualizando...' : 'Guardando...'}
       initialValues={isEditing ? undefined : initialValues}

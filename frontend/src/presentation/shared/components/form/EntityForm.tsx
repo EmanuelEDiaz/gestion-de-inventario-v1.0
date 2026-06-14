@@ -84,8 +84,8 @@ interface EntityFormProps {
   className?: string;
   initialValues?: Record<string, unknown>;
   storageKey: string;
-  createSchema?: z.ZodType;
-  updateSchema?: z.ZodType;
+  createSchema?: z.ZodType<unknown, z.ZodTypeDef, unknown>;
+  updateSchema?: z.ZodType<unknown, z.ZodTypeDef, unknown>;
   persistCreateValues?: boolean;
 }
 

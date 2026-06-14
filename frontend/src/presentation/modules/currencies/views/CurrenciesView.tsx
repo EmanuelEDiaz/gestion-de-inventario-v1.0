@@ -128,7 +128,6 @@ export function CurrenciesView() {
           initialData={editingCurrency ?? undefined}
           initialValues={editingCurrency ? undefined : createInitialValues}
           onSubmit={editingCurrency ? handleUpdate : handleCreate}
-          isSubmitting={isCreating}
           onCancel={() => { setShowForm(false); setEditingCurrency(null); }}
         />
       )}

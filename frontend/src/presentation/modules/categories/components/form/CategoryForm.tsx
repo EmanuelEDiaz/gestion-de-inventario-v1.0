@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Category, CreateCategoryData } from '@/core/category/entities/category';
-import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
-import type { EntityFormField } from '@/presentation/shared/components/form/EntityForm';
+import { EntityForm, type EntityFormField } from '@/presentation/shared/components/form/EntityForm';
+import { createCategorySchema, updateCategorySchema } from '@/core/validators/category-validators';
 
 interface CategoryFormProps {
   categories: Category[];
@@ -13,14 +13,14 @@ interface CategoryFormProps {
 
 export function CategoryForm({ categories, editingCategory, onSubmit, onContinue, onCancel }: CategoryFormProps) {
   const [values, setValues] = useState({
-    name: editingCategory?.name ?? 'Nueva Categoría',
+    name: editingCategory?.name ?? '',
     parentId: editingCategory?.parentId ?? '',
     sortOrder: (editingCategory?.sortOrder ?? 0).toString(),
   });
 
   useEffect(() => {
     setValues({
-      name: editingCategory?.name ?? 'Nueva Categoría',
+      name: editingCategory?.name ?? '',
       parentId: editingCategory?.parentId ?? '',
       sortOrder: (editingCategory?.sortOrder ?? 0).toString(),
     });
@@ -45,7 +45,6 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
       placeholder: 'Nombre de la categoría',
       hint: 'Nombre de la categoría',
       hintDescription: 'Máximo 100 caracteres. Se muestra en listados, filtros y breadcrumbs.',
-      validate: (v) => !v.trim() ? 'El nombre es obligatorio' : undefined,
     },
     {
       name: 'parentId',
@@ -53,7 +52,7 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
       type: 'select',
       placeholder: 'Ninguna (raíz)',
       hint: 'Jerarquía',
-      hintDescription: 'Si se selecciona una categoría padre, esta categoría será una subcategoría. Las categorías pueden tener hasta 3 niveles de anidación.',
+      hintDescription: 'Si se selecciona una categoría padre, esta categoría será una subcategoría.',
       options: parentOptions,
     },
     {
@@ -62,7 +61,7 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
       type: 'number',
       placeholder: '0',
       hint: 'Orden de visualización',
-      hintDescription: 'Número que determina la posición en listados. Menor número = mayor prioridad. Si no se especifica, se asigna 0.',
+      hintDescription: 'Número que determina la posición en listados.',
     },
   ], [parentOptions]);
 
@@ -76,14 +75,19 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
     sortOrder: parseInt(values.sortOrder) || 0,
   }), [values]);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(buildData());
-  }, [buildData, onSubmit]);
+  const handleSubmit = useCallback(async (formValues: Record<string, string>) => {
+    const data = {
+      name: formValues.name,
+      parentId: formValues.parentId || undefined,
+      sortOrder: parseInt(formValues.sortOrder) || 0,
+    } satisfies CreateCategoryData;
+    await onSubmit(data);
+  }, [onSubmit]);
 
   const handleContinue = useCallback(() => {
     if (!onContinue) return;
-    onContinue(buildData());
+    const data = buildData();
+    onContinue(data);
     setValues({ name: '', parentId: '', sortOrder: '0' });
   }, [onContinue, buildData]);
 
@@ -93,11 +97,13 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
       fields={fields}
       values={values}
       onChange={handleChange}
-      onSubmit={handleSubmit}
+      onSubmitAction={handleSubmit}
       onCancel={onCancel}
-      onContinue={onContinue ? handleContinue : undefined}
+      onContinue={handleContinue}
       isEditing={!!editingCategory}
       storageKey="category-create"
+      createSchema={createCategorySchema}
+      updateSchema={updateCategorySchema}
       submitLabel={editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
       continueLabel="Crear y Continuar"
     />

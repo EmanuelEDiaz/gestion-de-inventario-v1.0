@@ -18,3 +18,27 @@ export {
   updateSupplierSchema,
 } from './supplier-validators';
 export type { CreateSupplierInput, UpdateSupplierInput } from './supplier-validators';
+
+export {
+  createCategorySchema,
+  updateCategorySchema,
+} from './category-validators';
+export type { CreateCategoryInput, UpdateCategoryInput } from './category-validators';
+
+export {
+  createCurrencySchema,
+  updateCurrencySchema,
+} from './currency-validators';
+export type { CreateCurrencyInput, UpdateCurrencyInput } from './currency-validators';
+
+export {
+  createExchangeRateSchema,
+  updateExchangeRateSchema,
+} from './exchange-rate-validators';
+export type { CreateExchangeRateInput, UpdateExchangeRateInput } from './exchange-rate-validators';
+
+export {
+  createRoleSchema,
+  updateRoleSchema,
+} from './role-validators';
+export type { CreateRoleInput, UpdateRoleInput } from './role-validators';
