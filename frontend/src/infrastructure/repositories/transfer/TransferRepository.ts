@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api/client';
+import { apiClient, isClientError } from '@/infrastructure/api/client';
 import type { ITransferRepository } from '@/core/transfer/ports/ITransferRepository';
 import type { Transfer, CreateTransferRequest, UpdateTransferRequest, TransferStatus } from '@/core/transfer/entities/transfer';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
@@ -55,7 +55,8 @@ export class TransferRepository implements ITransferRepository {
     if (mode === 'online-direct' || mode === 'online-degraded') {
       try {
         return await op();
-      } catch {
+      } catch (err) {
+        if (isClientError(err)) throw err;
         // fall through to outbox
       }
     }

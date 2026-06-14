@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api/client';
+import { apiClient, isClientError } from '@/infrastructure/api/client';
 import type { IAdjustmentRepository } from '@/core/adjustment/ports/IAdjustmentRepository';
 import type {
   Adjustment,
@@ -49,7 +49,8 @@ export class AdjustmentRepository implements IAdjustmentRepository {
     if (mode === 'online-direct' || mode === 'online-degraded') {
       try {
         return await op();
-      } catch {
+      } catch (err) {
+        if (isClientError(err)) throw err;
         // fall through to outbox
       }
     }

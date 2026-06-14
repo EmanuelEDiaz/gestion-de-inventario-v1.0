@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api/client';
+import { apiClient, isClientError } from '@/infrastructure/api/client';
 import { ISaleRepository } from '@/core/sale/ports/ISaleRepository';
 import { Sale, SaleFilter, CreateSaleInput } from '@/core/sale/entities/sale';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
@@ -44,7 +44,8 @@ export class SaleRepository implements ISaleRepository {
     if (mode === 'online-direct' || mode === 'online-degraded') {
       try {
         return await op();
-      } catch {
+      } catch (err) {
+        if (isClientError(err)) throw err;
         // fall through to outbox
       }
     }

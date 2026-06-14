@@ -1,9 +1,8 @@
 import { apiClient } from '@/infrastructure/api/client';
 import type { IExchangeRateRepository } from '@/core/exchange-rate/ports/IExchangeRateRepository';
 import type { ExchangeRate, CreateExchangeRateInput, UpdateExchangeRateInput } from '@/core/exchange-rate/entities/exchange-rate';
-import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
-import { getNetworkMode } from '@/infrastructure/storage/networkStore';
+import { tryApiOrOutbox } from '@/infrastructure/repositories/shared/api-or-outbox';
 
 export class ExchangeRateRepository implements IExchangeRateRepository {
   private readonly basePath = '/api/v1/exchange-rates';
@@ -23,9 +22,8 @@ export class ExchangeRateRepository implements IExchangeRateRepository {
 
   async create(data: CreateExchangeRateInput): Promise<ExchangeRate> {
     const id = `temp_${crypto.randomUUID()}`;
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.post<ExchangeRate>(this.basePath, data);
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -33,21 +31,14 @@ export class ExchangeRateRepository implements IExchangeRateRepository {
           await db.put('exchangeRates', { ...response.data, cachedAt: Date.now() } as any);
         }, 'ExchangeRateRepository.create');
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'EXCHANGE_RATE', entityId: id,
-      action: 'CREATE', payload: data,
-    });
-    return { id, ...data } as unknown as ExchangeRate;
+      },
+      { entityType: 'EXCHANGE_RATE', entityId: id, action: 'CREATE', payload: data },
+    );
   }
 
   async update(id: string, data: UpdateExchangeRateInput): Promise<ExchangeRate> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.put<ExchangeRate>(`${this.basePath}/${id}`, data);
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -55,35 +46,22 @@ export class ExchangeRateRepository implements IExchangeRateRepository {
           await db.put('exchangeRates', { ...response.data, cachedAt: Date.now() } as any);
         }, 'ExchangeRateRepository.update');
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'EXCHANGE_RATE', entityId: id,
-      action: 'UPDATE', payload: { id, ...data },
-    });
-    return { id, ...data } as unknown as ExchangeRate;
+      },
+      { entityType: 'EXCHANGE_RATE', entityId: id, action: 'UPDATE', payload: { id, ...data } },
+    );
   }
 
   async delete(id: string): Promise<void> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         await apiClient.delete(`${this.basePath}/${id}`);
         await safeCacheWrite(async () => {
           const db = await getDB();
           await db.delete('exchangeRates', id);
         }, 'ExchangeRateRepository.delete');
-        return;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'EXCHANGE_RATE', entityId: id,
-      action: 'DELETE', payload: { id },
-    });
+      },
+      { entityType: 'EXCHANGE_RATE', entityId: id, action: 'DELETE', payload: { id } },
+    );
   }
 }
 

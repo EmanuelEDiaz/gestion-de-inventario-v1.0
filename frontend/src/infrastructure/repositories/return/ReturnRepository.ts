@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api/client';
+import { apiClient, isClientError } from '@/infrastructure/api/client';
 import type { IReturnRepository } from '@/core/return/ports/IReturnRepository';
 import type { Return, ReturnType, ReturnStatus, CreateReturnData, UpdateReturnData } from '@/core/return/entities/return';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
@@ -49,7 +49,8 @@ export class ReturnRepository implements IReturnRepository {
     if (mode === 'online-direct' || mode === 'online-degraded') {
       try {
         return await op();
-      } catch {
+      } catch (err) {
+        if (isClientError(err)) throw err;
         // fall through to outbox
       }
     }

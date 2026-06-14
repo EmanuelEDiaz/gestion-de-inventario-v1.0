@@ -5,11 +5,10 @@
  */
 
 import { apiClient } from '../../api/client';
-import { getNetworkMode } from '@/infrastructure/storage/networkStore';
-import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
 import type { IWarehouseRepository } from '@/core/warehouse/ports/IWarehouseRepository';
 import type { Warehouse, CreateWarehouseData, UpdateWarehouseData } from '@/core/warehouse/entities/warehouse';
+import { tryApiOrOutbox } from '@/infrastructure/repositories/shared/api-or-outbox';
 
 export class WarehouseRepository implements IWarehouseRepository {
   private readonly basePath = '/api/v1/warehouses';
@@ -29,9 +28,9 @@ export class WarehouseRepository implements IWarehouseRepository {
   }
 
   async create(data: CreateWarehouseData): Promise<Warehouse> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    const id = `temp_${crypto.randomUUID()}`;
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.post<Warehouse>(this.basePath, data);
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -39,22 +38,14 @@ export class WarehouseRepository implements IWarehouseRepository {
           await db.put('warehouses', { ...response.data, cachedAt: Date.now() } as any);
         }, 'WarehouseRepository.create');
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    const id = `temp_${crypto.randomUUID()}`;
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
-      action: 'CREATE', payload: data,
-    });
-    return { id, ...data } as unknown as Warehouse;
+      },
+      { entityType: 'WAREHOUSE', entityId: id, action: 'CREATE', payload: data },
+    );
   }
 
   async update(id: string, data: UpdateWarehouseData): Promise<Warehouse> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.put<Warehouse>(`${this.basePath}/${id}`, data);
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -62,21 +53,14 @@ export class WarehouseRepository implements IWarehouseRepository {
           await db.put('warehouses', { ...response.data, cachedAt: Date.now() } as any);
         }, 'WarehouseRepository.update');
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
-      action: 'UPDATE', payload: data,
-    });
-    return { id, ...data } as unknown as Warehouse;
+      },
+      { entityType: 'WAREHOUSE', entityId: id, action: 'UPDATE', payload: data },
+    );
   }
 
   async activate(id: string): Promise<Warehouse> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.post<Warehouse>(`${this.basePath}/${id}/activate`);
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -84,21 +68,14 @@ export class WarehouseRepository implements IWarehouseRepository {
           await db.put('warehouses', { ...response.data, cachedAt: Date.now() } as any);
         }, 'WarehouseRepository.activate');
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
-      action: 'ACTIVATE', payload: { id },
-    });
-    return { id, active: true } as unknown as Warehouse;
+      },
+      { entityType: 'WAREHOUSE', entityId: id, action: 'ACTIVATE', payload: { id } },
+    );
   }
 
   async deactivate(id: string): Promise<Warehouse> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.post<Warehouse>(`${this.basePath}/${id}/deactivate`);
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -106,15 +83,9 @@ export class WarehouseRepository implements IWarehouseRepository {
           await db.put('warehouses', { ...response.data, cachedAt: Date.now() } as any);
         }, 'WarehouseRepository.deactivate');
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'WAREHOUSE', entityId: id,
-      action: 'DEACTIVATE', payload: { id },
-    });
-    return { id, active: false } as unknown as Warehouse;
+      },
+      { entityType: 'WAREHOUSE', entityId: id, action: 'DEACTIVATE', payload: { id } },
+    );
   }
 }
 

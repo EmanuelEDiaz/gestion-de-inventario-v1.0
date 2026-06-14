@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api/client';
+import { apiClient, isClientError } from '@/infrastructure/api/client';
 import type { ICustomerRepository } from '@/core/customer/ports/ICustomerRepository';
 import type { Customer, CreateCustomerData, UpdateCustomerData } from '@/core/customer/entities/customer';
 import { getNetworkMode } from '@/infrastructure/storage/networkStore';
@@ -64,7 +64,8 @@ export class CustomerRepository implements ICustomerRepository {
           await db.put('customers', normalize(response) as any);
         }, 'CustomerRepository.tryOrOutbox');
         return response;
-      } catch {
+      } catch (err) {
+        if (isClientError(err)) throw err;
         // fall through to outbox
       }
     }

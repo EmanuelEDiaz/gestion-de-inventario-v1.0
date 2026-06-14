@@ -1,9 +1,8 @@
 import { apiClient } from '../../api/client';
 import type { IProductRepository, PaginatedResponse, CursorResponse } from '@/core/product/ports/IProductRepository';
 import type { Product, CreateProductData, UpdateProductData, ProductFilters } from '@/core/product/entities/product';
-import { getNetworkMode } from '@/infrastructure/storage/networkStore';
-import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
+import { tryApiOrOutbox } from '@/infrastructure/repositories/shared/api-or-outbox';
 
 export interface ProductQueryParams {
   cursor?: string | null;
@@ -18,8 +17,6 @@ export interface ProductQueryParams {
   sortBy?: string;
   sortAsc?: boolean;
 }
-
-const uuid = () => crypto.randomUUID();
 
 export class ProductRepository implements IProductRepository {
   private readonly basePath = '/api/v1/products';
@@ -75,9 +72,9 @@ export class ProductRepository implements IProductRepository {
   }
 
   async create(data: CreateProductData): Promise<Product> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    const id = `temp_${crypto.randomUUID()}`;
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.post<Product>(this.basePath, data);
         if (response.data) {
           await safeCacheWrite(async () => {
@@ -87,22 +84,14 @@ export class ProductRepository implements IProductRepository {
           }, 'ProductRepository.create');
         }
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    const id = `temp_${uuid()}`;
-    await addToOutbox({
-      operationId: uuid(), entityType: 'PRODUCT', entityId: id,
-      action: 'CREATE', payload: data,
-    });
-    return { id, ...data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true } as unknown as Product;
+      },
+      { entityType: 'PRODUCT', entityId: id, action: 'CREATE', payload: data },
+    );
   }
 
   async update(id: string, data: UpdateProductData): Promise<Product> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.put<Product>(`${this.basePath}/${id}`, data);
         if (response.data) {
           await safeCacheWrite(async () => {
@@ -112,41 +101,27 @@ export class ProductRepository implements IProductRepository {
           }, 'ProductRepository.update');
         }
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: uuid(), entityType: 'PRODUCT', entityId: id,
-      action: 'UPDATE', payload: { id, ...data },
-    });
-    return { id, ...data } as unknown as Product;
+      },
+      { entityType: 'PRODUCT', entityId: id, action: 'UPDATE', payload: { id, ...data } },
+    );
   }
 
   async delete(id: string): Promise<void> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         await apiClient.delete(`${this.basePath}/${id}`);
         await safeCacheWrite(async () => {
           const db = await getDB();
           await db.delete('products', id);
         }, 'ProductRepository.delete');
-        return;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: uuid(), entityType: 'PRODUCT', entityId: id,
-      action: 'DELETE', payload: { id },
-    });
+      },
+      { entityType: 'PRODUCT', entityId: id, action: 'DELETE', payload: { id } },
+    );
   }
 
   async deleteAll(ids: string[]): Promise<void> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         await apiClient.delete(`${this.basePath}/batch`, { data: ids });
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -154,23 +129,14 @@ export class ProductRepository implements IProductRepository {
           for (const id of ids) await tx.store.delete(id);
           await tx.done;
         }, 'ProductRepository.deleteAll');
-        return;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    for (const id of ids) {
-      await addToOutbox({
-        operationId: uuid(), entityType: 'PRODUCT', entityId: id,
-        action: 'DELETE', payload: { id },
-      });
-    }
+      },
+      { entityType: 'PRODUCT', entityId: ids.join(','), action: 'DELETE', payload: { ids } },
+    );
   }
 
   async archive(id: string): Promise<Product> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.post<Product>(`${this.basePath}/${id}/archive`);
         if (response.data) {
           await safeCacheWrite(async () => {
@@ -180,21 +146,14 @@ export class ProductRepository implements IProductRepository {
           }, 'ProductRepository.archive');
         }
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: uuid(), entityType: 'PRODUCT', entityId: id,
-      action: 'ARCHIVE', payload: { id },
-    });
-    return { id } as unknown as Product;
+      },
+      { entityType: 'PRODUCT', entityId: id, action: 'ARCHIVE', payload: { id } },
+    );
   }
 
   async activate(id: string): Promise<Product> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.post<Product>(`${this.basePath}/${id}/activate`);
         if (response.data) {
           await safeCacheWrite(async () => {
@@ -204,15 +163,9 @@ export class ProductRepository implements IProductRepository {
           }, 'ProductRepository.activate');
         }
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: uuid(), entityType: 'PRODUCT', entityId: id,
-      action: 'ACTIVATE', payload: { id },
-    });
-    return { id } as unknown as Product;
+      },
+      { entityType: 'PRODUCT', entityId: id, action: 'ACTIVATE', payload: { id } },
+    );
   }
 }
 

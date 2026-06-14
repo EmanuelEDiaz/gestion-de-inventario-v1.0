@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api/client';
+import { apiClient, isClientError } from '@/infrastructure/api/client';
 import { IPurchaseRepository } from '@/core/purchase/ports/IPurchaseRepository';
 import { Purchase, PurchaseFilter, CreatePurchaseInput } from '@/core/purchase/entities/purchase';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
@@ -44,7 +44,8 @@ export class PurchaseRepository implements IPurchaseRepository {
     if (mode === 'online-direct' || mode === 'online-degraded') {
       try {
         return await op();
-      } catch {
+      } catch (err) {
+        if (isClientError(err)) throw err;
         // fall through to outbox
       }
     }

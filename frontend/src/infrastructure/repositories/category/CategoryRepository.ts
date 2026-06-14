@@ -5,11 +5,10 @@
  */
 
 import { apiClient } from '../../api/client';
-import { getNetworkMode } from '@/infrastructure/storage/networkStore';
-import { addToOutbox } from '@/infrastructure/storage/outbox';
 import { getDB, safeCacheWrite } from '@/infrastructure/storage/db';
 import type { ICategoryRepository } from '@/core/category/ports/ICategoryRepository';
 import type { Category, CreateCategoryData, UpdateCategoryData } from '@/core/category/entities/category';
+import { tryApiOrOutbox } from '@/infrastructure/repositories/shared/api-or-outbox';
 
 export class CategoryRepository implements ICategoryRepository {
   private readonly basePath = '/api/v1/categories';
@@ -29,9 +28,9 @@ export class CategoryRepository implements ICategoryRepository {
   }
 
   async create(data: CreateCategoryData): Promise<Category> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    const id = `temp_${crypto.randomUUID()}`;
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.post<Category>(this.basePath, data);
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -39,22 +38,14 @@ export class CategoryRepository implements ICategoryRepository {
           await db.put('categories', { ...response.data, cachedAt: Date.now() } as any);
         }, 'CategoryRepository.create');
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    const id = `temp_${crypto.randomUUID()}`;
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
-      action: 'CREATE', payload: data,
-    });
-    return { id, ...data } as unknown as Category;
+      },
+      { entityType: 'CATEGORY', entityId: id, action: 'CREATE', payload: data },
+    );
   }
 
   async update(id: string, data: UpdateCategoryData): Promise<Category> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         const response = await apiClient.put<Category>(`${this.basePath}/${id}`, data);
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -62,41 +53,27 @@ export class CategoryRepository implements ICategoryRepository {
           await db.put('categories', { ...response.data, cachedAt: Date.now() } as any);
         }, 'CategoryRepository.update');
         return response.data;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
-      action: 'UPDATE', payload: data,
-    });
-    return { id, ...data } as unknown as Category;
+      },
+      { entityType: 'CATEGORY', entityId: id, action: 'UPDATE', payload: data },
+    );
   }
 
   async delete(id: string): Promise<void> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         await apiClient.delete(`${this.basePath}/${id}`);
         await safeCacheWrite(async () => {
           const db = await getDB();
           await db.delete('categories', id);
         }, 'CategoryRepository.delete');
-        return;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    await addToOutbox({
-      operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
-      action: 'DELETE', payload: { id },
-    });
+      },
+      { entityType: 'CATEGORY', entityId: id, action: 'DELETE', payload: { id } },
+    );
   }
 
   async deleteAll(ids: string[]): Promise<void> {
-    const mode = getNetworkMode();
-    if (mode === 'online-direct' || mode === 'online-degraded') {
-      try {
+    return tryApiOrOutbox(
+      async () => {
         await apiClient.delete(`${this.basePath}/batch`, { data: ids });
         await safeCacheWrite(async () => {
           const db = await getDB();
@@ -104,17 +81,9 @@ export class CategoryRepository implements ICategoryRepository {
           for (const id of ids) await tx.store.delete(id);
           await tx.done;
         }, 'CategoryRepository.deleteAll');
-        return;
-      } catch {
-        // fall through to outbox
-      }
-    }
-    for (const id of ids) {
-      await addToOutbox({
-        operationId: crypto.randomUUID(), entityType: 'CATEGORY', entityId: id,
-        action: 'DELETE', payload: { id },
-      });
-    }
+      },
+      { entityType: 'CATEGORY', entityId: ids.join(','), action: 'DELETE', payload: { ids } },
+    );
   }
 }
 

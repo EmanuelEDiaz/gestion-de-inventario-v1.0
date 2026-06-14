@@ -1,4 +1,4 @@
-import { apiClient } from '@/infrastructure/api/client';
+import { apiClient, isClientError } from '@/infrastructure/api/client';
 import type { ISupplierRepository } from '@/core/supplier/ports/ISupplierRepository';
 import type { Supplier, CreateSupplierData, UpdateSupplierData } from '@/core/supplier/entities/supplier';
 import { getNetworkMode } from '@/infrastructure/storage/networkStore';
@@ -58,7 +58,8 @@ export class SupplierRepository implements ISupplierRepository {
           await db.put('suppliers', { ...response, cachedAt: Date.now() } as any);
         }, `SupplierRepository.${action.toLowerCase()}`);
         return response;
-      } catch {
+      } catch (err) {
+        if (isClientError(err)) throw err;
         // fall through to outbox
       }
     }
