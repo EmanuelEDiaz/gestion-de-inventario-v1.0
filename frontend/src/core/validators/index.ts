@@ -42,3 +42,15 @@ export {
   updateRoleSchema,
 } from './role-validators';
 export type { CreateRoleInput, UpdateRoleInput } from './role-validators';
+
+export {
+  createWarehouseSchema,
+  updateWarehouseSchema,
+} from './core/warehouse-validators';
+export type { CreateWarehouseInput, UpdateWarehouseInput } from './core/warehouse-validators';
+
+export {
+  createUserSchema,
+  updateUserSchema,
+} from './core/user-validators';
+export type { CreateUserInput, UpdateUserInput } from './core/user-validators';

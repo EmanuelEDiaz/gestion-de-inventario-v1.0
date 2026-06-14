@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import type { CachedWarehouse } from '@/infrastructure/storage/db';
+import { warehouseCode, warehouseName, warehouseAddress } from '@/core/validators/fields/core/warehouse-fields';
 
-const nullableString = z.string().nullable().optional().default(null);
+const nullableString = warehouseAddress().nullable().optional().default(null);
 
 export const warehouseResponseSchema: z.ZodSchema<CachedWarehouse> = z.object({
   id: z.string(),
-  code: z.string(),
-  name: z.string(),
+  code: warehouseCode(),
+  name: warehouseName(),
   address: nullableString,
   active: z.boolean(),
   version: z.coerce.number().int().optional(),

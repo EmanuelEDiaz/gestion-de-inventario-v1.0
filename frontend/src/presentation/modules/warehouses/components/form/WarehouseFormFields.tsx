@@ -1,47 +1,90 @@
-/**
- * WarehouseFormFields - Form fields for warehouse create/edit
- */
+'use client';
 
-import { Input } from '@/presentation/shared/components/ui';
-import { FormField } from '@/presentation/shared/components/form/FormField';
-import { Textarea } from '@/presentation/shared/components/form/Textarea';
+import { useState, useMemo, useCallback } from 'react';
+import { EntityForm, type EntityFormField } from '@/presentation/shared/components/form/EntityForm';
+import { createWarehouseSchema, updateWarehouseSchema } from '@/core/validators/core/warehouse-validators';
+import type { CreateWarehouseData } from '@/core/warehouse/entities/warehouse';
 
-export interface WarehouseFormData {
-  code: string;
-  name: string;
-  address: string;
-}
+const FIELDS: EntityFormField[] = [
+  { name: 'code', label: 'Código del Almacén', type: 'text', required: true, placeholder: 'Ej: ALM-01' },
+  { name: 'name', label: 'Nombre del Almacén', type: 'text', required: true, placeholder: 'Ej: Almacén Principal' },
+  { name: 'address', label: 'Dirección', type: 'textarea', required: false, placeholder: 'Dirección del almacén...' },
+];
+
+const INITIAL_VALUES: CreateWarehouseData = {
+  code: '',
+  name: '',
+  address: '',
+};
 
 interface WarehouseFormFieldsProps {
-  data: WarehouseFormData;
-  onChange: (field: keyof WarehouseFormData, value: string) => void;
+  initialData?: CreateWarehouseData;
+  initialValues?: Record<string, unknown>;
+  storageKey: string;
+  isEditing?: boolean;
+  persistCreateValues?: boolean;
+  onSubmit: (data: CreateWarehouseData) => Promise<void>;
+  onCancel: () => void;
 }
 
-export function WarehouseFormFields({ data, onChange }: WarehouseFormFieldsProps) {
+export function WarehouseFormFields({
+  initialData, initialValues, storageKey, isEditing,
+  persistCreateValues, onSubmit, onCancel,
+}: WarehouseFormFieldsProps) {
+  const mergedInitial = useMemo(() => {
+    const base = { ...INITIAL_VALUES, ...initialData };
+    if (initialValues) {
+      for (const [key, value] of Object.entries(initialValues)) {
+        if (value != null && key in INITIAL_VALUES) {
+          (base as Record<string, string>)[key] = String(value);
+        }
+      }
+    }
+    return base;
+  }, [initialData, initialValues]);
+
+  const [code, setCode] = useState(mergedInitial.code);
+  const [name, setName] = useState(mergedInitial.name);
+  const [address, setAddress] = useState(mergedInitial.address ?? '');
+
+  const values: Record<string, string> = useMemo(() => ({
+    code, name, address,
+  }), [code, name, address]);
+
+  const onChange = useCallback((field: string, value: string) => {
+    const setters: Record<string, (v: string) => void> = {
+      code: setCode,
+      name: setName,
+      address: setAddress,
+    };
+    setters[field]?.(value);
+  }, []);
+
+  const handleSubmitAction = useCallback(async (formValues: Record<string, string>) => {
+    await onSubmit({
+      code: formValues.code,
+      name: formValues.name,
+      address: formValues.address || undefined,
+    });
+  }, [onSubmit]);
+
   return (
-    <div className="space-y-4">
-      <Input
-        label="Código del Almacén"
-        value={data.code}
-        onChange={(e) => onChange('code', e.target.value.toUpperCase())}
-        required
-        placeholder="Ej: ALM-01"
-      />
-      <Input
-        label="Nombre del Almacén"
-        value={data.name}
-        onChange={(e) => onChange('name', e.target.value)}
-        required
-        placeholder="Ej: Almacén Principal"
-      />
-      <FormField label="Dirección (opcional)">
-        <Textarea
-          value={data.address}
-          onChange={(e) => onChange('address', e.target.value)}
-          rows={2}
-          placeholder="Dirección del almacén..."
-        />
-      </FormField>
-    </div>
+    <EntityForm
+      title={isEditing ? 'Editar Almacén' : 'Nuevo Almacén'}
+      description={isEditing ? 'Modifica los datos del almacén' : 'Completa los datos del almacén'}
+      fields={FIELDS}
+      values={values}
+      onChange={onChange}
+      onSubmitAction={handleSubmitAction}
+      onCancel={onCancel}
+      isEditing={isEditing}
+      createSchema={createWarehouseSchema}
+      updateSchema={updateWarehouseSchema}
+      storageKey={storageKey}
+      persistCreateValues={persistCreateValues}
+      initialValues={initialValues}
+      submitLabel={isEditing ? 'Guardar Cambios' : 'Crear Almacén'}
+      submitLoadingLabel={isEditing ? 'Actualizando...' : 'Guardando...'}
+    />
   );
 }
