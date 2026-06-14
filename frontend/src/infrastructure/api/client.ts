@@ -224,3 +224,18 @@ export function getErrorMessage(error: unknown): string {
   }
   return 'Error desconocido';
 }
+
+export function getFieldErrors(error: unknown): Array<{ field: string; message: string }> {
+  if (isApiError(error)) {
+    return error.response?.data.fieldErrors ?? [];
+  }
+  return [];
+}
+
+export function isClientError(error: unknown): boolean {
+  if (isApiError(error)) {
+    const status = error.response?.status ?? 0;
+    return status >= 400 && status < 500 && status !== 401 && status !== 403;
+  }
+  return false;
+}
