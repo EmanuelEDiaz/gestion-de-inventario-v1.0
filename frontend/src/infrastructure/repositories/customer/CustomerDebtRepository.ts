@@ -44,7 +44,7 @@ export class CustomerDebtRepository implements ICustomerDebtRepository {
         const response = await apiClient.patch<CustomerDebt>(`${this.basePath}/${id}`, data);
         await safeCacheWrite(async () => {
           const db = await getDB();
-          await db.put('customerDebts', { ...response.data, cachedAt: Date.now() } as any);
+          await db.put('customerDebts', { ...response.data, cachedAt: Date.now() });
         }, 'CustomerDebtRepository.update');
         return response.data;
       },
@@ -58,7 +58,7 @@ export class CustomerDebtRepository implements ICustomerDebtRepository {
         const response = await apiClient.post<CustomerDebt>(`${this.basePath}/${id}/cancel`);
         await safeCacheWrite(async () => {
           const db = await getDB();
-          await db.put('customerDebts', { ...response.data, cachedAt: Date.now() } as any);
+          await db.put('customerDebts', { ...response.data, cachedAt: Date.now() });
         }, 'CustomerDebtRepository.cancel');
         return response.data;
       },

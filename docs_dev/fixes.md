@@ -57,3 +57,30 @@ cd backend/inventory-app && mvn test
 
 ### Commit
 `8f093bf` — `fix(backend): repair ProductControllerTest 500 errors + add AuthorizationDeniedException handler`
+
+---
+
+## Fix-002: CustomerDebtRepository.ts usaba `as any` en `db.put`
+
+**Fase origen**: Pre-existing (detectado durante J.6 Fase A — verificación lint)
+
+### Síntoma
+2 errores ESLint `@typescript-eslint/no-explicit-any` en `CustomerDebtRepository.ts` líneas 47 y 61:
+```typescript
+await db.put('customerDebts', { ...response.data, cachedAt: Date.now() } as any);
+```
+
+### Causa Raíz
+El desarrollador usó `as any` para silenciar TypeScript. El tipo `CachedCustomerDebt` es compatible estructuralmente con `CustomerDebt + cachedAt`.
+
+### Reparación
+Eliminar `as any` — el spread es asignable a `CachedCustomerDebt` sin coerción.
+
+### Archivos modificados
+- `frontend/src/infrastructure/repositories/customer/CustomerDebtRepository.ts` — 2 cambios
+
+### Verificación
+```bash
+cd frontend && pnpm run lint
+# Resultado: 0 errors (antes: 2)
+```
