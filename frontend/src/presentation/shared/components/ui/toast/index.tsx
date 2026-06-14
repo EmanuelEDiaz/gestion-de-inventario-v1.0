@@ -28,6 +28,7 @@ export interface ToastOptions {
   duration?: number;
   statusCode?: number;
   action?: string;
+  onAction?: () => void;
   requiredPermission?: string;
   showCopyButton?: boolean;
 }
@@ -60,6 +61,7 @@ function showToast(variant: ToastVariant, title: string, options?: ToastOptions)
         duration={duration}
         statusCode={options?.statusCode}
         action={options?.action}
+        onAction={options?.onAction}
         requiredPermission={options?.requiredPermission}
         showCopyButton={options?.showCopyButton ?? true}
       />

@@ -12,7 +12,7 @@ import { LoadingOverlay } from '../form/LoadingSpinner';
 import { CacheProgressBar } from '../network-status/CacheProgressBar';
 import { SkeletonDashboard } from './SkeletonDashboard';
 import { CorruptionRepairCenter } from '../data-repair/CorruptionRepairCenter';
-import { TooltipHint } from '../ui/tooltip';
+import { TooltipWrapper } from '../ui/tooltip';
 import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { useCorruptionCount } from '@/presentation/shared/hooks/storage/useCorruptionCount';
 import { useSidebarSections } from '@/presentation/shared/hooks/ui/useSidebarSections';
@@ -252,33 +252,33 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <p className="mt-3 text-sm text-gray-700">{errorParts.whatHappened}</p>
                 <p className="mt-1 text-xs text-gray-500">{errorParts.impact} {errorParts.autoRetry}</p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <TooltipHint
-                    title="Reintentar descarga"
+                  <TooltipWrapper
+                    content="Reintentar descarga"
                     description="Reinicia la carga desde cero. Las fases con datos ya descargados se saltan automáticamente."
                     variant="info"
                   >
                     <button onClick={retryBoot} className="min-h-11 rounded bg-blue-600 px-4 py-2 text-xs text-white hover:bg-blue-700">
                       Reintentar descarga
                     </button>
-                  </TooltipHint>
-                  <TooltipHint
-                    title="Abrir centro de reparación"
+                  </TooltipWrapper>
+                  <TooltipWrapper
+                    content="Abrir centro de reparación"
                     description="Muestra los chunks corruptos con opciones: re-descargar, editar JSON manualmente, o descartar."
                     variant="info"
                   >
                     <button onClick={handleOpenRepairCenter} className="min-h-11 rounded bg-amber-600 px-4 py-2 text-xs text-white hover:bg-amber-700">
                       Reparar datos corruptos
                     </button>
-                  </TooltipHint>
-                  <TooltipHint
-                    title="Omitir y continuar con datos parciales"
+                  </TooltipWrapper>
+                  <TooltipWrapper
+                    content="Omitir y continuar con datos parciales"
                     description="La app se mostrará con los datos que ya están en caché. Puedes reintentar la descarga después desde el panel de estado."
                     variant="info"
                   >
                     <button onClick={skipAndContinue} className="min-h-11 rounded bg-gray-600 px-4 py-2 text-xs text-white hover:bg-gray-700">
                       Omitir y continuar
                     </button>
-                  </TooltipHint>
+                  </TooltipWrapper>
                 </div>
               </>
             )}
@@ -309,24 +309,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <TooltipHint
-                title="Reintentar descarga"
+              <TooltipWrapper
+                content="Reintentar descarga"
                 description="Reinicia la carga. Las fases con datos ya descargados se saltan automáticamente."
                 variant="info"
               >
                 <button onClick={retryBoot} className="min-h-11 rounded bg-amber-600 px-3 py-1.5 text-xs text-white hover:bg-amber-700">
                   Reintentar
                 </button>
-              </TooltipHint>
-              <TooltipHint
-                title="Abrir centro de reparación"
+              </TooltipWrapper>
+              <TooltipWrapper
+                content="Abrir centro de reparación"
                 description="Muestra los chunks corruptos con opciones de reparación."
                 variant="info"
               >
                 <button onClick={handleOpenRepairCenter} className="min-h-11 rounded bg-white px-3 py-1.5 text-xs text-amber-800 ring-1 ring-amber-300 hover:bg-amber-100">
                   Reparar
                 </button>
-              </TooltipHint>
+              </TooltipWrapper>
             </div>
           </div>
           {showRepairCenter && (

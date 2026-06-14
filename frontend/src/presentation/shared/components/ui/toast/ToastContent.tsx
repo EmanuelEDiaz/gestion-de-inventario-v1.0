@@ -12,6 +12,7 @@ export interface ToastContentProps {
   duration: number;
   statusCode?: number;
   action?: string;
+  onAction?: () => void;
   requiredPermission?: string;
   showCopyButton?: boolean;
 }
@@ -23,6 +24,7 @@ export function ToastContent({
   duration,
   statusCode,
   action,
+  onAction,
   requiredPermission,
   showCopyButton = true,
 }: ToastContentProps) {
@@ -66,7 +68,16 @@ export function ToastContent({
           )}
           <p className="font-medium text-sm">{title}</p>
           {description && <p className="text-sm opacity-90">{description}</p>}
-          {action && <p className="text-xs opacity-75 mt-1">Acción: &quot;{action}&quot;</p>}
+          {action && onAction ? (
+            <button
+              onClick={onAction}
+              className="text-xs underline hover:no-underline mt-1"
+            >
+              {action}
+            </button>
+          ) : action && (
+            <p className="text-xs opacity-75 mt-1">Acción: &quot;{action}&quot;</p>
+          )}
           {requiredPermission && <p className="text-xs opacity-75">Permiso: {requiredPermission}</p>}
         </div>
         {showCopyButton && (
