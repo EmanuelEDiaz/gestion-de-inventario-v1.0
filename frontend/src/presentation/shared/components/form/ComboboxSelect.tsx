@@ -20,11 +20,13 @@ export interface ComboboxSelectProps {
   disabled?: boolean;
   className?: string;
   emptyMessage?: string;
+  error?: string;
 }
 
 export function ComboboxSelect({
-  options, value, onChange, placeholder = 'Seleccionar...',
+  options, value, onChange,   placeholder = 'Seleccionar...',
   searchPlaceholder = 'Buscar...', disabled = false, className, emptyMessage = 'Sin resultados',
+  error,
 }: ComboboxSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -68,8 +70,11 @@ export function ComboboxSelect({
   return (
     <div ref={containerRef} className={cn('relative', className)}>
       <ComboboxButton selectedOption={selectedOption} placeholder={placeholder}
-        isOpen={isOpen} disabled={disabled}
+        isOpen={isOpen} disabled={disabled} error={error}
         onClick={() => { if (!disabled) setIsOpen(!isOpen); }} />
+      {error && (
+        <p className="mt-1 text-sm text-red-500">{error}</p>
+      )}
       {isOpen && (
         <ComboboxDropdown search={search} onSearch={setSearch}
           searchPlaceholder={searchPlaceholder} filteredOptions={filteredOptions}

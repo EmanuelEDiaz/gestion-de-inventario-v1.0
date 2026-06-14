@@ -349,6 +349,7 @@ export function EntityForm({
               placeholder={field.placeholder ?? 'Seleccionar...'}
               disabled={field.disabled ?? false}
               emptyMessage={field.emptyMessage}
+              error={fieldError}
             />
           )}
           {field.type === 'radio-group' && field.radioOptions && (
