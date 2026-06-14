@@ -793,3 +793,23 @@ const nullableString = z.string().nullable().optional().default(null);
 **Lección**: Cuando se modifica un type compartido agregando campos requeridos, buscar en todo el codebase los lugares que crean instancias de ese type (`const x: Type = {...}`). La verificación `tsc --noEmit` debería haber detectado esto; el timeout de red no debería impedir una inspección manual de todas las instancias del type modificado.
 
 ---
+
+## FIX-038 — `upgrade` handler sin `async`, `await` causa build error (K.6)
+
+**Fase de origen**: K (K.6 — migración v7→v8 IndexedDB)
+
+**Detectado en**: Build de Turbopack (Next.js 16)
+
+**Error**: `await isn't allowed in non-async function` en `db.ts:718` — el callback `upgrade` de `openDB()` no tenía `async`, pero contenía `await cqStore.getAll()`.
+
+**Causa raíz**: La migración v7→v8 se implementó con `await` dentro del callback `upgrade` sin declararlo `async`.
+
+**Solución**: Agregar `async` al callback `upgrade` en `db.ts:452`. La librería `idb` soporta `upgrade` asíncrono (retorna `void | Promise<void>`).
+
+**Archivos afectados**: `frontend/src/infrastructure/storage/db.ts`
+
+**Verificación**: `tsc --noEmit` ya no reporta error en `db.ts:718`. El build de Next.js debería pasar (test: `pnpm build`).
+
+**Lección**: Cualquier callback que use `await` debe declararse `async`. Verificar con `tsc --noEmit` antes de commit.
+
+---

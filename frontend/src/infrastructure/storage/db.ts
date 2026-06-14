@@ -448,7 +448,7 @@ export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
   if (dbInstance) return dbInstance;
 
   const openPromise = openDB<InventoryDB>(DB_NAME, DB_VERSION, {
-    upgrade(db, oldVersion, newVersion, transaction) {
+    async upgrade(db, oldVersion, newVersion, transaction) {
       // v1 stores
       if (!db.objectStoreNames.contains('outbox')) {
         const store = db.createObjectStore('outbox', { keyPath: 'id', autoIncrement: true });
