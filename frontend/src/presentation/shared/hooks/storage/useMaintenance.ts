@@ -9,7 +9,7 @@ export function useMaintenance(): void {
   const serviceRef = useRef<MaintenanceService | null>(null);
 
   useEffect(() => {
-    if (availability !== 'ready_partial' && availability !== 'ready_complete') return;
+    if (availability !== 'ready_partial') return;
     if (serviceRef.current) return;
 
     const service = new MaintenanceService();

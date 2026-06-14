@@ -20,7 +20,6 @@ export type LoadPhase =
 export type AppAvailability =
   | 'blocking'
   | 'ready_partial'
-  | 'ready_complete'
   | 'degraded'
   | 'error';
 
@@ -99,7 +98,6 @@ const PHASE_LABELS: Record<LoadPhase, string> = {
 const AVAILABILITY_LABELS: Record<AppAvailability, string> = {
   blocking: 'Preparando aplicación',
   ready_partial: 'App lista',
-  ready_complete: 'Todo listo',
   degraded: 'App lista (con algunas limitaciones)',
   error: 'Error al cargar',
 };

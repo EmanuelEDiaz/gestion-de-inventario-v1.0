@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { useAppLoaderStore, getAvailabilityLabel } from '@/core/loading/appLoaderStore';
+import { useReadyComplete } from '@/core/loading/backgroundTasksStore';
 import { type NetworkMode } from '@/infrastructure/storage/networkStore';
 import {
   ChevronDown,
@@ -25,6 +26,7 @@ export function SummaryBanner({ loading, error }: { loading: boolean; error: str
   const phase = useAppLoaderStore((s) => s.phase);
   const progress = useAppLoaderStore((s) => s.progress);
   const errorMsg = useAppLoaderStore((s) => s.error);
+  const isReadyComplete = useReadyComplete();
 
   const label = getAvailabilityLabel(availability);
 
@@ -35,7 +37,7 @@ export function SummaryBanner({ loading, error }: { loading: boolean; error: str
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold text-gray-900">{label}</span>
-        <Badge variant={availability === 'error' ? 'destructive' : availability === 'ready_complete' ? 'default' : 'secondary'}>
+        <Badge variant={availability === 'error' ? 'destructive' : isReadyComplete ? 'default' : 'secondary'}>
           {phase}
         </Badge>
       </div>

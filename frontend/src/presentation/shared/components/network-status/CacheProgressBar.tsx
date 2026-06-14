@@ -2,6 +2,7 @@
 
 import { useState, useDeferredValue } from 'react';
 import { useAppLoaderStore, getPhaseLabel, getPhaseProgress, type LoadPhase } from '@/core/loading/appLoaderStore';
+import { useReadyComplete } from '@/core/loading/backgroundTasksStore';
 import { Check, Loader2, ChevronDown, ChevronRight } from '@/presentation/shared/components/ui/icon-mapping';
 import { useClickOutside } from '@/presentation/shared/hooks/ui/useClickOutside';
 
@@ -53,7 +54,7 @@ export function CacheProgressBar({ variant = 'inline', onRetry, onOpenRepairCent
   const availability = useAppLoaderStore((s) => s.availability);
   const errorMsg = useAppLoaderStore((s) => s.error);
 
-  const isReadyComplete = availability === 'ready_complete';
+  const isReadyComplete = useReadyComplete();
   const isReadyPartial = availability === 'ready_partial';
   const isFinal = isReadyComplete || isReadyPartial;
 

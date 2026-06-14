@@ -46,7 +46,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isAppError = appAvailability === 'error';
   const isBlocking = appAvailability === 'blocking';
   const isAppReady = appAvailability === 'ready_partial'
-    || appAvailability === 'ready_complete'
     || appAvailability === 'degraded';
 
   const [showRepairCenter, setShowRepairCenter] = useState(false);
