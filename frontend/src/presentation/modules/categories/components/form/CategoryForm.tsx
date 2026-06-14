@@ -97,6 +97,7 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onContinue
       onCancel={onCancel}
       onContinue={onContinue ? handleContinue : undefined}
       isEditing={!!editingCategory}
+      storageKey="category-create"
       submitLabel={editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
       continueLabel="Crear y Continuar"
     />

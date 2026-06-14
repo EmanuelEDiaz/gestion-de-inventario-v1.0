@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { z } from 'zod';
 import { cn } from '@/presentation/shared/lib/utils';
 import { Button } from '@/presentation/shared/components/ui/Button';
 import { Input } from '@/presentation/shared/components/ui/Input';
@@ -9,6 +10,7 @@ import { ComboboxSelect } from '@/presentation/shared/components/form/ComboboxSe
 import { LabelWithHint } from '@/presentation/shared/components/form/LabelWithHint';
 import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/shared/components/ui/card';
 import { TooltipWrapper } from '@/presentation/shared/components/ui';
+import { getFieldErrors, getErrorMessage } from '@/infrastructure/api/client';
 
 export interface EntityFormField {
   name: string;
@@ -34,6 +36,13 @@ export interface EntityFormField {
   hintDescription?: string;
   labelSuffix?: React.ReactNode;
   validate?: (value: string, allValues: Record<string, string>) => string | undefined;
+  renderCustomField?: (props: {
+    field: EntityFormField;
+    value: string;
+    fieldError?: string;
+    onChange: (name: string, value: string) => void;
+    allErrors: Record<string, string>;
+  }) => React.ReactNode;
 }
 
 export interface AutoFillSource {
@@ -48,7 +57,8 @@ interface EntityFormProps {
   fields: EntityFormField[];
   values: Record<string, string>;
   onChange: (name: string, value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit?: (e: React.FormEvent) => void;
+  onSubmitAction?: (values: Record<string, string>) => Promise<void>;
   onCancel: () => void;
   onContinue?: (e: React.MouseEvent) => void;
   isSubmitting?: boolean;
@@ -60,16 +70,23 @@ interface EntityFormProps {
   autoFillSources?: Record<string, AutoFillSource>;
   afterFields?: React.ReactNode;
   continueAfterFields?: React.ReactNode;
-  renderField?: (
-    field: EntityFormField,
-    defaultRender: (f: EntityFormField) => React.ReactNode,
-  ) => React.ReactNode | null;
+  renderField?: (props: {
+    field: EntityFormField;
+    value: string;
+    fieldError?: string;
+    onChange: (name: string, value: string) => void;
+    allErrors: Record<string, string>;
+    defaultRender: (f: EntityFormField) => React.ReactNode;
+  }) => React.ReactNode | null;
   error?: string | null;
   externalFieldErrors?: Record<string, string>;
   onClearExternalFieldError?: (field: string) => void;
   className?: string;
   initialValues?: Record<string, unknown>;
-  storageKey?: string;
+  storageKey: string;
+  createSchema?: z.ZodType;
+  updateSchema?: z.ZodType;
+  persistCreateValues?: boolean;
 }
 
 export function EntityForm({
@@ -79,6 +96,7 @@ export function EntityForm({
   values,
   onChange,
   onSubmit,
+  onSubmitAction,
   onCancel,
   onContinue,
   isSubmitting = false,
@@ -90,17 +108,41 @@ export function EntityForm({
   autoFillSources,
   afterFields,
   renderField,
-  error,
+  error: globalError,
   externalFieldErrors,
   onClearExternalFieldError,
   className,
   initialValues,
   storageKey,
+  createSchema,
+  updateSchema,
+  persistCreateValues = true,
 }: EntityFormProps) {
   const autoSelected = useRef(new Set<string>());
   const initialValuesApplied = useRef(false);
   const storageRestored = useRef(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [backendFieldErrors, setBackendFieldErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const activeSchema = useMemo(() => {
+    if (!createSchema && !updateSchema) return undefined;
+    return isEditing ? (updateSchema ?? createSchema) : createSchema;
+  }, [createSchema, updateSchema, isEditing]);
+
+  function buildRawValuesForSchema(
+    fields: EntityFormField[], values: Record<string, string>
+  ): Record<string, unknown> {
+    const raw: Record<string, unknown> = {};
+    for (const field of fields) {
+      if (field.type === 'section-header') continue;
+      const v = values[field.name] ?? '';
+      raw[field.name] = v === '' ? undefined : v;
+    }
+    return raw;
+  }
+
+  const allFieldErrors = { ...fieldErrors, ...backendFieldErrors, ...externalFieldErrors };
 
   const getFilteredOptions = useCallback(
     (field: EntityFormField) => {
@@ -157,7 +199,7 @@ export function EntityForm({
   }, [initialValues, isEditing, values, onChange]);
 
   useEffect(() => {
-    if (isEditing || !storageKey || storageRestored.current) return;
+    if (isEditing || !persistCreateValues || storageRestored.current) return;
     storageRestored.current = true;
     try {
       const saved = localStorage.getItem(storageKey);
@@ -169,51 +211,89 @@ export function EntityForm({
         }
       }
     } catch {}
-  }, [storageKey, isEditing, values, onChange]);
+  }, [storageKey, isEditing, persistCreateValues, values, onChange]);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setSubmitError(null);
+    setBackendFieldErrors({});
+
     const errors: Record<string, string> = {};
+    let hasErrors = false;
+
+    if (activeSchema) {
+      const rawValues = buildRawValuesForSchema(fields, values);
+      const result = activeSchema.safeParse(rawValues);
+      if (!result.success) {
+        for (const issue of result.error.issues) {
+          const fieldName = issue.path[0] as string;
+          if (!errors[fieldName]) errors[fieldName] = issue.message;
+        }
+        hasErrors = true;
+      }
+    }
+
     for (const field of fields) {
       if (field.type === 'section-header') continue;
-      const value = values[field.name] ?? '';
       if (field.validate) {
-        const validationError = field.validate(value, values);
-        if (validationError) {
-          errors[field.name] = validationError;
-        }
+        const err = field.validate(values[field.name] ?? '', values);
+        if (err && !errors[field.name]) { errors[field.name] = err; hasErrors = true; }
       }
     }
 
     setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    if (hasErrors) return;
 
-    onSubmit(e);
-    if (storageKey && !isEditing) {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(values));
-      } catch {}
+    if (persistCreateValues && !isEditing) {
+      try { localStorage.setItem(storageKey, JSON.stringify(values)); } catch {}
     }
-  }, [fields, values, onSubmit, storageKey, isEditing]);
+
+    if (onSubmitAction) {
+      try {
+        await onSubmitAction(values);
+      } catch (err) {
+        const fieldResp = getFieldErrors(err);
+        if (fieldResp.length > 0) {
+          const mapped: Record<string, string> = {};
+          for (const fe of fieldResp) mapped[fe.field] = fe.message;
+          setBackendFieldErrors(mapped);
+        } else {
+          setSubmitError(getErrorMessage(err));
+        }
+      }
+      return;
+    }
+
+    if (onSubmit) {
+      onSubmit(e);
+    }
+  }, [fields, values, activeSchema, onSubmitAction, onSubmit, storageKey, persistCreateValues, isEditing]);
 
   const handleContinue = useCallback((e: React.MouseEvent) => {
-    if (storageKey && !isEditing) {
+    if (persistCreateValues && !isEditing) {
       try {
         localStorage.setItem(storageKey, JSON.stringify(values));
       } catch {}
     }
     onContinue?.(e);
-  }, [onContinue, storageKey, isEditing, values]);
+  }, [onContinue, storageKey, persistCreateValues, isEditing, values]);
 
   const defaultRender = useCallback(
     (field: EntityFormField) => {
       const filteredOptions = getFilteredOptions(field);
       const value = values[field.name] ?? '';
-      const fieldError = fieldErrors[field.name] ?? externalFieldErrors?.[field.name];
+      const fieldError = allFieldErrors[field.name];
       const handleChange = (v: string) => {
         if (fieldErrors[field.name]) {
           setFieldErrors((prev) => {
+            const next = { ...prev };
+            delete next[field.name];
+            return next;
+          });
+        }
+        if (backendFieldErrors[field.name]) {
+          setBackendFieldErrors((prev) => {
             const next = { ...prev };
             delete next[field.name];
             return next;
@@ -230,6 +310,23 @@ export function EntityForm({
           <section key={field.name} className="col-span-full space-y-4 border-t pt-6 first:border-t-0 first:pt-0">
             <h2 className="font-semibold text-gray-900">{field.label}</h2>
           </section>
+        );
+      }
+
+      if (field.renderCustomField) {
+        return (
+          <div key={field.name} className={cn('space-y-1', field.className ? field.className : 'col-span-full sm:col-span-1')}>
+            {field.renderCustomField({
+              field,
+              value,
+              fieldError,
+              onChange: handleChange,
+              allErrors: allFieldErrors,
+            })}
+            {fieldError && (
+              <p className="text-xs text-red-500">{fieldError}</p>
+            )}
+          </div>
         );
       }
 
@@ -302,8 +399,10 @@ export function EntityForm({
         </div>
       );
     },
-    [getFilteredOptions, values, onChange, fieldErrors, externalFieldErrors, onClearExternalFieldError],
+    [getFilteredOptions, values, onChange, fieldErrors, backendFieldErrors, externalFieldErrors, onClearExternalFieldError, allFieldErrors],
   );
+
+  const displayError = submitError ?? globalError;
 
   return (
     <Card className={cn('w-full', className)}>
@@ -316,7 +415,27 @@ export function EntityForm({
           <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
             {fields.map((field) => {
               if (renderField) {
-                const custom = renderField(field, defaultRender);
+                const custom = renderField({
+                  field,
+                  value: values[field.name] ?? '',
+                  fieldError: allFieldErrors[field.name],
+                  onChange: (name, v) => {
+                    if (allFieldErrors[name]) {
+                      if (fieldErrors[name]) {
+                        setFieldErrors((prev) => { const n = { ...prev }; delete n[name]; return n; });
+                      }
+                      if (backendFieldErrors[name]) {
+                        setBackendFieldErrors((prev) => { const n = { ...prev }; delete n[name]; return n; });
+                      }
+                      if (externalFieldErrors?.[name]) {
+                        onClearExternalFieldError?.(name);
+                      }
+                    }
+                    onChange(name, v);
+                  },
+                  allErrors: allFieldErrors,
+                  defaultRender,
+                });
                 if (custom === null) return null;
                 return custom;
               }
@@ -326,8 +445,8 @@ export function EntityForm({
 
           {afterFields}
 
-          {error && (
-            <p className="text-sm text-red-500" role="alert">{error}</p>
+          {displayError && (
+            <p className="text-sm text-red-500" role="alert">{displayError}</p>
           )}
 
           <div className="flex gap-2 pt-2">

@@ -88,10 +88,11 @@ const FIELD_VALIDATORS: Record<string, (value: string, allValues: Record<string,
 
 interface ProductFormFieldsProps {
   categories: Category[];
-  initialData?: Partial<ProductFormData>;
+  initialData?: ProductFormData;
   initialValues?: Record<string, unknown>;
-  storageKey?: string;
+  storageKey: string;
   isEditing?: boolean;
+  persistCreateValues?: boolean;
   onSubmit: (data: ProductFormData) => Promise<void>;
   onContinue?: (data: ProductFormData) => Promise<void>;
   onCancel: () => void;
@@ -102,6 +103,7 @@ interface ProductFormFieldsProps {
 export function ProductFormFields({
   categories, initialData, initialValues, storageKey,
   isEditing, onSubmit, onContinue, onCancel, afterFields, continueAfterFields,
+  persistCreateValues,
 }: ProductFormFieldsProps) {
   const mergedInitial = useMemo(() => {
     const base = { ...INITIAL_VALUES, ...initialData };
@@ -241,6 +243,7 @@ export function ProductFormFields({
       externalFieldErrors={externalFieldErrors}
       onClearExternalFieldError={(field) => setExternalFieldErrors((prev) => { const n = { ...prev }; delete n[field]; return n; })}
       storageKey={storageKey}
+      persistCreateValues={persistCreateValues}
       initialValues={initialValues}
       afterFields={afterFields}
       continueAfterFields={continueAfterFields}

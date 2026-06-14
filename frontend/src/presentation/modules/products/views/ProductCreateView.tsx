@@ -139,9 +139,10 @@ export function ProductCreateView() {
       <ProductFormFields
         key={prefillId || 'create'}
         categories={categories}
-        initialData={initialData}
+        initialData={initialData as ProductFormData}
         initialValues={initialValues}
-        storageKey={prefillId ? undefined : STORAGE_KEY}
+        storageKey={STORAGE_KEY}
+        persistCreateValues={!prefillId}
         onSubmit={handleSubmit}
         onContinue={handleContinue}
         onCancel={() => router.back()}

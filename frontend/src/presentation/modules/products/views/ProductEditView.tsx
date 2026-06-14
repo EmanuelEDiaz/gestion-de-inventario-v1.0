@@ -69,6 +69,7 @@ export function ProductEditView({ productId }: ProductEditViewProps) {
           categories={categories}
           initialData={initialData}
           isEditing
+          storageKey="product-create"
           onSubmit={handleSubmit}
           onCancel={() => router.push('/products')}
         />

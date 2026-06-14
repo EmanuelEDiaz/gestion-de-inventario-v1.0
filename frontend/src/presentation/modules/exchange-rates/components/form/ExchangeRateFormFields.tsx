@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { ArrowRight } from '@/presentation/shared/components/ui/icon-mapping';
 import type { CreateExchangeRateInput, RateType, ExchangeRate } from '@/core/exchange-rate/entities/exchange-rate';
 import { RATE_TYPE_LABELS } from '@/core/exchange-rate/entities/exchange-rate';
-import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
+import { EntityForm, type EntityFormField } from '@/presentation/shared/components/form/EntityForm';
 import { useCurrenciesController } from '@/presentation/modules/currencies/hooks/useCurrenciesController';
 
 interface ExchangeRateFormFieldsProps {
@@ -124,7 +124,7 @@ export function ExchangeRateFormFields({ rates, initialData, onSubmit, isSubmitt
           valueField: 'rate',
         },
       }}
-      renderField={(field, defaultRender) => {
+      renderField={({ field, defaultRender }: { field: EntityFormField; defaultRender: (f: EntityFormField) => React.ReactNode }) => {
         if (field.name === 'baseCode') {
           const quoteField = fieldConfigs.find(f => f.name === 'quoteCode')!;
           return (
