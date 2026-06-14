@@ -100,6 +100,7 @@ export function useAppLoader() {
       setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
       appLogger.warn(`[AppLoader] ${entityType} non-fatal — recurso secundario`, err);
     } else {
+      setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
       setError(errMsg);
     }
   }

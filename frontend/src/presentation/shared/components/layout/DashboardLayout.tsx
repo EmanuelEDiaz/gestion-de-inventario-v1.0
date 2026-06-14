@@ -55,6 +55,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const userId = user?.id ?? 'boot-loader';
   const lastFailedPhase = useAppLoaderStore((s) => s.lastFailedPhase);
 
+  function isCoreEntityLocal(entityType: string): boolean {
+    return ['warehouses', 'products', 'stock'].includes(entityType);
+  }
+
   const handleCloseRepairCenter = useCallback(() => {
     setShowRepairCenter(false);
     setCorruptionRefreshTrigger((prev) => prev + 1);
@@ -72,6 +76,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     useAppLoaderStore.getState().setAvailability('degraded');
     useAppLoaderStore.getState().setPhase('idle');
   }, []);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    window.location.href = '/login';
+  }, [logout]);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -98,10 +107,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     if (appPhase === 'error' && appError) {
       addError('app_loader', appError);
-      toast.error('Error en carga inicial', {
-        description: appError,
-        action: 'Carga de datos offline',
-        duration: 12000,
+      toast.error('Error al cargar datos iniciales', {
+        description: appError + '. La app usará datos locales si están disponibles. Puedes reintentar desde el panel de error.',
+        action: 'Ver detalles',
+        duration: 30000,
       });
     }
   }, [appPhase, appError, addError]);
@@ -110,8 +119,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     const handler = (e: Event) => {
       const { idbStoreName } = (e as CustomEvent).detail;
-      toast.warning('Datos corruptos detectados', {
-        description: `${idbStoreName}: el checksum del chunk no coincide. Los datos se guardaron en el centro de reparación.`,
+      toast.warning('Datos corruptos en ' + idbStoreName, {
+        description: `El checksum del chunk no coincide. Los datos se guardaron en el centro de reparación. Puedes seguir usando la app con datos anteriores.`,
         action: 'Ir a reparar',
         onAction: () => handleOpenRepairCenter(),
         duration: 120_000,
@@ -216,7 +225,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             Cargando aplicación — la navegación estará disponible en unos segundos
           </div>
         </div>
-        <CacheProgressBar variant="floating" />
+        <CacheProgressBar variant="floating" onRetry={retryBoot} onOpenRepairCenter={handleOpenRepairCenter} />
       </div>
     );
   }
@@ -226,7 +235,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const isTokenError = appError
       ? /sesión|token|expirada|expir/i.test(appError)
       : false;
-    const errorParts = formatPhaseError(store.phase, store.step, false, true);
+    const entityType = lastFailedPhase?.entityType ?? 'unknown';
+    const phaseLabel = lastFailedPhase?.phaseLabel ?? 'datos';
+    const hasCore = !!(lastFailedPhase && !isCoreEntityLocal(lastFailedPhase.entityType));
+    const errorParts = formatPhaseError(entityType, phaseLabel, hasCore, isCoreEntityLocal(entityType));
 
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -251,7 +263,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <p className="mt-2 text-sm text-red-600">{appError}</p>
                 <p className="mt-3 text-sm text-gray-700">{errorParts.whatHappened}</p>
                 <p className="mt-1 text-xs text-gray-500">{errorParts.impact} {errorParts.autoRetry}</p>
-                <div className="mt-6 flex flex-wrap gap-3">
+                <div className="mt-4">
+                  <CacheProgressBar variant="inline" onRetry={retryBoot} onOpenRepairCenter={handleOpenRepairCenter} />
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
                   <TooltipWrapper
                     content="Reintentar descarga"
                     description="Reinicia la carga desde cero. Las fases con datos ya descargados se saltan automáticamente."
@@ -279,6 +294,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       Omitir y continuar
                     </button>
                   </TooltipWrapper>
+                </div>
+                <div className="mt-4 border-t border-gray-200 pt-4">
+                  <button
+                    onClick={handleLogout}
+                    className="text-xs text-gray-500 hover:text-red-600 underline"
+                  >
+                    Cerrar sesión
+                  </button>
                 </div>
               </>
             )}

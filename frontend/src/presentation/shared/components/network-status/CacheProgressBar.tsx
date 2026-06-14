@@ -38,9 +38,11 @@ function subPercentFor(
 
 interface CacheProgressBarProps {
   variant?: 'inline' | 'floating';
+  onRetry?: () => void;
+  onOpenRepairCenter?: () => void;
 }
 
-export function CacheProgressBar({ variant = 'inline' }: CacheProgressBarProps) {
+export function CacheProgressBar({ variant = 'inline', onRetry, onOpenRepairCenter }: CacheProgressBarProps) {
   const phase = useAppLoaderStore((s) => s.phase);
   const progress = useAppLoaderStore((s) => s.progress);
   const subStep = useAppLoaderStore((s) => s.subStep);
@@ -208,13 +210,31 @@ export function CacheProgressBar({ variant = 'inline' }: CacheProgressBarProps) 
         </p>
       )}
 
-      {/* Error box */}
+      {/* Error box with actions */}
       {isError && (
-        <div className="rounded border border-red-200 bg-red-50 p-2">
+        <div className="rounded border border-red-200 bg-red-50 p-2 space-y-2">
           <p className="text-xs font-medium text-red-700">Error durante la carga inicial</p>
           {errorMsg && (
-            <p className="mt-1 text-[11px] leading-relaxed text-red-600 break-words">{errorMsg}</p>
+            <p className="text-[11px] leading-relaxed text-red-600 break-words">{errorMsg}</p>
           )}
+          <div className="flex flex-wrap gap-2 pt-1">
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="min-h-11 rounded bg-blue-600 px-3 py-1.5 text-[11px] text-white hover:bg-blue-700"
+              >
+                Reintentar
+              </button>
+            )}
+            {onOpenRepairCenter && (
+              <button
+                onClick={onOpenRepairCenter}
+                className="min-h-11 rounded bg-amber-600 px-3 py-1.5 text-[11px] text-white hover:bg-amber-700"
+              >
+                Ir a reparar
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
