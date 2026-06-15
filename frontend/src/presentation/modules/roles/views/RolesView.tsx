@@ -44,7 +44,7 @@ const COLUMNS: Column<Role>[] = [
 
 export function RolesView() {
   const { data: roles = [], isLoading, error } = useRoles();
-  const { create, update, deactivate, reactivate, remove, removeMany, isCreating, isUpdating } = useRoleActions();
+  const { create, update, deactivate, reactivate, remove, removeMany } = useRoleActions();
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState('');

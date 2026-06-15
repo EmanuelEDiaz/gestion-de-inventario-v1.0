@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowRight } from '@/presentation/shared/components/ui/icon-mapping';
 import type { CreateExchangeRateInput, RateType, ExchangeRate } from '@/core/exchange-rate/entities/exchange-rate';
 import { RATE_TYPE_LABELS } from '@/core/exchange-rate/entities/exchange-rate';
-import { EntityForm, type EntityFormField } from '@/presentation/shared/components/form/EntityForm';
+import { EntityForm } from '@/presentation/shared/components/form/EntityForm';
 import { useCurrenciesController } from '@/presentation/modules/currencies/hooks/useCurrenciesController';
 import { createExchangeRateSchema, updateExchangeRateSchema } from '@/core/validators/exchange-rate-validators';
 

@@ -37,7 +37,6 @@ const COLUMNS: Column<Customer>[] = [
 export function CustomersListView() {
   const { customers, loading, error, create, activate, deactivate, remove, fetchAll } = useCustomers();
   const [showForm, setShowForm] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
   const actions = useMemo<TableAction<Customer>[]>(() => [
     { icon: CheckCircle, title: 'Activar cliente', onClick: (r) => activate(r.id), hidden: (r) => r.active },
@@ -62,18 +61,14 @@ export function CustomersListView() {
       {showForm && (
         <CustomerFormFields
           onSubmit={async (data) => {
-            setIsCreating(true);
             try { await create(data); toast.success('Cliente creado'); setShowForm(false); }
             catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear cliente'); }
-            finally { setIsCreating(false); }
           }}
           onContinue={async (data) => {
-            setIsCreating(true);
             try { await create(data); toast.success('Cliente creado. Puedes seguir agregando.'); }
             catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear cliente'); }
-            finally { setIsCreating(false); }
           }}
-          isSubmitting={isCreating} onCancel={() => setShowForm(false)}
+          storageKey="customer-create" onCancel={() => setShowForm(false)}
         />
       )}
       <GenericTable data={customers} columns={COLUMNS} actions={actions}

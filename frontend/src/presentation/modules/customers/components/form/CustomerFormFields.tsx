@@ -1,24 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { CreateCustomerData } from '@/core/customer/entities/customer';
-import { Button } from '@/presentation/shared/components/ui/Button';
-import { Input } from '@/presentation/shared/components/ui/Input';
-import { Textarea } from '@/presentation/shared/components/form/Textarea';
-import { TooltipHint } from '@/presentation/shared/components/ui/tooltip';
-import { useProvinces } from '@/presentation/modules/geo/hooks/useProvinces';
-import { useMunicipalities } from '@/presentation/modules/geo/hooks/useMunicipalities';
-import { MapPin } from '@/presentation/shared/components/ui/icon-mapping';
+import { EntityForm, type EntityFormField } from '@/presentation/shared/components/form/EntityForm';
+import { GeoFields } from '@/presentation/shared/components/form/GeoFields';
 import { MapPickerModal } from '@/presentation/shared/components/map/MapPickerModal';
+import { createCustomerSchema, updateCustomerSchema } from '@/core/validators/customer-validators';
+
+const FIELDS: EntityFormField[] = [
+  { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Cliente S.A.' },
+  { name: 'code', label: 'Código', type: 'text', required: false, placeholder: 'CLI-001', hint: 'Código', hintDescription: 'Código interno del cliente (CLI-001)' },
+  { name: 'contactName', label: 'Contacto', type: 'text', required: false, placeholder: 'María López' },
+  { name: 'phone', label: 'Teléfono', type: 'text', required: false, placeholder: '+53 5555 5555' },
+  { name: 'email', label: 'Email', type: 'text', required: false, placeholder: 'cliente@empresa.com' },
+  { name: 'address', label: 'Dirección', type: 'text', required: false, placeholder: 'Calle 10 #123' },
+  { name: 'province', label: 'Provincia', type: 'text', required: false },
+  { name: 'municipality', label: 'Municipio', type: 'text', required: false },
+  { name: 'street', label: 'Calle', type: 'text', required: false },
+  { name: 'locality', label: 'Localidad', type: 'text', required: false },
+  { name: 'zipCode', label: 'CP', type: 'text', required: false },
+  { name: 'latitude', label: 'Latitud', type: 'text', required: false },
+  { name: 'longitude', label: 'Longitud', type: 'text', required: false },
+  { name: 'notes', label: 'Notas', type: 'textarea', required: false, rows: 3, placeholder: 'Notas adicionales...', className: 'col-span-full' },
+];
 
 interface CustomerFormFieldsProps {
   onSubmit: (data: CreateCustomerData) => void;
   onContinue?: (data: CreateCustomerData) => void;
-  isSubmitting: boolean;
   onCancel: () => void;
+  storageKey?: string;
 }
 
-export function CustomerFormFields({ onSubmit, onContinue, isSubmitting, onCancel }: CustomerFormFieldsProps) {
+export function CustomerFormFields({ onSubmit, onContinue, onCancel, storageKey = 'customer-create' }: CustomerFormFieldsProps) {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [contactName, setContactName] = useState('');
@@ -30,161 +43,128 @@ export function CustomerFormFields({ onSubmit, onContinue, isSubmitting, onCance
   const [street, setStreet] = useState('');
   const [locality, setLocality] = useState('');
   const [zipCode, setZipCode] = useState('');
-  const [notes, setNotes] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
+  const [notes, setNotes] = useState('');
   const [showMapPicker, setShowMapPicker] = useState(false);
-  const [shouldContinue, setShouldContinue] = useState(false);
 
-  const { data: provinces } = useProvinces();
-  const { data: municipalities } = useMunicipalities(province || undefined);
+  const values = useMemo<Record<string, string>>(() => ({
+    name, code, contactName, phone, email, address,
+    province, municipality, street, locality, zipCode,
+    latitude, longitude, notes,
+  }), [name, code, contactName, phone, email, address, province, municipality, street, locality, zipCode, latitude, longitude, notes]);
 
-  const resetForm = () => {
-    setName('');
-    setCode('');
-    setContactName('');
-    setPhone('');
-    setEmail('');
-    setAddress('');
-    setProvince('');
-    setMunicipality('');
-    setStreet('');
-    setLocality('');
-    setZipCode('');
-    setLatitude('');
-    setLongitude('');
-    setNotes('');
-  };
+  const onChange = useCallback((field: string, value: string) => {
+    const setters: Record<string, (v: string) => void> = {
+      name: setName, code: setCode, contactName: setContactName,
+      phone: setPhone, email: setEmail, address: setAddress,
+      province: setProvince, municipality: setMunicipality,
+      street: setStreet, locality: setLocality, zipCode: setZipCode,
+      latitude: setLatitude, longitude: setLongitude, notes: setNotes,
+    };
+    setters[field]?.(value);
+  }, []);
 
-  const getData = (): CreateCustomerData => ({
-    name,
-    code: code || undefined,
-    contactName: contactName || undefined,
-    phone: phone || undefined,
-    email: email || undefined,
-    address: address || undefined,
-    province: province || undefined,
-    municipality: municipality || undefined,
-    street: street || undefined,
-    locality: locality || undefined,
-    zipCode: zipCode || undefined,
-    latitude: latitude ? parseFloat(latitude) : undefined,
-    longitude: longitude ? parseFloat(longitude) : undefined,
-    notes: notes || undefined,
-  });
+  const resetForm = useCallback(() => {
+    setName(''); setCode(''); setContactName(''); setPhone(''); setEmail('');
+    setAddress(''); setProvince(''); setMunicipality('');
+    setStreet(''); setLocality(''); setZipCode('');
+    setLatitude(''); setLongitude(''); setNotes('');
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const data = getData();
-    if (shouldContinue && onContinue) {
-      resetForm();
-      onContinue(data);
-    } else {
-      onSubmit(data);
-    }
-    setShouldContinue(false);
-  };
+  const handleSubmitAction = useCallback(async (formValues: Record<string, string>) => {
+    const data: CreateCustomerData = {
+      name: formValues.name,
+      code: formValues.code || undefined,
+      contactName: formValues.contactName || undefined,
+      phone: formValues.phone || undefined,
+      email: formValues.email || undefined,
+      address: formValues.address || undefined,
+      province: formValues.province || undefined,
+      municipality: formValues.municipality || undefined,
+      street: formValues.street || undefined,
+      locality: formValues.locality || undefined,
+      zipCode: formValues.zipCode || undefined,
+      latitude: formValues.latitude ? parseFloat(formValues.latitude) : undefined,
+      longitude: formValues.longitude ? parseFloat(formValues.longitude) : undefined,
+      notes: formValues.notes || undefined,
+    };
+    await onSubmit(data);
+  }, [onSubmit]);
+
+  const handleContinue = useCallback(() => {
+    const data: CreateCustomerData = {
+      name,
+      code: code || undefined,
+      contactName: contactName || undefined,
+      phone: phone || undefined,
+      email: email || undefined,
+      address: address || undefined,
+      province: province || undefined,
+      municipality: municipality || undefined,
+      street: street || undefined,
+      locality: locality || undefined,
+      zipCode: zipCode || undefined,
+      latitude: latitude ? parseFloat(latitude) : undefined,
+      longitude: longitude ? parseFloat(longitude) : undefined,
+      notes: notes || undefined,
+    };
+    onContinue?.(data);
+    resetForm();
+  }, [name, code, contactName, phone, email, address, province, municipality, street, locality, zipCode, latitude, longitude, notes, onContinue, resetForm]);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label htmlFor="name" className="text-sm font-medium">Nombre *</label>
-          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Cliente S.A." required title="Nombre del cliente" />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="code" className="text-sm font-medium">
-            <span className="inline-flex items-center gap-1">Código<TooltipHint title="Código" description="Código interno del cliente (CLI-001)" /></span>
-          </label>
-          <Input id="code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="CLI-001" title="Código de referencia" />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="contactName" className="text-sm font-medium">Contacto</label>
-          <Input id="contactName" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="María López" title="Persona de contacto" />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="phone" className="text-sm font-medium">Teléfono</label>
-          <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+53 5555 5555" title="Número de teléfono" />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-medium">Email</label>
-          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@empresa.com" title="Correo electrónico" />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="address" className="text-sm font-medium">Dirección</label>
-          <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle 10 #123" title="Dirección del cliente" />
-        </div>
-        <div className="space-y-1 sm:col-span-2">
-          <label className="text-sm font-medium">
-            <span className="inline-flex items-center gap-1">Dirección estructurada <TooltipHint title="Dirección estructurada" description="Provincia, municipio, calle y código postal" /></span>
-          </label>
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="customer-province" className="text-sm font-medium">Provincia</label>
-          <select id="customer-province" value={province} onChange={(e) => setProvince(e.target.value)}
-            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
-            <option value="">Seleccionar provincia</option>
-            {provinces?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="customer-municipality" className="text-sm font-medium">Municipio</label>
-          <select id="customer-municipality" value={municipality} onChange={(e) => setMunicipality(e.target.value)}
-            disabled={!province}
-            className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50">
-            <option value="">Seleccionar municipio</option>
-            {municipalities?.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-        </div>
-        <div className="space-y-1">
-          <Input id="customer-street" value={street} onChange={(e) => setStreet(e.target.value)}
-            placeholder="Calle #123" title="Calle y número" />
-        </div>
-        <div className="space-y-1">
-          <Input id="customer-locality" value={locality} onChange={(e) => setLocality(e.target.value)}
-            placeholder="Reparto/Comunidad" title="Reparto o comunidad" />
-        </div>
-        <div className="space-y-1">
-          <Input id="customer-zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)}
-            placeholder="Código Postal" title="Código postal" />
-        </div>
-        <div className="sm:col-span-2 flex items-center gap-2 pt-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => setShowMapPicker(true)}>
-            <MapPin className="h-4 w-4 mr-1" /> Seleccionar en Mapa
-          </Button>
-          {latitude && longitude && (
-            <span className="text-xs text-muted-foreground">
-              Coordenadas: {parseFloat(latitude).toFixed(6)}, {parseFloat(longitude).toFixed(6)}
-            </span>
-          )}
-        </div>
-      </div>
+    <>
+      <EntityForm
+        title="Nuevo Cliente"
+        description="Completa los datos del cliente"
+        fields={FIELDS}
+        values={values}
+        onChange={onChange}
+        onSubmitAction={handleSubmitAction}
+        onCancel={onCancel}
+        onContinue={onContinue ? handleContinue : undefined}
+        createSchema={createCustomerSchema}
+        updateSchema={updateCustomerSchema}
+        storageKey={storageKey}
+        persistCreateValues={false}
+        submitLabel="Crear Cliente"
+        submitLoadingLabel="Guardando..."
+        renderField={({ field, onChange: onValueChange, defaultRender, allErrors }) => {
+          if (field.name === 'province') {
+            return (
+              <GeoFields
+                province={values.province}
+                municipality={values.municipality}
+                street={values.street}
+                locality={values.locality}
+                zipCode={values.zipCode}
+                latitude={values.latitude}
+                longitude={values.longitude}
+                onChange={onValueChange}
+                errors={allErrors}
+                onOpenMapPicker={() => setShowMapPicker(true)}
+              />
+            );
+          }
+          if (['municipality', 'street', 'locality', 'zipCode', 'latitude', 'longitude'].includes(field.name)) {
+            return null;
+          }
+          return defaultRender(field);
+        }}
+      />
       <MapPickerModal
         open={showMapPicker}
         province={province}
         municipality={municipality}
         initialLocation={latitude && longitude ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined}
         onSelect={(lat, lng) => {
-          setLatitude(lat.toString());
-          setLongitude(lng.toString());
+          onChange('latitude', lat.toString());
+          onChange('longitude', lng.toString());
           setShowMapPicker(false);
         }}
         onClose={() => setShowMapPicker(false)}
       />
-      <div className="space-y-1">
-        <label htmlFor="notes" className="text-sm font-medium">Notas</label>
-        <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas adicionales..." rows={3} />
-      </div>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Guardando...' : 'Crear Cliente'}</Button>
-        {onContinue && (
-          <Button type="submit" variant="outline" disabled={isSubmitting}
-            onClick={() => setShouldContinue(true)}>
-            {isSubmitting ? 'Guardando...' : 'Crear y Continuar'}
-          </Button>
-        )}
-        <Button type="button" variant="outline" onClick={onCancel}>Cancelar</Button>
-      </div>
-    </form>
+    </>
   );
 }

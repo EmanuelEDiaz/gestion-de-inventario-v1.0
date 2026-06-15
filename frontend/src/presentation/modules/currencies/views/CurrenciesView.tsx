@@ -34,7 +34,7 @@ const COLUMNS: Column<CurrencyRow>[] = [
 ];
 
 export function CurrenciesView() {
-  const { currencies, isLoading, error, create, update, remove, removeMany, bulkDisable, bulkEnable, isCreating } = useCurrenciesController();
+  const { currencies, isLoading, error, create, update, remove, removeMany, bulkDisable, bulkEnable } = useCurrenciesController();
   const [showForm, setShowForm] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState<Currency | null>(null);
   const [searchQuery, setSearchQuery] = useState('');

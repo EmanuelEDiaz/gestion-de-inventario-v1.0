@@ -4,7 +4,7 @@ import { apiClient } from '../../api/client';
 import { getNetworkMode } from '@/infrastructure/storage/networkStore';
 import { addToOutbox } from '@/infrastructure/storage/outbox';
 import type { CustomerDebt, UpdateDebtData } from '@/core/customer/entities/customer-debt';
-import type { DebtPayment, RegisterDebtPaymentData } from '@/core/customer/entities/debt-payment';
+import type { DebtPayment } from '@/core/customer/entities/debt-payment';
 
 vi.mock('../../api/client', () => ({
   apiClient: {

@@ -37,7 +37,6 @@ const COLUMNS: Column<Supplier>[] = [
 export function SuppliersListView() {
   const { suppliers, loading, error, create, activate, deactivate, remove, fetchAll } = useSuppliers();
   const [showForm, setShowForm] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
   const actions = useMemo<TableAction<Supplier>[]>(() => [
     { icon: CheckCircle, title: 'Activar proveedor', onClick: (r) => activate(r.id), hidden: (r) => r.active },
@@ -62,18 +61,14 @@ export function SuppliersListView() {
       {showForm && (
         <SupplierFormFields
           onSubmit={async (data) => {
-            setIsCreating(true);
             try { await create(data); toast.success('Proveedor creado'); setShowForm(false); }
             catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear proveedor'); }
-            finally { setIsCreating(false); }
           }}
           onContinue={async (data) => {
-            setIsCreating(true);
             try { await create(data); toast.success('Proveedor creado. Puedes seguir agregando.'); }
             catch (err) { toast.error(err instanceof Error ? err.message : 'Error al crear proveedor'); }
-            finally { setIsCreating(false); }
           }}
-          isSubmitting={isCreating} onCancel={() => setShowForm(false)}
+          storageKey="supplier-create" onCancel={() => setShowForm(false)}
         />
       )}
       <GenericTable data={suppliers} columns={COLUMNS} actions={actions}

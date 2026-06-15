@@ -9,30 +9,18 @@ import {
   type AppAvailability,
 } from '@/core/loading/appLoaderStore';
 import {
-  productResponseSchema,
   customerResponseSchema,
   supplierResponseSchema,
-  warehouseResponseSchema,
-  categoryResponseSchema,
   stockResponseSchema,
   currencyResponseSchema,
   exchangeRateResponseSchema,
   customerDebtResponseSchema,
 } from '@/core/loading/validators';
-import {
-  initPersistence,
-  getCachedCount,
-  DB_NAME,
-  DB_VERSION,
-} from '@/infrastructure/storage/db';
+import { getCachedCount } from '@/infrastructure/storage/db';
 import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueService';
-import { setIdbReady, appLogger } from '@/infrastructure/logging/appLogger';
-import { useSWPrecacheProgress } from './useSWPrecacheProgress';
+import { appLogger } from '@/infrastructure/logging/appLogger';
 import { getStorageUsage } from './useCacheProgress';
 import { startBackgroundTasks } from './useBackgroundTasks';
-
-const PAGE_SIZE = 100;
-const REHYDRATE_TIMEOUT_MS = 8_000;
 
 let bootInProgress = false;
 
@@ -73,37 +61,33 @@ export function useAppLoader() {
   const setError = useAppLoaderStore((s) => s.setError);
   const setLastFailedPhase = useAppLoaderStore((s) => s.setLastFailedPhase);
   const setSubStep = useAppLoaderStore((s) => s.setSubStep);
-  const setSubProgress = useAppLoaderStore((s) => s.setSubProgress);
-  const { done: swDone, triggerStart: swTriggerStart } = useSWPrecacheProgress();
-  const swStartedRef = useRef(false);
   const bgTasksTriggeredRef = useRef(false);
 
-  async function handlePhaseError(
-    entityType: string,
-    err: unknown,
-    phaseLabel: string,
-  ): Promise<void> {
-    const errMsg = err instanceof Error ? err.message : `Error al descargar ${phaseLabel}`;
-    const [wCount, pCount, sCount] = await Promise.all([
-      getCachedCount('warehouses'),
-      getCachedCount('products'),
-      getCachedCount('stockBalances'),
-    ]);
-    const hasCore = wCount > 0 && pCount > 0 && sCount > 0;
+  const handlePhaseError = useCallback(
+    async (entityType: string, err: unknown, phaseLabel: string): Promise<void> => {
+      const errMsg = err instanceof Error ? err.message : `Error al descargar ${phaseLabel}`;
+      const [wCount, pCount, sCount] = await Promise.all([
+        getCachedCount('warehouses'),
+        getCachedCount('products'),
+        getCachedCount('stockBalances'),
+      ]);
+      const hasCore = wCount > 0 && pCount > 0 && sCount > 0;
 
-    if (hasCore) {
-      setAvailability('degraded');
-      setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
-      appLogger.warn(`[AppLoader] ${entityType} non-fatal — usando datos anteriores`, err);
-    } else if (!isCoreEntity(entityType)) {
-      setAvailability('degraded');
-      setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
-      appLogger.warn(`[AppLoader] ${entityType} non-fatal — recurso secundario`, err);
-    } else {
-      setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
-      setError(errMsg);
-    }
-  }
+      if (hasCore) {
+        setAvailability('degraded');
+        setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
+        appLogger.warn(`[AppLoader] ${entityType} non-fatal — usando datos anteriores`, err);
+      } else if (!isCoreEntity(entityType)) {
+        setAvailability('degraded');
+        setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
+        appLogger.warn(`[AppLoader] ${entityType} non-fatal — recurso secundario`, err);
+      } else {
+        setLastFailedPhase({ entityType, phaseLabel, error: errMsg });
+        setError(errMsg);
+      }
+    },
+    [setAvailability, setLastFailedPhase, setError],
+  );
 
   useEffect(() => {
     if (store.phase !== 'quota') return;
@@ -119,145 +103,7 @@ export function useAppLoader() {
         setError(err instanceof Error ? err.message : 'Error al verificar almacenamiento');
       }
     })();
-  }, [store.phase, setPhase, setError]);
-
-  useEffect(() => {
-    if (store.phase !== 'sw_precache') return;
-    if (!swStartedRef.current) {
-      swTriggerStart();
-      swStartedRef.current = true;
-    }
-    if (swDone) {
-      setPhase('db_open');
-    }
-  }, [store.phase, swDone, swTriggerStart, setPhase]);
-
-  useEffect(() => {
-    if (store.phase !== 'db_open') return;
-    (async () => {
-      try {
-        await initPersistence();
-        setIdbReady(true);
-        setPhase('rehydrate_local');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al abrir base de datos');
-      }
-    })();
-  }, [store.phase, setPhase, setError]);
-
-  useEffect(() => {
-    if (store.phase !== 'rehydrate_local') return;
-    (async () => {
-      const rehydrate = (async () => {
-        const db = await import('idb').then((idb) => idb.openDB(DB_NAME, DB_VERSION));
-        const [warehouseCount, productCount, stockCount] = await Promise.all([
-          db.count('warehouses'),
-          db.count('products'),
-          db.count('stockBalances'),
-        ]);
-        return { warehouseCount, productCount, stockCount };
-      })();
-
-      const timeout = new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), REHYDRATE_TIMEOUT_MS),
-      );
-
-      const result = await Promise.race([rehydrate, timeout]);
-
-      if (!result) {
-        appLogger.warn(
-          '[AppLoader] rehydrate_local timeout (>8s), forzando descarga completa',
-          { errorCode: 'ERR_REHYDRATE_TIMEOUT' },
-        );
-        setSubStep('Reintentando descarga...');
-        setPhase('warehouses');
-        return;
-      }
-
-      try {
-        const { warehouseCount, productCount, stockCount } = result;
-        const hasMinCache = warehouseCount > 0 && productCount > 0 && stockCount > 0;
-
-        if (hasMinCache) {
-          setSubStep('Cargando datos locales...');
-          setAvailability('ready_partial');
-        } else {
-          setSubStep(`${productCount > 0 ? 'Actualizando' : 'Descargando'} productos...`);
-          setPhase('warehouses');
-        }
-      } catch (err) {
-        appLogger.error('[AppLoader] rehydrate_local falló, forzando descarga completa', err);
-        setPhase('warehouses');
-      }
-    })();
-  }, [store.phase, setPhase, setAvailability, setSubStep]);
-
-  useEffect(() => {
-    if (store.phase !== 'warehouses') return;
-    (async () => {
-      try {
-        setSubStep('Descargando bodegas...');
-        await loadFlatCatalog({
-          endpoint: '/api/v1/warehouses',
-          idbStoreName: 'warehouses',
-          schema: warehouseResponseSchema,
-          entityLabel: 'bodegas',
-        });
-        setPhase('products');
-      } catch (err) {
-        await handlePhaseError('warehouses', err, 'bodegas');
-      }
-    })();
-  }, [store.phase, setPhase, setSubStep, setError]);
-
-  useEffect(() => {
-    if (store.phase !== 'products') return;
-    (async () => {
-      try {
-        const count = await getCachedCount('products');
-        if (count > 0) { setPhase('categories'); return; }
-        const result = await DownloadQueueService.downloadEntity({
-          entityType: 'products',
-          endpoint: '/api/v1/products/paginated',
-          idbStoreName: 'products',
-          schema: productResponseSchema,
-          pageSize: PAGE_SIZE,
-          userId: LOADER_USER_ID,
-          onProgress: (page, total) => {
-            setSubStep(`Página ${page}/${total}`);
-            setSubProgress(page, total);
-          },
-        });
-        if (!result.ok) {
-          const errMsg = result.errors?.[0] ?? 'Error desconocido descargando productos';
-          appLogger.warn('[AppLoader] products descarga parcial', result.errors);
-          await handlePhaseError('products', new Error(errMsg), 'productos');
-          return;
-        }
-        setPhase('categories');
-      } catch (err) {
-        await handlePhaseError('products', err, 'productos');
-      }
-    })();
-  }, [store.phase, setPhase, setSubStep, setSubProgress, setError]);
-
-  useEffect(() => {
-    if (store.phase !== 'categories') return;
-    (async () => {
-      try {
-        setSubStep('Descargando categorías...');
-        await loadFlatCatalog({
-          endpoint: '/api/v1/categories',
-          idbStoreName: 'categories',
-          schema: categoryResponseSchema,
-          entityLabel: 'categorías',
-        });
-        setPhase('currencies');
-      } catch (err) {
-        await handlePhaseError('categories', err, 'categorías');
-      }
-    })();
-  }, [store.phase, setPhase, setSubStep, setError]);
+  }, [store.phase, setPhase, setSubStep, setError, handlePhaseError]);
 
   useEffect(() => {
     if (store.phase !== 'currencies') return;
@@ -276,7 +122,7 @@ export function useAppLoader() {
         setPhase('exchange_rates');
       }
     })();
-  }, [store.phase, setPhase, setSubStep]);
+  }, [store.phase, setPhase, setSubStep, handlePhaseError]);
 
   useEffect(() => {
     if (store.phase !== 'exchange_rates') return;
@@ -295,7 +141,7 @@ export function useAppLoader() {
         setPhase('customer_debts');
       }
     })();
-  }, [store.phase, setPhase, setSubStep]);
+    }, [store.phase, setPhase, setSubStep, handlePhaseError]);
 
   useEffect(() => {
     if (store.phase !== 'customer_debts') return;
@@ -314,7 +160,7 @@ export function useAppLoader() {
         setPhase('stock');
       }
     })();
-  }, [store.phase, setPhase, setSubStep]);
+  }, [store.phase, setPhase, setSubStep, handlePhaseError]);
 
   useEffect(() => {
     if (store.phase !== 'stock') return;
@@ -340,7 +186,7 @@ export function useAppLoader() {
         await handlePhaseError('stock', err, 'existencias');
       }
     })();
-  }, [store.phase, setPhase, setAvailability, setSubStep, setError]);
+  }, [store.phase, setPhase, setAvailability, setSubStep, setError, handlePhaseError]);
 
   useEffect(() => {
     if (store.phase !== 'customers') return;
@@ -358,7 +204,7 @@ export function useAppLoader() {
         await handlePhaseError('customers', err, 'clientes');
       }
     })();
-  }, [store.phase, setPhase, setSubStep]);
+  }, [store.phase, setPhase, setSubStep, handlePhaseError]);
 
   useEffect(() => {
     if (store.phase !== 'suppliers') return;
@@ -376,7 +222,7 @@ export function useAppLoader() {
         await handlePhaseError('suppliers', err, 'proveedores');
       }
     })();
-  }, [store.phase, setPhase, setSubStep]);
+  }, [store.phase, setPhase, setSubStep, handlePhaseError]);
 
   useEffect(() => {
     if (store.availability !== 'ready_partial') return;

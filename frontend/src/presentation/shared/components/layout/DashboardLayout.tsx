@@ -37,16 +37,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { can } = usePermission();
   const { isAuthenticated, hasHydrated, user, logout } = useAuthStore();
   const { phase: appPhase, availability: appAvailability, error: appError, startLoading } = useAppLoader();
-  const store = useAppLoaderStore();
+  useAppLoaderStore();
   useMaintenance();
   const addError = useErrorLogStore((s) => s.addError);
-  const { overallPercent } = useCacheProgress();
+  useCacheProgress();
 
   const isAuthReady = hasHydrated && isAuthenticated;
   const isAppError = appAvailability === 'error';
   const isBlocking = appAvailability === 'blocking';
-  const isAppReady = appAvailability === 'ready_partial'
-    || appAvailability === 'degraded';
 
   const [showRepairCenter, setShowRepairCenter] = useState(false);
   const [corruptionRefreshTrigger, setCorruptionRefreshTrigger] = useState(0);
@@ -95,12 +93,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [pathname, hasHydrated, isAuthenticated, can, router]);
 
-  // Trigger AppLoader when auth is ready
   useEffect(() => {
     if (isAuthReady && appPhase === 'idle' && appAvailability === 'blocking') {
       startLoading();
     }
-  }, [isAuthReady, appPhase, startLoading]);
+  }, [isAuthReady, appPhase, appAvailability, startLoading]);
 
   // Show toast and audit error on loading failure
   useEffect(() => {
@@ -114,7 +111,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [appPhase, appError, addError]);
 
-  // Listen for corruption-detected events and show toast
   useEffect(() => {
     const handler = (e: Event) => {
       const { idbStoreName } = (e as CustomEvent).detail;
@@ -127,14 +123,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     };
     window.addEventListener('corruption-detected', handler);
     return () => window.removeEventListener('corruption-detected', handler);
-  }, []);
+  }, [handleOpenRepairCenter]);
 
-  // Listen for open-repair-center events
   useEffect(() => {
     const handler = () => handleOpenRepairCenter();
     window.addEventListener('open-repair-center', handler);
     return () => window.removeEventListener('open-repair-center', handler);
-  }, []);
+  }, [handleOpenRepairCenter]);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);

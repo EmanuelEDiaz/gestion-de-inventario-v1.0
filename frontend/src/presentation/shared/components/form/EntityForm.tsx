@@ -142,7 +142,9 @@ export function EntityForm({
     return raw;
   }
 
-  const allFieldErrors = { ...fieldErrors, ...backendFieldErrors, ...externalFieldErrors };
+  const allFieldErrors = useMemo(() => ({
+    ...fieldErrors, ...backendFieldErrors, ...externalFieldErrors,
+  }), [fieldErrors, backendFieldErrors, externalFieldErrors]);
 
   const getFilteredOptions = useCallback(
     (field: EntityFormField) => {
