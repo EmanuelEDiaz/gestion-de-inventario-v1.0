@@ -99,14 +99,20 @@ async function notifyClientToSync(): Promise<void> {
   }
 }
 
-async function clearUserCaches(userId: string): Promise<void> {
+const SESSION_CACHE_PREFIXES = [
+  "cache-R1-pages",
+  "cache-R1-rsc",
+  "cache-R1-rsc-prefetch",
+  "cache-R1-others",
+];
+
+async function clearUserCaches(userId: string | null): Promise<void> {
   const cacheNames = await caches.keys();
-  const userPrefix = `inventory-offline-${userId}`;
-  await Promise.all(
-    cacheNames
-      .filter((name) => name.startsWith(userPrefix))
-      .map((name) => caches.delete(name)),
+  const toDelete = cacheNames.filter((name) =>
+    SESSION_CACHE_PREFIXES.some((p) => name.startsWith(p)) ||
+    (userId !== null && name.startsWith(`inventory-offline-${userId}`))
   );
+  await Promise.all(toDelete.map((name) => caches.delete(name)));
 }
 
 self.addEventListener("message", async (event: ExtendableMessageEvent) => {
@@ -118,7 +124,7 @@ self.addEventListener("message", async (event: ExtendableMessageEvent) => {
   if (event.data?.type === "SET_USER_CONTEXT") {
     const prevUserId = currentUserId;
     currentUserId = event.data.payload.userId;
-    if (currentUserId && currentUserId !== prevUserId) {
+    if (currentUserId !== prevUserId) {
       await clearUserCaches(currentUserId);
     }
     return;

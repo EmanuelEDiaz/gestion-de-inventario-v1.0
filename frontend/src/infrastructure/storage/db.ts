@@ -799,7 +799,15 @@ export async function destroyPersistence(): Promise<void> {
     if ('caches' in window) {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((k) => k.startsWith('inventory-')).map((k) => caches.delete(k)),
+        keys
+          .filter((k) =>
+            k.startsWith('inventory-') ||
+            k.startsWith('cache-R1-pages') ||
+            k.startsWith('cache-R1-rsc') ||
+            k.startsWith('cache-R1-rsc-prefetch') ||
+            k.startsWith('cache-R1-others')
+          )
+          .map((k) => caches.delete(k)),
       );
     }
   } catch (error) {
