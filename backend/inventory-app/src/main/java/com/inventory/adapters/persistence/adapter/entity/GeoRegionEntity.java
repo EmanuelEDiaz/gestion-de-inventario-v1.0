@@ -34,7 +34,7 @@ public class GeoRegionEntity implements Persistable<UUID> {
     @Column("longitude")
     private BigDecimal longitude;
 
-    @Column("is_active")
+    @Column("active")
     private boolean active;
 
     @Version
