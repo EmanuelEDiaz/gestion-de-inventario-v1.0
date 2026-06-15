@@ -63,6 +63,7 @@ export async function addToOutbox(entry: {
     createdAt: Date.now(),
   };
   await db.add('outbox', outboxEntry);
+  registerOutboxSync().catch(() => {});
 }
 
 export async function getPendingOutbox(): Promise<OutboxEntry[]> {
@@ -231,4 +232,13 @@ async function getLocalEntity(storeName: string, entityId: string): Promise<Loca
 async function putLocalEntity(storeName: string, entry: LocalEntityRecord): Promise<void> {
   const db = await getDB();
   await db.put(storeName as 'products', entry as never);
+}
+
+async function registerOutboxSync(): Promise<void> {
+  if (typeof navigator === "undefined") return;
+  if (!("serviceWorker" in navigator)) return;
+  const registration = await navigator.serviceWorker.ready;
+  if ("sync" in registration) {
+    await (registration as unknown as { sync: { register: (tag: string) => Promise<void> } }).sync.register("sync-outbox");
+  }
 }

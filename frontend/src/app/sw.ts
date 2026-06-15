@@ -86,6 +86,19 @@ self.addEventListener("activate", (event) => {
 });
 self.addEventListener("fetch", serwist.handleFetch);
 
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-outbox") {
+    event.waitUntil(notifyClientToSync());
+  }
+});
+
+async function notifyClientToSync(): Promise<void> {
+  const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  for (const client of clients) {
+    client.postMessage({ type: "SYNC_OUTBOX" });
+  }
+}
+
 async function clearUserCaches(userId: string): Promise<void> {
   const cacheNames = await caches.keys();
   const userPrefix = `inventory-offline-${userId}`;

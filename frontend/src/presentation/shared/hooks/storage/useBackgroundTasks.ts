@@ -171,7 +171,7 @@ export async function prefetchImagesBackground(): Promise<void> {
             return;
           }
           try {
-            const res = await fetch(`/api/v1/images/${encodeURIComponent(key)}`);
+            const res = await fetch(`/api/v1/images/${key.startsWith("/") ? key.slice(1) : key}`);
             if (!res.ok) return;
             const buf = await res.arrayBuffer();
             await writeOPFSFile(path, buf);
