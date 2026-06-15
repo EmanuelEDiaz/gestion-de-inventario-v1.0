@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Dialog } from '@/presentation/shared/components/ui/Dialog';
 import { EntityForm, type EntityFormField } from '@/presentation/shared/components/form/EntityForm';
 import { getFailedOutbox } from '@/infrastructure/storage/outbox';
-import { getDB, type OutboxEntry } from '@/infrastructure/storage/db';
+import { getDB, getFromEntityStore, putToEntityStore, type OutboxEntry } from '@/infrastructure/storage/db';
 import { toast } from '@/presentation/shared/components/ui/toast';
 
 interface RepairDialogProps {
@@ -56,7 +56,6 @@ export function RepairDialog({ open, onClose }: RepairDialogProps) {
     setSaving(true);
     try {
       const db = await getDB();
-      const storeName = selectedEntry.entityType.toLowerCase();
       const payload = selectedEntry.payload as Record<string, unknown>;
 
       const updatedPayload: Record<string, unknown> = {};
@@ -71,15 +70,11 @@ export function RepairDialog({ open, onClose }: RepairDialogProps) {
 
       const entityId = selectedEntry.isTempId ? undefined : selectedEntry.entityId;
       if (entityId) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const existing = await (db as any).get(storeName, entityId);
-        if (existing) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (db as any).put(storeName, { ...existing, ...updatedPayload, cachedAt: Date.now() });
-        } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (db as any).put(storeName, { id: entityId, ...updatedPayload, cachedAt: Date.now() });
-        }
+        const existing = await getFromEntityStore(db, selectedEntry.entityType, entityId);
+        const storeData = existing
+          ? { ...existing, ...updatedPayload, cachedAt: Date.now() }
+          : { id: entityId, ...updatedPayload, cachedAt: Date.now() };
+        await putToEntityStore(db, selectedEntry.entityType, storeData);
       }
 
       if (selectedEntry.id !== undefined) {

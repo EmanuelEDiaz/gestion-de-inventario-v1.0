@@ -1,4 +1,4 @@
-import { openDB, deleteDB, type DBSchema, type IDBPDatabase } from 'idb';
+import { openDB, deleteDB, type DBSchema, type IDBPDatabase, type StoreNames } from 'idb';
 import type { Product } from '@/core/product/entities/product';
 import type { CorruptionEntry } from '@/core/loading/types/corruption';
 
@@ -1091,6 +1091,46 @@ export async function getCachedMovements(): Promise<CachedMovement[]> {
 
 export async function cacheMovements(movements: CachedMovement[]): Promise<void> {
   await batchPut('movements', movements as unknown as Record<string, unknown>[]);
+}
+
+const ENTITY_STORE_MAP: Record<string, StoreNames<InventoryDB>> = {
+  PRODUCT: 'products',
+  CATEGORY: 'categories',
+  WAREHOUSE: 'warehouses',
+  CURRENCY: 'currencies',
+  EXCHANGE_RATE: 'exchangeRates',
+  CUSTOMER: 'customers',
+  SUPPLIER: 'suppliers',
+  SALE: 'sales',
+  PURCHASE: 'purchases',
+  TRANSFER: 'transfers',
+  ADJUSTMENT: 'adjustments',
+  RETURN: 'returns',
+  DEBT: 'customerDebts',
+};
+
+export function getEntityStoreName(entityType: string): StoreNames<InventoryDB> | undefined {
+  return ENTITY_STORE_MAP[entityType];
+}
+
+export async function getFromEntityStore(
+  db: IDBPDatabase<InventoryDB>,
+  entityType: string,
+  id: string
+): Promise<Record<string, unknown> | undefined> {
+  const store = getEntityStoreName(entityType);
+  if (!store) return undefined;
+  return db.get(store, id) as Promise<Record<string, unknown> | undefined>;
+}
+
+export async function putToEntityStore(
+  db: IDBPDatabase<InventoryDB>,
+  entityType: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  const store = getEntityStoreName(entityType);
+  if (!store) return;
+  await db.put(store, data as never);
 }
 
 export { MAX_OUTBOX_ENTRIES, BACKOFF_DELAYS };

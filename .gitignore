@@ -59,7 +59,5 @@ infra/docker/.env
 *.log
 logs/
 #===otros===
-nul frontend
-.dev-pids.json
 graphify-out/
 

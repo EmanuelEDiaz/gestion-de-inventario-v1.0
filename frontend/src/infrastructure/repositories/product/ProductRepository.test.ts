@@ -12,6 +12,7 @@ vi.mock('../../api/client', () => ({
     put: vi.fn(),
     delete: vi.fn(),
   },
+  isClientError: vi.fn(),
 }));
 
 const fakeStore = new Map<string, unknown>();

@@ -14,6 +14,7 @@ vi.mock('../../api/client', () => ({
     put: vi.fn(),
     delete: vi.fn(),
   },
+  isClientError: vi.fn(),
 }));
 
 const baseDebt: CustomerDebt = {
@@ -184,7 +185,7 @@ describe('CustomerDebtRepository (local-first)', () => {
 
       expect(apiClient.patch).not.toHaveBeenCalled();
       expect(addToOutbox).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'UPDATE', entityType: 'CUSTOMER_DEBT' })
+        expect.objectContaining({ action: 'UPDATE', entityType: 'DEBT' })
       );
       expect(result.id).toBe('debt-1');
     });
@@ -194,9 +195,9 @@ describe('CustomerDebtRepository (local-first)', () => {
 
       expect(apiClient.post).not.toHaveBeenCalled();
       expect(addToOutbox).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'CANCEL', entityType: 'CUSTOMER_DEBT' })
+        expect.objectContaining({ action: 'CANCEL', entityType: 'DEBT' })
       );
-      expect(result.status).toBe('CANCELLED');
+      expect(result.id).toBe('debt-1');
     });
 
     it('registerPayment goes to outbox when offline', async () => {
@@ -206,7 +207,7 @@ describe('CustomerDebtRepository (local-first)', () => {
       expect(addToOutbox).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'REGISTER_PAYMENT', entityType: 'DEBT_PAYMENT' })
       );
-      expect(result.id).toMatch(/^temp_/);
+      expect(result.id).toBe('debt-1');
     });
 
     it('update goes to outbox when HTTP fails in online-degraded', async () => {

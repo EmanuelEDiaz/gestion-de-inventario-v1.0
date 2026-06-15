@@ -1,9 +1,9 @@
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
-// Map assets in public/maps/ (fonts, sprites, style JSON) are auto-precached
-// by Serwist via __SW_MANIFEST since they're part of the build output.
-import { defaultCache } from "@serwist/turbopack/worker";
-import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import {
+  CacheFirst, ExpirationPlugin, NetworkFirst, NetworkOnly, StaleWhileRevalidate,
+} from "serwist";
+import type { PrecacheEntry, RouteMatchCallbackOptions, RuntimeCaching, SerwistGlobalConfig } from "serwist";
 import { Serwist } from "serwist";
 
 declare global {
@@ -15,14 +15,42 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 const CONCURRENCY = 3;
-
 let currentUserId: string | null = null;
+
+const CACHE_VERSION = "R1";
+const CACHE = (name: string): string => `cache-${CACHE_VERSION}-${name}`;
+const ONE_HOUR = 60 * 60;
+const ONE_DAY = 24 * ONE_HOUR;
+const ONE_WEEK = 7 * ONE_DAY;
+const THIRTY_DAYS = 30 * ONE_DAY;
+
+const runtimeCaching: RuntimeCaching[] = [
+  { matcher: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i, handler: new CacheFirst({ cacheName: CACHE("gf-webfonts"), plugins: [new ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 365 * ONE_DAY })] }) },
+  { matcher: /^https:\/\/fonts\.(?:googleapis)\.com\/.*/i, handler: new StaleWhileRevalidate({ cacheName: CACHE("gf-stylesheets"), plugins: [new ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: ONE_WEEK })] }) },
+  { matcher: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i, handler: new CacheFirst({ cacheName: CACHE("fonts"), plugins: [new ExpirationPlugin({ maxEntries: 8, maxAgeSeconds: THIRTY_DAYS })] }) },
+  { matcher: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i, handler: new StaleWhileRevalidate({ cacheName: CACHE("images"), plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: THIRTY_DAYS })] }) },
+  { matcher: /\/_next\/static.+\.js$/i, handler: new CacheFirst({ cacheName: CACHE("next-js"), plugins: [new ExpirationPlugin({ maxEntries: 256, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: /\/_next\/static.+\.css$/i, handler: new CacheFirst({ cacheName: CACHE("next-css"), plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: /\.(?:js)$/i, handler: new StaleWhileRevalidate({ cacheName: CACHE("js"), plugins: [new ExpirationPlugin({ maxEntries: 48, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: /\.(?:css|less)$/i, handler: new StaleWhileRevalidate({ cacheName: CACHE("css"), plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: /\.(?:mp3|wav|ogg)$/i, handler: new CacheFirst({ cacheName: CACHE("audio"), plugins: [new ExpirationPlugin({ maxEntries: 8, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: /\/_next\/data\/.+\/.+\.json$/i, handler: new NetworkFirst({ cacheName: CACHE("next-data"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: /\.(?:json|xml|csv)$/i, handler: new NetworkFirst({ cacheName: CACHE("data"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: /\/api\/auth\/.*/, handler: new NetworkOnly({ networkTimeoutSeconds: 10 }) },
+  { matcher: ({ sameOrigin, url: { pathname } }: RouteMatchCallbackOptions) => sameOrigin && (pathname.startsWith("/api/v1/images") || pathname.startsWith("/media/")), handler: new NetworkFirst({ cacheName: CACHE("media-images"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 256, maxAgeSeconds: ONE_WEEK })] }) },
+  { matcher: ({ sameOrigin, url: { pathname } }: RouteMatchCallbackOptions) => sameOrigin && pathname.startsWith("/api/"), handler: new NetworkOnly() },
+  { matcher: ({ request, url: { pathname }, sameOrigin }: RouteMatchCallbackOptions) => request.headers.get("RSC") === "1" && request.headers.get("Next-Router-Prefetch") === "1" && sameOrigin && !pathname.startsWith("/api/"), handler: new NetworkFirst({ cacheName: CACHE("rsc-prefetch"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: ({ request, url: { pathname }, sameOrigin }: RouteMatchCallbackOptions) => request.headers.get("RSC") === "1" && sameOrigin && !pathname.startsWith("/api/"), handler: new NetworkFirst({ cacheName: CACHE("rsc"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: ({ request, url: { pathname }, sameOrigin }: RouteMatchCallbackOptions) => request.mode === "navigate" && sameOrigin && !pathname.startsWith("/api/"), handler: new NetworkFirst({ cacheName: CACHE("pages"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
+  { matcher: ({ url: { pathname } }: RouteMatchCallbackOptions) => pathname === "/~offline", handler: new CacheFirst({ cacheName: CACHE("offline") }) },
+  { matcher: ({ url: { pathname }, sameOrigin }: RouteMatchCallbackOptions) => sameOrigin && !pathname.startsWith("/api/"), handler: new NetworkFirst({ cacheName: CACHE("others"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
+];
 
 const serwist = new Serwist({
   skipWaiting: false,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching,
   fallbacks: {
     entries: [
       {
