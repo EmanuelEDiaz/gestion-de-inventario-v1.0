@@ -16,6 +16,10 @@ interface ReturnFormBasicFieldsProps {
   onWarehouseChange: (val: string) => void;
   onOriginalDocumentChange: (val: string) => void;
   onReasonChange: (val: string) => void;
+  typeError?: string;
+  warehouseError?: string;
+  originalDocumentIdError?: string;
+  reasonError?: string;
 }
 
 const RETURN_TYPES: ReturnDocType[] = ['SALE_RETURN', 'PURCHASE_RETURN'];
@@ -24,6 +28,7 @@ export function ReturnFormBasicFields({
   type, warehouseId, originalDocumentId, reason,
   warehouses, onTypeChange, onWarehouseChange,
   onOriginalDocumentChange, onReasonChange,
+  typeError, warehouseError, originalDocumentIdError, reasonError,
 }: ReturnFormBasicFieldsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -34,6 +39,7 @@ export function ReturnFormBasicFields({
           value={type}
           onChange={(val) => onTypeChange(val as ReturnDocType)}
           placeholder="Seleccionar tipo..."
+          error={typeError}
         />
       </div>
       <div className="space-y-1">
@@ -43,15 +49,16 @@ export function ReturnFormBasicFields({
           value={warehouseId}
           onChange={onWarehouseChange}
           placeholder={warehouses.length === 0 ? 'No hay almacenes disponibles' : 'Seleccionar almacén...'}
+          error={warehouseError}
         />
       </div>
       <div className="space-y-1">
         <label htmlFor="originalDocumentId" className="text-sm font-medium">Documento Original</label>
-        <Input id="originalDocumentId" value={originalDocumentId} onChange={(e) => onOriginalDocumentChange(e.target.value)} placeholder="ID de la venta/compra original" title="ID del documento original" />
+        <Input id="originalDocumentId" value={originalDocumentId} onChange={(e) => onOriginalDocumentChange(e.target.value)} placeholder="ID de la venta/compra original" title="ID del documento original" error={originalDocumentIdError} />
       </div>
       <div className="space-y-1">
         <label htmlFor="reason" className="text-sm font-medium">Razón</label>
-        <Input id="reason" value={reason} onChange={(e) => onReasonChange(e.target.value)} placeholder="Motivo de la devolución" title="Razón de la devolución" />
+        <Input id="reason" value={reason} onChange={(e) => onReasonChange(e.target.value)} placeholder="Motivo de la devolución" title="Razón de la devolución" error={reasonError} />
       </div>
     </div>
   );

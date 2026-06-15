@@ -10,14 +10,16 @@ interface PurchaseSummaryProps {
   onCancel: () => void;
   showContinue?: boolean;
   onContinueClick?: () => void;
+  notesError?: string;
 }
 
-export function PurchaseSummary({ notes, onNotesChange, isSubmitting, onCancel, showContinue, onContinueClick }: PurchaseSummaryProps) {
+export function PurchaseSummary({ notes, onNotesChange, isSubmitting, onCancel, showContinue, onContinueClick, notesError }: PurchaseSummaryProps) {
   return (
     <>
       <div className="space-y-1">
         <label htmlFor="notes" className="text-sm font-medium">Notas</label>
-        <Textarea id="notes" value={notes} onChange={(e) => onNotesChange(e.target.value)} placeholder="Notas adicionales..." rows={2} />
+        <Textarea id="notes" value={notes} onChange={(e) => onNotesChange(e.target.value)} placeholder="Notas adicionales..." rows={2} error={!!notesError} />
+        {notesError && <p className="text-sm text-red-500">{notesError}</p>}
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creando...' : 'Crear Compra'}</Button>

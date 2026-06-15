@@ -9,13 +9,15 @@ interface AdjustmentHeaderFieldsProps {
   warehouses: Warehouse[];
   warehouseId: string;
   onWarehouseChange: (value: string) => void;
-  type: AdjustmentType;
+  type: string;
   onTypeChange: (value: string) => void;
+  warehouseError?: string;
+  typeError?: string;
 }
 
 const TYPES: AdjustmentType[] = ['COUNT', 'DAMAGE', 'THEFT', 'EXPIRY', 'OTHER'];
 
-export function AdjustmentHeaderFields({ warehouses, warehouseId, onWarehouseChange, type, onTypeChange }: AdjustmentHeaderFieldsProps) {
+export function AdjustmentHeaderFields({ warehouses, warehouseId, onWarehouseChange, type, onTypeChange, warehouseError, typeError }: AdjustmentHeaderFieldsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div className="space-y-1">
@@ -25,6 +27,7 @@ export function AdjustmentHeaderFields({ warehouses, warehouseId, onWarehouseCha
           value={warehouseId}
           onChange={onWarehouseChange}
           placeholder={warehouses.length === 0 ? 'No hay almacenes disponibles' : 'Seleccionar almacén...'}
+          error={warehouseError}
         />
       </div>
       <div className="space-y-1">
@@ -34,6 +37,7 @@ export function AdjustmentHeaderFields({ warehouses, warehouseId, onWarehouseCha
           value={type}
           onChange={onTypeChange}
           placeholder="Seleccionar tipo..."
+          error={typeError}
         />
       </div>
     </div>

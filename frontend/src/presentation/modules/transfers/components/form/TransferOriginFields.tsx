@@ -7,9 +7,10 @@ interface TransferOriginFieldsProps {
   warehouses: Warehouse[];
   value: string;
   onChange: (value: string) => void;
+  fromWarehouseError?: string;
 }
 
-export function TransferOriginFields({ warehouses, value, onChange }: TransferOriginFieldsProps) {
+export function TransferOriginFields({ warehouses, value, onChange, fromWarehouseError }: TransferOriginFieldsProps) {
   return (
     <div className="space-y-1">
       <label htmlFor="fromWarehouseId" className="text-sm font-medium">Almacén Origen *</label>
@@ -18,6 +19,7 @@ export function TransferOriginFields({ warehouses, value, onChange }: TransferOr
         value={value}
         onChange={onChange}
         placeholder={warehouses.length === 0 ? 'No hay almacenes' : 'Seleccionar origen...'}
+        error={fromWarehouseError}
       />
     </div>
   );

@@ -8,9 +8,10 @@ interface TransferDestinationFieldsProps {
   fromWarehouseId: string;
   value: string;
   onChange: (value: string) => void;
+  toWarehouseError?: string;
 }
 
-export function TransferDestinationFields({ warehouses, fromWarehouseId, value, onChange }: TransferDestinationFieldsProps) {
+export function TransferDestinationFields({ warehouses, fromWarehouseId, value, onChange, toWarehouseError }: TransferDestinationFieldsProps) {
   return (
     <div className="space-y-1">
       <label htmlFor="toWarehouseId" className="text-sm font-medium">Almacén Destino *</label>
@@ -19,6 +20,7 @@ export function TransferDestinationFields({ warehouses, fromWarehouseId, value, 
         value={value}
         onChange={onChange}
         placeholder={warehouses.length === 0 ? 'No hay almacenes' : 'Seleccionar destino...'}
+        error={toWarehouseError}
       />
     </div>
   );

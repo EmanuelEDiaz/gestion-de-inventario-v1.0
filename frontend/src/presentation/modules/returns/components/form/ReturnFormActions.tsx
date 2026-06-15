@@ -9,16 +9,18 @@ interface ReturnFormActionsProps {
   isSubmitting: boolean;
   onNotesChange: (val: string) => void;
   onCancel: () => void;
+  notesError?: string;
 }
 
 export function ReturnFormActions({
-  notes, isSubmitting, onNotesChange, onCancel,
+  notes, isSubmitting, onNotesChange, onCancel, notesError,
 }: ReturnFormActionsProps) {
   return (
     <>
       <div className="space-y-1">
         <label htmlFor="notes" className="text-sm font-medium">Notas</label>
-        <Textarea id="notes" value={notes} onChange={(e) => onNotesChange(e.target.value)} placeholder="Notas adicionales..." rows={2} />
+        <Textarea id="notes" value={notes} onChange={(e) => onNotesChange(e.target.value)} placeholder="Notas adicionales..." rows={2} error={!!notesError} />
+        {notesError && <p className="text-sm text-red-500">{notesError}</p>}
       </div>
       <div className="flex gap-2">
         <TooltipWrapper content="Crear nueva devolución" side="top">

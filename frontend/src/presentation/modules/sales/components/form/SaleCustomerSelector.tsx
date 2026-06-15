@@ -11,9 +11,11 @@ interface SaleCustomerSelectorProps {
   customers: Customer[];
   customerId: string;
   onCustomerChange: (id: string) => void;
+  warehouseError?: string;
+  customerError?: string;
 }
 
-export function SaleCustomerSelector({ warehouses, warehouseId, onWarehouseChange, customers, customerId, onCustomerChange }: SaleCustomerSelectorProps) {
+export function SaleCustomerSelector({ warehouses, warehouseId, onWarehouseChange, customers, customerId, onCustomerChange, warehouseError, customerError }: SaleCustomerSelectorProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div className="space-y-1">
@@ -23,6 +25,7 @@ export function SaleCustomerSelector({ warehouses, warehouseId, onWarehouseChang
           value={warehouseId}
           onChange={onWarehouseChange}
           placeholder={warehouses.length === 0 ? 'No hay almacenes' : 'Seleccionar...'}
+          error={warehouseError}
         />
       </div>
       <div className="space-y-1">
@@ -32,6 +35,7 @@ export function SaleCustomerSelector({ warehouses, warehouseId, onWarehouseChang
           value={customerId}
           onChange={onCustomerChange}
           placeholder={customers.length === 0 ? 'No hay clientes' : 'Sin cliente...'}
+          error={customerError}
         />
       </div>
     </div>

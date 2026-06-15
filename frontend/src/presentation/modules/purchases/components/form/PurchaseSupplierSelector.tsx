@@ -11,6 +11,8 @@ interface PurchaseSupplierSelectorProps {
   supplierId: string;
   onWarehouseChange: (v: string) => void;
   onSupplierChange: (v: string) => void;
+  warehouseError?: string;
+  supplierError?: string;
 }
 
 export function PurchaseSupplierSelector({
@@ -20,6 +22,8 @@ export function PurchaseSupplierSelector({
   supplierId,
   onWarehouseChange,
   onSupplierChange,
+  warehouseError,
+  supplierError,
 }: PurchaseSupplierSelectorProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -30,6 +34,7 @@ export function PurchaseSupplierSelector({
           value={warehouseId}
           onChange={onWarehouseChange}
           placeholder={warehouses.length === 0 ? 'No hay almacenes' : 'Seleccionar...'}
+          error={warehouseError}
         />
       </div>
       <div className="space-y-1">
@@ -39,6 +44,7 @@ export function PurchaseSupplierSelector({
           value={supplierId}
           onChange={onSupplierChange}
           placeholder={suppliers.length === 0 ? 'No hay proveedores' : 'Sin proveedor...'}
+          error={supplierError}
         />
       </div>
     </div>
