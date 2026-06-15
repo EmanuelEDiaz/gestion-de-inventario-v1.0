@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from 'react';
 import type { CreateCustomerData } from '@/core/customer/entities/customer';
 import { EntityForm, type EntityFormField } from '@/presentation/shared/components/form/EntityForm';
 import { GeoFields } from '@/presentation/shared/components/form/GeoFields';
-import { MapPickerModal } from '@/presentation/shared/components/map/MapPickerModal';
 import { createCustomerSchema, updateCustomerSchema } from '@/core/validators/customer-validators';
 
 const FIELDS: EntityFormField[] = [
@@ -46,7 +45,6 @@ export function CustomerFormFields({ onSubmit, onContinue, onCancel, storageKey 
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [notes, setNotes] = useState('');
-  const [showMapPicker, setShowMapPicker] = useState(false);
 
   const values = useMemo<Record<string, string>>(() => ({
     name, code, contactName, phone, email, address,
@@ -143,7 +141,6 @@ export function CustomerFormFields({ onSubmit, onContinue, onCancel, storageKey 
                 longitude={values.longitude}
                 onChange={onValueChange}
                 errors={allErrors}
-                onOpenMapPicker={() => setShowMapPicker(true)}
               />
             );
           }
@@ -152,18 +149,6 @@ export function CustomerFormFields({ onSubmit, onContinue, onCancel, storageKey 
           }
           return defaultRender(field);
         }}
-      />
-      <MapPickerModal
-        open={showMapPicker}
-        province={province}
-        municipality={municipality}
-        initialLocation={latitude && longitude ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined}
-        onSelect={(lat, lng) => {
-          onChange('latitude', lat.toString());
-          onChange('longitude', lng.toString());
-          setShowMapPicker(false);
-        }}
-        onClose={() => setShowMapPicker(false)}
       />
     </>
   );

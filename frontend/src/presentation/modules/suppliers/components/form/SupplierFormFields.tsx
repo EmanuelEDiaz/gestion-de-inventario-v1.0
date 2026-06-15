@@ -6,7 +6,6 @@ import { EntityForm, type EntityFormField } from '@/presentation/shared/componen
 import { GeoFields } from '@/presentation/shared/components/form/GeoFields';
 import { SupplierBasicInfo } from './SupplierBasicInfo';
 import { SupplierContactFields } from './SupplierContactFields';
-import { MapPickerModal } from '@/presentation/shared/components/map/MapPickerModal';
 import { createSupplierSchema, updateSupplierSchema } from '@/core/validators/supplier-validators';
 
 const FIELDS: EntityFormField[] = [
@@ -46,7 +45,6 @@ export function SupplierFormFields({ onSubmit, onContinue, onCancel, storageKey 
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [notes, setNotes] = useState('');
-  const [showMapPicker, setShowMapPicker] = useState(false);
 
   const values = useMemo<Record<string, string>>(() => ({
     name, email, phone, contactName, code,
@@ -138,6 +136,9 @@ export function SupplierFormFields({ onSubmit, onContinue, onCancel, storageKey 
                 onNameChange={(v) => onValueChange('name', v)}
                 onEmailChange={(v) => onValueChange('email', v)}
                 onPhoneChange={(v) => onValueChange('phone', v)}
+                nameError={allErrors['name']}
+                emailError={allErrors['email']}
+                phoneError={allErrors['phone']}
               />
             );
           }
@@ -148,6 +149,8 @@ export function SupplierFormFields({ onSubmit, onContinue, onCancel, storageKey 
                 code={values.code}
                 onContactNameChange={(v) => onValueChange('contactName', v)}
                 onCodeChange={(v) => onValueChange('code', v)}
+                contactNameError={allErrors['contactName']}
+                codeError={allErrors['code']}
               />
             );
           }
@@ -163,7 +166,6 @@ export function SupplierFormFields({ onSubmit, onContinue, onCancel, storageKey 
                 longitude={values.longitude}
                 onChange={onValueChange}
                 errors={allErrors}
-                onOpenMapPicker={() => setShowMapPicker(true)}
               />
             );
           }
@@ -172,18 +174,6 @@ export function SupplierFormFields({ onSubmit, onContinue, onCancel, storageKey 
           }
           return defaultRender(field);
         }}
-      />
-      <MapPickerModal
-        open={showMapPicker}
-        province={province}
-        municipality={municipality}
-        initialLocation={latitude && longitude ? { lat: parseFloat(latitude), lng: parseFloat(longitude) } : undefined}
-        onSelect={(lat, lng) => {
-          onChange('latitude', lat.toString());
-          onChange('longitude', lng.toString());
-          setShowMapPicker(false);
-        }}
-        onClose={() => setShowMapPicker(false)}
       />
     </>
   );
