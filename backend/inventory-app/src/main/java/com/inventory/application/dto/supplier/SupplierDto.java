@@ -1,5 +1,7 @@
 package com.inventory.application.supplier.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -20,8 +22,8 @@ public record SupplierDto(
     String street,
     String locality,
     String zipCode,
-    BigDecimal latitude,
-    BigDecimal longitude,
+    @JsonInclude(Include.ALWAYS) BigDecimal latitude,
+    @JsonInclude(Include.ALWAYS) BigDecimal longitude,
     Instant createdAt,
     Instant updatedAt
 ) {}

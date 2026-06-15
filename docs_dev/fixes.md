@@ -151,3 +151,55 @@ pnpm lint  # 0 errors
 pnpm exec tsc --noEmit  # 0 errors
 pnpm test:run  # 274 tests pass
 ```
+
+---
+
+## Fix-005: Jackson omite lat/lng nulos causando NaN en validación Zod
+
+**Fase origen**: M.2 (extensión — no previsto en plan original)
+
+### Síntoma
+
+```
+[ERROR] [DownloadQueue] all 8 items failed validation in customers
+expected: "number", received: "NaN", path: ["latitude"]
+```
+
+Customers/suppliers con `latitude`/`longitude` nulos fallaban validación Zod completa, impidiendo su persistencia en IDB. Violación de **P3** (offline indefinido).
+
+### Causa Raíz
+
+`backend/.../application.yml:39`:
+```yaml
+spring.jackson.default-property-inclusion: non_null
+```
+
+Cuando `BigDecimal latitude` es `null` en DB:
+1. Jackson **omite el campo** del JSON (no serializa `"latitude": null`)
+2. Frontend recibe JavaScript `undefined` (no `null`) para el campo faltante
+3. `z.coerce.number(undefined)` → `Number(undefined)` = `NaN` → Zod rechaza
+4. El batch entero se descarta porque ningún ítem pasa validación
+
+El fix frontend previo (`.catch(null)` en Zod, commit `fc6fc39`) era una **defensa**, no la causa raíz.
+
+### Reparación
+
+Agregar `@JsonInclude(Include.ALWAYS)` en `latitude`/`longitude` de `CustomerDto` y `SupplierDto` para forzar serialización explícita a `null`:
+
+```java
+@JsonInclude(Include.ALWAYS) BigDecimal latitude,
+@JsonInclude(Include.ALWAYS) BigDecimal longitude,
+```
+
+### Archivos modificados
+
+- `backend/.../dto/customer/CustomerDto.java` — 2 anotaciones + import
+- `backend/.../dto/supplier/SupplierDto.java` — 2 anotaciones + import
+
+### Verificación
+
+```bash
+cd backend/inventory-app && mvn compile -q  # 0 errors
+cd frontend && pnpm exec tsc --noEmit  # 0 errors
+cd frontend && pnpm lint  # 0 errors
+```
