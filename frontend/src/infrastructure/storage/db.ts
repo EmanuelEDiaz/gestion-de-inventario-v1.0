@@ -30,6 +30,8 @@ export interface OutboxEntry {
   nextRetryAt: number;
   expiresAt: number;
   lastError?: string;
+  fieldErrors?: Array<{ field: string; message: string }>;
+  fieldErrorsAt?: number;
   createdAt: number;
   skip?: boolean;
   isTempId?: boolean;
@@ -43,6 +45,7 @@ export interface DeadLetterEntry {
   payload: unknown;
   error: string;
   retryCount: number;
+  fieldErrors?: Array<{ field: string; message: string }>;
   rejectedAt: number;
   userNotified: boolean;
 }

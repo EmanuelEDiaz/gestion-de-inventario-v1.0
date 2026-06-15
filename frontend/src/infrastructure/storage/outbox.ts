@@ -177,6 +177,12 @@ export async function getOutboxCount(): Promise<number> {
   return db.count('outbox');
 }
 
+export async function getFailedOutbox(): Promise<OutboxEntry[]> {
+  const db = await getDB();
+  const all = await db.getAll('outbox');
+  return all.filter(e => e.status === 'rejected' && e.fieldErrors && e.fieldErrors.length > 0);
+}
+
 export async function getDeadLetters(): Promise<DeadLetterEntry[]> {
   const db = await getDB();
   return db.getAll('deadLetter');

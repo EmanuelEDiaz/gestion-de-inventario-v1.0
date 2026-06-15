@@ -241,23 +241,41 @@ export async function pushOutbox(): Promise<PushResult> {
             result.incidents.push(`${entry.operationId} failed with status ${status}`);
           }
         } else {
+          const { getFieldErrors } = await import('@/infrastructure/api/client');
           for (const entry of batch) {
+            const fieldResp = getFieldErrors(error);
+            if (fieldResp.length > 0) {
+              const db = await getDB();
+              await db.put('outbox', { ...entry, fieldErrors: fieldResp, status: 'rejected' });
+              result.failed++;
+              result.incidents.push(`${entry.operationId} rejected with field errors`);
+            } else {
+              const newRetryCount = (entry.retryCount ?? 0) + 1;
+              const delay = nextRetryDelay(newRetryCount);
+              await updateRetry(entry.id!, newRetryCount, now + delay);
+              await markOutboxEntry(entry.id!, 'pending');
+              result.failed++;
+              result.incidents.push(`${entry.operationId} network error, retry ${newRetryCount}`);
+            }
+          }
+        }
+      } else {
+        const { getFieldErrors } = await import('@/infrastructure/api/client');
+        for (const entry of batch) {
+          const fieldResp = getFieldErrors(error);
+          if (fieldResp.length > 0) {
+            const db = await getDB();
+            await db.put('outbox', { ...entry, fieldErrors: fieldResp, status: 'rejected' });
+            result.failed++;
+            result.incidents.push(`${entry.operationId} rejected with field errors`);
+          } else {
             const newRetryCount = (entry.retryCount ?? 0) + 1;
             const delay = nextRetryDelay(newRetryCount);
             await updateRetry(entry.id!, newRetryCount, now + delay);
             await markOutboxEntry(entry.id!, 'pending');
             result.failed++;
-            result.incidents.push(`${entry.operationId} network error, retry ${newRetryCount}`);
+            result.incidents.push(`${entry.operationId} unexpected error, retry ${newRetryCount}`);
           }
-        }
-      } else {
-        for (const entry of batch) {
-          const newRetryCount = (entry.retryCount ?? 0) + 1;
-          const delay = nextRetryDelay(newRetryCount);
-          await updateRetry(entry.id!, newRetryCount, now + delay);
-          await markOutboxEntry(entry.id!, 'pending');
-          result.failed++;
-          result.incidents.push(`${entry.operationId} unexpected error, retry ${newRetryCount}`);
         }
       }
     }
@@ -485,15 +503,23 @@ export async function processOutbox(): Promise<PushResult> {
           result.incidents.push(`Error on ${entry.operationId}: ${entryResult?.error || entryResult?.errorMessage || 'Unknown'}`);
         }
       } catch (err) {
-        entry.retryCount = (entry.retryCount || 0) + 1;
         entry.lastError = String(err);
-        if (entry.retryCount >= 3) {
+        const { getFieldErrors } = await import('@/infrastructure/api/client');
+        const fieldResp = getFieldErrors(err);
+        if (fieldResp.length > 0) {
+          entry.fieldErrors = fieldResp;
+          entry.fieldErrorsAt = Date.now();
           entry.status = 'rejected';
-          const { moveToDeadLetter } = await import('./outbox');
-          await moveToDeadLetter(entry);
         } else {
-          entry.status = 'pending';
-          entry.nextRetryAt = Date.now() + Math.min(30000 * Math.pow(2, entry.retryCount), 120000);
+          entry.retryCount = (entry.retryCount || 0) + 1;
+          if (entry.retryCount >= 3) {
+            entry.status = 'rejected';
+            const { moveToDeadLetter } = await import('./outbox');
+            await moveToDeadLetter(entry);
+          } else {
+            entry.status = 'pending';
+            entry.nextRetryAt = Date.now() + Math.min(30000 * Math.pow(2, entry.retryCount), 120000);
+          }
         }
         await db.put('outbox', entry);
         result.failed++;
