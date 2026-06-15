@@ -346,9 +346,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </TooltipWrapper>
             </div>
           </div>
-          {showRepairCenter && (
-            <CorruptionRepairCenter onClose={handleCloseRepairCenter} userId={userId} />
-          )}
         </div>
       )}
       {appAvailability === 'ready_partial' && (
@@ -370,6 +367,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         onToggleMobileMenu={handleToggleMobileMenu}
         disabled={false}
       />
+      {showRepairCenter && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 pt-12">
+          <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl">
+            <CorruptionRepairCenter onClose={handleCloseRepairCenter} userId={userId} />
+          </div>
+        </div>
+      )}
       <DashboardMain isCollapsed={isCollapsed}>{children}</DashboardMain>
       <NetworkStatusWidget />
       <LogoutConfirmDialog
