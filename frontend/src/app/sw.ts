@@ -63,8 +63,27 @@ const serwist = new Serwist({
   },
 });
 
-self.addEventListener("install", () => { /* skipWaiting controlado por la app */ });
-self.addEventListener("activate", serwist.handleActivate);
+const CACHE_VERSION_PREFIX = "cache-R1-";
+
+async function deleteOldCaches(): Promise<void> {
+  const cacheNames = await caches.keys();
+  await Promise.all(
+    cacheNames
+      .filter((name) => !name.startsWith(CACHE_VERSION_PREFIX) && !name.startsWith("serwist:"))
+      .map((name) => caches.delete(name)),
+  );
+}
+
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+self.addEventListener("activate", (event) => {
+  event.waitUntil(Promise.all([
+    deleteOldCaches(),
+    self.clients.claim(),
+  ]));
+  serwist.handleActivate(event);
+});
 self.addEventListener("fetch", serwist.handleFetch);
 
 async function clearUserCaches(userId: string): Promise<void> {

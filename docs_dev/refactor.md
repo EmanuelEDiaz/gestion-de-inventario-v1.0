@@ -63,7 +63,9 @@ En desarrollo serwist usa catch-all `NetworkOnly` deliberadamente, pero **impide
 
 ## 1. Fases de Implementación
 
-### Fase R.1 — Custom `runtimeCaching` con estrategias reales
+### ✅ Fase R.1 — Custom `runtimeCaching` con estrategias reales (COMPLETED)
+
+> **Commit**: `6d7726c` — feat(sw): custom runtimeCaching with real strategies
 
 **Skills**: `clean-code`, `senior-frontend`
 
