@@ -1,360 +1,162 @@
-# Plan: Arreglar Carga Inicial Bloqueada + SSE/Proxy
+# Plan: Fase M — Reparación Runtime (bugs post-L)
 
-> Created: 2026-06-15 | v1 — refactoriza el loader roto (se traba al 10%) + SSE ECONNRESET por proxy Next.js.
->
-> ⚠️ **Extiende `task_plan.md`**: no lo reemplaza. Reglas, principios y convenciones de `task_plan.md` se aplican aquí. Fase L.
+> Created: 2026-06-15 | v2 — post-L. Extiende `task_plan.md`: reglas, principios y convenciones de `task_plan.md` aplican. Fase M.
 
 ---
 
-## Problema 1 — Loading trabado al 10% (`sw_precache`)
+## ✅ Fase M.1+M.2 — Completada (`fc6fc39`)
 
-El flujo actual en `useAppLoader.ts` tiene 6 fases sin handler:
-
-```
-quota (2%) → sw_precache (10%) → [AQUÍ SE TRABA]
-  ↓ no existe useEffect para sw_precache
-db_open (15%)         ← sin handler
-rehydrate_local (18%) ← sin handler
-warehouses (25%)      ← sin handler
-categories (43%)      ← sin handler
-products (40%)        ← sin handler
-  ↓
-currencies (46%)      ← PRIMER handler real (existe)
-exchange_rates → customer_debts → stock → customers → suppliers → idle
-```
-
-El único `useEffect` que arranca es el de `quota` (línea 92, verifica almacenamiento). Tras setear `sw_precache`, no hay ningún `useEffect` escuchando las fases intermedias. La app se queda en 10% para siempre.
-
-### Bug adicional: peso de `products`
-
-En `appLoaderStore.ts:70`:
-```typescript
-products: 40,   // ← DEBERÍA ser > 43 (categories)
-categories: 43, // ← más alto que products
-```
-
-La barra de progreso retrocedería de 43% a 40% al pasar de `categories` a `products`.
-
-### Principios violados
-
-| Principio | Impacto |
-|-----------|---------|
-| **P1. Cero internet en runtime** | No impactado — no requiere internet |
-| **P2. Dispositivo ligero** | La app nunca llega a `ready_partial`, el usuario no puede operar |
-| **P3. Trabajo offline indefinido** | **Imposible alcanzarlo** si el boot nunca termina |
-| **P4. Servidor apagable** | No impactado |
-| **P5. Sync no destructivo** | No impactado |
+| Subfase | Commit | Cambio | Verificación |
+|---------|--------|--------|-------------|
+| L.1.a | `187c1b2` | +3 handlers (sw_precache, db_open, rehydrate_local) + fix peso products 40→45 | tsc + lint clean |
+| L.1.b | `b396162` | +3 handlers (warehouses, categories, products) | tsc + lint clean |
+| L.2 | `72fa172` | Flux.interval keepalive 30s en NotificationSseController.java | mvn test 102/0 |
+| L.3 | ⏭️ saltado | Opcional — resuelto por L.2 | — |
 
 ---
 
-## Problema 2 — SSE ECONNRESET en `/api/v1/notifications/stream`
+## 1. Problemas Detectados en Runtime
 
-Los logs muestran errores repetidos de proxy:
+### M.1 — Backend: columna `is_active` no existe en `geo_regions`
+
+`V21__add_geo_regions.sql` crea columna `active`, pero `GeoRegionEntity.java:37` declara `@Column("is_active")`. Spring Data R2DBC genera SQL con `WHERE geo_regions.is_active = $1` → `column does not exist`.
+
+**Impacto**: Endpoint `GET /api/v1/geo/provinces/{code}` devuelve 500. Background task `populate_geo_index` falla con `ERR_GEOINDEX_LOAD_FAILED`.
+
+### M.2 — Frontend: customers/suppliers fallan validación Zod (NaN en lat/lng)
+
 ```
-Failed to proxy http://localhost:8080/api/v1/notifications/stream Error: socket hang up
-code: 'ECONNRESET'
+[ERROR] [DownloadQueue] all 8 items failed validation in customers
+expected: "number", received: "NaN", path: ["latitude"]
 ```
 
-### Causa raíz
+`z.coerce.number()` recibe un valor que convierte a NaN (probablemente `undefined` de campo faltante o `BigDecimal` nulo mal serializado). Customers/suppliers no se persisten en IDB.
 
-**Causa 1 — Next.js rewrite proxy no maneja SSE**: `next.config.ts:19-23` mapea `/api/*` → `localhost:8080` sin configuración de streaming. Next.js (Node.js HTTP) cierra conexiones SSE ociosas tras periodos de inactividad.
+**Impacto**: Viola **P3** — datos offline de customers/suppliers ausentes.
 
-**Causa 2 — Sin keep-alive en el backend**: `NotificationSseController.java` emite eventos solo cuando hay notificaciones. Sin heartbeats periódicos (`: keepalive\n\n`), el proxy intermedio asume conexión muerta.
+### M.3 — Frontend: SSE ECONNRESET persiste
 
-### Principios violados
+Keep-alive cada 30s no basta si el proxy Next.js tiene timeout ocioso < 30s.
 
-| Principio | Impacto |
-|-----------|---------|
-| P1–P5 | **Ninguno** — el error es no-fatal, solo ruido en consola. La notificación SSE deja de funcionar pero la app opera normal. El hook de SSE ya tiene retry cada 5s. |
+### M.4 — Frontend: toast "Ir a reparar" no abre modal
 
-**No bloquea la app**. Es un bug de ruido.
+`handleOpenRepairCenter()` → `setShowRepairCenter(true)` no produce modal visible.
 
 ---
 
-## Objetivos
+## 2. Principios Violados
 
-| Meta | Indicador |
-|------|-----------|
-| Carga inicial completa sin trabas | `ready_partial` en < 5s con caché, < 30s sin caché |
-| 6 handlers faltantes implementados | `useAppLoader.ts` tiene `useEffect` para cada fase de `sw_precache` a `products` |
-| Pesos de progreso monotónicos | `PHASE_WEIGHTS` 100% creciente sin retrocesos |
-| SSE sin ECONNRESET en proxy | Proxy Next.js configurado para streaming o SSE conecta directo a backend |
-| Keep-alive en backend SSE | Heartbeat cada 30s mientras no haya eventos |
-
----
-
-## Fases de Implementación
-
-### Fase L.1 — Frontend: implementar 6 handlers faltantes en useAppLoader.ts
-
-**Skills**: `senior-frontend`, `clean-code`
-
-#### L.1.1 — Handler `sw_precache` → `db_open` (simplificado)
-
-El hook `useSWPrecacheProgress.ts` existe pero es código muerto (nunca se importa). La fase `sw_precache` actualmente marca "Instalando aplicación" pero no hay precache real que esperar. Simplificar: avanzar inmediatamente a `db_open`.
-
-```typescript
-useEffect(() => {
-  if (store.phase !== 'sw_precache') return;
-  setPhase('db_open');
-}, [store.phase, setPhase]);
-```
-
-**Futuro**: Cuando se implemente SW precache real, este handler escuchará `useSWPrecacheProgress` y avanzará solo cuando `done === true`.
-
-#### L.1.2 — Handler `db_open` → `rehydrate_local`
-
-Verificar que IDB abre correctamente. Si falla, error fatal (principio de auditoría crítica del `task_plan.md`).
-
-```typescript
-useEffect(() => {
-  if (store.phase !== 'db_open') return;
-  (async () => {
-    try {
-      const db = await getDB();
-      if (!db) throw new Error('IDB no disponible');
-    } catch (err) {
-      setError('Error al abrir almacenamiento local');
-      return;
-    }
-    setPhase('rehydrate_local');
-  })();
-}, [store.phase, setPhase, setError]);
-```
-
-#### L.1.3 — Handler `rehydrate_local` → `warehouses` o `idle`
-
-Verificar si el core dataset (warehouses + products + stockBalances) ya existe en IDB. Si existe, pasar a `idle` (carga completada, background tasks). Si no, iniciar descarga completa desde `warehouses`.
-
-```typescript
-useEffect(() => {
-  if (store.phase !== 'rehydrate_local') return;
-  (async () => {
-    try {
-      const [wCount, pCount, sCount] = await Promise.all([
-        getCachedCount('warehouses'),
-        getCachedCount('products'),
-        getCachedCount('stockBalances'),
-      ]);
-      if (wCount > 0 && pCount > 0 && sCount > 0) {
-        // Core dataset exists — go straight to ready
-        setAvailability('ready_partial');
-        void startBackgroundTasks();
-        setPhase('idle');
-        return;
-      }
-    } catch {}
-    // No cache — full download
-    setPhase('warehouses');
-  })();
-}, [store.phase, setPhase, setAvailability, setSubStep, setError]);
-```
-
-#### L.1.4 — Handler `warehouses`
-
-```typescript
-useEffect(() => {
-  if (store.phase !== 'warehouses') return;
-  (async () => {
-    try {
-      setSubStep('Descargando bodegas...');
-      await loadFlatCatalog({
-        endpoint: '/api/v1/warehouses',
-        idbStoreName: 'warehouses',
-        schema: warehouseResponseSchema,
-        entityLabel: 'bodegas',
-      });
-      setPhase('categories');
-    } catch (err) {
-      await handlePhaseError('warehouses', err, 'bodegas');
-      setPhase('categories');
-    }
-  })();
-}, [store.phase, setPhase, setSubStep, handlePhaseError]);
-```
-
-#### L.1.5 — Handler `categories`
-
-```typescript
-useEffect(() => {
-  if (store.phase !== 'categories') return;
-  (async () => {
-    try {
-      setSubStep('Descargando categorías...');
-      await loadFlatCatalog({
-        endpoint: '/api/v1/categories',
-        idbStoreName: 'categories',
-        schema: categoryResponseSchema,
-        entityLabel: 'categorías',
-      });
-      setPhase('products');
-    } catch (err) {
-      await handlePhaseError('categories', err, 'categorías');
-      setPhase('products');
-    }
-  })();
-}, [store.phase, setPhase, setSubStep, handlePhaseError]);
-```
-
-#### L.1.6 — Handler `products`
-
-Los productos usan descarga paginada (chunked) a través de `DownloadQueueService.fetchAllWithIntegrity`. El endpoint es `/api/v1/products/paginated`.
-
-```typescript
-useEffect(() => {
-  if (store.phase !== 'products') return;
-  (async () => {
-    try {
-      setSubStep('Descargando productos...');
-      await loadFlatCatalog({
-        endpoint: '/api/v1/products/paginated',
-        idbStoreName: 'products',
-        schema: productResponseSchema,
-        entityLabel: 'productos',
-      });
-      setPhase('currencies');
-    } catch (err) {
-      await handlePhaseError('products', err, 'productos');
-      setPhase('currencies');
-    }
-  })();
-}, [store.phase, setPhase, setSubStep, handlePhaseError]);
-```
-
-> **Nota de consistencia**: `categories` avanza a `products`. Pero `categories` no es core según la política de suficiencia mínima del `task_plan.md` ("sin categorías los productos siguen siendo funcionales"). Sin embargo, es más simple descargar categories primero y products después ya que el orden está establecido en la store. Si categories falla, `handlePhaseError` lo trata como no-fatal cuando ya existe core dataset.
-
-#### L.1.7 — Fix peso `products` en `appLoaderStore.ts`
-
-Cambiar `products: 40` → `products: 45` (mayor que `categories: 43`, menor que `currencies: 46`).
-
-```typescript
-products: 45,
-```
-
-#### Archivos modificados en L.1
-
-| Archivo | Cambio |
-|---------|--------|
-| `presentation/shared/hooks/storage/useAppLoader.ts` | +6 useEffects para sw_precache, db_open, rehydrate_local, warehouses, categories, products |
-| `core/loading/appLoaderStore.ts` | products: 40 → 45 |
-
-> ✅ **L.1 completo** — `187c1b2` (L.1.1–L.1.3, L.1.7) + `b396162` (L.1.4–L.1.6) — 6 handlers implementados, weight fix products 40→45.
-
-> `warehouseResponseSchema`, `categoryResponseSchema`, `productResponseSchema` ya existen como imports disponibles. `getDB`, `getCachedCount`, `DownloadQueueService` ya están importados.
+| Issue | Principio | Severidad |
+|-------|-----------|-----------|
+| M.2 — NaN lat/lng | **P3**: offline indefinido | **Alta** — datos offline perdidos |
+| M.1 — is_active column | P2: dispositivo ligero | Media — geo degradado |
+| M.3 — SSE ECONNRESET | Ninguno | Baja — ruido no-fatal |
+| M.4 — Repair modal | Ninguno | Baja — UX |
 
 ---
 
-### Fase L.2 — Backend: SSE keep-alive heartbeat
+## 3. Fases de Implementación
+
+### Fase M.1 — Backend: fix columna `is_active` → `active`
 
 **Skills**: `clean-code`, `layered-architecture`
 
-#### L.2.1 — Agregar heartbeat en `NotificationSseController.java`
+**Archivo**: `backend/.../persistence/adapter/entity/GeoRegionEntity.java:37`
 
-Actualmente el endpoint retorna `Flux<ServerSentEvent<NotificationDto>>` directamente desde `NotificationSinkPort.streamForUser(userId)`:
-
-```java
-@GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-public Flux<ServerSentEvent<NotificationDto>> stream() {
-    // ... obtiene userId del token
-    return notificationSink.streamForUser(userId);
-}
+```diff
+- @Column("is_active")
++ @Column("active")
+  private boolean active;
 ```
 
-Agregar un heartbeat cada 30s mientras el flujo está activo pero sin eventos:
-
-```java
-@GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-public Flux<ServerSentEvent<NotificationDto>> stream() {
-    var userId = getCurrentUserId();
-    var keepAlive = Flux.interval(Duration.ofSeconds(30))
-        .map(i -> ServerSentEvent.<NotificationDto>builder()
-            .comment("keepalive")
-            .build());
-    return Flux.merge(
-        notificationSink.streamForUser(userId),
-        keepAlive
-    );
-}
-```
-
-`Flux.merge` combina eventos (prioridad a los reales). El heartbeat es un comentario SSE (`: keepalive\n\n`) que los proxies interpretan como actividad y no matan la conexión.
-
-#### Archivos modificados en L.2
-
-| Archivo | Cambio |
-|---------|--------|
-| `adapters/web/controller/notification/NotificationSseController.java` | + Flux.interval keepAlive cada 30s |
+**Verificación**: `mvn compile -q` → `mvn test`
 
 ---
 
-### Fase L.3 — Frontend: SSE bypass proxy o configuración
+### Fase M.2 — Fix NaN en lat/lng de customers y suppliers
+
+**Skills**: `clean-code`, `senior-backend`, `senior-frontend`
+
+#### M.2.a — Investigar origen del NaN
+
+Leer `SupplementaryApplicationMapper.java` para ver cómo mapea `BigDecimal latitude`/`longitude`. Si hace `.doubleValue()` sin null-check, bug de backend. Si el DTO retorna `null` correctamente, bug de frontend (Zod recibe `undefined`).
+
+#### M.2.b — Frontend: Zod tolerar NaN como null
+
+En `customer-response.ts` y `supplier-response.ts`:
+```typescript
+const nullableNumber = z.coerce.number().finite().nullable().catch(null);
+```
+
+`.catch(null)` transforma cualquier error (NaN incluido) a `null`.
+
+**Archivos**: 
+- `frontend/src/core/loading/validators/customer-response.ts`
+- `frontend/src/core/loading/validators/supplier-response.ts`
+- (posible) `backend/.../application/mapper/SupplementaryApplicationMapper.java`
+
+**Verificación**: `pnpm exec tsc --noEmit` + `pnpm lint`
+
+---
+
+### Fase M.3 — Reparar SSE ECONNRESET
 
 **Skills**: `senior-frontend`, `clean-code`
 
-Hay 3 estrategias. Elegir una:
+**Opción A (recomendada)**: Reducir heartbeat 30s → 10s en `NotificationSseController.java`.
+**Opción B**: Conectar SSE directo a `API_BASE` en vez del proxy.
 
-| Estrategia | Descripción | Esfuerzo | Riesgo |
-|-----------|-------------|----------|--------|
-| **A. Keep-alive + retry (recomendada)** | Backend envía heartbeat (L.2). Frontend mantiene retry 5s existente. No tocar proxy. | Bajo | Mínimo — el reconnect de 5s ya funciona |
-| **B. Proxy SSE timeout** | Configurar Next.js rewrite para streaming con timeout largo | Medio | Next.js 16 puede no exponer opciones de proxy raw |
-| **C. Conexión directa** | SSE conecta directo a `localhost:8080` en vez de pasar por proxy | Bajo | Problemas de CORS si backend no configura `Access-Control-Allow-Origin` |
+**Archivos**: `NotificationSseController.java`, `useNotificationStream.ts` (x2)
 
-#### L.3.1 — Estrategia A (elegida): validar que el retry del frontend funciona
-
-Los hooks ya tienen reconexión automática:
-- `useNotificationStream.ts` (módulo): reconecta tras 5s (líneas 99-112)
-- `useNotificationStream.ts` (shared): reconecta tras 5s (líneas 104-152)
-
-Validar que el retry no sea ruidoso (loggear solo 1 vez por reconexión, no cada error de proxy). Mejorar logging para distinguir "reconexión normal" de "error permanente".
-
-Agregar supresión de logs repetitivos:
-```typescript
-// Solo loggear el primer ECONNRESET de cada racha, no repetir cada 5s
-if (!lastLoggedConnectionError || Date.now() - lastLoggedConnectionError > 60000) {
-  appLogger.warn('[SSE] Stream desconectado, reconectando en 5s...');
-  lastLoggedConnectionError = Date.now();
-}
-```
-
-#### Archivos modificados en L.3
-
-| Archivo | Cambio |
-|---------|--------|
-| `presentation/modules/notifications/hooks/useNotificationStream.ts` | Supresión de logs ruidosos + appLogger |
-| `presentation/shared/hooks/api/useNotificationStream.ts` | Supresión de logs ruidosos + appLogger |
+**Verificación**: `mvn compile -q` + `pnpm exec tsc --noEmit` + `pnpm lint`
 
 ---
 
-## Reglas de Ejecución (adicionales a task_plan.md)
+### Fase M.4 — Debug repair modal
 
-- **L.1 es la prioridad**: Sin esto la app no arranca. Hacer L.1 completo antes de tocar L.2/L.3.
-- **L.2 + L.3 son secundarios**: El SSE no bloquea la app. Si hay tiempo, hacer L.2 (back-end, sencillo). L.3 es opcional si L.2 resuelve el síntoma.
-- ✅ **L.2 completado** — `72fa172` (keep-alive heartbeat 30s). ⏭️ **L.3 saltado** — opcional, resuelto por L.2.
-- **Los handlers de L.1 siguen el patrón exacto de los handlers existentes** (`currencies` a `suppliers`): `useEffect` con guard de fase, async, try/catch, handlePhaseError, setPhase siguiente.
-- **No modificar `loadFlatCatalog`** — reutilizarlo tal como está.
-- **No tocar `CacheProgressBar`** ni la UI de progreso — los pesos corregidos y los handlers nuevos harán que avance naturalmente.
-- **Verificación**: `pnpm exec tsc --noEmit` y `pnpm lint` antes de commit.
-- **Commit por fase**: L.1 completo → commit, L.2 → commit, L.3 → commit.
+**Skills**: `senior-frontend`, `clean-code`
+
+Investigar en `DashboardLayout.tsx` por qué `setShowRepairCenter(true)` no renderiza `CorruptionRepairCenter`. Posibles causas: stale closure en callback del toast, CSS overlay ocultando el modal, condición de renderizado incorrecta.
+
+**Verificación**: Prueba manual.
 
 ---
 
-## Archivos Resumen
+## 4. Reglas de Ejecución
+
+- **🏛️ P1–P5 son ley suprema**: M.2 tiene prioridad sobre M.1 por violar P3. M.3 y M.4 son secundarios.
+- **Una fase a la vez**: ejecutar → verificar (tsc + lint + tests) → commit → preguntar al usuario si continuar.
+- **Commit por fase**: `git add . && git commit -m '<tipo>(<scope>): <mensaje>'` (conventional commits).
+- **Skills por fase**: cargar la skill indicada antes de tocar código.
+- **Verificación obligatoria frontend**: `pnpm exec tsc --noEmit` + `pnpm lint`.
+- **Verificación obligatoria backend**: `mvn compile -q` + `mvn test`.
+- **Prohibido `catch(e) {}`** sin tipar.
+- **Sin `any`** sin justificación explícita.
+- **Errores preexistentes no previstos**: documentar en `docs_dev/fixes.md` con causa raíz + solución + fase.
+- **Máximo 3 sub-agentes en paralelo** para acelerar.
+- **Código**: Inglés. **UI**: Español.
+
+---
+
+## 5. Archivos Resumen
 
 | Archivo | Cambio | Fase |
 |---------|--------|:----:|
-| `presentation/shared/hooks/storage/useAppLoader.ts` | +6 handlers para sw_precache → db_open → rehydrate_local → warehouses → categories → products | L.1 |
-| `core/loading/appLoaderStore.ts` | `products: 40` → `45` | L.1 |
-| `backend/.../NotificationSseController.java` | + Flux.interval keepAlive 30s | ✅ L.2 |
-| `presentation/modules/notifications/hooks/useNotificationStream.ts` | Supresión logs ruidosos + appLogger | L.3 |
-| `presentation/shared/hooks/api/useNotificationStream.ts` | Supresión logs ruidosos + appLogger | L.3 |
+| `backend/.../entity/GeoRegionEntity.java` | `@Column("is_active")` → `@Column("active")` | ✅ M.1 |
+| `backend/.../mapper/SupplementaryApplicationMapper.java` | No tenía bug — NaN no viene de backend | ✅ M.2 (investigado) |
+| `frontend/src/core/loading/validators/customer-response.ts` | Zod: `.catch(null)` en nullableNumber | ✅ M.2 |
+| `frontend/src/core/loading/validators/supplier-response.ts` | Zod: `.catch(null)` en nullableNumber | ✅ M.2 |
+| `backend/.../NotificationSseController.java` | `30s` → `10s` (opcional) | M.3 |
+| `frontend/.../hooks/useNotificationStream.ts` (x2) | SSE directo a backend (opcional) | M.3 |
+| `frontend/.../layout/DashboardLayout.tsx` | Debug repair modal | M.4 |
 
 ---
 
-## Riesgos y Mitigaciones
+## 6. Riesgos y Mitigaciones
 
 | Riesgo | Impacto | Mitigación |
 |--------|---------|------------|
-| `loadFlatCatalog` no soporta paginación para productos | Products nunca se descargan | Verificar `DownloadQueueService.fetchAllWithIntegrity` — ya maneja paginado |
-| `rehydrate_local` detecta core dataset pero datos están corruptos | `ready_partial` con datos inconsistentes | La auditoría de boot (crítica) debe correr antes de decidir. Si el chunk journal tiene `corrupted`, ir a descarga completa. |
-| Multi-tab race condition en boot | Dos tabs descargan el mismo chunk | `navigator.locks.request('download-lock')` — ya implementado en `DownloadQueueService`? Verificar. |
-| SSE keep-alive causa CPU innecesaria | Cada 30s emite un evento aunque nadie escuche | El `Flux.interval` es barato (no bloquea). Spring WebFlux lo maneja con reactor timer. |
+| M.2: mapper no tiene bug → NaN viene de otro lado | Pérdida de tiempo investigando | Si mapper está bien, ir directo a M.2.b (Zod catch) |
+| M.2: `.catch(null)` oculta errores legítimos | Datos corruptos guardados como null | Solo aplicar a lat/lng, no a campos críticos |
+| M.3 opción B: CORS bloquea SSE directo | SSE sigue roto | Agregar CORS header en backend, o volver a opción A |
+| M.4: stale closure en toast de sonner | Modal no se abre nunca | Pasar callback como ref estable |
