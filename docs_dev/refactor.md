@@ -329,6 +329,7 @@ if (!lastLoggedConnectionError || Date.now() - lastLoggedConnectionError > 60000
 
 - **L.1 es la prioridad**: Sin esto la app no arranca. Hacer L.1 completo antes de tocar L.2/L.3.
 - **L.2 + L.3 son secundarios**: El SSE no bloquea la app. Si hay tiempo, hacer L.2 (back-end, sencillo). L.3 es opcional si L.2 resuelve el síntoma.
+- ✅ **L.2 completado** — `72fa172` (keep-alive heartbeat 30s). ⏭️ **L.3 saltado** — opcional, resuelto por L.2.
 - **Los handlers de L.1 siguen el patrón exacto de los handlers existentes** (`currencies` a `suppliers`): `useEffect` con guard de fase, async, try/catch, handlePhaseError, setPhase siguiente.
 - **No modificar `loadFlatCatalog`** — reutilizarlo tal como está.
 - **No tocar `CacheProgressBar`** ni la UI de progreso — los pesos corregidos y los handlers nuevos harán que avance naturalmente.
@@ -343,7 +344,7 @@ if (!lastLoggedConnectionError || Date.now() - lastLoggedConnectionError > 60000
 |---------|--------|:----:|
 | `presentation/shared/hooks/storage/useAppLoader.ts` | +6 handlers para sw_precache → db_open → rehydrate_local → warehouses → categories → products | L.1 |
 | `core/loading/appLoaderStore.ts` | `products: 40` → `45` | L.1 |
-| `backend/.../NotificationSseController.java` | + Flux.interval keepAlive 30s | L.2 |
+| `backend/.../NotificationSseController.java` | + Flux.interval keepAlive 30s | ✅ L.2 |
 | `presentation/modules/notifications/hooks/useNotificationStream.ts` | Supresión logs ruidosos + appLogger | L.3 |
 | `presentation/shared/hooks/api/useNotificationStream.ts` | Supresión logs ruidosos + appLogger | L.3 |
 
