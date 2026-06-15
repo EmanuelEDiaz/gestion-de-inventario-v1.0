@@ -11,10 +11,10 @@ public record CreateRoleRequest(
     @NotBlank @Pattern(regexp = "^[A-Z][A-Z0-9_]{1,49}$", message = "El código debe ser mayúsculas, sin espacios")
     String code,
 
-    @NotBlank @Size(max = 100)
+    @NotBlank @Size(max = 200)
     String name,
 
-    @Size(max = 255)
+    @Size(max = 500)
     String description,
 
     List<UUID> permissionIds
