@@ -67,7 +67,7 @@ const PHASE_WEIGHTS: Record<LoadPhase, number> = {
   rehydrate_local: 18,
   warehouses: 25,
   categories: 43,
-  products: 40,
+  products: 45,
   currencies: 46,
   exchange_rates: 48,
   customer_debts: 50,

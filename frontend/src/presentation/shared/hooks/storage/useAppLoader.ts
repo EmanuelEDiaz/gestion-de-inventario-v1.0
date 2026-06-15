@@ -16,7 +16,7 @@ import {
   exchangeRateResponseSchema,
   customerDebtResponseSchema,
 } from '@/core/loading/validators';
-import { getCachedCount } from '@/infrastructure/storage/db';
+import { getCachedCount, getDB } from '@/infrastructure/storage/db';
 import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueService';
 import { appLogger } from '@/infrastructure/logging/appLogger';
 import { getStorageUsage } from './useCacheProgress';
@@ -104,6 +104,45 @@ export function useAppLoader() {
       }
     })();
   }, [store.phase, setPhase, setSubStep, setError, handlePhaseError]);
+
+  useEffect(() => {
+    if (store.phase !== 'sw_precache') return;
+    setPhase('db_open');
+  }, [store.phase, setPhase]);
+
+  useEffect(() => {
+    if (store.phase !== 'db_open') return;
+    (async () => {
+      try {
+        const db = await getDB();
+        if (!db) throw new Error('IDB no disponible');
+      } catch {
+        setError('Error al abrir almacenamiento local');
+        return;
+      }
+      setPhase('rehydrate_local');
+    })();
+  }, [store.phase, setPhase, setError]);
+
+  useEffect(() => {
+    if (store.phase !== 'rehydrate_local') return;
+    (async () => {
+      try {
+        const [wCount, pCount, sCount] = await Promise.all([
+          getCachedCount('warehouses'),
+          getCachedCount('products'),
+          getCachedCount('stockBalances'),
+        ]);
+        if (wCount > 0 && pCount > 0 && sCount > 0) {
+          setAvailability('ready_partial');
+          void startBackgroundTasks();
+          setPhase('idle');
+          return;
+        }
+      } catch {}
+      setPhase('warehouses');
+    })();
+  }, [store.phase, setPhase, setAvailability, setSubStep, setError]);
 
   useEffect(() => {
     if (store.phase !== 'currencies') return;
