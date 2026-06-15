@@ -23,7 +23,7 @@ public class AdjustmentEntity {
     @Column("warehouse_id")
     private UUID warehouseId;
 
-    @Column("type")
+    @Column("adjustment_type")
     private String type;
 
     @Column("status")
