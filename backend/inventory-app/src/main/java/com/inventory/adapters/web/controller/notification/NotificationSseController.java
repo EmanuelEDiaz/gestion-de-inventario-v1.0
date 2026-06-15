@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @RestController
@@ -32,10 +33,17 @@ public class NotificationSseController {
         @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = extractUserId(userDetails);
-        return sinkPort.streamForUser(userId)
-            .map(n -> ServerSentEvent.<NotificationDto>builder()
-                .data(mapper.toDto(n, false))
+        var keepAlive = Flux.interval(Duration.ofSeconds(30))
+            .map(i -> ServerSentEvent.<NotificationDto>builder()
+                .comment("keepalive")
                 .build());
+        return Flux.merge(
+            sinkPort.streamForUser(userId)
+                .map(n -> ServerSentEvent.<NotificationDto>builder()
+                    .data(mapper.toDto(n, false))
+                    .build()),
+            keepAlive
+        );
     }
 
     private UUID extractUserId(UserDetails userDetails) {
