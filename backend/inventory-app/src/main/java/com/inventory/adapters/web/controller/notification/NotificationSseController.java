@@ -33,7 +33,7 @@ public class NotificationSseController {
         @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = extractUserId(userDetails);
-        var keepAlive = Flux.interval(Duration.ofSeconds(30))
+        var keepAlive = Flux.interval(Duration.ofSeconds(10))
             .map(i -> ServerSentEvent.<NotificationDto>builder()
                 .comment("keepalive")
                 .build());

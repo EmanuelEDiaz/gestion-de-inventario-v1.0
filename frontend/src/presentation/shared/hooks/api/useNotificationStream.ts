@@ -56,7 +56,7 @@ async function runSSEStream(
       };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const response = await fetch('/api/v1/notifications/stream', {
+      const response = await fetch(`${API_BASE}/api/v1/notifications/stream`, {
         headers,
         signal,
         credentials: 'include',
