@@ -15,6 +15,7 @@ export class RoleRepository implements IRoleRepository {
       const response = await apiClient.get<Role>(`${this.basePath}/${id}`);
       return response.data;
     } catch {
+      // Offline fallback: role may not exist (404) or network unavailable
       return null;
     }
   }

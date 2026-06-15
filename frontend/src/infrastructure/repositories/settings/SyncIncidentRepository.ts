@@ -11,6 +11,7 @@ export class SyncIncidentRepository implements ISyncIncidentRepository {
     try {
       return await syncIncidentApi.getById(id);
     } catch {
+      // Offline fallback: incident not found or network unavailable
       return null;
     }
   }

@@ -16,6 +16,7 @@ export const userPreferencesRepository = {
       const response = await apiClient.get<UserPreferences>('/api/v1/users/me/preferences');
       return { ...DEFAULT_PREFS, ...response.data };
     } catch {
+      // Offline fallback: return safe defaults if server unreachable
       return DEFAULT_PREFS;
     }
   },

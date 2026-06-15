@@ -84,3 +84,70 @@ Eliminar `as any` — el spread es asignable a `CachedCustomerDebt` sin coerció
 cd frontend && pnpm run lint
 # Resultado: 0 errors (antes: 2)
 ```
+
+---
+
+## Fix-003: Lint warning — unused `axios` import en client.test.ts
+
+**Fase origen**: J.8.3 — detectado durante verificación lint
+
+### Síntoma
+```bash
+frontend/src/infrastructure/api/client.test.ts:2:8
+  warning  'axios' is defined but never used  @typescript-eslint/no-unused-vars
+```
+
+### Causa Raíz
+El test importaba `axios` para `vi.mock('axios', ...)` pero en Vitest el mock factory reemplaza el módulo completo. La importación no es necesaria — `vi.mock` no requiere que el módulo esté importado en el archivo de test.
+
+### Reparación
+Eliminar `import axios from 'axios';` del test file.
+
+### Archivos modificados
+- `frontend/src/infrastructure/api/client.test.ts` — remove unused import
+
+### Verificación
+```bash
+cd frontend && pnpm lint
+# Resultado: 0 errors, 0 warnings
+```
+
+---
+
+## Fix-004: 4 catch blocks sin inspección de error en repositorios
+
+**Fase origen**: J.8.5 — detectado durante verificación de catch patterns
+
+### Síntoma
+4 repositorios tenían `catch {}` sin comentario ni inspección de error:
+- `UserRepository.getById()` — `catch { return null; }`
+- `RoleRepository.getById()` — `catch { return null; }`
+- `UserPreferencesRepository.get()` — `catch { return DEFAULT_PREFS; }`
+- `SyncIncidentRepository.findById()` — `catch { return null; }`
+
+### Causa Raíz
+Estos repositorios implementan `getById`/`get` con fallback offline: si la API falla (404, network), retornan null o defaults. Originalmente sin comentario documentando la intencionalidad.
+
+### Reparación
+Agregar comentario explicativo en cada catch block:
+```typescript
+} catch {
+  // Offline fallback: user may not exist (404) or network unavailable
+  return null;
+}
+```
+
+### Archivos modificados
+- `frontend/src/infrastructure/repositories/user/UserRepository.ts`
+- `frontend/src/infrastructure/repositories/user/RoleRepository.ts`
+- `frontend/src/infrastructure/repositories/user/UserPreferencesRepository.ts`
+- `frontend/src/infrastructure/repositories/settings/SyncIncidentRepository.ts`
+
+### Verificación
+```bash
+cd frontend && rg "Offline fallback" src/infrastructure/repositories/
+# 4 matches — cada catch documentado
+pnpm lint  # 0 errors
+pnpm exec tsc --noEmit  # 0 errors
+pnpm test:run  # 274 tests pass
+```

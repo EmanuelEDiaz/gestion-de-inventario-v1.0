@@ -15,6 +15,7 @@ export class UserRepository implements IUserRepository {
       const response = await apiClient.get<User>(`${this.basePath}/${id}`);
       return response.data;
     } catch {
+      // Offline fallback: user may not exist (404) or network unavailable
       return null;
     }
   }

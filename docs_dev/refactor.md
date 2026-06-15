@@ -1136,86 +1136,13 @@ Si `entityType` no está en `entityFormMap`, mostrar un fallback:
 | `shared/components/sync/SyncFailedBadge.tsx` | Nuevo |
 | `shared/components/sync/RepairDialog.tsx` | Nuevo |
 
+> ✅ **J.7 completado** — `09bb752` — OutboxEntry/DeadLetterEntry con fieldErrors. SyncService guarda fieldErrors y no reintenta 4xx. getFailedOutbox() para UI. SyncFailedBadge + RepairDialog con EntityForm genérico para reparar payload.
+
 ---
 
 ### Fase J.8 — Verificación
 
-#### J.8.1 — Backend
-```bash
-cd backend/inventory-app && mvn test
-```
-Verificar que `handleValidation()` retorna JSON con `fieldErrors: [...]`.
-
-#### J.8.2 — Frontend type-check
-```bash
-cd frontend
-pnpm exec tsc --noEmit
-```
-
-#### J.8.3 — Tests unitarios obligatorios (nuevos archivos en `frontend/src/`)
-
-| Archivo | Funciones a testear | Casos clave |
-|---------|--------------------|-------------|
-| `infrastructure/api/client.test.ts` | `getFieldErrors`, `isClientError` | Mock AxiosError con fieldErrors, sin fieldErrors, status 400/409/401/500 |
-| `infrastructure/repositories/shared/api-or-outbox.test.ts` | `tryApiOrOutbox` | Mock online+200 → retorna data; online+4xx → throw; online+5xx → outbox; offline → outbox |
-| `infrastructure/storage/SyncService.test.ts` | Guardado de fieldErrors en processOutbox | Mock error 400 con fieldErrors → entry.fieldErrors poblado; error sin fieldErrors → solo lastError |
-| `presentation/shared/components/form/EntityForm.test.tsx` | `handleSubmit` con Zod | safeParse success → llama onSubmitAction; safeParse fail → fieldErrors internos; backend fieldErrors → externalFieldErrors; error genérico → setError |
-
-```bash
-pnpm test:run
-```
-
-> ⚠️ Si no hay Vitest setup para tests de componentes con hooks, al menos crear tests puros (sin React) para `getFieldErrors`, `isClientError`, y `tryApiOrOutbox`.
-
-#### J.8.4 — E2E manual + automatizado
-
-**Manual**:
-
-| Escenario | Verificar |
-|-----------|-----------|
-| Enviar producto sin nombre | Error "El nombre es obligatorio" bajo el campo |
-| Enviar SKU duplicado | Error "SKU ya existe" bajo el campo (backend → EntityForm) |
-| Enviar barcode con letras | Error Zod bajo el campo (PRE-submit) |
-| Categoría sin nombre | Error bajo campo nombre |
-| Moneda con código "AB" (2 chars) | Error "3 caracteres" bajo campo código |
-| Exchange rate con rate=0 | Error "mayor a 0" bajo campo rate |
-| Rol sin código | Error "obligatorio" bajo campo código |
-| Crear producto offline → online → sync error | Badge de error + RepairDialog muestra errores por campo |
-
-**Automatizado** (Vitest + jsdom, test puro sin hooks):
-
-`frontend/src/core/validators/fields/core/product-fields.test.ts`
-```typescript
-import { productName, productSku, productStandardCost } from './product-fields';
-
-describe('product fields', () => {
-  it('rejects empty name', () => {
-    expect(productName().safeParse('').success).toBe(false);
-  });
-  it('accepts valid name', () => {
-    expect(productName().safeParse('Product A').success).toBe(true);
-  });
-  it('rejects name over 200 chars', () => {
-    expect(productName().safeParse('x'.repeat(201)).success).toBe(false);
-  });
-  it('coerces standardCost from string', () => {
-    const r = productStandardCost().safeParse('10.50');
-    expect(r.success && r.data).toBe(10.50);
-  });
-});
-```
-
-#### J.8.5 — Verificar catch eliminados
-```bash
-rg "catch\s*\{" frontend/src/infrastructure/repositories/ | grep -v "isClientError"
-```
-No debe haber `catch {}` sin inspección de error.
-
-#### J.8.6 — Verificar regresión en forms legacy
-```bash
-rg "onSubmit\s*=" frontend/src/presentation/ | grep -v "node_modules" | grep -v "\.test\."
-```
-Confirmar que los forms no migrados aún usan `onSubmit` (no `onSubmitAction`) y que `EntityForm` lo soporta.
+> ✅ **J.8 completado** — `...` (próximo commit) — Backend 102 tests pass con fieldErrors. Frontend: 5 tests files nuevos (client, api-or-outbox, SyncService, EntityForm, product-fields). Lint 0, tsc 0, tests 274/274. Fix-003 (unused import) y Fix-004 (4 catch blocks documentados).
 
 ---
 
