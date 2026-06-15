@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 interface ProvidersProps {
@@ -20,6 +20,19 @@ export function Providers({ children }: ProvidersProps) {
         },
       }),
   );
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "SYNC_OUTBOX") {
+        import("@/infrastructure/storage/SyncService").then(({ processOutbox }) => {
+          processOutbox().catch(() => {});
+        });
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", handler);
+    return () => navigator.serviceWorker.removeEventListener("message", handler);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
