@@ -4,7 +4,7 @@
 
 ---
 
-## ✅ Fase M.1+M.2 — Completada (`fc6fc39`)
+## ✅ Fase M — Completada
 
 | Subfase | Commit | Cambio | Verificación |
 |---------|--------|--------|-------------|
@@ -12,6 +12,11 @@
 | L.1.b | `b396162` | +3 handlers (warehouses, categories, products) | tsc + lint clean |
 | L.2 | `72fa172` | Flux.interval keepalive 30s en NotificationSseController.java | mvn test 102/0 |
 | L.3 | ⏭️ saltado | Opcional — resuelto por L.2 | — |
+| M.1 | `fc6fc39` | Backend: columna `is_active` → `active` en GeoRegionEntity | mvn compile -q |
+| M.2 | `fc6fc39` | Frontend: Zod `.catch(null)` en lat/lng customers/suppliers | tsc + lint clean |
+| **M.3** | `fdc50be` | SSE: heartbeat 30s→10s + direct SSE bypass proxy | tsc + lint + mvn compile clean |
+| **M.4** | `49d38be` | Repair modal overlay fuera de condicion `degraded` | tsc + lint clean |
+| **Fix-005** | `627ffd9` | Backend: `@JsonInclude(ALWAYS)` lat/lng (causa raíz NaN) | mvn compile -q |
 
 ---
 
