@@ -15,6 +15,9 @@ import {
   currencyResponseSchema,
   exchangeRateResponseSchema,
   customerDebtResponseSchema,
+  warehouseResponseSchema,
+  categoryResponseSchema,
+  productResponseSchema,
 } from '@/core/loading/validators';
 import { getCachedCount, getDB } from '@/infrastructure/storage/db';
 import { DownloadQueueService } from '@/infrastructure/storage/DownloadQueueService';
@@ -143,6 +146,63 @@ export function useAppLoader() {
       setPhase('warehouses');
     })();
   }, [store.phase, setPhase, setAvailability, setSubStep, setError]);
+
+  useEffect(() => {
+    if (store.phase !== 'warehouses') return;
+    (async () => {
+      try {
+        setSubStep('Descargando bodegas...');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/warehouses',
+          idbStoreName: 'warehouses',
+          schema: warehouseResponseSchema,
+          entityLabel: 'bodegas',
+        });
+        setPhase('categories');
+      } catch (err) {
+        await handlePhaseError('warehouses', err, 'bodegas');
+        setPhase('categories');
+      }
+    })();
+  }, [store.phase, setPhase, setSubStep, handlePhaseError]);
+
+  useEffect(() => {
+    if (store.phase !== 'categories') return;
+    (async () => {
+      try {
+        setSubStep('Descargando categorías...');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/categories',
+          idbStoreName: 'categories',
+          schema: categoryResponseSchema,
+          entityLabel: 'categorías',
+        });
+        setPhase('products');
+      } catch (err) {
+        await handlePhaseError('categories', err, 'categorías');
+        setPhase('products');
+      }
+    })();
+  }, [store.phase, setPhase, setSubStep, handlePhaseError]);
+
+  useEffect(() => {
+    if (store.phase !== 'products') return;
+    (async () => {
+      try {
+        setSubStep('Descargando productos...');
+        await loadFlatCatalog({
+          endpoint: '/api/v1/products/paginated',
+          idbStoreName: 'products',
+          schema: productResponseSchema,
+          entityLabel: 'productos',
+        });
+        setPhase('currencies');
+      } catch (err) {
+        await handlePhaseError('products', err, 'productos');
+        setPhase('currencies');
+      }
+    })();
+  }, [store.phase, setPhase, setSubStep, handlePhaseError]);
 
   useEffect(() => {
     if (store.phase !== 'currencies') return;
