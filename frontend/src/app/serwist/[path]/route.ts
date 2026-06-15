@@ -1,6 +1,6 @@
 import { createSerwistRoute } from "@serwist/turbopack";
 
-const revision = crypto.randomUUID();
+const revision = "v1";
 
 const STATIC_PAGES = [
   "/", "/adjustments", "/audit-log", "/categories",
@@ -10,6 +10,7 @@ const STATIC_PAGES = [
   "/purchases", "/reports", "/returns", "/roles", "/sales",
   "/settings", "/stock", "/suppliers", "/sync/incidents",
   "/transfers", "/users", "/warehouses", "/warehouses/new",
+  "/~offline",
 ] as const;
 
 export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
