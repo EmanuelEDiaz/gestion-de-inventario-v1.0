@@ -59,6 +59,7 @@ export class MaintenanceService {
       await this.runDatePruning();
       await this.cleanupDownloadChunks();
       await this.cleanupTempFiles();
+      await this.cleanupSwCaches();
       await this.evictImageCacheLRU();
     } catch (err) {
       appLogger.error('[Maintenance] Error during maintenance cycle', err);
@@ -226,6 +227,21 @@ export class MaintenanceService {
       if (entries.length > 0) appLogger.info(`[Maintenance] Cleaned ${entries.length} temp files from OPFS`);
     } catch (err) {
       appLogger.error('[Maintenance] Error cleaning temp files', err);
+    }
+  }
+
+  private async cleanupSwCaches(): Promise<void> {
+    try {
+      if (typeof navigator === 'undefined' || !('caches' in window)) return;
+      const cacheNames = await caches.keys();
+      const currentPrefix = 'cache-R1-';
+      const stale = cacheNames.filter((name) => name.startsWith('cache-') && !name.startsWith(currentPrefix));
+      if (stale.length > 0) {
+        await Promise.all(stale.map((name) => caches.delete(name)));
+        appLogger.info(`[Maintenance] Cleaned ${stale.length} stale SW caches`);
+      }
+    } catch (err) {
+      appLogger.warn('[Maintenance] SW cache cleanup failed', err instanceof Error ? err.message : String(err));
     }
   }
 
