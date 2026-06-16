@@ -17,6 +17,8 @@ import { useAuthStore } from '@/presentation/shared/hooks/storage/useAuthStore';
 import { useCorruptionCount } from '@/presentation/shared/hooks/storage/useCorruptionCount';
 import { useSidebarSections } from '@/presentation/shared/hooks/ui/useSidebarSections';
 import { getOutboxCount } from '@/infrastructure/storage/db';
+import { SessionExpiredBanner } from '@/presentation/shared/components/feedback/SessionExpiredBanner';
+import { QuotaWarningBanner } from '@/presentation/shared/components/feedback/QuotaWarningBanner';
 import { NAVIGATION_CONFIG } from '@/presentation/shared/config/navigation.config';
 import { useCacheProgress } from '@/presentation/shared/hooks/storage/useCacheProgress';
 import { useAppLoader } from '@/presentation/shared/hooks/storage/useAppLoader';
@@ -45,6 +47,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isAuthReady = hasHydrated && isAuthenticated;
   const isAppError = appAvailability === 'error';
   const isBlocking = appAvailability === 'blocking';
+  const isSessionExpired = appError
+    ? /sesión|token|expirada|expir/i.test(appError)
+    : false;
 
   const [showRepairCenter, setShowRepairCenter] = useState(false);
   const [corruptionRefreshTrigger, setCorruptionRefreshTrigger] = useState(0);
@@ -166,9 +171,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     setShowLogoutDialog(true);
   };
 
-  const handleLogoutConfirm = async () => {
+  const handleLogoutKeepData = async () => {
     setShowLogoutDialog(false);
-    await logout();
+    await logout('session');
+    window.location.href = '/login';
+  };
+
+  const handleLogoutDeleteAll = async () => {
+    setShowLogoutDialog(false);
+    await logout('full');
     window.location.href = '/login';
   };
 
@@ -355,6 +366,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </p>
         </div>
       )}
+      <QuotaWarningBanner />
       <DashboardHeader
         navigationSections={navigationSections}
         isCollapsed={isCollapsed}
@@ -376,10 +388,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
       <DashboardMain isCollapsed={isCollapsed}>{children}</DashboardMain>
       <NetworkStatusWidget />
+      {isSessionExpired && (
+        <SessionExpiredBanner
+          onLoginClick={() => { logout('session'); window.location.href = '/login'; }}
+        />
+      )}
       <LogoutConfirmDialog
         isOpen={showLogoutDialog}
         pendingCount={pendingForLogout}
-        onConfirm={handleLogoutConfirm}
+        onKeepData={handleLogoutKeepData}
+        onDeleteAll={handleLogoutDeleteAll}
         onCancel={() => setShowLogoutDialog(false)}
       />
     </div>

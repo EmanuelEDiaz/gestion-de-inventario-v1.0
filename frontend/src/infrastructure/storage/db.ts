@@ -449,6 +449,31 @@ interface InventoryDB extends DBSchema {
 let dbInstance: IDBPDatabase<InventoryDB> | null = null;
 let dbReady = false;
 
+function setupVersionChangeHandler(db: IDBPDatabase<InventoryDB>): void {
+  db.addEventListener('versionchange', () => {
+    db.close();
+    dbInstance = null;
+    dbReady = false;
+    import('@/infrastructure/logging/appLogger').then(m =>
+      m.appLogger.info('IDB versionchange received — connection closed for upgrade')
+    );
+    window.dispatchEvent(new CustomEvent('idb-versionchange'));
+  });
+}
+
+let blockedDialogShown = false;
+
+function showBlockedBanner(): void {
+  if (blockedDialogShown) return;
+  blockedDialogShown = true;
+  import('@/presentation/shared/components/ui').then(m => {
+    m.toast.warning('Actualización de almacenamiento local', {
+      description: 'Otra pestaña tiene una versión antigua de la base de datos. Recarga las otras pestañas para continuar.',
+      duration: 0,
+    });
+  });
+}
+
 export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
   if (!dbReady) {
     throw new Error('Persistence not initialized. Call initPersistence() after login.');
@@ -734,6 +759,7 @@ export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
     blocked() {
       dbInstance?.close();
       dbInstance = null;
+      showBlockedBanner();
     },
   });
 
@@ -742,6 +768,7 @@ export async function getDB(): Promise<IDBPDatabase<InventoryDB>> {
   );
 
   dbInstance = await Promise.race([openPromise, timeout]);
+  setupVersionChangeHandler(dbInstance);
   return dbInstance;
 }
 
@@ -787,6 +814,7 @@ export async function destroyPersistence(): Promise<void> {
       blocked() {
         dbInstance?.close();
         dbInstance = null;
+        showBlockedBanner();
       },
     });
   } catch (error) {
@@ -1139,6 +1167,45 @@ export async function putToEntityStore(
   const store = getEntityStoreName(entityType);
   if (!store) return;
   await db.put(store, data as never);
+}
+
+export const SESSION_STORES = [
+  'outbox', 'syncMeta', 'notifications', 'deadLetter',
+  'corruptionQueue', 'downloadChunks', 'appLogs',
+  'mapMarkers', 'mapAnnotations',
+] as const;
+
+export async function clearSessionData(): Promise<void> {
+  try {
+    const db = await getDB();
+    const tx = db.transaction(SESSION_STORES, 'readwrite');
+    await Promise.all(SESSION_STORES.map(store => tx.objectStore(store).clear()));
+    await tx.done;
+  } catch (error) {
+    import('@/infrastructure/logging/appLogger').then(m =>
+      m.appLogger.error('Failed to clear session data', error)
+    );
+  }
+
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter(k =>
+            k.startsWith('cache-R1-pages') ||
+            k.startsWith('cache-R1-rsc') ||
+            k.startsWith('cache-R1-rsc-prefetch') ||
+            k.startsWith('cache-R1-others')
+          )
+          .map(k => caches.delete(k)),
+      );
+    }
+  } catch (error) {
+    import('@/infrastructure/logging/appLogger').then(m =>
+      m.appLogger.error('Failed to clear session caches', error)
+    );
+  }
 }
 
 export { MAX_OUTBOX_ENTRIES, BACKOFF_DELAYS };

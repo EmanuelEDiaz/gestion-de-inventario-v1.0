@@ -171,7 +171,10 @@ export async function prefetchImagesBackground(): Promise<void> {
             return;
           }
           try {
-            const res = await fetch(`/api/v1/images/${key.startsWith("/") ? key.slice(1) : key}`);
+            const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+            const headers: Record<string, string> = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(`/api/v1/images/${key.startsWith("/") ? key.slice(1) : key}`, { headers });
             if (!res.ok) return;
             const buf = await res.arrayBuffer();
             await writeOPFSFile(path, buf);

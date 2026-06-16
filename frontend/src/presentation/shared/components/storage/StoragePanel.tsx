@@ -213,6 +213,109 @@ export function StoragePanel() {
           <p className="text-xs text-muted-foreground mt-2">{statusMessage}</p>
         )}
       </Card>
+
+      <Card className="p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle className="h-5 w-5 text-red-500" />
+          <h4 className="text-sm font-semibold text-red-700">Zona de peligro</h4>
+        </div>
+        <p className="text-xs text-gray-600 mb-3">
+          Borrar todos los datos locales del dispositivo: catálogos, datos operativos, mapa offline,
+          búsqueda geográfica y configuración local. No podrás usar la aplicación sin conexión
+          hasta volver a descargar los datos.
+        </p>
+        <WipeAllDataButton />
+      </Card>
     </div>
+  );
+}
+
+function WipeAllDataButton() {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [typedText, setTypedText] = useState('');
+
+  const handleWipe = async () => {
+    setShowConfirm(false);
+    setTypedText('');
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch {}
+    try {
+      const root = await navigator.storage.getDirectory();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for await (const [name] of (root as any).entries()) {
+        await root.removeEntry(name).catch(() => {});
+      }
+    } catch {}
+    try {
+      const keys = Object.keys(localStorage);
+      for (const key of keys) {
+        localStorage.removeItem(key);
+      }
+    } catch {}
+    try {
+      sessionStorage.clear();
+    } catch {}
+    window.location.reload();
+  };
+
+  return (
+    <>
+      <Button variant="destructive" size="sm" onClick={() => setShowConfirm(true)}>
+        <Trash2 className="h-4 w-4 mr-1" />
+        Borrar todos los datos
+      </Button>
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50" onClick={() => { setShowConfirm(false); setTypedText(''); }}>
+          <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Borrar todos los datos</h2>
+            </div>
+            <p className="mb-2 text-sm text-gray-600">
+              Esta acción eliminará todos los datos locales del dispositivo: catálogos, datos operativos,
+              mapa offline, búsqueda geográfica y configuración local.
+            </p>
+            <p className="mb-4 text-sm font-medium text-red-600">
+              No podrás usar la aplicación sin conexión hasta volver a descargar los datos.
+            </p>
+            <p className="mb-2 text-sm text-gray-700">
+              Escribe <strong>BORRAR</strong> para confirmar:
+            </p>
+            <input
+              type="text"
+              value={typedText}
+              onChange={(e) => setTypedText(e.target.value)}
+              className="mb-4 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              placeholder="BORRAR"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => { setShowConfirm(false); setTypedText(''); }}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleWipe}
+                disabled={typedText !== 'BORRAR'}
+                className="flex-1"
+              >
+                Borrar todo
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

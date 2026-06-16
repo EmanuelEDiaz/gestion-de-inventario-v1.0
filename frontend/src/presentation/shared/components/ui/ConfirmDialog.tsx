@@ -1,15 +1,17 @@
 'use client';
 
+import { type ReactNode } from 'react';
 import { AlertTriangle } from '@/presentation/shared/components/ui/icon-mapping';
 import { Button } from '@/presentation/shared/components/ui/Button';
 
 interface ConfirmDialogProps {
   open: boolean;
   title: string;
-  description: string;
+  description: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: 'default' | 'destructive';
+  footer?: ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -21,6 +23,7 @@ export function ConfirmDialog({
   confirmLabel = 'Confirmar',
   cancelLabel = 'Cancelar',
   variant = 'default',
+  footer,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -43,18 +46,20 @@ export function ConfirmDialog({
           <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
         </div>
         <p className="mb-6 text-sm text-gray-600">{description}</p>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onCancel} className="flex-1">
-            {cancelLabel}
-          </Button>
-          <Button
-            variant={variant === 'destructive' ? 'destructive' : 'default'}
-            onClick={onConfirm}
-            className="flex-1"
-          >
-            {confirmLabel}
-          </Button>
-        </div>
+        {footer ?? (
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onCancel} className="flex-1">
+              {cancelLabel}
+            </Button>
+            <Button
+              variant={variant === 'destructive' ? 'destructive' : 'default'}
+              onClick={onConfirm}
+              className="flex-1"
+            >
+              {confirmLabel}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

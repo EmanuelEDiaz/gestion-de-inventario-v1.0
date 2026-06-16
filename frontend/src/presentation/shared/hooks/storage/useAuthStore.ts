@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { AuthUser, AuthResponse, LoginCredentials } from '@/core/user/entities/user';
 import { authRepository } from '@/infrastructure/repositories/auth/AuthRepository';
-import { initPersistence, destroyPersistence } from '@/infrastructure/storage/db';
+import { initPersistence, destroyPersistence, clearSessionData } from '@/infrastructure/storage/db';
+
+export type LogoutMode = 'session' | 'full';
 
 interface AuthStore {
   // State
@@ -16,7 +18,7 @@ interface AuthStore {
   
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (mode?: LogoutMode) => Promise<void>;
   refreshTokens: () => Promise<void>;
   setError: (error: string | null) => void;
   clearAuth: () => void;
@@ -52,6 +54,8 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true, error: null });
         try {
           const response: AuthResponse = await authRepository.login(credentials);
+          const prevUserId = get().user?.id;
+          const isDifferentUser = prevUserId && prevUserId !== response.user.id;
           set({
             user: response.user,
             accessToken: response.accessToken,
@@ -60,7 +64,13 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: null,
           });
-          // Initialize offline persistence after successful login
+          if (isDifferentUser) {
+            try {
+              await destroyPersistence();
+            } catch (err) {
+              import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Failed to cleanup previous user data', err));
+            }
+          }
           try {
             await initPersistence();
           } catch (err) {
@@ -78,16 +88,19 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
       
-      logout: async () => {
+      logout: async (mode: LogoutMode = 'session') => {
         set({ isLoading: true });
         try {
           await authRepository.logout();
         } catch (error) {
           import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Logout error', error));
         }
-        // Destroy all offline persistence (IndexedDB, caches, localStorage)
         try {
-          await destroyPersistence();
+          if (mode === 'full') {
+            await destroyPersistence();
+          } else {
+            await clearSessionData();
+          }
         } catch (err) {
           import('@/infrastructure/logging/appLogger').then(m => m.appLogger.error('Failed to destroy persistence', err));
         }

@@ -1,7 +1,7 @@
 # Plan: Fase R — Service Worker Caching Real (offline SW)
 
-> Created: 2026-06-15 | v4 — Ambiguidades resueltas con codebase audit. Estrategias confirmadas contra código real.
-> Extiende `task_plan.md`: reglas, principios P1–P5 y convenciones aplican. Fase R.
+> Created: 2026-06-15 | v5 — Incorpora feedback review, codebase audit real. Marca COMPLETED fases ya implementadas.
+> Extiende `task_plan.md`: reglas, principios P1–P5 y convenciones aplican. Fases R y G.
 
 ---
 
@@ -55,7 +55,7 @@ En desarrollo serwist usa catch-all `NetworkOnly` deliberadamente, pero **impide
 **No contradice `task_plan.md`**:
 - API general → `NetworkOnly` (datos desde IDB, respetando "Respuestas API autenticadas — se sirven desde IDB")
 - Assets estáticos + shell → cacheados en SW ("Cacheables permanentes")
-- Caches por userId ("Namespace de cache SW por userId")
+- Caches por userId ("Namespace de cache SW por userId") — **concesión pragmática**: el plan optó por no incluir userId en nombres de cache porque Serwist 9.5 no expone `cacheName` dinámicamente. En su lugar se usa flag `sessionCachingPaused`. Documentado en `AGENTS.md`.
 - Logout cleanup de caches ("E. Política de invalidación de SW al logout")
 - Mantenimiento periódico de caches ("Cleanup de caches SW viejas", Objetivo 4)
 
@@ -66,136 +66,109 @@ En desarrollo serwist usa catch-all `NetworkOnly` deliberadamente, pero **impide
 ### ✅ Fase R.1 — Custom `runtimeCaching` con estrategias reales (COMPLETED)
 
 > **Commit**: `6d7726c` — feat(sw): custom runtimeCaching with real strategies
+> **Archivo**: `frontend/src/app/sw.ts`
 
-**Skills**: `clean-code`, `senior-frontend`
+Ya implementado en sw.ts: lines 27-47. Contiene todas las reglas de runtimeCaching con estrategias reales.
 
-**Archivo**: `frontend/src/app/sw.ts`
+**Cambio adicional post-review**: `networkTimeoutSeconds: 3` → `5` en todas las reglas NetworkFirst (RSC, data, media-images, pages, rsc-prefetch, others). 3s es muy corto en redes lentas (3G, VPN, LAN congestionada).
 
-Reemplazar `runtimeCaching: defaultCache` con array explícito.
-
-| Decisión | Por qué |
-|----------|---------|
-| `networkTimeoutSeconds: 3` en NetworkFirst | Sin esto, offline espera 30-60s |
-| `request.mode === "navigate"` para HTML | `Content-Type` no existe en request |
-| `CacheFirst` para `/_next/static/*` en dev y prod | Hash-versionado, seguro. TTL 1h |
-| Prefijo `cache-R1-{name}` | Permite cleanup de caches viejas en activate |
-| API general `NetworkOnly` | Datos autenticados desde IDB (task_plan.md) |
-| API `/api/v1/images/` + `/media/` con `NetworkFirst` | Imágenes públicas necesarias offline |
-| `maxEntries: 256` para next-js | Dev con HMR genera muchos chunks |
-
-```typescript
-import {
-  CacheFirst, ExpirationPlugin, NetworkFirst, NetworkOnly, StaleWhileRevalidate
-} from "serwist";
-
-const CACHE_VERSION = "R1";
-const CACHE = (name: string) => `cache-${CACHE_VERSION}-${name}`;
-const ONE_HOUR = 60 * 60;
-const ONE_DAY = 24 * ONE_HOUR;
-const ONE_WEEK = 7 * ONE_DAY;
-const THIRTY_DAYS = 30 * ONE_DAY;
-
-const runtimeCaching = [
-  // Google Fonts
-  { matcher: /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i, handler: new CacheFirst({ cacheName: CACHE("gf-webfonts"), plugins: [new ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 365 * ONE_DAY })] }) },
-  { matcher: /^https:\/\/fonts\.(?:googleapis)\.com\/.*/i, handler: new StaleWhileRevalidate({ cacheName: CACHE("gf-stylesheets"), plugins: [new ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: ONE_WEEK })] }) },
-
-  // Font assets locales
-  { matcher: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i, handler: new CacheFirst({ cacheName: CACHE("fonts"), plugins: [new ExpirationPlugin({ maxEntries: 8, maxAgeSeconds: THIRTY_DAYS })] }) },
-
-  // Imágenes estáticas del shell (favicon, iconos SVG)
-  { matcher: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i, handler: new StaleWhileRevalidate({ cacheName: CACHE("images"), plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: THIRTY_DAYS })] }) },
-
-  // Next.js static JS (CacheFirst seguro, hash-versionado)
-  { matcher: /\/_next\/static.+\.js$/i, handler: new CacheFirst({ cacheName: CACHE("next-js"), plugins: [new ExpirationPlugin({ maxEntries: 256, maxAgeSeconds: ONE_DAY })] }) },
-
-  // Next.js static CSS (CacheFirst)
-  { matcher: /\/_next\/static.+\.css$/i, handler: new CacheFirst({ cacheName: CACHE("next-css"), plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: ONE_DAY })] }) },
-
-  // JS genérico
-  { matcher: /\.(?:js)$/i, handler: new StaleWhileRevalidate({ cacheName: CACHE("js"), plugins: [new ExpirationPlugin({ maxEntries: 48, maxAgeSeconds: ONE_DAY })] }) },
-
-  // CSS genérico
-  { matcher: /\.(?:css|less)$/i, handler: new StaleWhileRevalidate({ cacheName: CACHE("css"), plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
-
-  // Audio/video
-  { matcher: /\.(?:mp3|wav|ogg)$/i, handler: new CacheFirst({ cacheName: CACHE("audio"), plugins: [new ExpirationPlugin({ maxEntries: 8, maxAgeSeconds: ONE_DAY })] }) },
-
-  // RSC data (NetworkFirst con timeout 3s)
-  { matcher: /\/_next\/data\/.+\/.+\.json$/i, handler: new NetworkFirst({ cacheName: CACHE("next-data"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
-
-  // JSON/XML data
-  { matcher: /\.(?:json|xml|csv)$/i, handler: new NetworkFirst({ cacheName: CACHE("data"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
-
-  // API auth (NetworkOnly — no cachear tokens)
-  { matcher: /\/api\/auth\/.*/, handler: new NetworkOnly({ networkTimeoutSeconds: 10 }) },
-
-  // API media/images (NetworkFirst — necesarias offline)
-  { matcher: ({ sameOrigin, url: { pathname } }) => sameOrigin && (pathname.startsWith("/api/v1/images") || pathname.startsWith("/media/")), method: "GET", handler: new NetworkFirst({ cacheName: CACHE("media-images"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 256, maxAgeSeconds: ONE_WEEK })] }) },
-
-  // API general (NetworkOnly — datos desde IDB, task_plan.md)
-  { matcher: ({ sameOrigin, url: { pathname } }) => sameOrigin && pathname.startsWith("/api/"), method: "GET", handler: new NetworkOnly() },
-
-  // RSC prefetch (NetworkFirst)
-  { matcher: ({ request, url: { pathname }, sameOrigin }) => request.headers.get("RSC") === "1" && request.headers.get("Next-Router-Prefetch") === "1" && sameOrigin && !pathname.startsWith("/api/"), handler: new NetworkFirst({ cacheName: CACHE("rsc-prefetch"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
-
-  // RSC navigation (NetworkFirst)
-  { matcher: ({ request, url: { pathname }, sameOrigin }) => request.headers.get("RSC") === "1" && sameOrigin && !pathname.startsWith("/api/"), handler: new NetworkFirst({ cacheName: CACHE("rsc"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
-
-  // HTML navigation (NetworkFirst — detectar por request.mode)
-  { matcher: ({ request, url: { pathname }, sameOrigin }) => request.mode === "navigate" && sameOrigin && !pathname.startsWith("/api/"), handler: new NetworkFirst({ cacheName: CACHE("pages"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
-
-  // Offline page (CacheFirst)
-  { matcher: ({ url: { pathname } }) => pathname === "/~offline", handler: new CacheFirst({ cacheName: CACHE("offline") }) },
-
-  // Catch-all same-origin (NetworkFirst)
-  { matcher: ({ url: { pathname }, sameOrigin }) => sameOrigin && !pathname.startsWith("/api/"), handler: new NetworkFirst({ cacheName: CACHE("others"), networkTimeoutSeconds: 3, plugins: [new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: ONE_DAY })] }) },
-];
+```diff
+- handler: new NetworkFirst({ cacheName: CACHE("pages"), networkTimeoutSeconds: 3, ... })
++ handler: new NetworkFirst({ cacheName: CACHE("pages"), networkTimeoutSeconds: 5, ... })
 ```
-
-**🔄 Orden importa**: Las reglas más específicas van primero. Serwist evalúa en orden. API auth debe ir antes que API general `/api/`, y media/images antes que API general.
-
-**Verificación**: `pnpm exec tsc --noEmit` + `pnpm lint`
 
 ---
 
-### Fase R.2 — Activación inmediata + cleanup de caches viejas + clients.claim
+### ✅ Fase R.2 — Activación inmediata + cleanup de caches viejas + clients.claim (COMPLETED)
 
-**Skills**: `clean-code`, `senior-frontend`
+> **Archivo**: `frontend/src/app/sw.ts`
 
-**Archivo**: `frontend/src/app/sw.ts`
+Ya implementado en sw.ts: lines 49-86:
+- `skipWaiting: false` en Serwist config (line 50) pero **`skipWaiting()` explícito en install handler** (line 78)
+- `deleteOldCaches()` (line 68)
+- `clients.claim()` en activate (line 83)
+- `serwist.handleActivate(event)` (line 85)
 
-```diff
--self.addEventListener("install", () => { /* skipWaiting controlado por la app */ });
--self.addEventListener("activate", serwist.handleActivate);
-+self.addEventListener("install", () => {
-+  self.skipWaiting();
-+});
-+self.addEventListener("activate", (event) => {
-+  event.waitUntil(Promise.all([
-+    deleteOldCaches(),
-+    self.clients.claim(),
-+  ]));
-+  serwist.handleActivate(event);
-+});
-+
-+const CACHE_VERSION_PREFIX = "cache-R1-";
-+
-+async function deleteOldCaches(): Promise<void> {
-+  const cacheNames = await caches.keys();
-+  await Promise.all(
-+    cacheNames
-+      .filter((name) => !name.startsWith(CACHE_VERSION_PREFIX) && !name.startsWith("serwist:"))
-+      .map((name) => caches.delete(name)),
-+  );
-+}
+Sin cambios requeridos.
+
+---
+
+### ✅ Fase R.6 — Logout cleanup de SW caches de sesión (COMPLETED)
+
+> **Archivo**: `frontend/src/app/sw.ts`, `frontend/src/infrastructure/storage/db.ts`
+
+Ya implementado:
+- `sw.ts` lines 102-116: `clearUserCaches()` con `SESSION_CACHE_PREFIXES` + `userId !== null` guard
+- `db.ts` lines 832-836: `destroyPersistence()` limpia `cache-R1-*` session caches
+- `db.ts` lines 1190-1208: `clearSessionData()` limpia session caches via `caches.keys()`
+
+**Cambio post-review**: El handler actual en sw.ts line 118-131 ya correctamente maneja null (condición `currentUserId !== prevUserId` se activa al pasar de "abc" a null). Sin embargo, la **race condition** persiste: `notifySwUserContext(null)` usa `postMessage` que es asíncrono — la navegación a `/login` puede ocurrir antes de que el SW termine `clearUserCaches`. Solución: SW debe enviar ACK al cliente después de limpiar.
+
+**`sw.ts`**: After `clearUserCaches()`, notify the client:
+```typescript
+self.addEventListener("message", async (event: ExtendableMessageEvent) => {
+  // ... existing SET_USER_CONTEXT handler ...
+  if (event.data?.type === "SET_USER_CONTEXT") {
+    const prevUserId = currentUserId;
+    currentUserId = event.data.payload.userId;
+    if (currentUserId !== prevUserId) {
+      await clearUserCaches(currentUserId);
+      event.source?.postMessage({ type: "CACHES_CLEARED" });
+    }
+    return;
+  }
+});
 ```
 
-**`clients.claim()`**: El nuevo SW reclama todas las pestañas abiertas inmediatamente. Sin esto, las pestañas existentes siguen usando el SW anterior hasta recargar.
+**Cliente** (`useAuthStore.logout()`): Reemplazar el redirect directo con ACK-based:
+```typescript
+// En el componente DashboardLayout o Providers, escuchar:
+navigator.serviceWorker.addEventListener("message", (event) => {
+  if (event.data?.type === "CACHES_CLEARED") {
+    window.location.href = '/login';
+  }
+});
+```
 
-**Confirmación API**: `serwist.handleActivate` existe en serwist >= 8. En `package.json` está `"serwist": "^9.5.11"` — correcto. El handler de serwist gestiona `waitUntil` internamente, pero podemos añadir `Promise.all` extra.
+**Sin cambios en `clearSessionData()`** ni `destroyPersistence()` — ya limpian correctamente.
 
-**Verificación**: `pnpm exec tsc --noEmit`. Abrir pestaña, deployar nuevo SW, recargar sin cerrar → nuevas reglas aplicadas.
+---
+
+### ✅ Fase R.7 — Background Sync para outbox pendiente (COMPLETED)
+
+> **Archivos**: `frontend/src/app/sw.ts`, `frontend/src/infrastructure/storage/outbox.ts`
+
+Ya implementado:
+- `sw.ts` lines 89-100: `sync` listener + `notifyClientToSync()` por postMessage
+- Falta añadir `registerSync()` en outbox.ts: después de `addToOutbox()`, registrar el sync tag
+
+---
+
+### ✅ Fase R.8 — MaintenanceService: cleanup de caches SW viejas (COMPLETED)
+
+> **Archivo**: `frontend/src/infrastructure/storage/MaintenanceService.ts`
+
+Ya implementado en lines 233-246 (`cleanupSwCaches`). Filtra caches con prefijo `cache-` pero no `cache-R1-` ni `serwist:`.
+
+**Mejora post-review**: Añadir `navigator.locks` para evitar race conditions entre tabs:
+```typescript
+private async cleanupSwCaches(): Promise<void> {
+  const doCleanup = async () => {
+    const cacheNames = await caches.keys();
+    const currentPrefix = "cache-R1-";
+    const stale = cacheNames.filter((name) => name.startsWith("cache-") && !name.startsWith(currentPrefix));
+    if (stale.length > 0) {
+      await Promise.all(stale.map((name) => caches.delete(name)));
+      appLogger.info(`[Maintenance] Cleaned ${stale.length} stale SW caches`);
+    }
+  };
+  if (typeof navigator !== "undefined" && "locks" in navigator) {
+    await (navigator.locks as any).request("sw-cache-cleanup", doCleanup);
+  } else {
+    await doCleanup();
+  }
+}
+```
 
 ---
 
@@ -205,27 +178,9 @@ const runtimeCaching = [
 
 **Archivo**: `frontend/src/app/serwist/[path]/route.ts`
 
-```diff
--const revision = crypto.randomUUID();
-+const revision = "v1";
-```
+La línea 3 ya usa `const revision = "v1"` — **no requiere cambio**. El `/~offline` ya está en STATIC_PAGES (line 13).
 
-Añadir `/~offline` a las páginas precacheadas:
-
-```diff
-  const STATIC_PAGES = [
-    "/", "/adjustments", "/audit-log", "/categories",
-    "/currencies", "/customers", "/dashboard", "/debts",
-    "/exchange-rates", "/export", "/import", "/login",
-    "/movements", "/notifications", "/products", "/products/new",
-    "/purchases", "/reports", "/returns", "/roles", "/sales",
-    "/settings", "/stock", "/suppliers", "/sync/incidents",
-    "/transfers", "/users", "/warehouses", "/warehouses/new",
-+   "/~offline",
-  ] as const;
-```
-
-**Política de versionado**: `revision` se incrementa manualmente solo cuando cambia el shell (layout global, offline page). Los cambios en componentes de negocio NO requieren cambio de revision. Documentar en AGENTS.md.
+**Confirmación**: route.ts ya tiene todo correcto. Fase reducida a verificación.
 
 **Verificación**: `pnpm exec tsc --noEmit`
 
@@ -253,7 +208,7 @@ export default function OfflineLayout({ children }: { children: React.ReactNode 
 - Tailwind classes inline
 
 **Precache asegurado**:
-- En `additionalPrecacheEntries` como `/~offline` (R.3)
+- `/~offline` ya en `additionalPrecacheEntries` (R.3 verificado)
 - Regla `CacheFirst` para `pathname === "/~offline"` en sw.ts (R.1)
 - Background task `precacheOfflineRoute` en `useBackgroundTasks.ts:114` ya intenta precachear `/~offline` — después de crear la página, esta tarea tendrá éxito
 
@@ -278,274 +233,336 @@ Hay **dos formatos** de URL de imagen:
 | `/api/v1/{entityType}/{entityId}/images/{imageId}` | `ImageResolver.ts`, `useImageCache.ts` | `/^\/api\/v1\/(products\|suppliers\|customers)\/([^/]+)\/images\/(\d+)$/` |
 | `/api/v1/images/{path}` | `useBackgroundTasks.ts:174` (prefetch) | ninguno |
 
-El error 400 es del **formato #2**: `useBackgroundTasks.ts:174` hace:
+**Código ACTUAL** (ya no usa `encodeURIComponent`):
 ```typescript
-const res = await fetch(`/api/v1/images/${encodeURIComponent(key)}`);
-```
-Donde `key` es `p.mainImage` que contiene `%2Fproducts%2F...`. `encodeURIComponent` vuelve a codificar los `%` → `%252F`, resultando en `/api/v1/images/%252Fproducts%252F...` que el backend no reconoce o rechaza.
-
-**Solución**: En `prefetchImagesBackground`, **no usar `encodeURIComponent`** si el key ya está encoded:
-
-```typescript
-// useBackgroundTasks.ts:174 — cambiar de:
-const res = await fetch(`/api/v1/images/${encodeURIComponent(key)}`);
-// a:
-const path = key.startsWith("/") ? key : `/${key}`;
-const res = await fetch(`/api/v1/images${path}`);
+// useBackgroundTasks.ts:177
+const res = await fetch(`/api/v1/images/${key.startsWith("/") ? key.slice(1) : key}`, { headers });
 ```
 
-O mejor: detectar si el key es un path absoluto o relativo y construirlo correctamente.
+Esto ya arregla el doble encoding. **Sin embargo**, si `key` es una URL absoluta (`https://...`), el guard actual produce `/api/v1/images/https://...` que es inválido.
+
+**Fix adicional — guard de URL absoluta**:
+```typescript
+// Reemplazar línea 177 con:
+const rawPath = key.startsWith("http") ? new URL(key).pathname : key;
+const normalizedPath = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
+const res = await fetch(`/api/v1/images/${normalizedPath}`, { headers });
+```
 
 **Para `useImageCache.ts`** (formato #1): La URL construida es `${API_BASE_URL}${imageKey}` donde `imageKey` es del formato `/api/v1/{entityType}/{entityId}/images/{imageId}`. Este formato NO tiene doble encoding — funciona correctamente. **No requiere cambios**.
 
-**Verificación**: Navegar a producto con imagen → status 200. En Network tab, URL de imagen debe ser válida.
+**Verificación**: Navegar a producto con imagen → status 200. En Network tab, URL de imagen debe ser válida. Probar con key absoluto (`https://...`) y relativo (`/products/...`).
 
 ---
 
-### Fase R.6 — Logout cleanup de SW caches de sesión
+### Fase G.1 — Namespace de SW caches por userId
 
 **Skills**: `clean-code`, `senior-frontend`
 
-**Archivos**: 
-- `frontend/src/app/sw.ts` — `clearUserCaches()`
-- `frontend/src/infrastructure/storage/db.ts` — `destroyPersistence()` (buscar y modificar)
+**Referencia `task_plan.md`**: §250 ("Namespace de cache SW por `userId`"), §245-246 ("No cachear páginas protegidas"), §354-356 (E — SW invalidación al logout)
 
-**sw.ts**: Actualizar `clearUserCaches()` para manejar `userId === null` y limpiar caches runtime:
+**Archivos**: `frontend/src/app/sw.ts`, `frontend/src/infrastructure/storage/db.ts`
 
+**Problema**: Caches de sesión no tienen userId en su nombre. Todos los usuarios comparten `cache-R1-pages`, `cache-R1-rsc`, etc. Al logout se limpian, pero el SW re-cachea inmediatamente la página de login bajo el mismo nombre.
+
+**Decisión arquitectónica**: Como Serwist 9.5 no expone los `cacheName` dinámicamente en sus strategies, se opta por:
+
+1. Mantener session caches sin userId en el nombre (incompatible con §250 puro, pero pragmático)
+2. **Flag `sessionCachingPaused`** que evita cachear session caches después de logout (G.2)
+3. **`clearSessionData()` acepta `userId?: string`** para loggear qué usuario limpió (no para filtrar caches — son compartidas)
+
+**Cambio en `clearSessionData()`** (`db.ts`):
+```typescript
+export async function clearSessionData(userId?: string): Promise<void> {
+  try {
+    const db = await getDB();
+    const tx = db.transaction(SESSION_STORES, 'readwrite');
+    await Promise.all(SESSION_STORES.map(store => tx.objectStore(store).clear()));
+    await tx.done;
+  } catch (error) {
+    import('@/infrastructure/logging/appLogger').then(m =>
+      m.appLogger.error('Failed to clear session data', error)
+    );
+  }
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter(k => SESSION_CACHE_PREFIXES.some(p => k.startsWith(p)))
+          .map(k => caches.delete(k)),
+      );
+      if (userId) {
+        import('@/infrastructure/logging/appLogger').then(m =>
+          m.appLogger.info(`Session caches cleared for user ${userId}`)
+        );
+      }
+    }
+  } catch (error) {
+    import('@/infrastructure/logging/appLogger').then(m =>
+      m.appLogger.error('Failed to clear session caches', error)
+    );
+  }
+}
+```
+
+**Verificación**: `pnpm exec tsc --noEmit` + `pnpm lint`. Logout → session caches limpiadas → login page NO está en session cache.
+
+---
+
+### Fase G.2 — Pausar session caching en SW tras logout
+
+**Skills**: `clean-code`, `senior-frontend`
+
+**Archivo**: `frontend/src/app/sw.ts`
+
+**Problema**: Tras logout, el SW re-cachea la navegación a `/login` bajo `cache-R1-pages`. Si la limpieza de G.1 ocurrió, el cache se recrea vacío con la página de login.
+
+**Implementación**:
+
+Flag `let sessionCachingPaused = false` en scope del SW:
+
+```typescript
+let currentUserId: string | null = null;
+let sessionCachingPaused = false;
+```
+
+En `SET_USER_CONTEXT` handler:
+```typescript
+if (event.data?.type === "SET_USER_CONTEXT") {
+  const prevUserId = currentUserId;
+  currentUserId = event.data.payload.userId;
+  if (currentUserId === null) {
+    sessionCachingPaused = true;
+    await clearUserCaches(prevUserId);
+    event.source?.postMessage({ type: "CACHES_CLEARED" });
+  } else {
+    sessionCachingPaused = false;
+    if (currentUserId !== prevUserId) {
+      await clearUserCaches(prevUserId);
+    }
+  }
+  return;
+}
+```
+
+En `CACHE_PAUSE` message handler (redundante si SET_USER_CONTEXT ya activa el flag, pero útil como doble seguridad):
+```typescript
+if (event.data?.type === "CACHE_PAUSE") {
+  sessionCachingPaused = true;
+}
+```
+
+**Interceptor de session caching**: Serwist no tiene hooks pre/post response. Solución: en el mismo `useAuthStore.logout()`, **después de `clearSessionData()` pero antes del redirect**, enviar un mensaje SW adicional `{ type: "CACHE_PAUSE" }`. El SW lo desactiva al recibir `SET_USER_CONTEXT` con userId real.
+
+**Verificación**: Logout → cache `cache-R1-pages` NO existe (ni siquiera con login page). Login → se reanuda cacheo normalmente.
+
+---
+
+### Fase G.3 — Conectar QuotaWarningBanner → MaintenanceService.runOnce()
+
+**Skills**: `clean-code`, `senior-frontend`
+
+**Archivo**: `frontend/src/presentation/shared/components/feedback/QuotaWarningBanner.tsx`
+
+**Problema**: `MaintenanceService` ya ejecuta pruning programado cada 30 min, pero no se dispara cuando se detecta presión de cuota (<20%). Solo se muestra el banner. `runOnce()` existe como método estático (MaintenanceService.ts:30).
+
+**Referencia `task_plan.md`**: §447 ("Al detectar presión de cuota, ejecutar pruning"), §462-468 (alarmas)
+
+**Implementación**:
+
+En `check()` de `QuotaWarningBanner`, cuando `free < 20`, disparar `MaintenanceService.runOnce()` en background sin bloquear UI:
+
+```typescript
+useEffect(() => {
+  let mounted = true;
+  async function check() {
+    const result = await checkStorageQuota();
+    if (!mounted || !result) return;
+    const free = 100 - result.percentUsed;
+    setPercentFree(free);
+    if (free < 20) {
+      setQuotaState(free < 5 ? 'critical' : 'warn');
+      import('@/infrastructure/storage/MaintenanceService')
+        .then(m => m.MaintenanceService.runOnce())
+        .catch(() => {});
+    } else {
+      setQuotaState('ok');
+    }
+  }
+  check();
+  const interval = setInterval(check, CHECK_INTERVAL_MS);
+  return () => { mounted = false; clearInterval(interval); };
+}, []);
+```
+
+**Verificación**: Forzar cuota <20% → `appLogger` confirma operaciones de pruning ejecutadas además del banner visible.
+
+---
+
+### Fase G.4 — Unificar logout: sidebar usa mismo dialog que header
+
+**Skills**: `clean-code`, `senior-frontend`
+
+**Archivo**: `frontend/src/presentation/shared/components/layout/DashboardLayout.tsx`
+
+**Problema**: El botón "Cerrar sesión" en el error state (línea 304) usa `handleLogout` que ejecuta `logout()` sin `LogoutConfirmDialog`, sin verificar cambios pendientes.
+
+**Referencia `task_plan.md`**: §339-346 (B — Logout con cambios pendientes: siempre mostrar ConfirmDialog)
+
+**Implementación**:
+
+Reemplazar `handleLogout` para usar el mismo flujo que `handleLogoutRequest` (dialog + pending count):
+```typescript
+const handleLogout = useCallback(async () => {
+  try { setPendingForLogout(await getOutboxCount()); } catch { setPendingForLogout(0); }
+  setShowLogoutDialog(true);
+}, []);
+```
+
+**Verificación**: Click "Cerrar sesión" en error state → muestra LogoutConfirmDialog con pending count.
+
+---
+
+### Fase G.5 — Cleanup: eliminar código muerto en SW + verificar SESSION_STORES
+
+**Skills**: `clean-code`
+
+**Archivos**: `frontend/src/app/sw.ts`, `frontend/src/infrastructure/storage/db.ts`
+
+**Implementación**:
+
+1. En `sw.ts`, eliminar condicion muerta de `clearUserCaches()`:
 ```typescript
 async function clearUserCaches(userId: string | null): Promise<void> {
   const cacheNames = await caches.keys();
-  // Siempre limpiar caches de sesión (pages, rsc, others)
-  // Conservar: next-js, next-css, js, css, fonts, images, gf-*, audio, data,
-  //            next-data, media-images, offline (pública)
-  const sessionCachePrefixes = [
-    "cache-R1-pages",
-    "cache-R1-rsc",
-    "cache-R1-rsc-prefetch",
-    "cache-R1-others",
-  ];
-  const sessionCaches = cacheNames.filter((name) =>
-    sessionCachePrefixes.some((prefix) => name.startsWith(prefix)) ||
-    (userId !== null && name.startsWith(`inventory-offline-${userId}`))
+  const toDelete = cacheNames.filter((name) =>
+    SESSION_CACHE_PREFIXES.some((p) => name.startsWith(p))
   );
-  await Promise.all(sessionCaches.map((name) => caches.delete(name)));
+  await Promise.all(toDelete.map((name) => caches.delete(name)));
 }
 ```
 
-**destroyPersistence()**: Buscar en `db.ts`. Debe añadir limpieza de caches `cache-R1-*` de sesión. Si la función existe, añadir:
+2. En `db.ts`, verificar `SESSION_STORES`:
+   - `conflicts/incidents` no existe como store → `deadLetter` + `corruptionQueue` lo cubren. Añadir comentario inline documentando la decisión.
+   - No requiere cambios de store.
 
-```typescript
-// En destroyPersistence(), después de limpiar caches inventory-*
-const cacheNames = await caches.keys();
-const sessionCaches = cacheNames.filter((name) =>
-  name.startsWith("cache-R1-pages") ||
-  name.startsWith("cache-R1-rsc") ||
-  name.startsWith("cache-R1-rsc-prefetch") ||
-  name.startsWith("cache-R1-others")
-);
-await Promise.all(sessionCaches.map((name) => caches.delete(name)));
-```
-
-**Flujo de logout** (confirmado en `useAuthStore.ts:81-96`):
-1. `authRepository.logout()` → POST a backend
-2. `destroyPersistence()` → limpia IDB + OPFS + caches legacy
-3. `notifySwUserContext(null)` → envía SET_USER_CONTEXT a SW con `userId: null`
-4. Zustand reset
-
-**NOTA**: El mensaje `SET_USER_CONTEXT` con `userId: null` siempre debe activar `clearUserCaches(null)`. El SW actual solo limpia si `currentUserId && currentUserId !== prevUserId` — con `null` no entraba. El fix en R.6 corrige esto.
-
-**Verificación**: Logout → Cache Storage: `cache-R1-pages`, `cache-R1-rsc`, `cache-R1-rsc-prefetch`, `cache-R1-others` eliminadas. `cache-R1-offline`, `cache-R1-next-js`, etc. conservadas.
+**Verificación**: `pnpm exec tsc --noEmit` + `pnpm lint` sin errores.
 
 ---
 
-### Fase R.7 — Background Sync para outbox pendiente
+## 2. Codebase Audit (contra código real)
 
-**Skills**: `clean-code`, `senior-frontend`
+### 2.1 Fases YA implementadas (refactor.md desactualizado)
 
-**Archivos**:
-- `frontend/src/app/sw.ts`
-- `frontend/src/infrastructure/storage/outbox.ts` (añadir `registerSync()`)
+| Fase | Archivo | Líneas | Estado |
+|------|---------|--------|--------|
+| R.1 — runtimeCaching real | `sw.ts` | 27-47 | ✅ COMPLETED |
+| R.2 — skipWaiting + clients.claim + deleteOldCaches | `sw.ts` | 68-86 | ✅ COMPLETED |
+| R.6 — logout cleanup session caches | `sw.ts`, `db.ts` | 102-116, 1190-1208 | ✅ COMPLETED |
+| R.7 — Background Sync via postMessage | `sw.ts` | 89-100 | ✅ Parcial (falta registerSync en outbox.ts) |
+| R.8 — MaintenanceService cleanupSwCaches | `MaintenanceService.ts` | 233-246 | ✅ COMPLETED (sin locks — mejora posible) |
+| R.3 — revision estática + /~offline en precache | `route.ts` | 3, 13 | ✅ COMPLETED |
 
-**Decisión arquitectónica**: El SW **no reimplementa** lógica de sync. En vez de duplicar `SyncService.processOutbox()` (536 líneas complejas con locks, temp IDs, dead letters, field errors), el SW **envía un mensaje al cliente** para que ejecute el sync:
+### 2.2 Archivos a MODIFICAR
 
-```typescript
-// sw.ts
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-outbox") {
-    event.waitUntil(notifyClientToSync());
-  }
-});
+| Archivo | Cambio | Fase | Prioridad |
+|---------|--------|:----:|:---------:|
+| `sw.ts` | `networkTimeoutSeconds: 3` → `5` en NetworkFirst | R.1 | Alta |
+| `sw.ts` | ACK postMessage tras `clearUserCaches()` | R.6 | Alta |
+| `sw.ts` | `sessionCachingPaused` flag + CACHE_PAUSE handler | G.2 | Alta |
+| `sw.ts` | `navigator.locks` en `deleteOldCaches()` | R.2 | Media |
+| `sw.ts` | Eliminar condicion muerta `inventory-offline-${userId}` | G.5 | Baja |
+| `db.ts` | `clearSessionData()` acepta `userId?: string` | G.1 | Alta |
+| `db.ts` | Comentario `conflicts/incidents` | G.5 | Baja |
+| `outbox.ts` | `registerSync()` después de `addToOutbox()` | R.7 | Alta |
+| `MaintenanceService.ts` | `navigator.locks` en `cleanupSwCaches()` | R.8 | Media |
+| `useBackgroundTasks.ts` | Guard URL absoluta en image fix | R.5 | Media |
+| `QuotaWarningBanner.tsx` | Llamar `MaintenanceService.runOnce()` | G.3 | Alta |
+| `DashboardLayout.tsx` | Unificar logout con dialog | G.4 | Media |
 
-async function notifyClientToSync(): Promise<void> {
-  const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-  for (const client of clients) {
-    client.postMessage({ type: "SYNC_OUTBOX" });
-  }
-}
-```
+### 2.3 Archivos a CREAR
 
-**Frontend** (en el hook raíz o `Providers.tsx`), escuchar este mensaje:
+| Archivo | Para | Prioridad |
+|---------|------|:---------:|
+| `frontend/src/app/(offline)/layout.tsx` | Layout mínimo offline | Alta |
+| `frontend/src/app/(offline)/~offline/page.tsx` | Offline fallback page | Alta |
 
-```typescript
-// En un useEffect global
-navigator.serviceWorker.addEventListener("message", (event) => {
-  if (event.data?.type === "SYNC_OUTBOX") {
-    import("@/infrastructure/storage/SyncService").then(({ processOutbox }) => {
-      processOutbox().catch(() => {});
-    });
-  }
-});
-```
+### 2.4 Archivos a REUSE (sin cambios)
 
-**Registro de sync tag**: En `outbox.ts`, después de `addToOutbox()`, registrar el sync:
+| Archivo | Razón |
+|---------|-------|
+| `Button.tsx` | Existe en `ui/Button.tsx` — offline page lo reutilizará |
+| `useImageCache.ts` | Formato #1 sin doble encoding — no requiere cambios |
+| `useAuthStore.ts` | Ya llama `destroyPersistence()` + `notifySwUserContext(null)` — flujo correcto |
 
-```typescript
-// outbox.ts — añadir al final de addToOutbox()
-export async function addToOutbox(entry: { ... }): Promise<void> {
-  // ... existing code ...
-  await db.add("outbox", outboxEntry);
-  registerSync().catch(() => {}); // non-fatal
-}
+### 2.5 Archivos DELETE / código muerto
 
-async function registerSync(): Promise<void> {
-  if (typeof navigator === "undefined") return;
-  if (!("serviceWorker" in navigator)) return;
-  const registration = await navigator.serviceWorker.ready;
-  if ("sync" in registration) {
-    await (registration as unknown as { sync: { register: (tag: string) => Promise<void> } }).sync.register("sync-outbox");
-  }
-}
-```
-
-**Degradación graceful**: Si `SyncManager` no existe (Safari, Firefox), el sync tag no se registra. El usuario hace sync manual desde Settings — el outbox sigue acumulándose normalmente.
-
-**Verificación**: Marcar offline, crear producto, reconectar → outbox se drena automáticamente.
+| Código | Razón |
+|--------|-------|
+| `sw.ts:113` — `inventory-offline-${userId}` | Nunca matchea; ningún cache se crea con ese prefijo |
+| `useBackgroundTasks.ts:177` — guard actual | Reemplazar con guard de URL absoluta |
 
 ---
 
-### Fase R.8 — MaintenanceService: cleanup de caches SW viejas
+## 3. Mejora recomendada: Pruning Strategy
 
-**Skills**: `clean-code`, `senior-frontend`
+### Estado actual
 
-**Archivo**: `frontend/src/infrastructure/storage/MaintenanceService.ts`
+| Dimensión | Implementado | Gap |
+|-----------|:------------:|:---:|
+| IDB date pruning (90-180d) | ✅ | Format checker por sample ✅ |
+| Image LRU (100MB OPFS) | ✅ | Last-access tracking ✅ |
+| Stale SW cache cleanup (version) | ✅ | Sin `navigator.locks` |
+| Session cache cleanup on logout | ✅ | Sin userId namespace |
+| Quota monitoring (5min) | ✅ | No dispara pruning ❌ |
+| OPFS temp file cleanup | ✅ | |
+| Download chunks cleanup | ✅ | |
 
-`MaintenanceService` ya existe y se ejecuta cada 30 min, boot y post-sync. Añadir operación:
+### Recomendaciones
 
+1. **Quota-triggered pruning**: `QuotaWarningBanner` debe llamar `MaintenanceService.runOnce()` (G.3) — ya en el plan.
+
+2. **SW cache TTL para session caches**: Si un usuario nunca cierra sesión, `cache-R1-pages` crece indefinidamente. Añadir TTL opcional de 7 días en `MaintenanceService.cleanupSwCaches()`:
 ```typescript
-// En runAll(), después de cleanupTempFiles()
-async cleanupSwCaches(): Promise<void> {
-  try {
-    const hasLocks = typeof navigator !== "undefined" && "locks" in navigator;
-    const doCleanup = async () => {
-      const cacheNames = await caches.keys();
-      const currentPrefix = "cache-R1-";
-      const stale = cacheNames.filter((name) => name.startsWith("cache-") && !name.startsWith(currentPrefix));
-      if (stale.length > 0) {
-        await Promise.all(stale.map((name) => caches.delete(name)));
-        const { appLogger } = await import("@/infrastructure/logging/appLogger");
-        appLogger.info(`cleaned ${stale.length} stale SW caches`);
-      }
-    };
-
-    if (hasLocks) {
-      await (navigator.locks as unknown as { request: (n: string, fn: () => Promise<void>) => Promise<void> })
-        .request("sw-cache-cleanup", doCleanup);
-    } else {
-      await doCleanup();
-    }
-  } catch {
-    // Non-fatal
-  }
-}
+// Además de limpiar caches viejas de versiones anteriores, limpiar session caches con TTL
+const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+// Nota: Cache API no expone fecha de creación directamente.
+// Como workaround, se podría cachear un marcador de timestamp por cache name.
+// Alternativa: simplemente limpiar session caches periódicamente (más agresivo).
+// Decisión: NO implementar TTL por ahora — las session caches son pequeñas y se limpian al logout.
 ```
 
-**`navigator.locks`**: Previene race conditions entre tabs. Si dos tabs ejecutan cleanup simultáneo, solo uno procede.
+3. **`navigator.locks` en cleanup cross-tab**: El código actual de `cleanupSwCaches` no usa locks. Añadirlos para prevenir race conditions entre tabs.
 
-**Verificación**: Forzar `MaintenanceService.runAll()` → appLogger confirma caches limpiadas.
-
----
-
-## 2. Codebase Audit (confirmaciones)
-
-### Archivos existentes que se modifican
-
-| Fichero | Existe? | Rol en el plan |
-|---------|---------|----------------|
-| `frontend/src/app/sw.ts` | ✅ sí | R.1, R.2, R.6, R.7 |
-| `frontend/src/app/serwist/[path]/route.ts` | ✅ sí | R.3 |
-| `frontend/src/infrastructure/storage/db.ts` | ✅ sí | R.6 — `destroyPersistence()` |
-| `frontend/src/infrastructure/storage/outbox.ts` | ✅ sí | R.7 — añadir `registerSync()` |
-| `frontend/src/infrastructure/storage/MaintenanceService.ts` | ✅ sí | R.8 |
-| `frontend/src/presentation/shared/hooks/storage/useBackgroundTasks.ts` | ✅ sí | R.5 — fix encodeURIComponent |
-| `frontend/src/presentation/shared/hooks/storage/useAuthStore.ts` | ✅ sí | Ya llama `destroyPersistence()` + `notifySwUserContext(null)` |
-| `frontend/src/infrastructure/images/useImageCache.ts` | ✅ sí | R.5 — verificar, probablemente no requiere cambios |
-
-### Archivos nuevos
-
-| Fichero | Creado para |
-|---------|-------------|
-| `frontend/src/app/(offline)/layout.tsx` | Layout mínimo sin providers |
-| `frontend/src/app/(offline)/~offline/page.tsx` | Offline fallback page |
-
-### Confirmaciones del audit
-
-| Pregunta | Respuesta |
-|----------|-----------|
-| `ExpirationPlugin` existe en serwist 9.5? | ✅ Sí, importable desde `"serwist"` |
-| `SET_USER_CONTEXT` se envía en logout? | ✅ Sí, `useAuthStore.ts:94` con `userId: null` |
-| `SyncService.processOutbox()` es complejo? | ✅ 536 líneas — **no reimplementar en SW**, mejor postMessage |
-| Imagen doble encoding viene de `useBackgroundTasks.ts:174`? | ✅ Confirmado — usa `encodeURIComponent` sobre key ya encoded |
-| `previousUserId` check bloquea cleanup con `null`? | ✅ Sí — el handler solo limpia si `currentUserId && ...` |
-| Button existe en ui/? | ✅ `presentation/shared/components/ui/Button.tsx` |
+4. **Monitoreo de tamaño de SW caches**: Añadir métrica en HealthPanel que estime el storage usado por SW caches usando `caches.match()` o `cache.keys()` iterativo.
 
 ---
 
-## 3. Reglas de Ejecución
+## 4. Reglas de Ejecución
 
-- **🏛️ P1–P5 son ley suprema**: R.1 tiene prioridad (P3, P4). R.7 es obligatorio (P5).
+- **🏛️ P1–P5 son ley suprema**: R.4 tiene prioridad (P3, P4). G.3 es obligatorio (Objetivo 4).
 - **Una fase a la vez**: ejecutar → verificar → commit → preguntar al usuario si continuar
 - **Commit por fase**: `git add . && git commit -m '<tipo>(<scope>): <mensaje>'`
 - **Skills por fase**: `clean-code`, `senior-frontend`
 - **Verificación**: `pnpm exec tsc --noEmit` + `pnpm lint`
-- **Verificación offline**: Chrome DevTools → Application → Service Workers → check "Offline" → recargar
-- **Verificación imágenes**: Navegar a producto con imagen → Network tab → status 200
-- **Verificación caches**: Application → Cache Storage → `cache-R1-*` pobladas
-- **Al cambiar CACHE_VERSION futuro**: Incrementar de `"R1"` a `"R2"` en sw.ts + incrementar `revision` en route.ts si cambia shell. Documentar en AGENTS.md.
 - **Sin `console.log` en producción**: Usar `appLogger`
 
 ---
 
-## 4. Archivos a Modificar (resumen)
-
-| Archivo | Cambio | Fase |
-|---------|--------|:----:|
-| `frontend/src/app/sw.ts` | `runtimeCaching` explícito con estrategias reales | R.1 |
-| `frontend/src/app/sw.ts` | `skipWaiting()` + `deleteOldCaches()` + `clients.claim()` | R.2 |
-| `frontend/src/app/sw.ts` | `clearUserCaches()` maneja `null` + caches runtime | R.6 |
-| `frontend/src/app/sw.ts` | `sync` listener + `notifyClientToSync()` por postMessage | R.7 |
-| `frontend/src/app/serwist/[path]/route.ts` | `revision` estático + `/~offline` en precache | R.3 |
-| `frontend/src/app/(offline)/layout.tsx` | (CREAR) Layout mínimo | R.4 |
-| `frontend/src/app/(offline)/~offline/page.tsx` | (CREAR) Offline page (reusa Button) | R.4 |
-| `frontend/src/presentation/shared/hooks/storage/useBackgroundTasks.ts` | Fix `encodeURIComponent` en prefetch | R.5 |
-| `frontend/src/infrastructure/storage/db.ts` | `destroyPersistence()` añade cleanup `cache-R1-*` | R.6 |
-| `frontend/src/infrastructure/storage/outbox.ts` | `registerSync()` después de `addToOutbox()` | R.7 |
-| `frontend/src/infrastructure/storage/MaintenanceService.ts` | `cleanupSwCaches()` en `runAll()` | R.8 |
-
----
-
-## 5. Dependencias
+## 5. Dependencias y Orden
 
 ```
-R.1 (runtimeCaching)
-  ├── R.2 (activate+cleanup) — necesita cache names de R.1
-  ├── R.3 (precache) — independiente
-  ├── R.4 (offline page) — necesita R.3 (precache entry)
-  ├── R.5 (image fix) — independiente
-  └── R.6 (logout) — necesita R.1 (nombres)
-        └── R.8 (maintenance) — necesita R.1 + R.2
-R.7 (background sync) — independiente
+R.4 (offline page) — independiente (CREAR)
+R.5 (image fix) — independiente (MODIFICAR)
+R.7 (registerSync en outbox.ts) — independiente (MODIFICAR)
+
+G.1 (clearSessionData con userId) → G.2 (sessionCachingPaused)
+G.3 (quota→maintenance) — independiente
+G.4 (unificar logout) — independiente
+G.5 (cleanup) — independiente
+
+Post-R: Actualizar networkTimeoutSeconds 3→5 en sw.ts + ACK + locks + absolute URL guard
 ```
 
-Orden: **R.1 → R.2 → R.3 → R.4 → R.5 → R.6 → R.7 → R.8**
-
-R.1, R.3, R.5 y R.7 pueden ejecutarse en paralelo sin conflictos de merge.
+Orden recomendado: **R.4 → R.5 → R.7 → G.1 → G.2 → G.3 → G.4 → G.5** + cambios post-review dispersos.
